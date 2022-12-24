@@ -2,6 +2,8 @@
  A mod for the strategy game Victoria 3 that expands political mechanics, introducing more interest groups and interest group splits.
 
  Thanks to AcrillicTuna's [Interest Group Descriptions](https://steamcommunity.com/sharedfiles/filedetails/?id=2898602048) mod for better tooltips :)
+
+ ![Starting political setup of the UK](./example_gbr.png)
  
 ## New Interest Groups
  The interest groups (IGs) in this mod come in two categories: non-ideological and ideological. The intent is to model politics in its varied forms, from non-ideological squabbles between institutional power blocs, to ideological movements led by disciplined mass parties. 

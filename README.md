@@ -1,4 +1,6 @@
 # Better Politics Mod
+ ***Playtesters wanted!*** DM me on Discord: `lilliesea#8032`
+
  A mod for the strategy game Victoria 3 that expands political mechanics, introducing more interest groups and interest group splits.
 
  Thanks to AcrillicTuna's [Interest Group Descriptions](https://steamcommunity.com/sharedfiles/filedetails/?id=2898602048) mod for better tooltips :)

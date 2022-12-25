@@ -5,6 +5,9 @@
 
  ![Starting political setup of the UK](./example_gbr.png)
  
+## Installation
+ For Windows: Place the `better-politics-mod` folder into your Victoria 3 mod folder. This is probably something like: `C:\Users\<username>\Documents\Paradox Interactive\Victoria 3\mod` if the game was installed with default settings.
+ 
 ## New Interest Groups
  The interest groups (IGs) in this mod come in two categories: non-ideological and ideological. The intent is to model politics in its varied forms, from non-ideological squabbles between institutional power blocs, to ideological movements led by disciplined mass parties. 
  

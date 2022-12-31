@@ -157,7 +157,7 @@
 		default = "/gfx/interface/icons/political_parties/communists.dds"
 	}
 	unlocking_technologies = {
-		political_agitation
+		socialism
 	}
 	# THIS IS RUN ONLY ONCE AT GAME START
 	valid_for_country = {
@@ -191,15 +191,20 @@
 			value = -5
 			desc = "base_value"
 		}
+		if = { # hard to get if reformists and revs still united
+			limit = {
+				NOT = {
+					has_global_variable = second_intl_disunited_var
+				}
+			}
+			add = {
+				value = -20
+				desc = "still_united"
+			}
+		}
 		if = { # communists love communism
 			limit = {
-				leader = {
-					OR = {
-						has_ideology = ideology_communist
-						has_ideology = ideology_vanguardist
-						has_ideology = ideology_anarchist
-					}
-				}
+				has_ideology = ideology_ig_revolutionist_socialist
 			}
 			add = {
 				value = 10
@@ -209,13 +214,7 @@
 		if = { # communists love communism
 			limit = {
 				is_powerful = yes
-				leader = {
-					OR = {
-						has_ideology = ideology_communist
-						has_ideology = ideology_vanguardist
-						has_ideology = ideology_anarchist
-					}
-				}
+				has_ideology = ideology_ig_revolutionist_socialist
 			}
 			add = {
 				value = 10
@@ -225,22 +224,21 @@
 		if = { # weak social democrats and radicals may side with strong communists
 			limit = {
 				is_powerful = no
-				leader = {
-					OR = {
-						has_ideology = ideology_social_democrat
-						has_ideology = ideology_radical
+				OR = {
+					leader = {
+						OR = {
+							has_ideology = ideology_social_democrat
+							has_ideology = ideology_radical
+						}
 					}
+					has_ideology = ideology_ig_reformist_socialist
+					is_interest_group_type = ig_radicals
+					is_interest_group_type = ig_agrarian_populists
 				}
 				owner = {
 					any_interest_group = {
 						is_powerful = yes
-						leader = {
-							OR = {
-								has_ideology = ideology_communist
-								has_ideology = ideology_vanguardist
-								has_ideology = ideology_anarchist
-							}
-						}
+						has_ideology = ideology_ig_revolutionist_socialist
 					}
 				}
 			}
@@ -251,8 +249,11 @@
 		}
 		if = { # post-revolution anarchists not excited about vanguard party
 			limit = {
-				leader = {
-					has_ideology = ideology_anarchist
+				OR = {
+					leader = {
+						has_ideology = ideology_anarchist
+					}
+					has_ideology = ideology_ig_anarchist
 				}
 				owner = {
 					has_law = law_type:law_council_republic
@@ -271,7 +272,7 @@
 				has_ideology = ideology_reactionary
 			}
 			add = {
-				value = -3
+				value = -5
 				desc = "from_reactionaries"
 			}
 		}
@@ -466,5 +467,26 @@
 				desc = "from_republican"
 			}
 		}
+		if = { # nobody will join if the revsocs don't join
+			limit = {
+				NOT = { is_interest_group_type = ig_revolutionist_socialists }
+				OR = {
+					NOT = { exists = owner.py:communist_party }
+					AND = {
+						exists = owner.py:communist_party
+						owner = {
+							ig:ig_revolutionist_socialists = {
+								NOT = { is_member_of_party = owner.py:communist_party }
+							}
+						}
+					}
+				}
+			}
+			add = {
+				value = -30
+				desc = "from_no_communists_in_party" # this should probably never actually display in game because the party won't exist
+			}
+		}
+
 	}
 }

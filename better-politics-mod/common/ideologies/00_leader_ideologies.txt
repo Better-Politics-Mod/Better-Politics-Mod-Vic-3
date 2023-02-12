@@ -126,6 +126,7 @@ ideology_traditionalist = {
 						has_ideology = ideology_isolationist
 						has_ideology = ideology_patriotic
 						has_ideology = ideology_reactionary
+						has_ideology = ideology_plutocratic
 					}
 				}
 			}
@@ -155,7 +156,7 @@ ideology_atheist = {
 	
 	possible = {
 		owner = {
-			has_technology_researched = egalitarianism
+			has_technology_researched = empiricism
 		}
 		scope:interest_group = {
 			OR = {
@@ -392,19 +393,29 @@ ideology_radical = {
 			if = {
 				limit = {
 					scope:interest_group = {
-						has_ideology = ideology_radical
+						has_ideology = ideology_republican
 					}
 				}
 				add = 100
 			}
-			# more likely for socialists
+			# more likely for populists
+			if = {
+				limit = {
+					scope:interest_group = {
+						has_ideology = ideology_populist
+					}
+				}
+				add = 50
+			}
+			# Unlikely for socialists after first intl
 			if = {
 				limit = {
 					scope:interest_group = {
 						has_ideology = ideology_proletarian
 					}
+					has_global_variable = first_intl_split_complete_var
 				}
-				add = 50
+				add = -50
 			}
 			# more likely if issues are relevant and people are angry
 			if = {
@@ -455,11 +466,11 @@ ideology_radical = {
 				}
 				add = -75
 			}
-			# very unlikely for socialists after socialism is researched
+			# very unlikely for socialists after second intl
 			if = {
 				limit = {
 					scope:interest_group = {
-						has_ideology = ideology_proletarian
+						has_ideology = ideology_ig_united_socialist
 					}
 					owner = {
 						has_technology_researched = socialism
@@ -668,21 +679,12 @@ ideology_feminist = {
 	
 	leader_weight = {
 		value = {
-			value = 50
+			value = 40
 			 # less likely if issues are not relevant
 			if = {
 				limit = {
 					owner = {
-						OR = {
-							has_law = law_type:law_womens_suffrage
-							AND = {
-								has_law = law_type:law_women_in_the_workplace
-								OR = {
-									has_law = law_type:law_oligarchy
-									has_law = law_type:law_autocracy
-								}
-							}
-						}
+						has_law = law_type:law_womens_suffrage
 					}
 				}
 				add = -100
@@ -694,21 +696,21 @@ ideology_feminist = {
 					is_female = yes
 				}
 				multiply = {
-					value = 2
+					value = 1.5
 				}
 			}
-			# more likely with limited women's rights
+			# more likely with some women's rights
 			if = {
 				limit = {
 					owner = { 
 						OR = {
-							has_law = law_type:law_no_womens_rights
 							has_law = law_type:law_women_own_property
+							has_law = law_type:law_women_in_the_workplace
 						}
 					}
 				}
 				multiply = {
-					value = 2
+					value = 1.5
 				}
 			}
 			# less likely if conservative
@@ -773,11 +775,11 @@ ideology_abolitionist = {
 		value = 50
 		if = {
 			limit = { scope:interest_group = { has_ideology = ideology_egalitarian } }
-			add = 150
+			add = 100
 		}	
 		if = {
 			limit = { scope:interest_group = { has_ideology = ideology_liberal } }
-			add = 150
+			add = 100
 		}		
 		if = {
 			limit = { has_trait = tactful }
@@ -844,7 +846,14 @@ ideology_slaver = {
 			add = -1000
 		}		
 		if = {
-			limit = { scope:interest_group = { is_interest_group_type = ig_landowners } }
+			limit = { 
+				scope:interest_group = { 
+					OR = {
+						has_ideology = ideology_reactionary
+						has_ideology = ideology_stratocratic
+					}
+				} 
+			}
 			add = 500
 		}
 		if = {
@@ -860,7 +869,7 @@ ideology_slaver = {
 				exists = c:USA
 				owner = { c:USA = THIS }
 			}
-			add = 100
+			add = 150
 		}
 		if = { # very difficult to reintroduce slavery once you ban it and its supporters have faded from the political scene
 			limit = {
@@ -993,6 +1002,8 @@ ideology_jingoist_leader = {
 			NOR = {
 				has_ideology = ideology_isolationist
 				has_ideology = ideology_particularist
+				has_ideology = ideology_ig_anarchist
+				is_interest_group_type = ig_socialists
 			}
 		}
 	}
@@ -1223,13 +1234,21 @@ ideology_socialist_leader = {
 				has_ideology = ideology_ig_fascist
 				has_ideology = ideology_ig_anarchist
 				is_interest_group_type = ig_conservatives
-
 			}
 		}
 	}
 	
 	leader_weight = {
-		value = 25
+		value = 20
+		# Unlikely after reformist/revolutionist split
+		if = {
+			limit = {
+				owner = {
+					has_variable = local_socialists_split_var
+				}
+			}
+			add = -250
+		}
 		# more likely for socialists
 		if = {
 			limit = {
@@ -1237,7 +1256,7 @@ ideology_socialist_leader = {
 					has_ideology = ideology_ig_united_socialist
 				}
 			}
-			add = 100
+			add = 110
 		}
 		# somewhat more likely for proletarians
 		if = {
@@ -1246,7 +1265,7 @@ ideology_socialist_leader = {
 					has_ideology = ideology_proletarian
 				}
 			}
-			add = 100
+			add = 80
 		}
 		# very angry IG's more likely to turn to more radical socialism
 		if = {
@@ -1255,20 +1274,20 @@ ideology_socialist_leader = {
 					ig_approval <= -5
 				}
 			}
-			add = 50
+			add = 20
 		}
 		# more likely when issues are relevant
 		if = {
 			limit = {
 				owner = {
 					OR = {
-						NOT = { has_law = law_type:law_universal_suffrage }
+						has_law = law_type:law_slave_trade
+						has_law = law_type:law_legacy_slavery
 						has_law = law_type:law_serfdom
-						has_law = law_type:law_serfdom_banned
 					}
 				}
 			}
-			add = 25
+			add = 20
 		}
 		# more likely for discontent trade unions outside of council republic
 		if = {
@@ -1457,6 +1476,38 @@ ideology_communist = {
 	}
 	
 	leader_weight = {
+		# Very likely for revsocs after Second Intl
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_ideology = ideology_ig_revolutionist_socialist
+				}
+				has_global_variable = second_intl_split_complete_var
+			}
+			add = 50
+		}
+		# More likely for socialists
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_ideology = ideology_ig_united_socialist
+					NOR = {
+						has_ideology = ideology_ig_reformist_socialist
+						has_ideology = ideology_ig_social_democrat
+					}
+				}
+			}
+			add = 50
+		}
+		# Somewhat likely for unions
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_ideology = ideology_proletarian
+				}
+			}
+			add = 30
+		}
 		# More likely for angry IG's outside of council republic
 		if = {
 			limit = {
@@ -1540,16 +1591,14 @@ ideology_vanguardist = {
 		owner = { has_technology_researched = socialism }
 		scope:interest_group = {
 			OR = {
-				is_interest_group_type = ig_rural_folk
-				is_interest_group_type = ig_intelligentsia
-				is_interest_group_type = ig_trade_unions
+				is_interest_group_type = ig_revolutionist_socialists
 				is_interest_group_type = ig_armed_forces
+				is_interest_group_type = ig_petty_bourgeoisie
 			}
 		}
 		scope:interest_group = {
 			NOR = {
 				has_variable = chose_anarchism
-				has_variable = chose_communism
 				has_variable = chose_fascism
 				has_variable = chose_conservatism
 				has_variable = chose_ethno_nationalism
@@ -1558,16 +1607,12 @@ ideology_vanguardist = {
 	}
 	
 	leader_weight = {
-		value = 100
-		# More likely for angry IG's outside of council republic
+		value = -10
+		# More likely for revolutionary socialists
 		if = {
 			limit = {
-				owner = {
-					NOT = { has_law = law_type:law_council_republic }
-				}
 				scope:interest_group = {
-					ig_approval <= -5
-					NOT = { is_interest_group_type = ig_armed_forces }
+					is_interest_group_type = ig_revolutionist_socialists
 				}
 			}
 			add = 100
@@ -1575,6 +1620,9 @@ ideology_vanguardist = {
 		# More likely when SoL is low outside of council republic
 		if = {
 			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_revolutionist_socialists
+				}
 				owner = {
 					NOT = { has_law = law_type:law_council_republic }
 					average_sol <= 10
@@ -1585,6 +1633,9 @@ ideology_vanguardist = {
 		# More likely in an autocracy
 		if = {
 			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_revolutionist_socialists
+				}
 				owner = {
 					OR = {
 						has_law = law_type:law_autocracy
@@ -1606,14 +1657,29 @@ ideology_vanguardist = {
 			}
 			add = -100
 		}
-		# Extremely likely for content Armed Forces in Council Republic
+		# Unlikely for Armed Forces outside of Council Republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_council_republic }
+				}
+				scope:interest_group = {
+					is_interest_group_type = ig_armed_forces
+				}
+			}
+			add = -100
+		}
+		# Extremely likely for content Armed Forces and Bureaucrats in Council Republic
 		if = {
 			limit = {
 				owner = {
 					has_law = law_type:law_council_republic
 				}
 				scope:interest_group = {
-					is_interest_group_type = ig_armed_forces
+					OR = {
+						is_interest_group_type = ig_armed_forces
+						is_interest_group_type = ig_petty_bourgeoisie
+					}
 					ig_approval >= 0
 				}
 			}
@@ -1626,7 +1692,7 @@ ideology_vanguardist = {
 					has_law = law_type:law_council_republic
 					OR = {
 						has_law = law_type:law_autocracy
-						has_law = law_type:law_oligarchy
+	 					has_law = law_type:law_oligarchy
 					}
 				}
 				scope:interest_group = {
@@ -1832,15 +1898,15 @@ ideology_anarchist = {
 		law_anarchy = strongly_approve
 		law_universal_suffrage = neutral
 		law_census_voting = disapprove
-		law_wealth_voting = disapprove
-		law_landed_voting = disapprove
+		law_wealth_voting = strongly_disapprove	
+		law_landed_voting = strongly_disapprove	
 		law_oligarchy = strongly_disapprove
 		law_autocracy = strongly_disapprove		
 	}
 
-	lawgroup_army_model = {
-		law_professional_army = strongly_approve
-		law_national_militia = approve
+	lawgroup_army_model = { 
+		law_professional_army = disapprove
+		law_national_militia = neutral
 		law_peasant_levies = disapprove
 		law_mass_conscription = strongly_disapprove
 	}
@@ -1879,7 +1945,7 @@ ideology_anarchist = {
 	}
 	
 	leader_weight = {
-		value = 50
+		value = 20
 		if = {
 			limit = {
 				scope:interest_group = {
@@ -1898,7 +1964,7 @@ ideology_anarchist = {
 					ig_approval <= -5
 				}
 			}
-			add = 40
+			add = 30
 		}
 		# More likely when SoL is low outside of council republic
 		if = {
@@ -1908,7 +1974,7 @@ ideology_anarchist = {
 					average_sol <= 10
 				}
 			}
-			add = 40
+			add = 30
 		}
 		# More likely for agrarian populists and radicals when serfdom is legal
 		if = {
@@ -1923,7 +1989,7 @@ ideology_anarchist = {
 					}
 				}
 			}
-			add = 40
+			add = 60
 		}
 		# More likely if in "government" under anarchy
 		if = {

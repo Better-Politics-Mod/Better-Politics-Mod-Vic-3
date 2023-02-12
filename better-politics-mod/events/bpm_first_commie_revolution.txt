@@ -1,0 +1,120 @@
+﻿namespace = bpm_1st_commie_rev
+
+bpm_1st_commie_rev.1 = { # Checks if this is the first major revolution
+	type = country_event
+	placement = root
+	hidden = yes
+
+	trigger = {
+		NOT = { has_global_variable = first_major_rev_happened_var }
+		has_law = law_type:law_council_republic
+		OR = {
+			NOT = { is_revolutionary = yes } # Revolution won, OR
+			any_interest_group = { # Reformists didn't side with revolution
+				OR = {
+					has_ideology = ideology_ig_reformist_socialist
+					has_ideology = ideology_ig_social_democrat
+				}
+				NOT = { is_revolutionary = yes }
+			}
+		}
+		country_rank > rank_value:minor_power
+	}
+
+	immediate = {
+		set_global_variable = first_major_rev_happened_var
+		set_global_variable = global_socialists_split_var
+		set_variable = first_major_rev_country_var
+		save_scope_as = first_major_rev_country_scope
+		every_country = {
+			if = {
+				limit = {
+					is_player = yes
+				}
+				trigger_event = { id = bpm_1st_commie_rev.2 days = 30 }
+			}
+		}
+		if = {
+			limit = {
+				NOT = { any_country = { is_player = yes } }
+			}
+			random_country = { trigger_event = { id = bpm_1st_commie_rev.2 days = 30 } }
+		}
+	}
+}
+
+
+bpm_1st_commie_rev.2 = { # Handles first major revolution
+	type = country_event
+	placement = root
+
+	event_image = { video = "gfx/event_pictures/europenorthamerica_political_extremism.bk2" }
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/europenorthamerica/political_extremism"
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+	title = bpm_1st_commie_rev.2.t
+	desc = bpm_1st_commie_rev.2.d
+	flavor = bpm_1st_commie_rev.2.f
+	duration = 3
+
+	immediate = {
+		set_global_variable = global_socialists_disunited_var
+	}
+
+	option = {
+		name = bpm_1st_commie_rev.2.a
+		default_option = yes
+		set_global_variable = global_first_major_rev_disunited_var
+		hidden_effect = {
+			every_country = {
+				update_party_support = yes
+			}
+		}
+	}
+}
+
+bpm_1st_commie_rev.3 = { # Handles first major revolution
+	type = country_event
+	placement = root
+
+	event_image = { video = "gfx/event_pictures/southamerica_election.bk2" }
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/europenorthamerica/political_extremism"
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+	title = bpm_1st_commie_rev.3.t
+	desc = bpm_1st_commie_rev.3.d
+	flavor = bpm_1st_commie_rev.3.f
+	duration = 3
+
+	trigger = { 
+		has_global_variable = global_first_major_rev_disunited_var 
+		has_variable = local_socialists_split_var
+		NOT = {
+			has_variable = communists_renamed_var
+		}
+	}
+
+	immediate = {
+		set_variable = communists_renamed_var
+		set_variable = local_socialists_disunited_var
+		every_interest_group = {
+			limit = { is_interest_group_type = ig_socialists }
+			set_interest_group_name = ig_independent_socialists
+		}
+		every_interest_group = {
+			limit = { is_interest_group_type = ig_revolutionist_socialists }
+			set_interest_group_name = ig_communists
+		}
+		every_interest_group = {
+			limit = { is_interest_group_type = ig_reformist_socialists }
+			remove_ideology = ideology_ig_reformist_socialist
+			add_ideology = ideology_ig_social_democrat
+			set_interest_group_name = ig_social_democrats
+		}
+	}
+
+	option = {
+		name = bpm_1st_commie_rev.3.a
+		default_option = yes
+	}
+}

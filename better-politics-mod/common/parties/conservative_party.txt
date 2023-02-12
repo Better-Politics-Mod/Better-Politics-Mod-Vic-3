@@ -207,6 +207,9 @@ conservative_party = {
 	icon = {
 		default = "/gfx/interface/icons/political_parties/conservatism.dds"
 	}
+	unlocking_technologies = {
+		mass_communication
+	}
 	# THIS IS RUN ONLY ONCE AT GAME START
 	valid_for_country = {
 		always = yes
@@ -215,13 +218,76 @@ conservative_party = {
 		owner = {
 			country_has_voting_franchise = yes
 		}
-		# socialists will not join conservatives
-		NOT = { has_ideology = ideology_ig_united_socialist }
+		# leftists will not join conservatives
+		NOR = { 
+			has_ideology = ideology_ig_united_socialist 
+			has_ideology = ideology_egalitarian
+		}
+		leader = {
+			NOR = {
+				has_ideology = ideology_communist
+				has_ideology = ideology_vanguardist
+				has_ideology = ideology_anarchist
+				has_ideology = ideology_socialist_leader
+				has_ideology = ideology_social_democrat
+				has_ideology = ideology_radical
+			}
+		}
 	}
 	join_weight = {
 		value = {
 			value = -5
 			desc = "base_value"
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_presidential_republic
+				}
+			}
+			add = {
+				value = 2
+				desc = "bpm_two_party_system"
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						AND = {
+							has_law = law_type:law_presidential_republic
+							exists = c:USA
+							this = c:USA
+						}
+						AND = {
+							has_law = law_type:law_monarchy
+							exists = c:GBR
+							this = c:GBR
+						}
+					}
+				}
+			}
+			add = {
+				value = 5
+				desc = "bpm_two_party_system_historical"
+			}
+		}
+		if = {
+			limit = {
+				leader = { has_ideology = ideology_moderate }
+			}
+			add = {
+				leader = {
+					value = popularity
+					if = {
+						limit = { popularity < 0 }
+						multiply = -1
+					}
+					modulo = 2
+					multiply = 3
+				}
+				desc = "bpm_from_moderatism"
+			}
 		}
 		if = { # socialists and radicals won't join conservative parties
 			limit = {
@@ -246,8 +312,8 @@ conservative_party = {
 				is_interest_group_type = ig_conservatives
 			}
 			add = {
-				value = 20
-				desc = "from_conservative_ig"
+				value = 15
+				desc = "bpm_from_conservative_ig"
 			}
 		}
 		if = { # conservatives love conservativism
@@ -277,7 +343,22 @@ conservative_party = {
 			}
 			add = {
 				value = 5
-				desc = "from_conservative_ig"
+				desc = "bpm_from_conservative_ideologies"
+			}
+		}
+		if = { # liberals and moderates will join in council republic
+			limit = {
+				OR = {
+					has_ideology = ideology_liberal
+					has_ideology = ideology_plutocratic
+					leader = { has_ideology = ideology_moderate }
+					leader = { has_ideology = ideology_market_liberal }
+				}
+				owner = { has_law = law_type:law_council_republic }
+			}
+			add = {
+				value = 5
+				desc = "bpm_from_liberals_in_soviet"
 			}
 		}
 		if = { # reactionaries will join weaker conservatives
@@ -295,7 +376,7 @@ conservative_party = {
 			}
 			add = {	
 				value = 10
-				desc = "from_powerful_conservative_ig"
+				desc = "bpm_from_weak_conservative_ig"
 			}
 		}
 		if = { # armed forces will join if a more powerful member has jingoist leader

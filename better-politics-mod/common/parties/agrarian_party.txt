@@ -140,18 +140,46 @@ agrarian_party = {
 	valid_for_country = {
 		always = yes
 	}
+	unlocking_technologies = {
+		egalitarianism
+	}
 	available_for_interest_group = {
-		owner = {
-			any_interest_group = {
-				is_interest_group_type = ig_agrarian_populists
-				is_powerful = yes
-			}
-		}
 	}
 	join_weight = {
 		value = {
 			value = -5
 			desc = "base_value"
+		}
+		if = { # can form farmer's coalition
+			limit = {
+				is_interest_group_type = ig_agrarian_populists
+				owner = {
+					OR = {
+						any_interest_group = {
+							is_interest_group_type = ig_rural_folk
+							leader = { 
+								OR = {
+									has_ideology = ideology_abolitionist
+									has_ideology = ideology_socialist_leader
+									has_ideology = ideology_social_democrat
+									has_ideology = ideology_communist
+									has_ideology = ideology_radical
+									has_ideology = ideology_anarchist
+								}
+							}
+						}
+						any_interest_group = {
+							is_interest_group_type = ig_anarchists
+							is_marginal = no
+							owner = { has_law = law_type:law_serfdom }
+						}
+					}
+				}
+			}
+			add = {
+				value = 10
+				desc = "bpm_from_agrarian_coalition"
+			}
 		}
 		if = { # a party for powerful farmers
 			limit = {
@@ -159,29 +187,49 @@ agrarian_party = {
 				is_powerful = yes
 			}
 			add = {
-				value = 20
-				desc = "from_peasants"
+				value = 10
+				desc = "bpm_from_powerful_agrarians"
 			}
 		}
-		if = { # a party for powerful anti-serfdom anarchists
+		if = { # a party for anti-serfdom anarchists
 			limit = {
 				is_interest_group_type = ig_anarchists
-				is_powerful = yes
 				owner = { has_law = law_type:law_serfdom }
 			}
 			add = {
 				value = 20
-				desc = "from_peasants"
+				desc = "bpm_from_anti_serfdom_anarchists"
 			}
 		}
-		if = { # weak anti-serfdom types might fall in line behind strong farmers
+		if = { # radical rural folk will join the party
 			limit = {
 				is_interest_group_type = ig_rural_folk
-				is_powerful = no
+				leader = { 
+					OR = {
+						has_ideology = ideology_abolitionist
+						has_ideology = ideology_socialist_leader
+						has_ideology = ideology_social_democrat
+						has_ideology = ideology_communist
+						has_ideology = ideology_radical
+						has_ideology = ideology_anarchist
+					}
+				}
+			}
+			add = {
+				value = 15
+				desc = "bpm_from_radical_peasants"
+			}
+		}
+		if = { # anti-serfdom types might fall in line behind strong farmers
+			limit = {
+				is_interest_group_type = ig_rural_folk
 				owner = {
-					has_law = law_type:law_serfdom
+					OR = {
+						has_law = law_type:law_serfdom
+						has_law = law_type:law_slave_trade
+					}
 					any_interest_group = {
-						is_powerful = yes
+						is_powerful = yes 
 						OR = {
 							is_interest_group_type = ig_agrarian_populists
 							is_interest_group_type = ig_anarchists
@@ -190,8 +238,8 @@ agrarian_party = {
 				}
 			}
 			add = {
-				value = 10
-				desc = "from_powerful_farmers"
+				value = 15
+				desc = "bpm_from_powerful_agrarians"
 			}
 		}
 		if = { # weak urban progressives might fall in line behind strong farmers
@@ -216,7 +264,7 @@ agrarian_party = {
 			}
 			add = {
 				value = 5
-				desc = "from_powerful_farmers"
+				desc = "bpm_from_powerful_agrarians"
 			}
 		}
 		if = { # scandinavians are more likely to have agrarian parties
@@ -311,27 +359,11 @@ agrarian_party = {
 					has_ideology = ideology_paternalistic
 				}
 				owner = {
-					has_law = law_type:law_free_trade
-				}
-				NOT = {
-					leader = {
-						has_ideology = ideology_market_liberal
+					OR = {
+						has_law = law_type:law_laissez_faire
+						has_law = law_type:law_free_trade
 					}
-				}
-			}
-			add = {
-				value = 6
-				desc = "from_anti_free_trade"
-			}
-		}
-		if = { # against laissez-faire - peasant/socialist alliance
-			limit = {
-				OR = {
-					has_ideology = ideology_proletarian
-					has_ideology = ideology_agrarian
-				}
-				owner = {
-					has_law = law_type:law_laissez_faire
+					
 				}
 				NOT = {
 					leader = {
@@ -387,15 +419,45 @@ agrarian_party = {
 		}
 		if = { # nobody will join if the agrarian populists don't join
 			limit = {
-				NOT = { is_interest_group_type = ig_agrarian_populists }
+				NOR = { 
+					is_interest_group_type = ig_agrarian_populists
+					AND = {
+						is_interest_group_type = ig_rural_folk
+						leader = {
+							OR = {
+								has_ideology = ideology_abolitionist
+								has_ideology = ideology_socialist_leader
+								has_ideology = ideology_social_democrat
+								has_ideology = ideology_communist
+								has_ideology = ideology_anarchist
+							}
+						}
+					}
+				}
 				OR = {
 					NOT = { exists = owner.py:agrarian_party }
 					AND = {
 						exists = owner.py:agrarian_party
 						owner = {
-							any_interest_group = {
-								is_interest_group_type = ig_agrarian_populists
-								NOT = { is_member_of_party = owner.py:agrarian_party }
+							NOT = {
+								any_interest_group = {
+									OR = {
+										is_interest_group_type = ig_agrarian_populists
+										AND = {
+											is_interest_group_type = ig_rural_folk
+											leader = {
+												OR = {
+													has_ideology = ideology_abolitionist
+													has_ideology = ideology_socialist_leader
+													has_ideology = ideology_social_democrat
+													has_ideology = ideology_communist
+													has_ideology = ideology_anarchist
+												}
+											}
+										}
+									}
+									is_member_of_party = owner.py:agrarian_party
+								}
 							}
 						}
 					}

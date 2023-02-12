@@ -20,19 +20,17 @@ liberal_party = {
 				}
 			}
 			triggered_desc = {
-				desc = party_whigs
+				desc = party_liberal_gbr
 				trigger = {
 					exists = c:GBR
 					THIS = c:GBR
-					NOT = { has_law = law_type:law_free_trade }
 				}
 			}
 			triggered_desc = {
-				desc = party_republicans
+				desc = party_liberal_usa
 				trigger = {
 					exists = c:USA
 					THIS = c:USA
-					has_global_variable = american_civil_war
 				}
 			}
 			triggered_desc = {
@@ -197,19 +195,10 @@ liberal_party = {
 			triggered_desc = {
 				desc = party_whig_party
 				trigger = {
-					OR = {
-						AND = {
-							country_has_primary_culture = cu:dixie
-							NOT = {
-								exists = c:USA
-								THIS = c:USA
-							}
-						}
-						AND = {
-							exists = c:USA
-							THIS = c:USA
-							NOT = { has_global_variable = american_civil_war }
-						}
+					country_has_primary_culture = cu:dixie
+					NOT = {
+						exists = c:USA
+						THIS = c:USA
 					}
 				}
 			}
@@ -252,7 +241,7 @@ liberal_party = {
 		default = "/gfx/interface/icons/political_parties/liberal.dds"
 	}
 	unlocking_technologies = {
-		empiricism
+		mass_communication
 	}
 	# THIS IS RUN ONLY ONCE AT GAME START
 	valid_for_country = {
@@ -269,10 +258,14 @@ liberal_party = {
 				has_ideology = ideology_communist
 				has_ideology = ideology_vanguardist
 				has_ideology = ideology_anarchist
+				has_ideology = ideology_socialist_leader
 			}
 		}
 		NOT = {
-			has_ideology = ideology_ig_united_socialist
+			AND = {
+				has_ideology = ideology_ig_united_socialist
+				NOT = { has_ideology = ideology_ig_social_democrat }
+			}
 		}
 	}
 	join_weight = {
@@ -280,14 +273,73 @@ liberal_party = {
 			value = -5
 			desc = "base_value"
 		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_presidential_republic
+				}
+			}
+			add = {
+				value = 2
+				desc = "bpm_two_party_system" 
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						AND = {
+							has_law = law_type:law_presidential_republic
+							exists = c:USA
+							this = c:USA
+						}
+						AND = {
+							has_law = law_type:law_monarchy
+							exists = c:GBR
+							this = c:GBR
+						}
+					}
+				}
+			}
+			add = {
+				value = 5
+				desc = "bpm_two_party_system_historical"
+			}
+		}
+		if = {
+			limit = {
+				leader = { has_ideology = ideology_moderate }
+			}
+			add = {
+				leader = {
+					value = popularity
+					if = {
+						limit = { popularity < 0 }
+						multiply = -1
+					}
+					add = 1
+					modulo = 2
+					multiply = 3
+
+				}
+				desc = "bpm_from_moderatism"
+			}
+		}
 		if = { # liberals love liberalism
 			limit = {
 				is_interest_group_type = ig_liberals
 			}
 			add = {
-				value = 20
-				desc = "from_liberalism"
+				value = 15
+				desc = "bpm_from_liberal_ig"
 			}
+		}
+		if = { # liberals love liberalism
+			limit = { has_ideology = ideology_liberal }
+				add = {
+					value = 5
+					desc = "bpm_from_liberal_ideologies"
+				}
 		}
 		if = { # liberals love liberalism
 			limit = {
@@ -306,15 +358,10 @@ liberal_party = {
 			}
 		}
 		if = { # liberals love liberalism
-			limit = {
-				OR = {
-					has_ideology = ideology_liberal
-					has_ideology = ideology_laissez_faire
-				}
-			}
+			limit = { has_ideology = ideology_laissez_faire }
 			add = {
-				value = 5
-				desc = "from_liberalism"
+				value = 3
+				desc = "bpm_from_laissez_faire"
 			}
 		}
 		if = { # various progressives are inclined towards liberalism
@@ -330,15 +377,13 @@ liberal_party = {
 				}
 			}
 			add = {
-				value = 5
+				value = 6
 				desc = "from_progressivism"
 			}
 		}
 		if = { # radicals will cooperate with weaker liberals
 			limit = {
-				OR = {
-					is_interest_group_type = ig_radicals
-				}
+				is_interest_group_type = ig_radicals
 				is_powerful = no
 				owner = {
 					any_interest_group = {
@@ -348,7 +393,7 @@ liberal_party = {
 				}
 			}
 			add = {	
-				value = 10
+				value = 15
 				desc = "from_liberalism"
 			}
 		}
@@ -569,6 +614,34 @@ liberal_party = {
 			add = {
 				value = 5
 				desc = "from_slavery"
+			}
+		}
+		if = { # committed anti-slavery
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_legacy_slavery
+						has_law = law_type:law_slave_trade
+					}
+					ig:ig_liberals = {
+						leader = {
+							OR = {
+								has_ideology = ideology_abolitionist
+								has_ideology = ideology_radical
+							}
+						}
+					}
+				}
+				OR = {
+					has_ideology = ideology_anti_slavery
+					leader = {
+						has_ideology = ideology_abolitionist
+					}
+				}
+			}
+			add = {
+				value = 5
+				desc = "bpm_from_committed_antislavery"
 			}
 		}
 		if = { # anti-serfdom

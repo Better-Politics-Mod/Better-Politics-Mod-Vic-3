@@ -1,0 +1,461 @@
+﻿types information_panels_types
+{
+	### PARTIES AND IG LIST DETAILS
+	type parties_and_ig_list_details = vbox {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = preferred
+		name = "tutorial_highlight_interest_group"
+		margin_top = 5
+		spacing = 15
+
+		### PARTIES
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+			block "datamodel" {}
+			spacing = 0
+			
+			item = {
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = preferred
+					
+					background = {
+						using = simple_frame
+					}
+					
+					block "move_to_government_button_party" {
+						button_icon_move_left = {
+							enabled = "[Party.CanJoinGoverment]"
+							visible = "[GetVariableSystem.Exists('reform_government')]"
+							layoutpolicy_vertical = expanding
+							size = { 35 0 }
+							onclick = "[ReformGovernment.StageParty(Party.AccessSelf)]"
+							tooltip = "[Party.GetCanJoinGovermentDesc]"
+							
+							blockoverride "icon_size" {
+								size = { 35 90 }
+							}
+						}
+					}
+					
+					vbox = {
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = preferred
+					
+						# party header
+						hbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = preferred
+							spacing = 0
+							margin = { 10 0 }
+							
+							background = {
+								texture = "gfx/interface/tooltip/tooltip_title_bg.dds"
+								color = "[Party.GetColor]"
+								alpha = 0.5
+								mirror = horizontal
+								
+								modify_texture = {
+									using = texture_velvet
+								}
+							}
+							
+							textbox = {
+								layoutpolicy_horizontal = expanding
+								size = { 0 40 }
+								text = "#v [Party.GetName]#!"
+								align = right|nobaseline
+								block "highlight_name" {}
+								elide = right
+								using = fontsize_large
+							}
+							icon = {
+								texture = "[Party.GetIcon]"
+								size = { 35 35 }
+							}
+						}
+						
+						# igs inside the party
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = preferred
+							datamodel = "[Party.GetMembers]"
+							
+							item = {
+								ig_item_details = {
+									blockoverride "move_to_government_button" {}
+									blockoverride "move_to_opposition_button" {}
+								}
+							}
+						}
+					}
+				
+					block "move_to_opposition_button_party" {
+						button_icon_move_right = {
+							visible = "[GetVariableSystem.Exists('reform_government')]"
+							layoutpolicy_vertical = expanding
+							size = { 35 0 }
+							onclick = "[ReformGovernment.UnstageParty(Party.AccessSelf)]"
+							
+							blockoverride "icon_size" {
+								size = { 35 90 }
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		### IGs without parties
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+			block "datamodel_independent_igs" {}
+			
+			item = {
+				ig_item_details = {}
+			}
+		}
+		
+		block "marginal_igs" {
+			### MARGINAL IGs
+			section_header_button = {
+				name = "tutorial_highlight_marginalized_title"
+				visible = "[Not(IsDataModelEmpty(AccessPlayer.AccessMarginalInterestGroups))]"
+				
+				blockoverride "layout" {
+					size = { 0 38 }
+					layoutpolicy_horizontal = expanding
+				}
+				blockoverride "left_text" {
+					text = "MARGINAL_TITLE_ACCORDION"
+				}
+
+				blockoverride "onclick" {
+					onclick = "[GetVariableSystem.Toggle('marginalized_igs_expanded')]"
+				}
+				
+				blockoverride "onclick_showmore" {
+					visible = "[Not(GetVariableSystem.Exists('marginalized_igs_expanded'))]"
+				}
+
+				blockoverride "onclick_showless" {
+					visible = "[GetVariableSystem.Exists('marginalized_igs_expanded')]"
+				}
+			}
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = preferred
+				visible = "[GetVariableSystem.Exists('marginalized_igs_expanded')]"
+				datamodel = "[AccessPlayer.AccessMarginalInterestGroups]"
+				
+				item = {
+					ig_item_details = {}
+				}
+			}
+		}
+		
+		widget = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+		}
+	}
+
+	### IG ITEM DETAILS
+	type ig_item_details = vbox {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = preferred
+		visible = "[GreaterThanOrEqualTo_CFixedPoint(InterestGroup.GetClout,'(CFixedPoint)0.001')]"
+		background = {
+			texture = "gfx/interface/tooltip/tooltip_title_bg.dds"
+			color = "[InterestGroup.GetColor]"
+			alpha = 0.6
+
+			modify_texture = {
+				using = texture_velvet
+			}
+		}
+		
+		divider_clean = {
+			size = { 0 2 }
+			layoutpolicy_horizontal = expanding
+		}
+		
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+			
+			block "move_to_government_button" {
+				button_icon_move_left = {
+					visible = "[GetVariableSystem.Exists('reform_government')]"
+					layoutpolicy_vertical = expanding
+					size = { 35 0 }
+					onclick = "[ReformGovernment.StageInterestGroup(InterestGroup.AccessSelf)]"
+					enabled = "[Not(InterestGroup.IsRevolutionary)]"
+					tooltip = "[AddLocalizationIf(InterestGroup.IsRevolutionary, 'REFORM_GOVERNMENT_MOVE_TO_GOVERNMENT_BUTTON_TOOLTIP')]"
+					
+					blockoverride "icon_size" {
+						size = { 35 80 }
+					}
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = preferred
+				spacing = 2
+				margin_bottom = 2
+
+				widget = { size = { 15 15 }}
+
+				### IG BUTTON
+				ig_button = {
+					block "ig_button_size" {
+						size = { 60 60 }
+					}
+					using = tooltip_ws
+					blockoverride "in_government_icon" {}
+				}
+
+				### CENTER INFO
+				vbox = {
+					layoutpolicy_horizontal = preferred
+					layoutpolicy_vertical = preferred
+					margin = { 0 0 }
+
+					### HEADER ( icons / name / clout )
+					hbox = {
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = preferred
+						spacing = 5
+						margin = { 0 2 }
+
+						background = {
+							using = dark_area
+
+							modify_texture = {
+								texture = "gfx/interface/masks/fade_horizontal_center.dds"
+								spriteType = Corneredstretched
+								spriteborder = { 0 0 }
+								blend_mode = alphamultiply
+							}
+						}
+						
+						### LEADING IG
+						icon = {
+							texture = "gfx/interface/icons/generic_icons/leading_interest_group_icon.dds"
+							size = { 32 32 }
+							visible = "[InterestGroup.IsLeadingGovernment]"
+							tooltip = "LEADING_IG"
+						}
+						### REVOLUTION
+						icon = {
+							visible = "[InterestGroup.IsInsurrectionary]"
+							size = { 32 32 }
+							texture = "gfx/interface/icons/politics_icons/radicalized.dds"
+							tooltip = "RADICAL_IG_TOOLTIP"
+						}
+
+						icon = {
+							visible = "[InterestGroup.IsRevolutionary]"
+							size = { 32 32 }
+							texture = "gfx/interface/icons/politics_icons/revolution.dds"
+							tooltip = "REVOLUTION_IG_TOOLTIP"
+						}
+						### SUPPRESSED / BOLSTERED
+						icon = {
+							tooltip = "TOOLTIP_SUPPRESSED"
+							size = { 32 32 }
+							visible = "[InterestGroup.IsSuppressed]"
+							texture = "gfx/interface/icons/generic_icons/ig_suppress.dds"
+						}
+						icon = {
+							tooltip = "TOOLTIP_PROMOTED"
+							size = { 32 32 }
+							visible = "[InterestGroup.IsBolstered]"
+							texture = "gfx/interface/icons/generic_icons/ig_bolster.dds"
+						}
+
+						### NAME
+						textbox = {
+							#layoutpolicy_horizontal = expanding
+							size = { 0 30 }
+							text = "#v  [InterestGroup.GetNameNoFormatting]#! "
+							align = left|nobaseline
+							autoresize = yes
+							using = fontsize_large
+							block "highlight_name" {}
+							elide = right
+						}
+
+						button_icon_goto = {
+							size = { 25 25 }
+ 							onclick = "[InformationPanelBar.OpenInterestGroupPanel(InterestGroup.AccessSelf)]"
+							tooltip = "GO_TO_BUTTON_INTEREST_GROUP"
+							block "goto_visibility" {}
+ 						}
+
+ 						expand = {}
+						
+						### CLOUT
+						vbox = {
+							layoutpolicy_vertical = preferred
+							spacing = 0
+							using = clout_tooltip_with_graph
+							
+							textbox = {
+								layoutpolicy_horizontal = preferred
+								size = { 0 20 }
+								align = right|nobaseline
+								margin_right = 2
+								text = "[InterestGroup.GetClout|%1]"
+								default_format = "#variable"
+								using = fontsize_large
+							}
+							
+							bar_horizontal = {
+								size = { 150 10 }
+
+								blockoverride "values" {
+									min = 0
+									max = "[GetPlayer.GetMaxCloutOrPopulationPercentage]"
+									value = "[FixedPointToFloat(InterestGroup.GetClout)]"
+									invertprogress = yes
+								}
+								blockoverride "marker_widgetanchor" {
+									widgetanchor = left
+									mirror = horizontal
+								}
+								blockoverride "color" {
+									color = "[InterestGroup.GetColor]"
+								}
+							}
+						}
+
+						icon = {
+							visible = "[InterestGroup.GetPartyAffiliationHighest.IsValid]"
+							texture = "[InterestGroup.GetPartyAffiliationHighest.GetIcon]"
+							size = { 30 30 }
+							tooltip = "[InterestGroup.GetPartyAffiliationTooltip]"
+						}
+
+						icon = {
+							visible = "[Not(InterestGroup.GetPartyAffiliationHighest.IsValid)]"
+							texture = "gfx/interface/icons/generic_icons/undecided_icon.dds"
+							size = { 30 30 }
+							tooltip = "[InterestGroup.GetPartyAffiliationTooltip]"
+						}
+					}
+
+					### BOTTOM PART
+					hbox = {
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = preferred
+						margin_top = 0
+
+						fixedgridbox = {
+							name = "traits_box"
+							flipdirection = yes
+							datamodel = "[InterestGroup.AccessTraits]"
+							addcolumn = 28
+							addrow = 30
+
+							item = {
+								widget = {
+									size = { 27 32 }
+									icon = {
+										parentanchor = center
+										texture = "[InterestGroupTrait.GetTexture]"
+										enabled = "[InterestGroupTrait.IsEnabled(InterestGroup.Self)]"
+										tooltipwidget = {
+											FancyTooltip_InterestGroupTrait = {}
+										}
+										using = tooltip_above
+										size = { 27 36 }
+										alpha = "[TransparentIfFalse(InterestGroupTrait.IsEnabled(InterestGroup.Self))]"
+									}
+								}
+							}
+						}
+						textbox = {
+							layoutpolicy_horizontal = expanding
+							align = left|nobaseline
+							margin_left = 10
+							size = { 0 25 }
+							elide = right
+							text = "[InterestGroup.GetApprovalRating] #bold ([InterestGroup.GetApprovalValue|=+])#!"
+							tooltip = "IG_APPROVAL_BREAKDOWN"
+						}
+
+						### IDEOLOGIES
+						dynamicgridbox = {
+							flipdirection = yes
+							name = "ideologies_box"
+							datamodel = "[InterestGroup.AccessIntrinsicIdeologies]"
+							item = {
+								widget = {
+									size = { 37 30 }
+
+									icon = {
+										texture = "[Ideology.GetTexture]"
+										tooltipwidget = {
+											FancyTooltip_Ideology = {}
+										}
+										size = { 32 32 }
+										using = tooltip_above
+									}
+								}
+							}
+						}
+					}
+					# textbox = {
+                    #    layoutpolicy_horizontal = expanding
+                    #    size = { 0 30 }
+                    #    text = "#v [InterestGroup.GetWillJoinPartyDesc]#!"
+                    #    tooltip = "[InterestGroup.GetWillJoinPartyTooltip]"
+                    # }
+				}
+
+				### LEADER
+				widget = {
+					size = { 75 75 }
+
+					character_portrait_medium = {
+						datacontext = "[InterestGroup.AccessLeader]"
+						using = tooltip_above
+						blockoverride "show_hat" {}
+						parentanchor = vcenter
+						blockoverride "highlight" {}
+					}
+
+					icon = {
+						datacontext = "[InterestGroup.AccessLeader.GetIdeology]"
+						texture = "[Ideology.GetTexture]"
+						tooltipwidget = {
+							FancyTooltip_Ideology = {}
+						}
+						size = { 35 35 }
+						parentanchor = bottom|right
+					}
+				}
+				
+				widget = { size = { 15 15 }}
+			}
+			
+			block "move_to_opposition_button" {
+				button_icon_move_right = {
+					visible = "[GetVariableSystem.Exists('reform_government')]"
+					layoutpolicy_vertical = expanding
+					size = { 35 0 }
+					onclick = "[ReformGovernment.UnstageInterestGroup(InterestGroup.AccessSelf)]"
+					
+					blockoverride "icon_size" {
+						size = { 35 90 }
+					}
+				}
+			}
+		}
+	}
+}

@@ -5,7 +5,7 @@
 
  Thanks to AcrillicTuna's [Interest Group Descriptions](https://steamcommunity.com/sharedfiles/filedetails/?id=2898602048) mod for better tooltips :)
 
- ![France in 1860](./fra_1860.png)
+ ![USA in 1851](./usa_1851.png)
  
 ## Installation
  For Windows: Place the `better-politics-mod` folder into your Victoria 3 mod folder. This is probably something like: `C:\Users\<username>\Documents\Paradox Interactive\Victoria 3\mod` if the game was installed with default settings.

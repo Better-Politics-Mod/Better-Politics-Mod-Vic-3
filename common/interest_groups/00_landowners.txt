@@ -1,43 +1,46 @@
 ﻿ig_landowners = {
 	color = hsv{ 0 0 0.5 }
 	texture = "gfx/interface/icons/ig_icons/landowners.dds"
-	
+	layer = "revolution_dynamic_landowners"
+	index = 4
+
 	ideologies = {
 		ideology_paternalistic
 		ideology_stratocratic
 		ideology_patriarchal
 		ideology_isolationist
 	}
-	
+
 	enable = {
 		always = yes
 	}
-	
+
 	traits = {
 		ig_trait_rural_systematic_corruption
 		ig_trait_rural_well_oiled_machine
 		ig_trait_rural_systematic_opposition
 	}
-	
+
 	on_enable = {}
 	on_disable = {}
 	on_character_ig_membership = {}
-	
+
 	pop_potential = {
 		OR = {
 			is_pop_type = aristocrats
 			is_pop_type = clergymen
 			is_pop_type = officers
 			is_pop_type = farmers
-		}		
+		}
 	}
-	
+
 	pop_weight = {
 		value = 0
-	
+
 		add = {
 			desc = "RURAL_UPPER_CLASS"
 			if = {
+<<<<<<< HEAD
 				limit = { 
 					OR = {
 						pop_employment_building_group = bg_agriculture
@@ -45,6 +48,10 @@
 						pop_employment_building_group = bg_plantations
 					}
 					strata = rich
+=======
+				limit = {
+					is_pop_type = aristocrats
+>>>>>>> 130127c (V1.3)
 				}
 				value = 250
 			}
@@ -53,7 +60,7 @@
 		add = {
 			desc = "POP_CLERGYMEN"
 			if = {
-				limit = { 
+				limit = {
 					is_pop_type = clergymen
 				}
 				value = 50
@@ -63,20 +70,25 @@
 		add = {
 			desc = "POP_OFFICERS"
 			if = {
-				limit = { 
+				limit = {
 					is_pop_type = officers
 				}
 				value = 50
 			}
-		}	
+		}
 
 		add = {
 			desc = "POP_FARMERS"
 			if = {
-				limit = { 
+				limit = {
 					is_pop_type = farmers
 				}
 				value = 50
+				
+				if = {
+					limit = { owner = { has_law = law_type:law_homesteading } }
+					add = 50
+				}
 			}
 		}
 
@@ -93,47 +105,127 @@
 			}
 		}	
 	}
-	
+
 	monarch_weight = {
-		value = 2.0
+		value = 1.5 # inherently likely
+		# Monarch is not likely to adopt a marginal IG
+		if = {
+			limit = {
+				is_marginal = yes
+			}
+			multiply = {
+				value = 0.1
+			}
+		}
+		# Monarch is more likely to adopt a Powerful IG
+		if = {
+			limit = {
+				is_powerful = yes
+			}
+			multiply = {
+				value = 2
+			}
+		}
+		# More likely with Serfdom or Slavery
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_serfdom
+						has_law = law_type:law_slave_trade
+						has_law = law_type:law_legacy_slavery
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
+		# More likely with Autocracy, Oligarchy, or Landed Voting
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_oligarchy
+						has_law = law_type:law_autocracy
+						has_law = law_type:law_landed_voting
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
 	}
-	
+
+	agitator_weight = {
+		# Agitators more likely to come from populist IG's rather than elitist
+		value = 0.25
+		# Agitators will never be part of a marginalized IG
+		if = {
+			limit = {
+				owner.ig:ig_landowners = {
+					is_marginal = yes
+				}
+			}
+			multiply = {
+				value = 0
+			}
+		}
+	}
+
 	commander_weight = {
 		value = 2.0
-	}	
-	
+	}
+
 	noble_chance = {
 		value = 1.0
 	}
-	
-	female_commander_chance = {	
+
+	female_commander_chance = {
 		value = 0.0
 	}
-	
+
 	female_politician_chance = {
 		value = 0.0
 
 		if = {
 			limit = {
 				owner = {
-					has_law = law_type:law_women_own_property
+					has_law = law_type:law_womens_suffrage
 				}
-				
+
 			}
 			add = {
-				value = 0.05
+				value = 0.01
 			}
 		}
+	}
 
+	female_agitator_chance = {
+		value = 0.01
+		
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_women_own_property
+				}
+
+			}
+			add = {
+				value = 0.01
+			}
+		}	
+		
 		if = {
 			limit = {
 				owner = {
 					has_law = law_type:law_women_in_the_workplace
 				}
-				
+
 			}
 			add = {
-				value = 0.05
+				value = 0.01
 			}
 		}
 
@@ -142,14 +234,14 @@
 				owner = {
 					has_law = law_type:law_womens_suffrage
 				}
-				
+
 			}
 			add = {
-				value = 0.05
+				value = 0.01
 			}
-		}
+		}		
 	}
-	
+
 	# The chance that a commander belonging to this IG takes over leadership when it changes
 	# scope:character is the most popular commander in the IG
 	commander_leader_chance = {

@@ -253,18 +253,17 @@ liberal_party = {
 		}
 		leader = { # far right and far left won't join liberal parties
 			NOR = {
-				has_ideology = ideology:ideology_fascist
-				has_ideology = ideology:ideology_ethno_nationalist
-				has_ideology = ideology:ideology_communist
-				has_ideology = ideology:ideology_vanguardist
-				has_ideology = ideology:ideology_anarchist
-				has_ideology = ideology:ideology_socialist_leader
+				bpm_leader_is_reactionary = yes
+				bpm_leader_is_fascist = yes
+				bpm_leader_is_radical_socialist = yes
 			}
 		}
-		NOT = {
+		NOR = {
+			bpm_ig_is_traditionalist = yes
+			bpm_ig_is_fascist = yes
 			AND = {
-				has_ideology = ideology:ideology_ig_united_socialist
-				NOT = { has_ideology = ideology:ideology_ig_social_democrat }
+				bpm_ig_is_socialist = yes
+				bpm_ig_is_moderate_socialist = no
 			}
 		}
 	}
@@ -275,31 +274,16 @@ liberal_party = {
 		}
 		if = {
 			limit = {
-				owner = {
-					has_law = law_type:law_presidential_republic
-				}
+				owner = { bpm_country_has_two_party_system = yes }
 			}
 			add = {
 				value = 2
-				desc = "bpm_two_party_system" 
+				desc = "bpm_two_party_system"
 			}
 		}
 		if = {
 			limit = {
-				owner = {
-					OR = {
-						AND = {
-							has_law = law_type:law_presidential_republic
-							exists = c:USA
-							this = c:USA
-						}
-						AND = {
-							has_law = law_type:law_monarchy
-							exists = c:GBR
-							this = c:GBR
-						}
-					}
-				}
+				owner = { bpm_country_has_historical_two_party_system = yes }
 			}
 			add = {
 				value = 5
@@ -327,29 +311,26 @@ liberal_party = {
 		}
 		if = { # liberals love liberalism
 			limit = {
-				is_interest_group_type = ig_liberals
+				bpm_ig_is_liberal = yes
+				bpm_ig_is_radical_liberal = no
 			}
 			add = {
-				value = 15
+				value = 10
 				desc = "bpm_from_liberal_ig"
 			}
 		}
-		if = { # liberals love liberalism
-			limit = { has_ideology = ideology:ideology_liberal }
+		if = { # radicals like liberalism
+			limit = { bpm_ig_is_radical_liberal = yes }
 				add = {
 					value = 5
-					desc = "bpm_from_liberal_ideologies"
+					desc = "bpm_from_radical_ig"
 				}
 		}
 		if = { # liberals love liberalism
 			limit = {
 				leader = {
-					OR = {
-						has_ideology = ideology:ideology_republican_leader
-						has_ideology = ideology:ideology_radical
-						has_ideology = ideology:ideology_reformer
-						has_ideology = ideology:ideology_market_liberal
-					}
+					bpm_leader_is_liberal = yes
+					bpm_leader_is_radical_liberal = no
 				}
 			}
 			add = {
@@ -357,8 +338,28 @@ liberal_party = {
 				desc = "from_liberal_leader"
 			}
 		}
-		if = { # liberals love liberalism
-			limit = { has_ideology = ideology:ideology_laissez_faire }
+		if = { # radical liberal leaders like liberalism
+			limit = {
+				leader = { bpm_leader_is_radical_liberal = yes }
+			}
+			add = {
+				value = 2
+				desc = "bpm_from_radical_leader"
+			}
+		}
+		if = { # liberals like laissez faire
+			OR = {
+				law_stance = {
+					law = law_type:law_laissez_faire
+					value > neutral
+				}
+				leader = {
+					law_stance = {
+						law = law_type:law_laissez_faire
+						value > neutral
+					}
+				}
+			}
 			add = {
 				value = 3
 				desc = "bpm_from_laissez_faire"
@@ -366,20 +367,32 @@ liberal_party = {
 		}
 		if = { # various progressives are inclined towards liberalism
 			limit = {
-				leader = {
-					OR = {
-						has_ideology = ideology:ideology_feminist
-						has_ideology = ideology:ideology_abolitionist
-						has_ideology = ideology:ideology_pacifist
-						has_ideology = ideology:ideology_social_democrat
-						has_ideology = ideology:ideology_atheist
-						has_ideology = ideology:ideology_humanitarian
-					}
+				leader = { 
+					bpm_leader_is_progressive_liberal = yes
+					bpm_leader_is_radical_liberal = no
 				}
 			}
 			add = {
 				value = 6
 				desc = "from_progressivism"
+			}
+		}
+		if = { # urban IGs prefer liberals
+			limit = {
+				bpm_ig_is_urban_institutional = yes
+			}
+			add = {
+				value = 1
+				desc = "bpm_from_urban"
+			}
+		}
+		if = { # proletarians lean towards liberals
+			limit = {
+				bpm_ig_is_proletarian = yes
+			}
+			add = {
+				value = 2
+				desc = "bpm_from_proletarian"
 			}
 		}
 		if = { # radicals will cooperate with weaker liberals
@@ -401,12 +414,7 @@ liberal_party = {
 		if = { # various conservatives dislike liberalism
 			limit = {
 				leader = {
-					OR = {
-						has_ideology = ideology:ideology_traditionalist
-						has_ideology = ideology:ideology_royalist
-						has_ideology = ideology:ideology_theocrat
-						has_ideology = ideology:ideology_slaver
-					}
+					bpm_leader_is_right_wing = yes
 				}
 			}
 			add = {
@@ -416,9 +424,9 @@ liberal_party = {
 		}
 		if = { # against hereditary bureacrats
 			limit = {
-				OR = {
-					has_ideology = ideology:ideology_meritocratic
-					has_ideology = ideology:ideology_anti_clerical
+				law_stance = {
+					law = law_type:law_hereditary_bureaucrats
+					value < neutral
 				}
 				owner = {
 					has_law = law_type:law_hereditary_bureaucrats
@@ -437,9 +445,7 @@ liberal_party = {
 					any_interest_group = {
 						is_member_of_party = owner.py:liberal_party
 						is_powerful = yes
-						leader = {
-							has_ideology = ideology:ideology_jingoist_leader
-						}
+						leader = { has_ideology = ideology:ideology_jingoist_leader }
 					}
 				}
 			}
@@ -450,9 +456,13 @@ liberal_party = {
 		}
 		if = { # against illiteracy and religious education
 			limit = {
-				OR = {
-					has_ideology = ideology:ideology_individualist
-					has_ideology = ideology:ideology_proletarian
+				law_stance = {
+					law = law_type:law_religious_schools
+					value < neutral
+				}
+				law_stance = {
+					law = law_type:law_no_schools
+					value < neutral
 				}
 				owner = {
 					OR = {
@@ -470,13 +480,21 @@ liberal_party = {
 			limit = {
 				OR = {
 					leader = {
-						has_ideology = ideology:ideology_feminist
+						law_stance = {
+							law = law_type:law_women_in_the_workplace
+							value > neutral
+						}
 					}
-					has_ideology = ideology:ideology_liberal
-					has_ideology = ideology:ideology_egalitarian
+					law_stance = {
+						law = law_type:law_women_in_the_workplace
+						value > neutral
+					}
 				}
 				owner = {
-					has_law = law_type:law_no_womens_rights
+					OR = { 
+						has_law = law_type:law_no_womens_rights
+						has_law = law_type:law_women_own_property
+					}
 				}
 			}
 			add = {
@@ -484,13 +502,12 @@ liberal_party = {
 				desc = from_no_womens_rights
 			}
 		}
-		if = { # anti-racism
+		if = { # anti-discriminiation
 			limit = {
 				OR = {
-					leader = {
-						has_ideology = ideology:ideology_reformer
-					}
-					has_ideology = ideology:ideology_liberal
+					leader = { bpm_leader_is_progressive_liberal = yes }
+					has_ideology = ideology:ideology_cit_liberal_nationalist
+					has_ideology = ideology:ideology_cit_immigrant_nationalist
 				}
 				owner = {
 					OR = {
@@ -502,46 +519,26 @@ liberal_party = {
 			}
 			add = {
 				value = 3
-				desc = from_racism
+				desc = "bpm_from_anti_discrimination"
 			}
 		}
 		if = { # anti-censorship
 			limit = {
-				OR = {
-					has_ideology = ideology:ideology_liberal
-					has_ideology = ideology:ideology_egalitarian
+				law_stance = {
+					law = law_type:law_outlawed_dissent
+					value < neutral
 				}
-				owner = {
-					has_law = law_type:law_outlawed_dissent
-				}
+				owner = { has_law = law_type:law_outlawed_dissent }
 			}
 			add = {
 				value = 3
 				desc = from_outlawed_dissent
 			}
 		}
-		if = { # against arbitrary or militarized policing
-			limit = {
-				OR = {
-					has_ideology = ideology:ideology_liberal
-					has_ideology = ideology:ideology_particularist
-				}
-				owner = {
-					OR = {	
-						has_law = law_type:law_local_police
-						has_law = law_type:law_militarized_police
-					}
-				}
-			}
-			add = {
-				value = 3
-				desc = from_bad_police
-			}
-		}
 		if = { # anticlerical
 			limit = {
 				OR = {
-					has_ideology = ideology:ideology_anti_clerical
+					has_ideology = ideology:ideology_rel_secularist
 					leader = { has_ideology = ideology:ideology_atheist }
 					leader = { has_ideology = ideology:ideology_positivist }
 				}
@@ -554,15 +551,8 @@ liberal_party = {
 		if = { # republican
 			limit = {
 				OR = {
-					has_ideology = ideology:ideology_republican
-					has_ideology = ideology:ideology_populist
-					leader = {
-						OR = {
-							has_ideology = ideology:ideology_atheist
-							has_ideology = ideology:ideology_republican_leader
-							has_ideology = ideology:ideology_radical
-						}
-					}
+					bpm_ig_is_republican = yes
+					leader = { bpm_leader_is_republican_liberal = yes }
 				}
 				owner = {
 					OR = {
@@ -582,10 +572,8 @@ liberal_party = {
 					has_law = law_type:law_debt_slavery
 				}
 				OR = {
-					has_ideology = ideology:ideology_particularist
-					leader = {
-						has_ideology = ideology:ideology_abolitionist
-					}
+					has_ideology = ideology:ideology_sta_decentralized_state
+					leader = { has_ideology = ideology:ideology_abolitionist }
 				}
 			}
 			add = {
@@ -602,7 +590,8 @@ liberal_party = {
 					}
 				}
 				OR = {
-					has_ideology = ideology:ideology_anti_slavery
+					bpm_ig_is_socialist = yes
+					bpm_ig_is_radical_liberal = yes
 					leader = {
 						has_ideology = ideology:ideology_abolitionist
 					}
@@ -630,7 +619,7 @@ liberal_party = {
 					}
 				}
 				OR = {
-					has_ideology = ideology:ideology_anti_slavery
+					bpm_ig_is_abolitionist = yes			
 					leader = {
 						has_ideology = ideology:ideology_abolitionist
 					}
@@ -647,20 +636,27 @@ liberal_party = {
 					has_law = law_type:law_serfdom
 				}
 				OR = {
-					has_ideology = ideology:ideology_egalitarian
-					has_ideology = ideology:ideology_anti_slavery
-					has_ideology = ideology:ideology_laissez_faire
-					has_ideology = ideology:ideology_particularist
+					bpm_ig_is_abolitionist = yes	
 					leader = {
-						has_ideology = ideology:ideology_abolitionist
-						has_ideology = ideology:ideology_social_democrat
-						has_ideology = ideology:ideology_communist
+						bpm_leader_is_progressive_liberal = yes
 					}
 				}
 			}
 			add = {
 				value = 5
 				desc = "from_serfdom"
+			}
+		}
+		if = { # anarchist
+			limit = {
+				OR = {
+					bpm_ig_is_anarchist = yes
+					leader = { bpm_leader_is_anarchist = yes }
+				}
+			}
+			add = {
+				value = -30
+				desc = "bpm_anarchist_anti_party"
 			}
 		}
 	}

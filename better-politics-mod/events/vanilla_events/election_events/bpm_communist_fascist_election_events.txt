@@ -1,0 +1,600 @@
+﻿namespace = communist_elections
+namespace = cable_street
+
+# International Socialism
+communist_elections.3 = {
+	type = country_event
+	placement = ROOT
+
+	title = communist_elections.3.t
+	desc = communist_elections.3.d
+	flavor = communist_elections.3.f
+	
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+	
+	duration = 3
+	
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = international_socialism_var }
+		any_country = {
+			NOT = { has_war_with = ROOT }
+			country_rank >= rank_value:major_power
+			any_interest_group = {
+				is_marginal = no
+				bpm_ig_is_radical_socialist = yes
+			}
+		}
+		any_active_party = {
+			OR = {
+				is_party_type = communist_party
+				is_party_type = social_democrat_party
+				is_party_type = anarchist_party
+			}
+		}
+	}
+
+	immediate = {
+		set_variable = {
+			name = international_socialism_var
+			months = short_modifier_time
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				party = {
+					OR = {
+						is_party_type = communist_party
+						is_party_type = social_democrat_party
+						is_party_type = anarchist_party
+					}
+				}
+			}
+			party = {
+				save_scope_as = socialist_party
+			}
+		}
+		random_country = {
+			limit = {
+				NOT = { has_war_with = ROOT }
+				country_rank >= rank_value:major_power
+				any_interest_group = {
+					is_marginal = no
+					bpm_ig_is_radical_socialist = yes
+				}
+			}
+			save_scope_as = socialist_country
+			random_interest_group = {
+				limit = {
+					is_marginal = no
+					bpm_ig_is_radical_socialist = yes
+				}
+				save_scope_as = foreign_socialist_ig
+				leader = {
+					save_scope_as = foreign_socialist_leader
+				}
+			}
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+
+	option = { # welcome international support
+		name = communist_elections.3.a
+		default_option = yes
+		scope:socialist_party = {
+			add_momentum = momentum_large
+		}
+		# improve relations with socialist country if the socialists are in power
+		if = {
+			limit = {
+				scope:foreign_socialist_ig = {
+					is_in_government = yes
+				}
+			}
+			scope:socialist_country = {
+				change_relations = {
+					country = ROOT
+					value = 20
+				}
+			}
+		}
+		# owe a favor to the socialist country if you both have socialist governments
+		if = {
+			limit = {
+				NOT = { owes_obligation_to = scope:socialist_country }
+				scope:foreign_socialist_ig = {
+					is_in_government = yes
+				}
+				scope:socialist_party = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+			}
+			set_owes_obligation_to = {
+				country = scope:socialist_country
+				setting = yes
+			}
+		}
+		# These variables increase the chances of generating new leaders with each ideology
+		if = {
+			limit = {
+				scope:foreign_socialist_leader = {
+					has_ideology = ideology:ideology_vanguardist
+				}
+			}
+			set_variable = {
+				name = election_vanguardist_support
+				months = long_modifier_time
+			}
+			custom_tooltip = election_socialist_support_tt
+		}
+		else_if = {
+			limit = {
+				scope:foreign_socialist_leader = {
+					has_ideology = ideology:ideology_anarchist
+				}
+			}
+			set_variable = {
+				name = election_anarchist_support
+				months = long_modifier_time
+			}
+			custom_tooltip = election_socialist_support_tt
+		}
+		else_if = {
+			limit = {
+				scope:foreign_socialist_leader = {
+					has_ideology = ideology:ideology_communist
+				}
+			}
+			set_variable = {
+				name = election_communist_support
+				months = long_modifier_time
+			}
+			custom_tooltip = election_socialist_support_tt
+		}
+	}
+
+	option = { # Limit foreign influence
+		name = communist_elections.3.b
+		scope:socialist_party = {
+			add_momentum = momentum_small
+		}
+	}
+
+	option = { # expel foreign infiltrators
+		name = communist_elections.3.c
+		trigger = {
+			scope:socialist_party = {
+				NOT = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+			}
+			OR = {
+				has_law = law_type:law_closed_borders
+				has_law = law_type:law_outlawed_dissent
+				has_law = law_type:law_secret_police
+			}
+		}
+		scope:socialist_party = {
+			add_momentum = momentum_large_decrease
+		}
+		# harm relations with socialist country if they have a socialist government
+		if = {
+			limit = {
+				scope:foreign_socialist_ig = {
+					is_in_government = yes
+				}
+			}
+			scope:socialist_country = {
+				change_relations = {
+					country = ROOT
+					value = -20
+				}
+			}
+		}
+	}
+}
+
+# Fascist paramilitaries intimidate voters
+communist_elections.4 = {
+	type = country_event
+	placement = ROOT
+
+	title = communist_elections.4.t
+	desc = communist_elections.4.desc
+	flavor = communist_elections.4.f
+	
+	event_image = {
+		video = "unspecific_vandalized_storefront"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+	
+	duration = 3
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = blackshirts_var }
+		any_interest_group = {
+			has_party = yes
+			leader = {
+				bpm_leader_is_fascist = yes
+			}
+			party = {
+				is_party_type = fascist_party
+			}
+		}
+	}
+
+	immediate = {
+		set_variable = {
+			name = blackshirts_var
+			months = short_modifier_time
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				leader = {
+					bpm_leader_is_fascist = yes
+				}
+				party = {
+					is_party_type = fascist_party
+				}
+			}
+			save_scope_as = fascist_ig
+			leader = {
+				save_scope_as = fascist_leader
+			}
+			party = {
+				save_scope_as = fascist_party_scope
+			}
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+
+	option = { # allow paramilitaries
+		name = communist_elections.4.a
+		default_option = yes
+		scope:fascist_party_scope = {
+			add_momentum = momentum_large
+		}
+		every_active_party = {
+			limit = {
+				NOT = { is_party_type = fascist_party }
+			}
+			add_momentum = momentum_small_decrease
+		}
+	}
+
+	option = { # Support paramilitaries with the army and police
+		name = communist_elections.4.b
+		default_option = yes
+		highlighted_option = yes
+		trigger = {
+			custom_tooltip = {
+				text = communist_elections.4.tt
+				scope:fascist_ig = {
+					is_in_government = yes
+				}
+			}
+			OR = {
+				ig:ig_armed_forces = {
+					is_powerful = yes
+				}
+				institution_investment_level = {
+					institution = institution_police
+					value >= 3
+				}
+				has_law = law_type:law_militarized_police
+			}
+		}
+		scope:fascist_party_scope = {
+			add_momentum = momentum_very_large
+			# increase opinion
+		}
+		every_active_party = {
+			limit = {
+				NOT = { is_party_type = fascist_party }
+			}
+			add_momentum = momentum_medium_decrease
+		}
+		if = {
+			limit = {
+				ig:ig_armed_forces = {
+					law_stance = {
+						law = law_type:law_militarized_police
+						value > neutral
+					}
+				}
+			}
+			add_modifier = {
+				name = state_sanctioned_paramilitaries
+				months = short_modifier_time
+			}
+		}
+		else_if = {
+			limit = {
+				ig:ig_armed_forces = {
+					law_stance = {
+						law = law_type:law_militarized_police
+						value < neutral
+					}
+				}
+			}
+			add_modifier = {
+				name = state_sanctioned_paramilitaries
+				months = short_modifier_time
+				multiplier = -1
+			}
+		}
+	}
+
+	option = { # Discourage paramilitaries
+		name = communist_elections.4.c
+		scope:fascist_party_scope = {
+			add_momentum = momentum_small
+		}
+		scope:fascist_ig = {
+			add_modifier = {
+				name = paramilitaries_opposed
+				months = short_modifier_time
+			}
+		}
+		every_active_party = {
+			limit = {
+				NOT = { is_party_type = fascist_party }
+			}
+			add_momentum = momentum_small_decrease
+		}
+	}
+
+	option = { # Crack down on paramilitaries
+		name = communist_elections.4.d
+		highlighted_option = yes
+		trigger = {
+			OR = {
+				has_law = law_type:law_protected_speech
+				has_law = law_type:law_guaranteed_liberties
+				institution_investment_level = {
+					institution = institution_police
+					value >= 3
+				}
+			}
+		}
+		scope:fascist_party_scope = {
+			add_momentum = momentum_medium_decrease
+		}
+		scope:fascist_ig = {
+			add_modifier = {
+				name = paramilitaries_opposed
+				months = short_modifier_time
+				multiplier = -2
+			}
+		}
+	}
+}
+
+# Battle of Cable Street
+cable_street.1 = {
+	type = country_event
+	placement = scope:fascist_rally_state
+	title = cable_street.1.t
+	desc = cable_street.1.d
+	flavor = cable_street.1.f
+	
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	duration = 3
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = cable_street_var }
+		any_interest_group = {
+			has_party = yes
+			party = {
+				is_party_type = fascist_party
+			}
+			leader = {
+				bpm_leader_is_fascist = yes
+			}
+		}
+		any_interest_group = {
+			is_marginal = no
+			bpm_ig_is_radical_socialist = yes
+		}
+	}
+	
+	immediate = {
+		set_variable = {
+			name = cable_street_var
+			months = short_modifier_time
+		}
+		random_scope_state = {
+			limit = {
+				is_incorporated = yes
+			}
+			save_scope_as = fascist_rally_state
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				party = {
+					is_party_type = fascist_party
+				}
+				leader = {
+					bpm_leader_is_fascist = yes
+				}
+			}
+			save_scope_as = fascist_ig
+			leader = {
+				save_scope_as = fascist_leader
+			}
+			party = {
+				save_scope_as = fascist_party
+			}
+		}
+		random_interest_group = {
+			limit = {
+				is_marginal = no
+				bpm_ig_is_radical_socialist = yes
+			}
+			save_scope_as = antifa_ig
+			leader = {
+				save_scope_as = antifa_leader
+			}
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+	
+	option = { # protect fascists right to march
+		name = cable_street.1.a
+		default_option = yes
+		# outcome weighted in favor of fascists
+		random_list = {
+			2 = {
+				scope:fascist_party = {
+					add_momentum = momentum_very_large
+				}
+				scope:fascist_rally_state = {
+					state_region = {
+						add_devastation = 10
+					}
+				}
+			}
+			2 = {
+				scope:fascist_party = {
+					add_momentum = momentum_large
+				}
+			}
+			1 = {
+				scope:fascist_party = {
+					add_momentum = momentum_large_decrease
+				}
+			}
+			1 = {
+				scope:fascist_party = {
+					add_momentum = momentum_very_large_decrease
+				}
+				scope:fascist_rally_state = {
+					state_region = {
+						add_devastation = 10
+					}
+				}
+			}
+		}
+		scope:antifa_ig = {
+			add_modifier = {
+				name = protected_fascist_rally_antifa
+				months = normal_modifier_time
+			}
+		}
+	}
+	option = { # keep the police out of it
+		name = cable_street.1.b
+		# outcome is entirely random
+		random_list = {
+			1 = {
+				scope:fascist_party = {
+					add_momentum = momentum_very_large
+				}
+				scope:fascist_rally_state = {
+					state_region = {
+						add_devastation = 10
+					}
+				}
+			}
+			1 = {
+				scope:fascist_party = {
+					add_momentum = momentum_large
+				}
+			}
+			1 = {
+				scope:fascist_party = {
+					add_momentum = momentum_large_decrease
+				}
+			}
+			1 = {
+				scope:fascist_party = {
+					add_momentum = momentum_very_large_decrease
+				}
+				scope:fascist_rally_state = {
+					state_region = {
+						add_devastation = 10
+					}
+				}
+			}
+		}
+	}
+	option = { # ban the rally
+		name = cable_street.1.c
+		# outcome weighted against fascists
+		random_list = {
+			1 = {
+				scope:fascist_party = {
+					add_momentum = momentum_very_large
+				}
+				scope:fascist_rally_state = {
+					state_region = {
+						add_devastation = 10
+					}
+				}
+			}
+			1 = {
+				scope:fascist_party = {
+					add_momentum = momentum_large
+				}
+			}
+			2 = {
+				scope:fascist_party = {
+					add_momentum = momentum_large_decrease
+				}
+			}
+			2 = {
+				scope:fascist_party = {
+					add_momentum = momentum_very_large_decrease
+				}
+				scope:fascist_rally_state = {
+					state_region = {
+						add_devastation = 10
+					}
+				}
+			}
+		}
+		scope:fascist_ig = {
+			add_modifier = {
+				name = banned_fascist_rally
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+

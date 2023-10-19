@@ -1,0 +1,413 @@
+﻿namespace = election_contextual_events
+
+# Pacifist Condemns the War
+# The country is leading a costly war of aggression, and a pacifist leader of the opposition comes out
+election_contextual_events.3 = {
+	type = country_event
+	placement = ROOT
+	title = election_contextual_events.3.t
+	desc = election_contextual_events.3.d
+	flavor = election_contextual_events.3.f
+
+	duration = 3
+
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		any_interest_group = {
+			has_party = yes
+			is_in_government = no
+			OR = {
+				has_ideology = ideology:ideology_mil_antimilitarist
+				leader = { has_ideology = ideology:ideology_pacifist }
+			}
+		}
+		any_interest_group = {
+			has_party = yes
+			is_in_government = yes
+		}
+		any_scope_war = {
+			attacker_warleader = ROOT
+		    has_war_exhaustion = {
+		        target = ROOT
+		        value > 10
+		    }
+		}
+	}
+	
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				is_in_government = no
+				OR = {
+					has_ideology = ideology:ideology_mil_antimilitarist
+					leader = { has_ideology = ideology:ideology_pacifist }
+				}
+			}
+			save_scope_as = opposition_pacifist_ig
+			party = { 
+				save_scope_as = opposition_pacifist_party 
+			}
+			leader = { 
+				save_scope_as = pacifist_ig_leader 
+			}
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				is_in_government = yes	
+			}
+			save_scope_as = government_war_ig
+			party = { 
+				save_scope_as = government_war_party 
+			}
+		}
+		random_scope_war = {
+			limit = {
+				attacker_warleader = ROOT
+			    has_war_exhaustion = {
+			        target = ROOT
+			        value > 10
+			    }
+			}
+			save_scope_as = pacifist_war
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+
+	option = { # The man speaks										
+		name = election_contextual_events.3.a
+		default_option = yes
+		scope:government_war_party = { 
+			add_momentum = momentum_medium_decrease
+		}
+		scope:pacifist_ig_leader = {
+			add_modifier = {
+				name = principled_pacifist	
+				months = normal_modifier_time
+			}
+		}
+	}
+	option = { # Censor it		
+		name = election_contextual_events.3.b
+		trigger = {
+			NOT = { 
+				has_law = law_type:law_protected_speech
+			}
+		}
+		random_list = {
+			25 = {
+				custom_tooltip = election_contextual_events.3.tt.2
+				scope:government_war_party = { 
+					add_momentum = momentum_large_decrease
+				}
+				scope:pacifist_ig_leader = {
+					add_modifier = {
+						name = martyrized_pacifist	
+						months = normal_modifier_time
+					}
+				}
+			}
+			25 = {
+				custom_tooltip = election_contextual_events.3.tt.2
+				scope:government_war_party = { 
+					add_momentum = momentum_medium_decrease
+				}
+				scope:pacifist_ig_leader = {
+					add_modifier = {
+						name = martyrized_pacifist	
+						months = normal_modifier_time
+						multiplier = 0.75
+					}
+				}
+			}
+			50 = {
+				custom_tooltip = election_contextual_events.3.tt.1
+				scope:government_war_party = { 
+					add_momentum = momentum_small
+				}
+			}
+		}
+	}
+	option = { # Censor it, but worse.
+		name = election_contextual_events.3.c
+		trigger = {
+			has_law = law_type:law_protected_speech
+		}
+		random_list = {
+			25 = {
+				custom_tooltip = election_contextual_events.3.tt.2
+				scope:government_war_party = { 
+					add_momentum = momentum_large_decrease
+				}
+				scope:pacifist_ig_leader = {
+					add_modifier = {
+						name = martyrized_pacifist	
+						months = normal_modifier_time
+					}
+				}
+			}
+			50 = {
+				custom_tooltip = election_contextual_events.3.tt.2
+				scope:government_war_party = { 
+					add_momentum = momentum_medium_decrease
+				}
+				scope:pacifist_ig_leader = {
+					add_modifier = {
+						name = martyrized_pacifist	
+						months = normal_modifier_time
+						multiplier = 0.75
+					}
+				}
+			}
+			25 = {
+				custom_tooltip = election_contextual_events.3.tt.1
+				scope:government_war_party = { 
+					add_momentum = momentum_small
+				}
+			}
+		}
+	}
+}
+
+# Coalition Coupons
+# Government IGs gain Momentum due to winning a war. Pacifists condemned as unpatriotic
+election_contextual_events.7 = {
+	type = country_event
+	placement = ROOT
+	title = election_contextual_events.7.t
+	desc = election_contextual_events.7.d
+	flavor = election_contextual_events.7.f
+
+	duration = 3
+
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		NOT = { 
+			has_variable = coalition_coupons_cooldown
+		}
+		any_interest_group = {
+			has_party = yes
+			is_in_government = yes
+		}
+		any_scope_war = {
+		    has_war_support = {
+		        target = ROOT
+		        value > 70
+		    }
+		}
+	}
+	
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_scope_war = {
+			limit = {
+			    has_war_support = {
+			        target = ROOT
+			        value > 70
+			    }
+			}
+			save_scope_as = ongoing_election_war
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				is_in_government = yes
+			}
+			party = { 
+				save_scope_as = ongoing_election_war_party 
+			}
+		}
+		set_variable = {
+			name = coalition_coupons_cooldown
+			months = long_modifier_time
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+	
+	option = { # Use this to win the election
+		name = election_contextual_events.7.a 					
+		default_option = yes
+		scope:ongoing_election_war_party = { 
+			add_momentum = momentum_medium
+		}
+		if = {
+			limit = {
+				any_interest_group = {
+					is_marginal = no
+					OR = {
+						has_ideology = ideology:ideology_mil_antimilitarist
+						leader = { has_ideology = ideology:ideology_pacifist }
+					}
+				}
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						has_ideology = ideology:ideology_mil_antimilitarist
+						leader = { has_ideology = ideology:ideology_pacifist }
+					}
+				}
+				leader = {
+					add_modifier = {
+					name = dove_of_peace_in_time_of_war
+					months = short_modifier_time
+					}
+				}
+			}
+		}
+	}
+	
+	option = { # Polarise society with jingoist rhetoric
+		name = election_contextual_events.7.b 					
+		add_modifier = {
+			name = jingoist_rhetoric
+			months = normal_modifier_time
+		}
+		if = {
+			limit = {
+				any_interest_group = {
+					OR = {
+						has_ideology = ideology:ideology_mil_antimilitarist
+						leader = { has_ideology = ideology:ideology_pacifist }
+					}
+				}
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						has_ideology = ideology:ideology_mil_antimilitarist
+						leader = { has_ideology = ideology:ideology_pacifist }
+					}
+				}
+				leader = {
+					add_modifier = {
+					name = dove_of_peace_in_time_of_war
+					months = short_modifier_time
+					}
+				}
+			}
+		}
+	}
+}
+
+# A Torrent of Gin and Beer
+# The government is pursuing anti-liquor policies, and people get (understandably) angry. 
+election_contextual_events.8 = {
+	type = country_event
+	placement = ROOT
+	title = election_contextual_events.8.t
+	desc = election_contextual_events.8.d
+	flavor = election_contextual_events.8.f
+
+	duration = 3
+
+	event_image = {
+		video = "unspecific_temperance_movement"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	trigger = {
+		NOT = { has_law = law_type:law_single_party_state }
+		in_election_campaign = yes
+		NOT = { has_variable = election_event_cooldown }
+		OR = { 
+			is_banning_goods = g:liquor
+			has_consumption_tax = g:liquor
+		}
+		any_interest_group = {
+			has_party = yes
+			is_in_government = no
+		}
+		any_interest_group = {
+			has_party = yes
+			is_in_government = yes
+		}
+	}
+	
+	immediate = {
+		set_variable = {
+			name = election_event_cooldown
+			months = election_event_cooldown_months
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				is_in_government = no	
+			}
+			save_scope_as = liquor_ig
+			party = { 
+				save_scope_as = anti_temperance_party 
+			}
+		}
+		random_interest_group = {
+			limit = {
+				has_party = yes
+				is_in_government = yes	
+			}
+			save_scope_as = liquor_gov_ig
+			party = { 
+				save_scope_as = temperance_party 
+			}
+		}
+	}
+	
+	cancellation_trigger = {
+		in_election_campaign = no
+	}
+	
+	option = { # Anti temperance party soars in popularity
+		name = election_contextual_events.8.a 					
+		default_option = yes
+		scope:anti_temperance_party = { 
+			add_momentum = momentum_large
+		}
+	}
+	
+	option = { # Run a smear campaign
+		name = election_contextual_events.8.b 					
+		scope:anti_temperance_party = { 
+			add_momentum = momentum_small
+		}
+		scope:temperance_party = { 
+			add_momentum = momentum_small_decrease
+		}
+	}
+}
+

@@ -1,30 +1,30 @@
-﻿ig_conservatives = {
-	color = hsv{ 0.57 1 1 }
-	texture = "gfx/interface/icons/ig_icons/conservatives.dds"
-	layer = "revolution_dynamic_petty_bourgeoisie"
-	index = 10
-
+﻿ig_market_liberals = {
+	color = hsv{ 0.45 0.7 0.9 }
+	texture = "gfx/interface/icons/ig_icons/market_liberals.dds"
+	layer = "revolution_dynamic_industrialists"
+	index = 12
+	
 	ideologies = {
-		ideology_gov_moderate_monarchist
+		ideology_gov_liberal_republican
 		ideology_dop_authoritarian_democrat
 		ideology_sta_powerful_state
 		ideology_cit_nationalist
 		ideology_rel_moralist
 		ideology_mil_patriotic
-		ideology_eco_interventionist
-		ideology_wel_religious_welfare
+		ideology_eco_laissez_faire
+		ideology_wel_market_welfare
 		ideology_fem_moderate_patriarchal
 	}
 	
 	enable = {
-		always = yes
+		always = no
 	}
 	
 	on_enable = {
-		ig:ig_conservatives = {
-			set_ig_trait = ig_trait:ig_trait_right_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_right_bastion_of_freedom
-			set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
+		ig:ig_market_liberals = {
+			set_ig_trait = ig_trait:ig_trait_urban_systematic_corruption
+			set_ig_trait = ig_trait:ig_trait_urban_well_oiled_machine
+			set_ig_trait = ig_trait:ig_trait_urban_systematic_opposition
 		}
 	}
 	on_disable = {}
@@ -34,64 +34,111 @@
 	}
 	
 	pop_weight = {
-		value = 30
+		value = 40
 	
+		add = {
+			desc = "SLAVERY_DETRACTORS"
+			if = {
+				limit = {
+					owner = { NOT = { has_law = law_type:law_slavery_banned } }
+					OR = {
+						pop_has_primary_culture = no
+						state = { is_slave_state = no }
+					}
+				}
+				value = 100
+			}
+		}
+
+		add = {
+			desc = "POP_EXCLUSIONS"
+			if = {
+				limit = { 
+					is_pop_type = peasants
+				}
+				value = -50
+			}
+		}
+		add = {
+			desc = "POP_EXCLUSIONS"
+			if = {
+				limit = { 
+					is_pop_type = clergymen
+				}
+				value = -15
+			}
+		}
 		add = {
 			desc = "POP_CAPITALISTS"
 			if = {
 				limit = { 
 					is_pop_type = capitalists
 				}
-				value = 175
+				value = 195
 			}
 		}	
-	
+		add = {
+			desc = "POP_ARISTOCRATS"
+			if = {
+				limit = { 
+					is_pop_type = aristocrats
+				}
+				value = 50
+			}
+		}	
+
 		add = {
 			desc = "MIDDLE_CLASS"
 			if = {
 				limit = { 
 					strata = middle
 				}
-				value = 50
-			}
-		}
-
-		add = {
-			desc = "LOWER_CLASS"
-			if = {
-				limit = { 
-					strata = poor
-				}
 				value = 20
 			}
 		}
 
 		add = {
-			desc = "RURAL"
+			desc = "URBAN"
 			if = {
 				limit = { 
-					OR = {
+					NOR = {
 						pop_employment_building_group = bg_agriculture
 						pop_employment_building_group = bg_ranching
 						pop_employment_building_group = bg_plantations
 					}
 				}
-				value = 50
+				value = 30
 			}
 		}
 
 		add = {
-			desc = "RURAL_UPPER_CLASS"
+			desc = "URBAN_MIDDLE_CLASS"
 			if = {
 				limit = { 
-					OR = {
+					NOR = {
+						pop_employment_building_group = bg_agriculture
+						pop_employment_building_group = bg_ranching
+						pop_employment_building_group = bg_plantations
+						is_pop_type = clergymen
+					}
+					strata = middle
+				}
+				value = 100
+			}
+		}
+
+		add = {
+			desc = "URBAN_UPPER_CLASS"
+			if = {
+				limit = { 
+					NOR = {
 						pop_employment_building_group = bg_agriculture
 						pop_employment_building_group = bg_ranching
 						pop_employment_building_group = bg_plantations
 					}
 					strata = rich
 				}
-				value = 200
+				value = 50
 			}
 		}
 		
@@ -109,12 +156,29 @@
 		}	
 
 		multiply = {
+			desc = "ABSOLUTISM"	
+			value = 1.0
+			
+			if = {
+				limit = { 
+					owner = {
+						has_law = law_type:law_monarchy
+						OR = {
+							has_law = law_type:law_oligarchy
+							has_law = law_type:law_autocracy
+						}
+					}
+				}
+				value = 0.75
+			}		
+		}
+		multiply = {
 			desc = "UNEDUCATED"
 			value = 1.0
 
 			if = {
 				limit = {
-					literacy_rate <= 0.4
+					literacy_rate <= 0.5
 				}
 				value = 0.5
 			}
@@ -125,26 +189,24 @@
 
 			if = {
 				limit = {
-					literacy_rate <= 0.2
+					literacy_rate <= 0.25
 				}
 				value = 0.5
 			}
 		}
+
 		multiply = {
-			desc = "STILL_ABSOLUTIST"
+			desc = "NO_DEMOCRACY"	
 			value = 1.0
+			
 			if = {
-				limit = {
+				limit = { 
 					owner = {
-						OR = {
-							has_law = law_type:law_autocracy
-							has_law = law_type:law_oligarchy
-						}
-						has_law = law_type:law_monarchy
+						NOT = { has_technology_researched = democracy }
 					}
 				}
 				value = 0.5
-			}
+			}		
 		}
 		multiply = {
 			desc = "NO_RATIONALISM"	
@@ -159,19 +221,7 @@
 				value = 0.0
 			}		
 		}
-		multiply = {
-			desc = "IN_WAR"	
-			value = 1.0
 
-			if = {
-				limit = { 
-					owner = {
-						is_at_war = yes
-					}
-				}
-				value = 1.25
-			}		
-		}	
 		multiply = {
 			desc = "decentralized_power"	
 			value = 1.0
@@ -184,7 +234,7 @@
 				}
 				value = 0.0
 			}		
-		}
+		}		
 	}
 	
 	monarch_weight = {

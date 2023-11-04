@@ -1,0 +1,178 @@
+# Requires the $VARIABLE$ and $VARIABLE$_baseline_target to be set
+# $RATE$ is how fast the variable ends up changing to the trend 
+bpm_handle_baseline_target_trend = {
+	if = {
+		limit = {
+			var:$VARIABLE$ < var:$VARIABLE$_baseline_target			
+		}
+		change_variable = {
+			name = $VARIABLE$
+			add = $RATE$
+		}
+		if = { # We overshat a bit 
+			limit = {
+				var:$VARIABLE$ > var:$VARIABLE$_baseline_target			
+			}
+			set_variable = {
+				name = $VARIABLE$
+				value = var:$VARIABLE$_baseline_target			
+			}
+		}
+	} else_if = {
+		limit = {
+			var:$VARIABLE$ > var:$VARIABLE$_baseline_target			
+		}
+		change_variable = {
+			name = $VARIABLE$
+			subtract = $RATE$
+		}
+		if = { # We overshat a bit 
+			limit = {
+				var:$VARIABLE$ < var:$VARIABLE$_baseline_target			
+			}
+			set_variable = {
+				name = $VARIABLE$
+				value = var:$VARIABLE$_baseline_target			
+			}
+		}
+	}
+}
+
+bpm_socialist_electoralism_update_baseline_target = {
+	set_variable = { name = bpm_je_socialist_electoralism_baseline_target value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_base value = 25 } # Basic level of electoralism
+
+	# INTEREST GROUPS --------------------------
+	set_variable = { name = bpm_je_socialist_electoralism_from_powerful_socialists value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_socialists_in_government value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_bolstered_socialists value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_happy_socialists value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_angry_socialists value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_suppressed_socialists value = 0 }
+	every_interest_group = {
+		limit = {
+			bpm_ig_is_socialist = yes 
+		}
+
+		# Powerful socialist IGs present
+		if = {
+			limit = {
+				is_powerful = yes
+			}
+			change_variable = { name = bpm_je_socialist_electoralism_from_powerful_socialists add = 5 }
+		}
+
+		# Socialist IG in government 
+		if = {
+			limit = {
+				is_in_government = yes 
+			}
+			change_variable = { name = bpm_je_socialist_electoralism_from_socialists_in_government add = 10 }
+		}
+
+		# Bolstered socialist IGs 
+		if = {
+			limit = {
+				is_being_bolstered = yes
+			}
+			change_variable = { name = bpm_je_socialist_electoralism_from_bolstered_socialists add = 5 }
+		}
+
+		# Happy non-marginal socialist IGs 
+		if = {
+			limit = {
+				ig_approval >= happy
+				is_marginal = no
+			}
+			change_variable = { name = bpm_je_socialist_electoralism_from_happy_socialists add = 5 }
+		}
+
+		# Angry non-marginal socialist IGs 
+		if = {
+			limit = {
+				ig_approval <= angry
+				is_marginal = no
+			}
+			change_variable = { name = bpm_je_socialist_electoralism_from_angry_socialists subtract = 10 }
+		}
+
+		# Suppressed socialist IGs 
+		if = {
+			limit = {
+				is_being_suppressed = yes
+			}
+			change_variable = { name = bpm_je_socialist_electoralism_from_suppressed_socialists subtract = 10 }
+		}
+	}
+
+	# LAWS & REVOLUTION ---------------------------------
+
+	# Revolution
+	set_variable = { name = bpm_je_socialist_electoralism_from_revolution value = 0 }
+	if = {
+		limit = {
+			has_revolution = yes
+		}
+		set_variable = { name = bpm_je_socialist_electoralism_from_revolution value = 25 }
+	}
+
+	# Censorship Laws
+	set_variable = { name = bpm_je_socialist_electoralism_from_censorship value = 0 }
+	if = {
+		limit = {
+			has_law = law_type:law_protected_speech
+		}
+		set_variable = { name = bpm_je_socialist_electoralism_from_censorship value = 10 }
+	} else_if = {
+		limit = {
+			has_law = law_type:law_right_of_assembly
+		}
+		set_variable = { name = bpm_je_socialist_electoralism_from_censorship value = 5 }
+	} else_if = {
+		limit = {
+			has_law = law_type:law_censorship
+		}
+		set_variable = { name = bpm_je_socialist_electoralism_from_censorship value = -10 }
+	} else_if = {
+		limit = {
+			has_law = law_type:law_censorship
+		}
+		set_variable = { name = bpm_je_socialist_electoralism_from_censorship value = -20 }
+	}
+
+	# Home Affairs Laws 
+	set_variable = { name = bpm_je_socialist_electoralism_from_home_affairs value = institution:institution_home_affairs.investment }
+	if = {
+		limit = {
+			has_law = law_type:law_guaranteed_liberties
+		}
+		change_variable = { name = bpm_je_socialist_electoralism_from_home_affairs multiply = 4 }
+	} else_if = {
+		limit = {
+			has_law = law_type:law_national_guard
+		}
+		change_variable = { name = bpm_je_socialist_electoralism_from_home_affairs multiply = -2 }
+	} else_if = {
+		limit = {
+			has_law = law_type:law_secret_police
+		}
+		change_variable = { name = bpm_je_socialist_electoralism_from_home_affairs multiply = -4 }
+	}
+
+	# TOTAL --------------------------
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_base }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_powerful_socialists }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_socialists_in_government }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_bolstered_socialists }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_happy_socialists }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_angry_socialists }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_suppressed_socialists }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_revolution }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_censorship }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_home_affairs }
+
+	clamp_variable = {
+		name = bpm_je_socialist_electoralism_baseline_target
+		min = 0 max = 100
+	}
+}

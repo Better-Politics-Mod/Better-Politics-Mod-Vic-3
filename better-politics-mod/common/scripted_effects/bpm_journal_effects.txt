@@ -37,6 +37,43 @@ bpm_handle_baseline_target_trend = {
 		}
 	}
 }
+bpm_handle_baseline_target_trend_script_value = {
+	if = {
+		limit = {
+			var:$VARIABLE$ < $VARIABLE$_baseline_target			
+		}
+		change_variable = {
+			name = $VARIABLE$
+			add = $RATE$
+		}
+		if = { # We overshat a bit 
+			limit = {
+				var:$VARIABLE$ > $VARIABLE$_baseline_target			
+			}
+			set_variable = {
+				name = $VARIABLE$
+				value = $VARIABLE$_baseline_target			
+			}
+		}
+	} else_if = {
+		limit = {
+			var:$VARIABLE$ > $VARIABLE$_baseline_target			
+		}
+		change_variable = {
+			name = $VARIABLE$
+			subtract = $RATE$
+		}
+		if = { # We overshat a bit 
+			limit = {
+				var:$VARIABLE$ < $VARIABLE$_baseline_target			
+			}
+			set_variable = {
+				name = $VARIABLE$
+				value = $VARIABLE$_baseline_target			
+			}
+		}
+	}
+}
 
 # Requires the $VARIABLE$ and $VARIABLE$_rate to be set
 # Wrapper for a more vanilla-esque JE growth
@@ -46,6 +83,17 @@ bpm_handle_steady_var_growth = {
 		add = var:$VARIABLE$_rate
 	}
 	clamp_variable = {
+		name = $VARIABLE$
+		min = 0
+		max = 100
+	}
+}
+bpm_handle_steady_global_var_growth = {
+	change_global_variable = {
+		name = $VARIABLE$
+		add = global_var:$VARIABLE$_rate
+	}
+	clamp_global_variable = {
 		name = $VARIABLE$
 		min = 0
 		max = 100
@@ -193,24 +241,24 @@ bpm_socialist_electoralism_update_baseline_target = {
 
 bpm_je_split_natlibs_progress_rate_update = {
 	set_variable = { name = bpm_je_split_natlibs_progress_rate value = 0 }
-	set_variable = { name = bpm_je_split_natlibs_progress_from_base value = -1.0 } # Base rate
+	set_variable = { name = bpm_je_split_natlibs_progress_from_base value = 0.0 } # Base rate
 
 	# WARS --------------------------
 	set_variable = { name = bpm_je_split_natlibs_progress_from_conflicts value = 0 }
 	if = {
 		limit = { is_at_war = yes }
-		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 0.3 }
+		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 2.0 }
 	} else_if = { # Don't want wars to stack with diploplays here 
 		limit = { is_diplomatic_play_committed_participant = yes }
-		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 0.1 }
+		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 0.5 }
 	}
 	if = {
 		limit = { has_revolution = yes }
-		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 1.0 }
+		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 2.0 }
 	}
 	if = {
 		limit = { is_unification_candidate = any }
-		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 1.0 }
+		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 2.0 }
 	}
 
 	# INTEREST GROUPS --------------------------
@@ -221,8 +269,8 @@ bpm_je_split_natlibs_progress_rate_update = {
 	every_interest_group = {
 		limit = {
 			OR = {
-				is_interest_group_type = ig:ig_liberals
-				is_interest_group_type = ig:ig_conservatives
+				is_interest_group_type = ig_liberals
+				is_interest_group_type = ig_conservatives
 			}
 
 			if = {
@@ -440,7 +488,7 @@ bpm_je_split_patcons_progress_rate_update = {
 	set_variable = { name = bpm_je_split_patcons_progress_from_conservative_status value = 0 } 
 	every_interest_group = {
 		limit = {
-			is_interest_group_type = ig:ig_conservatives
+			is_interest_group_type = ig_conservatives
 		}
 
 		if = {
@@ -488,4 +536,58 @@ bpm_je_split_patcons_progress_rate_update = {
 	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_left_wing_power }
 	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_communist_victory_coping }
 	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_marlibs }
+}
+
+bpm_je_second_intl_progress_rate_update = {
+	set_global_variable = { name = bpm_je_second_intl_progress_rate value = 0 }
+	set_global_variable = { name = bpm_je_second_intl_progress_from_base value = -1.0 } # Base rate
+
+	# CALCS --------------------------
+	set_global_variable = { name = bpm_je_second_intl_progress_from_powerful_igs value = 0 }
+	set_global_variable = { name = bpm_je_second_intl_progress_from_influential_igs value = 0 }
+	set_global_variable = { name = bpm_je_second_intl_progress_from_agitators value = 0 }
+	every_country = {
+		limit = {
+			country_rank = rank_value:great_power
+		}
+
+		every_interest_group = {
+			limit = {
+				bpm_ig_is_socialist = yes
+				is_marginal = no
+			}
+
+			if = {
+				limit = { is_powerful = yes	}
+				change_global_variable = { name = bpm_je_second_intl_progress_from_powerful_igs add = 0.2 }
+			} else = {
+				change_global_variable = { name = bpm_je_second_intl_progress_from_influential_igs add = 0.1 }
+			}
+		}
+
+		every_scope_character = {
+			limit = {
+				has_role = agitator
+				OR = {
+					law_stance = {
+						law = law_type:law_council_republic
+						value > neutral
+					}
+					interest_group = {
+						law_stance = {
+							law = law_type:law_council_republic
+							value > neutral
+						}
+					}
+				}
+			}
+			change_global_variable = { name = bpm_je_second_intl_progress_from_influential_igs add = 0.1 }
+		}
+	}
+
+	# TOTAL --------------------------
+	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_base }
+	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_powerful_igs }
+	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_influential_igs }
+	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_agitators }
 }

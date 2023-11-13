@@ -1,0 +1,108 @@
+# Use for radical factions that are expected to gain the most boost in popularity from radicalization 
+# i.e Fascists everywhere, Anarchists/Socialists for non-socialist republics, Liberals in liberal republics
+ig_attraction_radical = {
+	add = 1
+	multiply = { # Multiplied by 1.5x max
+		desc = "BPM_POP_LOYALISTS_GOVT"
+		add = 1.0
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			subtract = 1.0
+			add = pop_loyalist_fraction
+			divide = 2
+			add = 1
+		}
+	}
+	multiply = { # Up to 4x boost due to anger
+		desc = "BPM_POP_RADICALS_OPPOSITION"
+		add = 1.0
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = no
+				}
+			}
+			subtract = 1.0
+			add = pop_radical_fraction
+			multiply = 3
+			add = 1
+		}
+	}
+}
+
+# Use for non-radical factions that are expected to be mainstream in the country
+ig_attraction_moderate = {
+	add = 1
+	multiply = { # Multiplied by 1.5x max
+		desc = "BPM_POP_LOYALISTS_GOVT_MODERATE"
+		add = 1.0
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			subtract = 1.0
+			add = pop_loyalist_fraction
+			divide = 2
+			add = 1
+		}
+	}
+	multiply = { # Up to 1.5x boost due to anger
+		desc = "BPM_POP_RADICALS_OPPOSITION_MODERATE"
+		add = 1.0
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = no
+				}
+			}
+			subtract = 1.0
+			add = pop_radical_fraction
+			divide = 2
+			add = 1
+		}
+	}
+}
+
+ig_attraction_from_radicals_and_loyalists = {
+	add = 1
+	if = {
+		limit = {
+			scope:interest_group = {
+				bpm_ig_is_radical_opposition = yes
+			}
+		}
+		multiply = ig_attraction_radical
+	} else = {
+		multiply = ig_attraction_moderate
+	}
+}
+
+ig_attraction_to_interests_from_stability = {
+	desc = "BPM_POP_INTERESTS_FROM_STABILITY"
+	add = {
+		if = {
+			limit = { owner = { has_variable = bpm_political_stability } }
+			add = owner.var:bpm_political_stability
+			divide = 100
+			if = { # Adding curve to attraction past 0.66
+				limit = {  owner.var:bpm_political_stability > 0.66 }
+				multiply = { # Formula after 66%: x + ((x-0.66)*3+1), essentially doubling the attraction by the end
+					add =  owner.var:bpm_political_stability
+					divide = 100
+					subtract = 0.66
+					multiply = 3
+					add = 1.0
+				}
+			}
+		} else = {
+			add = 0.5
+		}
+		multipy = 2
+	}
+}

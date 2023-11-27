@@ -273,7 +273,7 @@ liberal_party = {
 	}
 	join_weight = {
 		value = {
-			value = -5
+			value = 0
 			desc = "base_value"
 		}
 		if = {
@@ -292,13 +292,11 @@ liberal_party = {
 			add = {
 				leader = {
 					value = popularity
-					if = {
-						limit = { popularity < 0 }
-						multiply = -1
-					}
+					add = 100
+					divide = 20
+					floor = yes
 					modulo = 2
 					multiply = 3
-
 				}
 				desc = "bpm_from_moderatism"
 			}
@@ -327,8 +325,17 @@ liberal_party = {
 				bpm_ig_is_radical_liberal = no
 			}
 			add = {
-				value = 10
+				value = 5
 				desc = "bpm_from_liberal_ig"
+			}
+		}
+		if = { # liberals love liberalism
+			limit = {
+				is_interest_group_type = ig_liberals
+			}
+			add = {
+				value = 10
+				desc = "bpm_from_main_liberal_ig"
 			}
 		}
 		if = { # radicals like liberalism
@@ -639,6 +646,69 @@ liberal_party = {
 			add = {
 				value = 5
 				desc = "from_serfdom"
+			}
+		}
+		if = { # marlibs don't love radicals
+			limit = {
+				OR = {
+					is_interest_group_type = ig_market_liberals
+					is_interest_group_type = ig_national_liberals
+				}
+				owner = {
+					NOT = { leader = { bpm_leader_is_radical_liberal = yes } }
+					py:liberal_party ?= {
+						any_member = {
+							OR = {
+								bpm_ig_is_radical_liberal = yes
+								leader = { bpm_leader_is_radical_liberal = yes }
+							}
+						}
+					}
+				}
+			}
+			add = {
+				value = -5
+				desc = "bpm_from_dislike_radicals"
+			}
+		}
+		if = {
+			limit = {
+				OR = {
+					AND = {
+						is_interest_group_type = ig_market_liberals
+						NOT = { leader = { bpm_leader_is_progressive_liberal = yes } }
+					}
+					AND = {
+						is_interest_group_type = ig_national_liberals
+						leader = { bpm_leader_is_right_wing = yes }
+					}
+				}
+				owner = {
+					ig:ig_liberals = {
+						party = { is_party_type = liberal_party }
+						leader = { bpm_leader_is_progressive_liberal = yes }
+					}
+				}
+			}
+			add = {
+				value = -5
+				desc = "bpm_from_dislike_progressives"
+			}
+		}
+		if = {
+			limit = {
+				is_interest_group_type = ig_market_liberals
+				owner = {
+					any_interest_group = {
+						has_ideology = ideology:ideology_wel_paternalistic_welfare
+						party = { is_party_type = conservative_party }
+						is_powerful = yes
+					}
+				}
+			}
+			add = {
+				value = -5
+				desc = "bpm_from_dislike_paternalists"
 			}
 		}
 		if = { # Anti-electoralism

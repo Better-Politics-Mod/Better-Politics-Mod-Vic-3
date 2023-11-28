@@ -4,22 +4,19 @@ ig_attraction_radical = {
 	add = 1
 	multiply = { # Multiplied by 1.5x max
 		desc = "BPM_POP_LOYALISTS_GOVT"
-		add = 1.0
 		if = {
 			limit = {
 				scope:interest_group = {
 					is_in_government = yes
 				}
 			}
-			subtract = 1.0
 			add = pop_loyalist_fraction
 			divide = 2
-			add = 1
 		}
+		add = 1
 	}
-	multiply = { # Up to 3x-4x boost due to anger
+	multiply = { # Up to 3x boost due to anger
 		desc = "BPM_POP_RADICALS_OPPOSITION"
-		add = 1.0
 		if = {
 			limit = {
 				scope:interest_group = {
@@ -27,22 +24,40 @@ ig_attraction_radical = {
 				}
 			}
 			add = pop_radical_fraction
-			if = {
-				limit = { 
-					scope:interest_group = { 
-						OR = {
-							bpm_ig_is_radical_socialist = yes 
-							is_interest_group_type = ig_radicals
-						}
-					} 
-				}
-				multiply = 3
-			}
-			else = {
-				multiply = 2
-			}
-			add = 1
+			multiply = 2
 		}
+		add = 1.0
+	}
+}
+
+# Same as radical, but the impact is higher
+ig_attraction_very_radical = {
+	add = 1
+	multiply = { # Multiplied by 1.5x max
+		desc = "BPM_POP_LOYALISTS_GOVT"
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			add = pop_loyalist_fraction
+			divide = 2
+		}
+		add = 1
+	}
+	multiply = { # Up to 4x boost due to anger
+		desc = "BPM_POP_EXTREME_RADICALS_OPPOSITION"
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = no
+				}
+			}
+			add = pop_radical_fraction
+			multiply = 3
+		}
+		add = 1.0
 	}
 }
 
@@ -51,31 +66,27 @@ ig_attraction_moderate = {
 	add = 1
 	multiply = { # Multiplied by 2.0x max
 		desc = "BPM_POP_LOYALISTS_GOVT_MODERATE"
-		add = 1.0
 		if = {
 			limit = {
 				scope:interest_group = {
 					is_in_government = yes
 				}
 			}
-			subtract = 1.0
 			add = pop_loyalist_fraction
-			add = 1
 		}
+		add = 1
 	}
 	multiply = { # Up to 2.0x boost due to anger
 		desc = "BPM_POP_RADICALS_OPPOSITION_MODERATE"
-		add = 1.0
 		if = {
 			limit = {
 				scope:interest_group = {
 					is_in_government = no
 				}
 			}
-			subtract = 1.0
 			add = pop_radical_fraction
-			add = 1
 		}
+		add = 1
 	}
 }
 
@@ -85,9 +96,17 @@ ig_attraction_from_radicals_and_loyalists = {
 		limit = {
 			scope:interest_group = {
 				bpm_ig_is_radical_opposition = yes
+				bpm_ig_is_very_radical_opposition = no
 			}
 		}
 		multiply = ig_attraction_radical
+	} else_if = {
+		limit = {
+			scope:interest_group = {
+				bpm_ig_is_very_radical_opposition = yes
+			}
+		}
+		multiply = ig_attraction_very_radical
 	} else = {
 		multiply = ig_attraction_moderate
 	}
@@ -115,6 +134,199 @@ ig_attraction_to_interests_from_stability = {
 		}
 		multiply = 2
 	}
+}
+
+ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script value will be DEPRECATED in a future rework of IG support weights
+
+	add = {
+		desc = "POP_LOWER_STRATA_VERY_POOR"
+		if = {
+			limit = {
+				strata = poor
+				standard_of_living <= 10
+				literacy_rate >= 0.5
+			}
+			value = 50
+		}
+	}
+	add = {
+		desc = "POP_LOWER_STRATA_POOR"
+		if = {
+			limit = {
+				strata = poor
+				standard_of_living <= 12
+				literacy_rate >= 0.5
+			}
+			value = 50
+		}
+	}
+
+	add = {
+		desc = "POP_URBAN_PROLETARIAT_SUPPORTS_COOPERATIVES"
+		if = {
+			limit = { 
+				NOR = {
+					pop_employment_building_group = bg_agriculture
+					pop_employment_building_group = bg_ranching
+					pop_employment_building_group = bg_plantations				
+				}
+
+				OR = {
+					is_pop_type = laborers
+					is_pop_type = machinists
+				}
+				interest_group = {
+					law_stance = {
+						law = law_type:law_cooperative_ownership
+						value > neutral
+					}
+				}
+				owner = { has_law = law_type:law_council_republic }
+				pop_radical_fraction = 0
+			}
+			value = 80
+			if = {
+				limit = { 
+					owner = {
+						has_law = law_type:law_cooperative_ownership
+					}
+				}
+				multiply = 2.0
+			}
+		}
+	}
+	add = {
+		desc = "POP_RURAL_SUPPORTS_COLLECTIVIZATION"
+		if = {
+			limit = { 
+				OR = {
+					pop_employment_building_group = bg_agriculture
+					pop_employment_building_group = bg_ranching
+					pop_employment_building_group = bg_plantations				
+				}
+				interest_group = {
+					law_stance = {
+						law = law_type:law_collectivized_agriculture
+						value > neutral
+					}
+				}
+				strata <= middle
+				owner = { has_law = law_type:law_council_republic }
+				pop_radical_fraction = 0
+			}
+			value = 40
+			if = {
+				limit = { 
+					owner = {
+						has_law = law_type:law_collectivized_agriculture
+					}
+				}
+				multiply = 2.0
+			}
+		}
+	}
+	add = {
+		desc = "POP_BUREAUCRATS_SUPPORT_COMMAND_ECONOMY"
+		if = {
+			limit = { 
+				OR = {
+					is_pop_type = clerks
+					is_pop_type = bureaucrats
+				}
+				interest_group = {
+					law_stance = {
+						law = law_type:law_command_economy
+						value > neutral
+					}
+				}
+				owner = { has_law = law_type:law_council_republic }
+				pop_radical_fraction = 0
+			}
+			value = 80
+			if = {
+				limit = { 
+					owner = {
+						has_law = law_type:law_command_economy
+					}
+				}
+				multiply = 2.0
+			}
+		}
+	}
+
+	add = {
+		desc = "POP_SOLDIERS_SUPPORT_ELECTIONS_IN_ARMY"
+		if = {
+			limit = { 
+				OR = {
+					is_pop_type = soldiers
+				}
+				owner = {
+					has_law = law_type:law_elected_officers
+				}
+			}
+			value = 40
+		}
+	}
+
+	add = {
+		desc = "POP_OFFICERS_SUPPORT_ELECTIONS_IN_ARMY"
+		if = {
+			limit = { 
+				is_pop_type = soldiers
+				owner = {
+					has_law = law_type:law_elected_officers
+				}
+			}
+			value = 20
+		}
+	}
+
+	add = {
+		desc = "POP_HAPPY_WITH_ANARCHIST_LAWS"
+		value = 0.0
+		if = {
+			limit = { 
+				strata <= middle
+				interest_group = {
+					bpm_ig_is_anarchist = yes
+				}
+				pop_radical_fraction = 0
+			}
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_elected_officers
+					}
+				}
+				add = 10
+			}
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_elected_police
+					}
+				}
+				add = 10
+			}
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_confederated
+					}
+				}
+				add = 10
+			}
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_anarchy
+					}
+				}
+				add = 30
+			}
+		}
+  }
 }
 
 ig_attraction_to_reformists_from_stability = {

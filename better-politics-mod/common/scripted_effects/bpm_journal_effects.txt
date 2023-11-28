@@ -351,7 +351,16 @@ bpm_je_split_natlibs_progress_rate_update = {
 
 bpm_je_split_marlibs_progress_rate_update = {
 	set_variable = { name = bpm_je_split_marlibs_progress_rate value = 0 }
-	set_variable = { name = bpm_je_split_marlibs_progress_from_base value = 0.0 } # Base rate
+	set_variable = { name = bpm_je_split_marlibs_progress_from_base value = 0 } # Base rate
+
+	# Top GP
+	set_variable = { name = bpm_je_split_marlibs_progress_from_top_gp value = 0 }
+	if = {
+		limit = {
+			global_country_ranking = 1
+		}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_top_gp add = 0.1 }
+	}
 
 	# LAW ENACTMENT --------------------------
 	set_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment value = 0 }
@@ -363,7 +372,7 @@ bpm_je_split_marlibs_progress_rate_update = {
 				is_enacting_law = law_type:law_free_trade
 			}
 		}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment add = 0.5 }
+		change_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment add = 1.0 }
 	}
 	if = {
 		limit = {
@@ -371,11 +380,24 @@ bpm_je_split_marlibs_progress_rate_update = {
 				is_enacting_law = law_type:law_homesteading
 				is_enacting_law = law_type:law_tenant_farmers
 				is_enacting_law = law_type:law_interventionism
-				is_enacting_law = law_type:law_free_trade
 				is_enacting_law = law_type:law_protectionism
 			}
 		}
 		change_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment add = 0.5 }
+	}
+	if = {
+		limit = {
+			any_political_movement = {
+				desired_law = {
+					OR = {
+						is_same_law_group_as = law_type:law_laissez_faire
+						is_same_law_group_as = law_type:law_free_trade
+						is_same_law_group_as = law_type:law_homesteading
+					}
+				}
+			}
+		}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_movement add = 0.5 }
 	}
 
 	# CURRENT LAWS --------------------------
@@ -396,24 +418,12 @@ bpm_je_split_marlibs_progress_rate_update = {
 	}
 	# grrr bad laws 
 	if = {
-		limit = { has_law = law_type:law_serfdom	}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_bad_laws add = -0.1 }
-	}
-	if = {
-		limit = { has_law = law_type:law_tenant_farmers	}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_bad_laws add = -0.1 }
-	}
-	if = {
-		limit = { has_law = law_type:law_isolationism	}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_bad_laws add = -0.1 }
-	}
-	if = {
-		limit = { has_law = law_type:law_mercantilism	}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_bad_laws add = -0.1 }
+		limit = { has_law = law_type:law_serfdom }
+		change_variable = { name = bpm_je_split_marlibs_progress_from_bad_laws add = -0.5 }
 	}
 	if = {
 		limit = { has_law = law_type:law_traditionalism	}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_bad_laws add = -0.1 }
+		change_variable = { name = bpm_je_split_marlibs_progress_from_bad_laws add = -0.5 }
 	}
 
 	# PATCONS --------------------------
@@ -432,13 +442,15 @@ bpm_je_split_marlibs_progress_rate_update = {
 				pop_type = capitalists
 			}
 		}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_radcaps add = 0.1 }
+		change_variable = { name = bpm_je_split_marlibs_progress_from_radcaps multiply = 1.2 }
 	}
 
 	# TOTAL --------------------------
 	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_base }
+	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_top_gp }
 	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_law_enactment }
-	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_good_laws }
+	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_movement }
+	# change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_good_laws }
 	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_bad_laws }
 	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_patcons }
 	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_radcaps }
@@ -478,22 +490,12 @@ bpm_je_split_patcons_progress_rate_update = {
 		remove_variable = temp_pop_fraction
 	}
 
+
+	
 	# CONSERVATIVE STATUS --------------------------
-	set_variable = { name = bpm_je_split_patcons_progress_from_conservative_status value = 0 } 
-	every_interest_group = {
-		limit = {
-			is_interest_group_type = ig_conservatives
-		}
-
-		if = {
-			limit = { is_in_government = no }
-			ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_conservative_status add = 0.25 } }
-		}
-
-		if = {
-			limit = { is_being_suppressed = yes }
-			ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_conservative_status add = 0.25 } }
-		}
+	if = {
+		limit = { ig:ig_conservatives = { is_being_suppressed = yes } }
+		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_conservative_status add = 0.25 } }
 	}
 
 	# LEFT WING --------------------------
@@ -504,6 +506,18 @@ bpm_je_split_patcons_progress_rate_update = {
 			is_marginal = no
 		}
 		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_left_wing_power add = 0.25 } }
+	}
+
+	set_variable = { name = bpm_je_split_patcons_progress_from_left_wing_government value = 0 }
+	if = {
+		limit = { 
+			ig:ig_conservatives = { is_in_government = no }
+			any_interest_group = {
+				bpm_ig_is_radical_left = yes
+				is_in_government = yes
+			}
+		}
+		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_left_wing_government add = 0.25 } }
 	}
 
 	# COUNCIL REPUBLIC --------------------------
@@ -534,6 +548,7 @@ bpm_je_split_patcons_progress_rate_update = {
 	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_radicals }
 	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_conservative_status }
 	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_left_wing_power }
+	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_left_wing_government }
 	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_communist_victory_coping }
 	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_marlibs }
 	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_corporatism }

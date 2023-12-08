@@ -175,14 +175,13 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 					is_pop_type = laborers
 					is_pop_type = machinists
 				}
-				interest_group = {
+				scope:interest_group = {
 					law_stance = {
 						law = law_type:law_cooperative_ownership
 						value > neutral
 					}
 				}
 				owner = { has_law = law_type:law_council_republic }
-				pop_radical_fraction = 0
 			}
 			value = 80
 			if = {
@@ -193,6 +192,7 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 				}
 				multiply = 2.0
 			}
+			multiply = bpm_nullify_if_radical
 		}
 	}
 	add = {
@@ -204,7 +204,7 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 					pop_employment_building_group = bg_ranching
 					pop_employment_building_group = bg_plantations				
 				}
-				interest_group = {
+				scope:interest_group = {
 					law_stance = {
 						law = law_type:law_collectivized_agriculture
 						value > neutral
@@ -212,7 +212,6 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 				}
 				strata <= middle
 				owner = { has_law = law_type:law_council_republic }
-				pop_radical_fraction = 0
 			}
 			value = 40
 			if = {
@@ -223,6 +222,7 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 				}
 				multiply = 2.0
 			}
+			multiply = bpm_nullify_if_radical
 		}
 	}
 	add = {
@@ -233,14 +233,13 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 					is_pop_type = clerks
 					is_pop_type = bureaucrats
 				}
-				interest_group = {
+				scope:interest_group = {
 					law_stance = {
 						law = law_type:law_command_economy
 						value > neutral
 					}
 				}
 				owner = { has_law = law_type:law_council_republic }
-				pop_radical_fraction = 0
 			}
 			value = 80
 			if = {
@@ -255,6 +254,23 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 	}
 
 	add = {
+		desc = "POP_ARMY_IN_SOCIALIST_STATE"
+		if = {
+			limit = { 
+				OR = {
+					is_pop_type = soldiers
+					is_pop_type = officers
+				}
+				owner = {
+					has_law = law_type:law_council_republic
+				}
+			}
+			value = 75
+			multiply = bpm_nullify_if_radical
+		}
+	}
+
+	add = {
 		desc = "POP_SOLDIERS_SUPPORT_ELECTIONS_IN_ARMY"
 		if = {
 			limit = { 
@@ -265,7 +281,8 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 					has_law = law_type:law_elected_officers
 				}
 			}
-			value = 40
+			value = 75
+			multiply = bpm_nullify_if_radical
 		}
 	}
 
@@ -273,12 +290,13 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 		desc = "POP_OFFICERS_SUPPORT_ELECTIONS_IN_ARMY"
 		if = {
 			limit = { 
-				is_pop_type = soldiers
+				is_pop_type = officers
 				owner = {
 					has_law = law_type:law_elected_officers
 				}
 			}
-			value = 20
+			value = 50
+			multiply = bpm_nullify_if_radical
 		}
 	}
 
@@ -288,10 +306,17 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 		if = {
 			limit = { 
 				strata <= middle
-				interest_group = {
+				scope:interest_group = {
 					bpm_ig_is_anarchist = yes
 				}
-				pop_radical_fraction = 0
+			}
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_national_militia
+					}
+				}
+				add = 20
 			}
 			if = {
 				limit = {
@@ -299,7 +324,7 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 						has_law = law_type:law_elected_officers
 					}
 				}
-				add = 10
+				add = 20
 			}
 			if = {
 				limit = {
@@ -307,7 +332,7 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 						has_law = law_type:law_elected_police
 					}
 				}
-				add = 10
+				add = 20
 			}
 			if = {
 				limit = {
@@ -315,7 +340,7 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 						has_law = law_type:law_confederated
 					}
 				}
-				add = 10
+				add = 20
 			}
 			if = {
 				limit = {
@@ -323,8 +348,9 @@ ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script val
 						has_law = law_type:law_anarchy
 					}
 				}
-				add = 30
+				add = 60
 			}
+			multiply = bpm_nullify_if_radical
 		}
   }
 }
@@ -357,4 +383,38 @@ ig_attraction_to_revolutionists_from_stability = {
 		}
 		multiply = 2
 	}
+}
+
+# Helpful to halve some supporting factors
+bpm_nullify_if_radical = {
+	add = 1.0
+	if = {
+		limit = {
+			pop_radical_fraction > 0
+		}
+		subtract = pop_radical_fraction
+	}
+}
+
+# Adds multipliers based on popularity of agitators to the IG
+bpm_ig_agitators_popularity = {
+	desc = "BPM_POP_FROM_AGITATOR_POPULARITY"
+	add = 1.0
+
+	scope:interest_group = {
+		every_scope_character = {
+			limit = {
+				has_role = agitator
+			}
+			multiply = bpm_ig_agitator_popularity
+		}
+	}
+}
+
+bpm_ig_agitator_popularity = {
+	value = popularity
+	multiply = 0.01
+	add = 1
+	max = 2.0
+	min = 1.0
 }

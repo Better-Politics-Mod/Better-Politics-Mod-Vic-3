@@ -1,0 +1,387 @@
+﻿namespace = anarchy
+
+# Stall event - Propaganda of the Deed
+# anarchists assassinate reactionary IG leader
+anarchy.1 = {
+	type = country_event
+	placement = ROOT
+	
+	title = anarchy.1.t
+	desc = anarchy.1.d
+	flavor = anarchy.1.f
+
+	category = enactment
+	
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		is_enacting_law = law_type:law_anarchy
+		any_interest_group = {
+			bpm_ig_is_right_wing = yes
+			is_marginal = no
+			leader = {
+				is_busy = no
+			}
+		}
+		NOT = {
+			has_modifier = anarchist_terrorism
+		}
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				bpm_ig_is_right_wing = yes
+				is_marginal = no
+				leader = {
+					is_busy = no
+				}
+			}
+			save_scope_as = anarchy_target_ig
+			leader = {
+				save_scope_as = anarchy_target_leader
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { is_enacting_law = law_type:law_anarchy }
+	}
+
+	option = { # support terrorism - setback
+		name = anarchy.1.a
+		trigger = {
+			enactment_setback_count < 2
+		}
+		highlighted_option = yes
+		add_enactment_setback = 1
+		scope:anarchy_target_ig = {
+			add_modifier = {
+				name = anarchist_assassination
+				multiplier = 2
+			}
+		}
+		add_modifier = {
+			name = anarchist_assaination_opposition_approval
+			months = normal_modifier_time
+		}
+		scope:anarchy_target_leader = {
+			kill_character = yes
+		}
+	}
+
+	option = { # condemn terrorism
+		name = anarchy.1.b
+		default_option = yes
+		# lose some law progress, lose lots of opposition ig opinion
+		add_enactment_modifier = {
+			name = anarchist_terrorism
+			multiplier = 2
+		}
+		scope:anarchy_target_ig = {
+			add_modifier = {
+				name = anarchist_assassination
+			}
+		}
+		scope:anarchy_target_leader = {
+			kill_character = yes
+		}
+	}
+}
+
+# Debate Event - Remove an institution for progress
+anarchy.2 = {
+	type = country_event
+	placement = ROOT
+	
+	title = anarchy.2.t
+	desc = anarchy.2.desc
+	flavor = anarchy.2.f
+
+	category = enactment
+	
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		is_enacting_law = law_type:law_anarchy
+		any_interest_group = {
+			OR = {
+				bpm_ig_is_anarchist = yes
+				bpm_leader_is_anarchist = yes
+			}
+		}
+		OR = {
+			institution_investment_level = {
+				institution = institution_police
+				value >= 2
+			}
+			institution_investment_level = {
+				institution = institution_home_affairs
+				value >= 2
+			}
+			institution_investment_level = {
+				institution = institution_colonial_affairs
+				value >= 2
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+    	random_interest_group = {
+    		limit = {
+				OR = {
+					bpm_ig_is_anarchist = yes
+					bpm_leader_is_anarchist = yes
+				}
+    		}
+    		save_scope_as = anarchists_scope
+    	}
+	}
+
+	cancellation_trigger = {
+		NOT = { is_enacting_law = law_type:law_anarchy }
+	}
+
+	option = { # remove police
+		name = anarchy.2.a
+		trigger = {
+			institution_investment_level = {
+				institution = institution_police
+				value >= 2
+			}
+		}
+		# add 15 progress
+		add_enactment_modifier = {
+			name = law_dismentling_the_state
+		}
+		change_institution_investment_level = {
+			institution = institution_police
+			investment = -3
+		}
+		if = {
+			limit = {
+				any_interest_group = {
+					law_stance = {
+						law = law_type:law_dedicated_police
+						value > neutral
+					}
+				}
+			}
+			random_interest_group = {
+				limit = {
+					is_marginal = no
+					law_stance = {
+						law = law_type:law_dedicated_police
+						value > neutral
+					}
+				}
+				add_modifier = {
+					name = dismantling_the_state
+					months = short_modifier_time
+				}
+			}
+		}
+	}
+	
+	option = { # remove home affairs
+		name = anarchy.2.c
+		trigger = {
+			institution_investment_level = {
+				institution = institution_home_affairs
+				value >= 2
+			}
+		}
+		add_enactment_modifier = {
+			name = law_dismentling_the_state
+		}
+		change_institution_investment_level = {
+			institution = institution_home_affairs
+			investment = -3
+		}
+		if = {
+			limit = {
+				any_interest_group = {
+					law_stance = {
+						law = law_type:law_no_home_affairs
+						value < neutral
+					}
+				}
+			}
+			random_interest_group = {
+				limit = {
+					is_marginal = no
+					law_stance = {
+						law = law_type:law_no_home_affairs
+						value < neutral
+					}
+				}
+				add_modifier = {
+					name = dismantling_the_state
+					months = short_modifier_time
+				}
+			}
+		}
+	}
+	option = { # remove colonialism
+		name = anarchy.2.d
+		trigger = {
+			institution_investment_level = {
+				institution = institution_colonial_affairs
+				value >= 2
+			}
+		}
+		add_enactment_modifier = {
+			name = law_dismentling_the_state
+		}
+		change_institution_investment_level = {
+			institution = institution_colonial_affairs
+			investment = -3
+		}
+		if = {
+			limit = {
+				any_interest_group = {
+					law_stance = {
+						law = law_type:law_no_colonial_affairs
+						value < neutral
+					}
+				}
+			}
+			random_interest_group = {
+				limit = {
+					is_marginal = no
+					law_stance = {
+						law = law_type:law_no_colonial_affairs
+						value < neutral
+					}
+				}
+				add_modifier = {
+					name = dismantling_the_state
+					months = short_modifier_time
+				}
+			}
+		}
+	}
+	option = { # remove nothing
+		name = anarchy.2.e
+		default_option = yes
+		# lose 20 progress
+		add_enactment_modifier = {
+			name = withering_away
+		}
+		# lose IG opinion
+		scope:anarchists_scope = {
+			add_modifier = {
+				name = ig_withering_away
+				months = short_modifier_time
+			}
+		}
+	}
+}
+
+# Advance event - Mutual Aid
+anarchy.3 = {
+	type = country_event
+	placement = ROOT
+	
+	title = anarchy.3.t
+	desc = anarchy.3.d
+	flavor = anarchy.3.f
+
+	category = enactment
+	
+	event_image = {
+		video = "africa_prosperous_farm"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		is_enacting_law = law_type:law_anarchy
+		ig:ig_rural_folk = {
+			is_marginal = no
+		}
+		NOT = {
+			has_modifier = mutual_aid
+		}
+	}
+
+	immediate = {
+		create_character = {
+			ig_leader = yes
+			interest_group = ig_rural_folk
+			female = no
+			ideology = ideology_anarchist
+		}
+		ig:ig_rural_folk = {
+			save_scope_as = farmer_ig
+			leader = { save_scope_as = anarchist_farmer }
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { is_enacting_law = law_type:law_anarchy }
+	}
+
+	option = { # encourage mutual aid
+		name = anarchy.3.a
+		# improve poor welfare
+		add_modifier = {
+			name = encouraging_mutual_aid
+			months = short_modifier_time
+		}
+		# increase success chance
+		add_enactment_modifier = {
+			name = mutual_aid
+		}
+	}
+	option = { # novel agricultural methods
+		name = anarchy.3.b
+		# agriculture throughput
+		add_modifier = {
+			name = anarchist_agriculture
+			months = short_modifier_time
+		}
+		# increase success chance
+		add_enactment_modifier = {
+			name = mutual_aid
+		}
+	}
+	option = { # use as propaganda
+		name = anarchy.3.c
+		default_option = yes
+		# greatly increase success chance
+		add_enactment_modifier = {
+			name = mutual_aid
+			multiplier = 2
+		}
+	}
+}

@@ -1,0 +1,291 @@
+
+exile_character = {
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	potential = {
+		is_in_exile_pool = no
+		is_in_void = no
+		is_ruler = no
+		is_heir = no
+		# Cannot exile pure commanders, we have the retire interaction for that
+		OR = {
+			has_role = politician
+			has_role = agitator
+		}
+		hidden_trigger = { # BPM addition: Making AI incapable of exiling non-institutional politicians unless they are a great power
+			OR = {
+				owner = { is_ai = no }
+				owner = { country_rank = rank_value:great_power }
+				has_role = agitator
+				interest_group = { bpm_ig_is_institutional = yes }
+			}
+		}
+	}
+
+	show_requirements = yes
+
+	possible = {
+		owner = {
+			NOT = {
+				has_law = law_type:law_protected_speech
+			}
+		}
+		OR = {
+			interest_group = {
+				is_in_government = no
+				is_insurrectionary = no
+				is_marginal = no
+			}
+			has_role = agitator
+		}
+	}
+
+	effect = {
+		this.interest_group = {
+			save_scope_as = relevant_ig
+		}
+		this = {
+			save_scope_as = exile_scope
+		}
+		owner = {
+			save_scope_as = exiling_country_scope
+		}
+		if = {
+			limit = {
+				owner = { has_journal_entry = je_caudillo }
+				interest_group = {
+					is_interest_group_type = ig_armed_forces
+				}
+			}
+			if = {
+				limit = {
+					interest_group = {
+						leader = {
+							this = ROOT
+						}
+					}
+				}
+				owner = {
+					custom_tooltip = {
+						text = lose_large_caudillo_points
+						change_variable = {
+							name = caudillo_var
+							add = -200
+						}
+					}
+				}
+			}
+			else = {
+				owner = {
+					custom_tooltip = {
+						text = lose_caudillo_points
+						change_variable = {
+							name = caudillo_var
+							add = -100
+						}
+					}
+				}
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					is_player = yes
+					NOT = { has_variable = achievement_agitate_elsewhere_var }
+				}
+				popularity >= 100
+			}
+			owner = { set_variable = achievement_agitate_elsewhere_var }
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					NOT = { has_role = agitator }
+				}
+				add_character_role = agitator
+			}
+			if = {
+				limit = {
+					has_role = general
+				}
+				remove_character_role = general
+			}
+			if = {
+				limit = {
+					has_role = admiral
+				}
+				remove_character_role = admiral
+			}
+			if = {
+				limit = {
+					has_role = politician
+				}
+				set_as_interest_group_leader = no
+				remove_character_role = politician
+			}
+		}
+		owner = {
+			custom_tooltip = exiling_dissident_radicals_factors
+		}
+		# Extra radical from exiling a popular character
+		if = {
+			limit = {
+				popularity >= 50
+			}
+			owner = {
+				add_radicals = {
+					value = small_radicals
+					interest_group = scope:relevant_ig
+				}
+			}
+		}
+		# Standard radicals from having Right of Assembly
+		if = {
+			limit = {
+				owner = { has_law = law_type:law_right_of_assembly }
+			}
+			owner = {
+				add_radicals = {
+					value = medium_radicals
+					interest_group = scope:relevant_ig
+				}
+			}
+		}
+		# Fewer radicals from Censorship
+		else_if = {
+			limit = {
+				owner = { has_law = law_type:law_censorship }
+			}
+			owner = {
+				add_radicals = {
+					value = small_radicals
+					interest_group = scope:relevant_ig
+				}
+			}
+		}
+		# Boring characters should be made interesting when being exiled
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_moderate
+			}
+			adopt_random_antigovernment_ideology = yes
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					popularity > 15
+				}
+				add_modifier = {
+					name = in_exile_modifier
+				}
+				every_country = {
+					limit = {
+						has_diplomatic_relevance = scope:exiling_country_scope
+					}
+					post_notification = exile_notification
+				}
+			}
+			else = {
+				add_modifier = {
+					name = in_exile_modifier
+					multiplier = 3
+				}
+			}
+		}
+		custom_tooltip = {
+			text = exile_dissident_tt
+			exile_character_with_martyrdom = yes
+		}
+	}
+
+	cooldown = { months = normal_modifier_time }
+	show_confirmation_box = yes
+
+	ai_chance = {
+		value = -50
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -5
+				}		
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -10
+				}		
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					NOR = {
+						has_law = law_type:law_autocracy
+						has_law = law_type:law_oligarchy
+						has_law = law_type:law_single_party_state
+					}
+				}			
+			}
+			add = -25
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_secret_police
+				}			
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_national_guard
+				}			
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_guaranteed_liberties
+				}			
+			}
+			add = -100
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_outlawed_dissent
+				}			
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_censorship
+				}			
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_right_of_assembly
+				}			
+			}
+			add = -10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_protected_speech
+				}			
+			}
+			add = -20
+		}
+	}
+}

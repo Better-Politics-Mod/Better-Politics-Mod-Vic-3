@@ -1,0 +1,170 @@
+# For general purpose and economic growth, it's best to have political stability at the middle [DYNAMIC]
+# Low stability [UNSTABLE] causes radicals and revolutions, alongside low ING support. At high stability [STAGNANT] reforms become harder to do, alongside higher ING support.
+# Factors:
+# + Backwards laws favoring nobility keep stability high
+# + Repressive laws keep stability high (scaled by institution levels, if applicable)
+# + IGs in power for long periods of time keep stability high
+# + Loyalists boost stability
+# - Electoral periods destabilize while active
+# +- Wars cause popularity changes based on war exhaustion. Defense of core territory mitigates negative hits to stability. Not having a war participant of higher or equal rank causes less influence.
+# - Revolutions damage stability
+# - Radicals damage stability
+# - Low legitimacy damages stability
+# Equilibrium change rate factors:
+# - Low default speed
+# + Revolutions, Wars & Election Cycles speed up the equilibrium
+# One-time factors:
+# - Coup JE destabilizes the system
+# - Revolution destabilizes the system
+# - Foreign meddling destabilizes the system
+# - Going bankrupt destabilizes the system
+# - Changing DoP or Govt laws destabilizes the system
+# + Fulfilling a Political Movement's demands stabilizes the system
+#
+# Potential options:
+# Use a button to get a one-time boost to law passing success chance at the cost of pissing off the IGs that oppose it
+bpm_update_political_stability = {
+	# TRACKING INTEREST GROUPS --------------------------
+	set_variable = { name = bpm_political_stability_from_interest_groups value = 0 }
+	every_interest_group = {
+		if = {
+			limit = { NOT = { has_variable = bpm_ig_in_government_duration } }
+			set_variable = { name = bpm_ig_in_government_duration value = 0 }
+		}
+
+		if = {
+			limit = { is_in_government = yes }
+			change_variable = { name = bpm_ig_in_government_duration add = 1 }
+		} else = {
+			change_variable = { name = bpm_ig_in_government_duration subtract = 4 }
+		}
+		clamp_variable = { name = bpm_ig_in_government_duration min = 0 max = 600 }
+
+		if = {
+			limit = { var:bpm_ig_in_government_duration > 24 } # 2 years of consequetive presence in government 
+			prev = { 
+				change_variable = { 
+					name = bpm_political_stability_from_interest_groups 
+					add = {
+						add = bpm_ig_in_government_duration 
+						multiply = prev.ig_government_power_share
+					}
+				} 
+			}
+		}
+	}
+	change_variable = { name = bpm_political_stability_from_interest_groups divide = 12 }
+	clamp_variable = { name = bpm_political_stability_from_interest_groups min = 0 max = 50 }
+
+	# APPLYING CHANGE ---------------------------------
+	if = {
+		limit = { NOT = { has_variable = bpm_political_stability } }
+		set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		recalculate_pop_ig_support = yes
+	} else = {
+		bpm_handle_baseline_target_trend_script_value = {
+			VARIABLE = bpm_political_stability
+			RATE = bpm_political_stability_rate
+		}
+	}
+
+	clamp_variable = {
+		name = bpm_political_stability
+		min = 0 max = 100
+	}
+
+	# HANDLING STATIC MODIFIERS ---------------------------------
+	remove_modifier = bpm_stability_stagnant
+	remove_modifier = bpm_stability_unstable
+
+	if = {
+		limit = { var:bpm_political_stability > 66 }
+		add_modifier = {
+			name = bpm_stability_stagnant
+			multiplier = {
+				add = var:bpm_political_stability
+				divide = 100
+				subtract = 0.66
+				multiply = 3
+				max = 1.0 # (1-0.66)*3 will be 1.02, so we clamp it for nice numbers
+			}
+		}
+	} else_if = {
+		limit = { var:bpm_political_stability <= 33 }
+		add_modifier = {
+			name = bpm_stability_unstable
+			multiplier = {
+				add = 33
+				subtract = var:bpm_political_stability
+				divide = 100
+				multiply = 3
+				max = 1.0 # (1-0.66)*3 will be 1.02, so we clamp it for nice numbers
+				min = 0.0
+			}
+		}
+	}
+}
+
+bpm_add_political_stability_big = {
+	custom_tooltip = {
+		text = "bpm_add_political_stability_big"
+		post_notification = bpm_add_political_stability_big
+		change_variable = {	name = bpm_political_stability add = 20 }
+	}
+}
+
+bpm_add_political_stability_normal = {
+	custom_tooltip = {
+		text = "bpm_add_political_stability_normal"
+		post_notification = bpm_add_political_stability_normal
+		change_variable = {	name = bpm_political_stability add = 10 }
+	}
+}
+
+bpm_add_political_stability_small = {
+	custom_tooltip = {
+		text = "bpm_add_political_stability_small"
+		post_notification = bpm_add_political_stability_small
+		change_variable = {	name = bpm_political_stability add = 5 }
+		clamp_variable = {
+			name = bpm_political_stability
+			min = 0 max = 100
+		}
+	}
+}
+
+bpm_remove_political_stability_big = {
+	custom_tooltip = {
+		text = "bpm_remove_political_stability_big"
+		post_notification = bpm_remove_political_stability_big
+		change_variable = {	name = bpm_political_stability subtract = 20 }
+		clamp_variable = {
+			name = bpm_political_stability
+			min = 0 max = 100
+		}
+	}
+}
+
+bpm_remove_political_stability_normal = {
+	custom_tooltip = {
+		text = "bpm_remove_political_stability_normal"
+		post_notification = bpm_remove_political_stability_normal
+		change_variable = {	name = bpm_political_stability subtract = 10 }
+		clamp_variable = {
+			name = bpm_political_stability
+			min = 0 max = 100
+		}
+	}
+}
+
+bpm_remove_political_stability_small = {
+	custom_tooltip = {
+		text = "bpm_remove_political_stability_small"
+		post_notification = bpm_remove_political_stability_small
+		change_variable = {	name = bpm_political_stability subtract = 5	}
+		clamp_variable = {
+			name = bpm_political_stability
+			min = 0 max = 100
+		}
+	}
+}

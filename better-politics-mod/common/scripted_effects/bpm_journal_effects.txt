@@ -1,0 +1,606 @@
+# Requires the $VARIABLE$ and $VARIABLE$_baseline_target to be set
+# $RATE$ is how fast the variable ends up changing to the trend 
+bpm_handle_baseline_target_trend = {
+	if = {
+		limit = {
+			var:$VARIABLE$ < var:$VARIABLE$_baseline_target			
+		}
+		change_variable = {
+			name = $VARIABLE$
+			add = $RATE$
+		}
+		if = { # We overshat a bit 
+			limit = {
+				var:$VARIABLE$ > var:$VARIABLE$_baseline_target			
+			}
+			set_variable = {
+				name = $VARIABLE$
+				value = var:$VARIABLE$_baseline_target			
+			}
+		}
+	} else_if = {
+		limit = {
+			var:$VARIABLE$ > var:$VARIABLE$_baseline_target			
+		}
+		change_variable = {
+			name = $VARIABLE$
+			subtract = $RATE$
+		}
+		if = { # We overshat a bit 
+			limit = {
+				var:$VARIABLE$ < var:$VARIABLE$_baseline_target			
+			}
+			set_variable = {
+				name = $VARIABLE$
+				value = var:$VARIABLE$_baseline_target			
+			}
+		}
+	}
+}
+bpm_handle_baseline_target_trend_script_value = {
+	if = {
+		limit = {
+			var:$VARIABLE$ < $VARIABLE$_baseline_target			
+		}
+		change_variable = {
+			name = $VARIABLE$
+			add = $RATE$
+		}
+		if = { # We overshat a bit 
+			limit = {
+				var:$VARIABLE$ > $VARIABLE$_baseline_target			
+			}
+			set_variable = {
+				name = $VARIABLE$
+				value = $VARIABLE$_baseline_target			
+			}
+		}
+	} else_if = {
+		limit = {
+			var:$VARIABLE$ > $VARIABLE$_baseline_target			
+		}
+		change_variable = {
+			name = $VARIABLE$
+			subtract = $RATE$
+		}
+		if = { # We overshat a bit 
+			limit = {
+				var:$VARIABLE$ < $VARIABLE$_baseline_target			
+			}
+			set_variable = {
+				name = $VARIABLE$
+				value = $VARIABLE$_baseline_target			
+			}
+		}
+	}
+}
+
+# Requires the $VARIABLE$ and $VARIABLE$_rate to be set
+# Wrapper for a more vanilla-esque JE growth
+bpm_handle_steady_var_growth = {
+	change_variable = {
+		name = $VARIABLE$
+		add = var:$VARIABLE$_rate
+	}
+	clamp_variable = {
+		name = $VARIABLE$
+		min = 0
+		max = 100
+	}
+}
+bpm_handle_steady_global_var_growth = {
+	change_global_variable = {
+		name = $VARIABLE$
+		add = global_var:$VARIABLE$_rate
+	}
+	clamp_global_variable = {
+		name = $VARIABLE$
+		min = 0
+		max = 100
+	}
+}
+
+bpm_socialist_electoralism_update_baseline_target = {
+	set_variable = { name = bpm_je_socialist_electoralism_baseline_target value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_base value = 50 } # Basic level of electoralism
+
+	# INTEREST GROUPS --------------------------
+	set_variable = { name = bpm_je_socialist_electoralism_from_powerful_socialists value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_socialists_in_government value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_bolstered_socialists value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_happy_socialists value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_angry_socialists value = 0 }
+	set_variable = { name = bpm_je_socialist_electoralism_from_suppressed_socialists value = 0 }
+	every_interest_group = {
+		limit = {
+			bpm_ig_is_socialist = yes 
+		}
+
+		# Powerful socialist IGs present
+		if = {
+			limit = {
+				is_powerful = yes
+			}
+			ROOT = { change_variable = { name = bpm_je_socialist_electoralism_from_powerful_socialists add = 5 } }
+		}
+
+		# Socialist IG in government 
+		if = {
+			limit = {
+				is_in_government = yes 
+			}
+			ROOT = { change_variable = { name = bpm_je_socialist_electoralism_from_socialists_in_government add = 10 } }
+		}
+
+		# Bolstered socialist IGs 
+		if = {
+			limit = {
+				is_being_bolstered = yes
+			}
+			ROOT = { change_variable = { name = bpm_je_socialist_electoralism_from_bolstered_socialists add = 5 } }
+		}
+
+		# Happy non-marginal socialist IGs 
+		if = {
+			limit = {
+				ig_approval >= happy
+				is_marginal = no
+			}
+			ROOT = { change_variable = { name = bpm_je_socialist_electoralism_from_happy_socialists add = 5 } }
+		}
+
+		# Suppressed socialist IGs 
+		if = {
+			limit = {
+				is_being_suppressed = yes
+				is_marginal = no
+			}
+			ROOT = { change_variable = { name = bpm_je_socialist_electoralism_from_suppressed_socialists subtract = 10 } }
+		}
+	}
+
+	# LAWS & REVOLUTION ---------------------------------
+
+	# Revolution
+	set_variable = { name = bpm_je_socialist_electoralism_from_revolution value = 0 }
+	if = {
+		limit = {
+			OR = {
+				has_revolution = yes
+				var:bpm_political_stability <= 0.33
+			}
+		}
+		set_variable = { name = bpm_je_socialist_electoralism_from_revolution value = 25 }
+	}
+
+	# Censorship Laws
+	set_variable = { name = bpm_je_socialist_electoralism_from_censorship value = 0 }
+	if = {
+		limit = {
+			has_law = law_type:law_protected_speech
+		}
+		set_variable = { name = bpm_je_socialist_electoralism_from_censorship value = 10 }
+	} else_if = {
+		limit = {
+			has_law = law_type:law_right_of_assembly
+		}
+		set_variable = { name = bpm_je_socialist_electoralism_from_censorship value = 5 }
+	} else_if = {
+		limit = {
+			has_law = law_type:law_censorship
+		}
+		set_variable = { name = bpm_je_socialist_electoralism_from_censorship value = -10 }
+	} else_if = {
+		limit = {
+			has_law = law_type:law_censorship
+		}
+		set_variable = { name = bpm_je_socialist_electoralism_from_censorship value = -20 }
+	}
+
+	# Home Affairs Laws 
+	set_variable = { name = bpm_je_socialist_electoralism_from_home_affairs value = institution:institution_home_affairs.investment }
+	if = {
+		limit = {
+			has_law = law_type:law_guaranteed_liberties
+		}
+		change_variable = { name = bpm_je_socialist_electoralism_from_home_affairs multiply = 4 }
+	} else_if = {
+		limit = {
+			has_law = law_type:law_national_guard
+		}
+		change_variable = { name = bpm_je_socialist_electoralism_from_home_affairs multiply = -2 }
+	} else_if = {
+		limit = {
+			has_law = law_type:law_secret_police
+		}
+		change_variable = { name = bpm_je_socialist_electoralism_from_home_affairs multiply = -4 }
+	}
+
+	# TOTAL --------------------------
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_base }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_powerful_socialists }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_socialists_in_government }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_bolstered_socialists }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_happy_socialists }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_suppressed_socialists }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_revolution }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_censorship }
+	change_variable = { name = bpm_je_socialist_electoralism_baseline_target add = var:bpm_je_socialist_electoralism_from_home_affairs }
+
+	clamp_variable = {
+		name = bpm_je_socialist_electoralism_baseline_target
+		min = 0 max = 100
+	}
+}
+
+bpm_je_split_natlibs_progress_rate_update = {
+	set_variable = { name = bpm_je_split_natlibs_progress_rate value = 0 }
+	set_variable = { name = bpm_je_split_natlibs_progress_from_base value = -0.4 } # Base rate
+
+	# WARS --------------------------
+	set_variable = { name = bpm_je_split_natlibs_progress_from_conflicts value = 0 }
+	if = {
+		limit = { is_at_war = yes }
+		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 0.5 }
+	} else_if = { # Don't want wars to stack with diploplays here 
+		limit = { is_diplomatic_play_committed_participant = yes }
+		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 0.2 }
+	}
+	if = {
+		limit = { has_revolution = yes }
+		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 2.0 }
+	}
+	if = {
+		limit = { bpm_country_is_major_unification_candidate = yes }
+		change_variable = { name = bpm_je_split_natlibs_progress_from_conflicts add = 0.5 }
+	}
+
+	# INTEREST GROUPS --------------------------
+	set_variable = { name = bpm_je_split_natlibs_progress_from_libcons_base value = 0 }
+	set_variable = { name = bpm_je_split_natlibs_progress_from_libcons_empowered value = 0 }
+	set_variable = { name = bpm_je_split_natlibs_progress_from_libcons_suppressed value = 0 }
+	set_variable = { name = bpm_je_split_natlibs_progress_from_libcons_marginal value = 0 }
+	every_interest_group = {
+		limit = {
+			OR = {
+				is_interest_group_type = ig_liberals
+				is_interest_group_type = ig_conservatives
+			}
+		}
+
+		if = {
+			limit = { is_marginal = yes }
+			ROOT = { change_variable = { name = bpm_je_split_natlibs_progress_from_libcons_marginal add = -0.1 } }
+		} else_if = {
+			limit = { is_being_suppressed = yes }
+			ROOT = { change_variable = { name = bpm_je_split_natlibs_progress_from_libcons_suppressed add = -0.2 } }
+		} else_if = {
+			limit = { is_powerful = yes }
+			ROOT = { change_variable = { name = bpm_je_split_natlibs_progress_from_libcons_base add = 0.2   } }
+		} else = {
+			ROOT = { change_variable = { name = bpm_je_split_natlibs_progress_from_libcons_base add = 0.1 } }
+		} 
+
+		if = {
+			limit = {
+				OR = {
+					is_being_bolstered = yes
+					is_in_government = yes
+				} 
+			}
+			ROOT = { change_variable = { name = bpm_je_split_natlibs_progress_from_libcons_empowered add = 0.2 } }
+		}
+	}
+
+	# RADICALS --------------------------
+	set_variable = { name = bpm_je_split_natlibs_progress_from_radicals value = 1.5 }
+	if = {
+		limit = {
+			radical_fraction = {
+				value > 0.5
+				strata = poor
+			}
+		}
+		change_variable = { name = bpm_je_split_natlibs_progress_from_radicals multiply = 0.5 }
+	} else_if = {
+		limit = {
+			radical_fraction = {
+				value > 0.33
+				strata = poor
+			}
+		}
+		change_variable = { name = bpm_je_split_natlibs_progress_from_radicals multiply = 0.33 }
+	} else_if = {
+		limit = {
+			radical_fraction = {
+				value > 0.2
+				strata = poor
+			}
+		}
+		change_variable = { name = bpm_je_split_natlibs_progress_from_radicals multiply = 0.2 }
+	} else_if = {
+		limit = {
+			radical_fraction = {
+				value > 0.1
+				strata = poor
+			}
+		}
+		change_variable = { name = bpm_je_split_natlibs_progress_from_radicals multiply = 0.1 }
+	} else = {
+		change_variable = { name = bpm_je_split_natlibs_progress_from_radicals multiply = 0.0 }
+	}
+
+	# TOTAL --------------------------
+	change_variable = { name = bpm_je_split_natlibs_progress_rate add = var:bpm_je_split_natlibs_progress_from_base }
+	change_variable = { name = bpm_je_split_natlibs_progress_rate add = var:bpm_je_split_natlibs_progress_from_conflicts }
+	change_variable = { name = bpm_je_split_natlibs_progress_rate add = var:bpm_je_split_natlibs_progress_from_libcons_base }
+	change_variable = { name = bpm_je_split_natlibs_progress_rate add = var:bpm_je_split_natlibs_progress_from_libcons_empowered }
+	change_variable = { name = bpm_je_split_natlibs_progress_rate add = var:bpm_je_split_natlibs_progress_from_libcons_suppressed }
+	change_variable = { name = bpm_je_split_natlibs_progress_rate add = var:bpm_je_split_natlibs_progress_from_libcons_marginal }
+	if = {
+		limit = {
+			AND = {
+				bpm_je_split_natlibs_progress_from_libcons_marginal = 0
+				bpm_je_split_natlibs_progress_from_libcons_suppressed = 0
+			}
+		}
+		change_variable = { name = bpm_je_split_natlibs_progress_rate add = var:bpm_je_split_natlibs_progress_from_radicals }
+	}
+	
+}
+
+bpm_je_split_marlibs_progress_rate_update = {
+	set_variable = { name = bpm_je_split_marlibs_progress_rate value = 0 }
+	set_variable = { name = bpm_je_split_marlibs_progress_from_base value = 0 } # Base rate
+
+	# Top GP
+	set_variable = { name = bpm_je_split_marlibs_progress_from_top_gp value = 0 }
+	if = {
+		limit = {
+			global_country_ranking = 1
+		}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_top_gp add = 0.1 }
+	}
+
+	# LAW ENACTMENT --------------------------
+	set_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment value = 0 }
+	set_variable = { name = bpm_je_split_marlibs_progress_from_movement value = 0 }
+	if = {
+		limit = {
+			OR = {
+				is_enacting_law = law_type:law_commercialized_agriculture
+				is_enacting_law = law_type:law_laissez_faire
+				is_enacting_law = law_type:law_free_trade
+			}
+		}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment add = 1.0 }
+	}
+	if = {
+		limit = {
+			OR = {
+				is_enacting_law = law_type:law_homesteading
+				is_enacting_law = law_type:law_tenant_farmers
+				is_enacting_law = law_type:law_interventionism
+				is_enacting_law = law_type:law_protectionism
+			}
+		}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment add = 0.5 }
+	}
+	if = {
+		limit = {
+			any_political_movement = {
+				desired_law = {
+					OR = {
+						is_same_law_group_as = law_type:law_laissez_faire
+						is_same_law_group_as = law_type:law_free_trade
+						is_same_law_group_as = law_type:law_homesteading
+					}
+				}
+			}
+		}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_movement add = 0.5 }
+	}
+
+	# CURRENT LAWS --------------------------
+	set_variable = { name = bpm_je_split_marlibs_progress_from_good_laws value = 0 }
+	set_variable = { name = bpm_je_split_marlibs_progress_from_bad_laws value = 0 }
+	# Good laws <3
+	if = {
+		limit = { has_law = law_type:law_homesteading	}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_good_laws add = 0.1 }
+	}
+	if = {
+		limit = { has_law = law_type:law_interventionism	}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_good_laws add = 0.1 }
+	}
+	if = {
+		limit = { has_law = law_type:law_protectionism	}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_good_laws add = 0.1 }
+	}
+	# grrr bad laws 
+	if = {
+		limit = { has_law = law_type:law_serfdom }
+		change_variable = { name = bpm_je_split_marlibs_progress_from_bad_laws add = -0.5 }
+	}
+	if = {
+		limit = { has_law = law_type:law_traditionalism	}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_bad_laws add = -0.5 }
+	}
+
+	# PATCONS --------------------------
+	set_variable = { name = bpm_je_split_marlibs_progress_from_patcons value = 0 }
+	if = {
+		limit = { has_variable = local_patcon_split_var }
+		change_variable = { name = bpm_je_split_marlibs_progress_from_patcons add = 0.5 }
+	}
+
+	# RADICAL CAPITALISTS --------------------------
+	set_variable = { name = bpm_je_split_marlibs_progress_from_radcaps value = 0 }
+	if = {
+		limit = {
+			radical_fraction = {
+				value > 0.1
+				pop_type = capitalists
+			}
+		}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_radcaps multiply = 1.2 }
+	}
+
+	# TOTAL --------------------------
+	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_base }
+	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_top_gp }
+	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_law_enactment }
+	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_movement }
+	# change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_good_laws }
+	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_bad_laws }
+	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_patcons }
+	change_variable = { name = bpm_je_split_marlibs_progress_rate add = var:bpm_je_split_marlibs_progress_from_radcaps }
+}
+
+bpm_je_split_patcons_progress_rate_update = {
+	set_variable = { name = bpm_je_split_patcons_progress_rate value = 0 }
+	set_variable = { name = bpm_je_split_patcons_progress_from_base value = 0.0 } # Base rate
+
+	# LOYALISM/RADICALISM/POVERTY --------------------------
+	set_variable = { name = bpm_je_split_patcons_progress_from_poverty value = 0 } 
+	set_variable = { name = bpm_je_split_patcons_progress_from_loyalists value = 0 } 
+	set_variable = { name = bpm_je_split_patcons_progress_from_radicals value = 0 } 
+	every_scope_state = {
+		limit = {
+			is_incorporated = yes
+			this.state_population > 0
+		}
+
+		set_variable = { name = temp_loyal value = this.loyalty }
+		# set_variable = { name = temp_poor value = this.population_below_expected_sol } #TODO: FIX THIS VALUE
+		set_variable = { name = temp_rad value = this.turmoil }
+
+		ROOT = {
+			# change_variable = { name = bpm_je_split_patcons_progress_from_poverty add = prev.var:temp_poor }
+			change_variable = { name = bpm_je_split_patcons_progress_from_loyalists add = prev.var:temp_loyal }
+			change_variable = { name = bpm_je_split_patcons_progress_from_radicals add = prev.var:temp_rad }
+		}
+
+		remove_variable = temp_loyal
+		# remove_variable = temp_poor
+		remove_variable = temp_rad
+	}
+
+
+	
+	# CONSERVATIVE STATUS --------------------------
+	set_variable = { name = bpm_je_split_patcons_progress_from_conservative_status value = 0 }
+	if = {
+		limit = { ig:ig_conservatives = { is_being_suppressed = yes } }
+		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_conservative_status add = 0.25 } }
+	}
+
+	# LEFT WING --------------------------
+	set_variable = { name = bpm_je_split_patcons_progress_from_left_wing_power value = 0 } 
+	every_interest_group = {
+		limit = {
+			bpm_ig_is_radical_left = yes 
+			is_marginal = no
+		}
+		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_left_wing_power add = 0.25 } }
+	}
+
+	set_variable = { name = bpm_je_split_patcons_progress_from_left_wing_government value = 0 }
+	if = {
+		limit = { 
+			ig:ig_conservatives = { is_in_government = no }
+			any_interest_group = {
+				bpm_ig_is_radical_left = yes
+				is_in_government = yes
+			}
+		}
+		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_left_wing_government add = 0.25 } }
+	}
+
+	# COUNCIL REPUBLIC --------------------------
+	set_variable = { name = bpm_je_split_patcons_progress_from_communist_victory_coping value = 0 } 
+
+	if = {
+		limit = { has_law = law_type:law_council_republic }
+		change_variable = { name = bpm_je_split_patcons_progress_from_communist_victory_coping add = 3 }
+	}
+
+	# MARLIBS --------------------------
+	set_variable = { name = bpm_je_split_patcons_progress_from_marlibs value = 0 }
+	if = {
+		limit = { has_variable = local_marlib_split_var }
+		change_variable = { name = bpm_je_split_patcons_progress_from_marlibs add = 0.5 }
+	}
+
+	set_variable = { name = bpm_je_split_patcons_progress_from_corporatism value = 0 }
+	if = {
+		limit = { has_technology_researched = corporatism }
+		change_variable = { name = bpm_je_split_patcons_progress_from_corporatism add = 0.2 }
+	}
+
+	# TOTAL --------------------------
+	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_base }
+	# change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_poverty }
+	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_loyalists }
+	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_radicals }
+	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_conservative_status }
+	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_left_wing_power }
+	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_left_wing_government }
+	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_communist_victory_coping }
+	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_marlibs }
+	change_variable = { name = bpm_je_split_patcons_progress_rate add = var:bpm_je_split_patcons_progress_from_corporatism }
+}
+
+bpm_je_second_intl_progress_rate_update = {
+	set_global_variable = { name = bpm_je_second_intl_progress_rate value = 0 }
+	set_global_variable = { name = bpm_je_second_intl_progress_from_base value = -1.0 } # Base rate
+
+	# CALCS --------------------------
+	set_global_variable = { name = bpm_je_second_intl_progress_from_powerful_igs value = 0 }
+	set_global_variable = { name = bpm_je_second_intl_progress_from_influential_igs value = 0 }
+	set_global_variable = { name = bpm_je_second_intl_progress_from_agitators value = 0 }
+	every_country = {
+		limit = {
+			country_rank = rank_value:great_power
+		}
+
+		every_interest_group = {
+			limit = {
+				bpm_ig_is_socialist = yes
+				is_marginal = no
+			}
+
+			if = {
+				limit = { is_powerful = yes	}
+				change_global_variable = { name = bpm_je_second_intl_progress_from_powerful_igs add = 0.4 }
+			} else = {
+				change_global_variable = { name = bpm_je_second_intl_progress_from_influential_igs add = 0.2 }
+			}
+		}
+
+		every_scope_character = {
+			limit = {
+				has_role = agitator
+				OR = {
+					law_stance = {
+						law = law_type:law_council_republic
+						value > neutral
+					}
+					interest_group = {
+						law_stance = {
+							law = law_type:law_council_republic
+							value > neutral
+						}
+					}
+				}
+			}
+			change_global_variable = { name = bpm_je_second_intl_progress_from_agitators add = 0.1 }
+		}
+	}
+
+	# TOTAL --------------------------
+	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_base }
+	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_powerful_igs }
+	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_influential_igs }
+	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_agitators }
+}

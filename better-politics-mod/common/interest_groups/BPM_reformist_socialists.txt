@@ -11,10 +11,10 @@
 	enable = {
 		has_global_variable = global_socialists_split_var
 	}
-
+	
 	on_enable = {
 		ig:ig_reformist_socialists = {
-			set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
+			# set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
 			set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
 			set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
 		}
@@ -77,10 +77,11 @@
 		}		
 	
 		add = {
-			desc = "POP_URBAN_PROLETARIAT"
+			desc = "POP_PROLETARIAT"
 			if = {
 				limit = { 
 					OR = {
+						is_pop_type = clerks
 						is_pop_type = laborers
 						is_pop_type = machinists
 					}
@@ -88,20 +89,28 @@
 				value = 30
 			}
 		}
-
 		add = {
 			desc = "POP_EDUCATED_PROLETARIAT"
 			if = {
 				limit = { 
 					OR = {
-						AND = {
-							is_pop_type = laborers
-							literacy_rate >= 0.60
-						}
+						is_pop_type = clerks
+						is_pop_type = laborers
 						is_pop_type = machinists
 					}
 				}
-				value = 60
+				value = literacy_rate
+				multiply = 100
+			}
+		}
+		add = {
+			desc = "POP_EDUCATED_FARMERS"
+			if = {
+				limit = { 
+					is_pop_type = farmers
+				}
+				value = literacy_rate
+				multiply = 100
 			}
 		}	
 
@@ -114,7 +123,7 @@
 						is_pop_type = engineers
 					}
 				}
-				value = 60
+				value = 50
 			}
 		}
 
@@ -146,7 +155,7 @@
 					}
 					owner = {
 						radical_fraction = {
-							value >= 0.5
+							value >= 0.2
 							pop_type = laborers
 						}
 					}
@@ -154,6 +163,8 @@
 				value = 100
 			}
 		}
+
+		add = ig_attraction_tmp_bpm_non_rural_socialist
 
 		add = {
 			desc = "POP_DISCRIMINATED"
@@ -178,6 +189,8 @@
 			}
 		}	
 
+		multiply = bpm_ig_agitators_popularity
+
 		multiply = {
 			desc = "NO_UNIONS"	
 			value = 1.0
@@ -188,9 +201,10 @@
 						ig:ig_trade_unions = {
 							is_marginal = yes
 						}
+						NOT = { has_law = law_type:law_council_republic }
 					}
 				}
-				value = 0.5
+				value = 0.2
 			}		
 		}
 		multiply = {
@@ -203,9 +217,10 @@
 						ig:ig_trade_unions = {
 							ig_clout < 5
 						}
+						NOT = { has_law = law_type:law_council_republic }
 					}
 				}
-				value = 0.75
+				value = 0.7
 			}		
 		}
 		multiply = {
@@ -254,7 +269,7 @@
 			desc = "BEFORE_FIRST_INTERNATIONAL"
 			value = 1.0
 			if = {
-				limit = { NOT = { has_global_variable = first_intl_split_complete_var } }
+				limit = { NOT = { has_global_variable = first_intl_chain_complete_var } }
 				value = 0.8
 			} 
 		}
@@ -262,8 +277,8 @@
 			desc = "BEFORE_SECOND_INTERNATIONAL"
 			value = 1.0
 			if = {
-				limit = { NOT = { has_global_variable = second_intl_split_complete_var } }
-				value = 0.6
+				limit = { NOT = { has_global_variable = second_intl_chain_complete_var } }
+				value = 0.7
 			}
 		}
 		multiply = {
@@ -303,7 +318,7 @@
 			value = 1.0
 			if = {
 				limit = { owner = { NOT = { has_technology_researched = socialism } } }
-				value = 0.5
+				value = 0.7
 			}		
 		}
 		multiply = {
@@ -311,7 +326,7 @@
 			value = 1.0
 			if = {
 				limit = { owner = { NOT = { has_technology_researched = labor_movement } } }
-				value = 0.5
+				value = 0.7
 			}		
 		}		
 		multiply = {
@@ -330,25 +345,16 @@
 				limit = { 
 					owner = {
 						any_interest_group = {
-							NOT = { has_ideology = ideology:ideology_ig_reformist_socialist }
 							OR = {
-								has_ideology = ideology:ideology_liberal
-								has_ideology = ideology:ideology_anti_slavery
-								has_ideology = ideology:ideology_egalitarian
-								leader = {
-									OR = {
-										has_ideology = ideology:ideology_radical
-										has_ideology = ideology:ideology_reformer
-										has_ideology = ideology:ideology_abolitionist
-										has_ideology = ideology:ideology_feminist
-									}
-								}
+								bpm_ig_is_radical_liberal = yes
+								leader = { bpm_leader_is_radical_liberal = yes }
+								leader = { bpm_leader_is_progressive_liberal = yes }
 							}
 							is_being_suppressed = yes
 						}
 					}
 				}
-				value = 1.2
+				value = 1.3
 			}		
 		}	
 		multiply = {
@@ -359,13 +365,7 @@
 				limit = { 
 					owner = {
 						any_interest_group = {
-							OR = {
-								has_ideology = ideology:ideology_paternalistic
-								has_ideology = ideology:ideology_reactionary
-								has_ideology = ideology:ideology_pro_slavery
-								has_ideology = ideology:ideology_stratocratic
-								has_ideology = ideology:ideology_laissez_faire
-							}
+							bpm_ig_is_right_wing = yes
 							is_being_bolstered = yes
 						}
 					}
@@ -386,15 +386,25 @@
 				}
 				value = 0.0
 			}		
-		}		
+		}	
+		multiply = ig_attraction_from_radicals_and_loyalists	
+		#multiply = ig_attraction_to_reformists_from_stability
+
+		
 	}
 	
 	monarch_weight = {
 		value = 0.0
 	}	
 
+	agitator_weight = {
+		value = 1.0
+		multiply = bpm_base_agitator_weight
+	}
+	
 	commander_weight = {
-		value = 0.5
+		value = 1.0
+		multiply = bpm_commander_assignment_from_laws_factor
 	}	
 	
 	noble_chance = {
@@ -402,23 +412,18 @@
 	}
 	
 	female_commander_chance = {	
-		value = 0.0
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
 	}
 	
 	female_politician_chance = {
-		value = 0.1
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
 
-		if = {
-			limit = {
-				owner = {
-					has_law = law_type:law_women_own_property
-				}
-				
-			}
-			add = {
-				value = 0.2
-			}
-		}
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

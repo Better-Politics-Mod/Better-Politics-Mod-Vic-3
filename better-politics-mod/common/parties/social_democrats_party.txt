@@ -200,34 +200,38 @@ social_democrat_party = {
 		always = yes
 	}
 	available_for_interest_group = {
+		bpm_ig_enabled = yes
+		NOT = { bpm_is_party_banned = { PARTY = social_democrat_party } }
 		owner = {
 			any_interest_group = {
-				has_ideology = ideology:ideology_proletarian
+				bpm_ig_is_proletarian = yes
 				is_marginal = no
 			}
 		}
-		NOR = {
-			has_ideology = ideology:ideology_reactionary
-			has_ideology = ideology:ideology_stratocratic
-			has_ideology = ideology:ideology_moralist
-			has_ideology = ideology:ideology_ig_fascist
-			has_ideology = ideology:ideology_paternalistic
-			has_ideology = ideology:ideology_laissez_faire
-		}
-		leader = { # fascists and conservatives hate social democracy
-			NOT = {
-				has_ideology = ideology:ideology_fascist
-				has_ideology = ideology:ideology_ethno_nationalist
-				has_ideology = ideology:ideology_traditionalist
-				has_ideology = ideology:ideology_royalist
-				has_ideology = ideology:ideology_theocrat
+		OR = {
+			AND = {
+				bpm_ig_is_moderate_conservative = no
+				bpm_ig_is_traditionalist = no
+				bpm_ig_is_upper_institutional = no
+				NOT = { has_ideology = ideology:ideology_eco_laissez_faire }
+				leader = { bpm_leader_is_right_wing = no }
 			}
+			leader = { bpm_leader_is_radical_socialist = yes }
 		}
 	}
 	join_weight = {
 		value = {
-			value = -5
+			value = -2
 			desc = "base_value"
+		}
+		if = { # no socialist party before the first international
+			limit = {
+				NOT = { has_global_variable = first_intl_chain_complete_var }
+			}
+			add = {
+				value = -25
+				desc = "bpm_before_first_intl"
+			}
 		}
 		if = { # revsocs won't cooperate if disunited
 			limit = {
@@ -238,9 +242,8 @@ social_democrat_party = {
 					}
 				}
 				OR = {
-					has_ideology = ideology:ideology_ig_revolutionist_socialist
-					leader = { has_ideology = ideology:ideology_vanguardist }
-					leader = { has_ideology = ideology:ideology_communist }
+					bpm_ig_is_revolutionary_socialist = yes
+					leader = { bpm_leader_is_communist = yes }
 				}
 			}
 			add = {
@@ -248,53 +251,58 @@ social_democrat_party = {
 				desc = "bpm_disunited_socialists"
 			}
 		}
-		if = { # social democrats love social democracy
+		if = { # socialists love socialism
 			limit = {
 				OR = {
-					leader = { has_ideology = ideology:ideology_social_democrat }
-					leader = { has_ideology = ideology:ideology_socialist_leader }
-					has_ideology = ideology:ideology_ig_united_socialist
-				}
-				NOT = {
-					has_ideology = ideology:ideology_ig_anarchist
+					leader = { bpm_leader_is_socialist = yes }
+					bpm_ig_is_socialist = yes
 				}
 			}
 			add = {	
-				value = 12
-				desc = from_social_democrat
+				value = 6
+				desc = "bpm_from_socialist"
+			}
+		}
+		if = { # socialists love socialism
+			limit = {
+				OR = {
+					leader = { bpm_leader_is_party_socialist = yes }
+					bpm_ig_is_party_socialist = yes
+				}
+			}
+			add = {	
+				value = 7
+				desc = "bpm_from_party_socialist"
 			}
 		}
 		if = { # powerful social democrats love social democracy
 			limit = {
 				is_powerful = yes
 				OR = {
-					leader = { has_ideology = ideology:ideology_social_democrat }
-					leader = { has_ideology = ideology:ideology_socialist_leader }
-					has_ideology = ideology:ideology_ig_united_socialist
+					leader = { bpm_leader_is_party_socialist = yes }
+					bpm_ig_is_party_socialist = yes
 				}
 			}
 			add = {	
 				value = 10
-				desc = from_social_democrat_powerful
+				desc = "bpm_from_powerful_party_socialist"
 			}
 		}
-		if = { # anarchists don't like the party
+		if = { # anarchist
 			limit = {
-				has_ideology = ideology:ideology_ig_anarchist
+				OR = {
+					has_global_variable = first_intl_disunited_var
+					has_global_variable = global_socialists_disunited_var
+					has_variable = local_socialists_disunited_var
+				}
+				OR = {
+					bpm_ig_is_anarchist = yes
+					leader = { bpm_leader_is_anarchist = yes }
+				}
 			}
 			add = {
-				value = -5
-				desc = from_anarchism
-			}
-		}
-		if = { # anarchists hate statists
-			limit = {
-				has_ideology = ideology:ideology_ig_anarchist
-				has_global_variable = first_intl_disunited_var
-			}
-			add = {
-				value = -10
-				desc = "bpm_from_first_intl_split"
+				value = -30
+				desc = "bpm_anarchist_anti_party"
 			}
 		}
 		if = { # trade unions will fall in line behind stronger leftists
@@ -308,44 +316,27 @@ social_democrat_party = {
 					any_interest_group = {
 						is_powerful = yes
 						OR = {
-							leader = { has_ideology = ideology:ideology_social_democrat }
-							has_ideology = ideology:ideology_ig_united_socialist
+							leader = { bpm_leader_is_socialist = yes }
+							bpm_ig_is_party_socialist = yes
 						}
 					}
 				}
 			}
 			add = {	
 				value = 10
-				desc = from_powerful_communists
+				desc = "bpm_from_powerful_party_socialist"
 			}
-		}
-		if = { # weak leftists will fall in line behind social democrats pre-revolution
-			limit = {
-				is_powerful = no
-				has_ideology = ideology:ideology_ig_revolutionist_socialist
-				owner = {
-					NOT = { has_law = law_type:law_council_republic }
-					any_interest_group = {
-						is_powerful = yes
-						has_ideology = ideology:ideology_ig_reformist_socialist
-					}
-				}
-			}
-			add = 6
-			desc = from_weak_communists
 		}
 		# weak liberals might fall in line behind strong social democrats
 		if = {
 			limit = {
 				is_powerful = no
-				has_ideology = ideology:ideology_liberal
+				bpm_ig_is_liberal = yes
 				owner = {
 					any_interest_group = {
 						is_powerful = yes
 						OR = {
-							leader = { has_ideology = ideology:ideology_social_democrat }
-							has_ideology = ideology:ideology_ig_social_democrat
-							has_ideology = ideology:ideology_ig_reformist_socialist
+							bpm_ig_is_reformist_socialist = yes
 						}
 					}
 				}
@@ -357,20 +348,22 @@ social_democrat_party = {
 		}
 		if = { # Weak radicals will fall in line behind stronger leftists if no strong liberals
 			limit = {
-				is_interest_group_type = ig_radicals
+				bpm_ig_is_radical_liberal = yes
 				is_powerful = no
 				owner = {
 					AND = {
 						any_interest_group = {
 							is_powerful = yes
 							OR = {
-								leader = { has_ideology = ideology:ideology_social_democrat }
-								has_ideology = ideology:ideology_ig_united_socialist
+								leader = { bpm_leader_is_socialist = yes }
+								bpm_ig_is_party_socialist = yes
 							}
 						}
-						any_interest_group = {
-							is_powerful = no
-							has_ideology = ideology:ideology_liberal
+						NOT = {
+							any_interest_group = {
+								is_powerful = yes
+								bpm_ig_is_liberal = yes
+							}
 						}
 					}
 				}
@@ -382,37 +375,7 @@ social_democrat_party = {
 		}
 		if = { # various progressives are inclined towards social democracy
 			limit = {
-				leader = {
-					OR = {
-						has_ideology = ideology:ideology_feminist
-						has_ideology = ideology:ideology_abolitionist
-						has_ideology = ideology:ideology_pacifist
-						has_ideology = ideology:ideology_radical
-						has_ideology = ideology:ideology_republican_leader
-						has_ideology = ideology:ideology_atheist
-						has_ideology = ideology:ideology_humanitarian
-					}
-				}
-			}
-			add = {	
-				value = 5
-				desc = from_progressivism_sd
-			}
-		}
-		if = { # various progressives are inclined towards social democracy
-			limit = {
-				has_ideology = ideology:ideology_egalitarian
-				NOT = {
-					has_ideology = ideology:ideology_ig_united_socialist
-				}
-				owner = {
-					any_interest_group = {
-						is_powerful = yes
-						OR = {
-							has_ideology = ideology:ideology_ig_united_socialist
-						}
-					}
-				}
+				leader = { bpm_leader_is_progressive_liberal = yes }
 			}
 			add = {	
 				value = 5
@@ -433,61 +396,28 @@ social_democrat_party = {
 		}
 		if = { # anti-censorship
 			limit = {
-				OR = {
-					has_ideology = ideology:ideology_liberal
-					has_ideology = ideology:ideology_egalitarian
-				}
+				bpm_ig_is_radical_liberal = yes
 				owner = {
 					has_law = law_type:law_outlawed_dissent
-				}
-			}
-			add = {
-				value = 3
-				desc = from_outlawed_dissent
-			}
-		}
-		if = { # against land-based taxation
-			limit = {
-				OR = {
-					has_ideology = ideology:ideology_meritocratic
-					has_ideology = ideology:ideology_agrarian
-					leader = {
-						has_ideology = ideology:ideology_social_democrat
+					NOT = {
+						any_interest_group = {
+							is_in_government = yes
+							bpm_ig_is_party_socialist = yes
+							is_powerful = yes
+						}
 					}
 				}
-				owner = {
-					has_law = law_type:law_land_based_taxation
-				}
 			}
 			add = {
-				value = 3
-				desc = "from_land_tax"
-			}
-		}
-		if = { # loyalists will join in when their issues are relevant
-			limit = {
-				has_ideology = ideology:ideology_loyalist
-				owner = {
-					has_law = law_type:law_consumption_based_taxation
-				}
-			}
-			add = {
-				value = 3
-				desc = "from_loyalist"
+				value = 5
+				desc = from_outlawed_dissent
 			}
 		}
 		if = { # republican
 			limit = {
 				OR = {
-					has_ideology = ideology:ideology_republican
-					has_ideology = ideology:ideology_populist
-					leader = {
-						OR = {
-							has_ideology = ideology:ideology_atheist
-							has_ideology = ideology:ideology_republican_leader
-							has_ideology = ideology:ideology_radical
-						}
-					}
+					bpm_ig_is_republican = yes
+					leader = { bpm_leader_is_republican_liberal = yes }
 				}
 				owner = {
 					OR = {
@@ -503,9 +433,13 @@ social_democrat_party = {
 		}
 		if = { # against illiteracy and religious education
 			limit = {
-				OR = {
-					has_ideology = ideology:ideology_individualist
-					has_ideology = ideology:ideology_proletarian
+				law_stance = {
+					law = law_type:law_religious_schools
+					value < neutral
+				}
+				law_stance = {
+					law = law_type:law_no_schools
+					value < neutral
 				}
 				owner = {
 					OR = {
@@ -521,93 +455,15 @@ social_democrat_party = {
 		}
 		if = { # against free trade - peasant/socialist alliance
 			limit = {
-				OR = {
-					has_ideology = ideology:ideology_proletarian
-					has_ideology = ideology:ideology_agrarian
-					has_ideology = ideology:ideology_paternalistic
-				}
-				owner = {
-					has_law = law_type:law_free_trade
-				}
+				bpm_ig_is_agrarian = yes
+				owner = { has_law = law_type:law_free_trade }
 				NOT = {
-					leader = {
-						has_ideology = ideology:ideology_market_liberal
-					}
-				}
-			}
-			add = {
-				value = 3
-				desc = "from_anti_laissez_faire"
-			}
-		}
-		if = { # against laissez-faire - peasant/socialist alliance
-			limit = {
-				OR = {
-					has_ideology = ideology:ideology_proletarian
-					has_ideology = ideology:ideology_agrarian
-				}
-				owner = {
-					has_law = law_type:law_laissez_faire
-				}
-				NOT = {
-					leader = {
-						has_ideology = ideology:ideology_market_liberal
-					}
-				}
-			}
-			add = {
-				value = 3
-				desc = "from_anti_laissez_faire"
-			}
-		}
-		if = { # loyalist-proletarian alliance for tax reform
-			limit = {
-				OR = {
-					has_ideology = ideology:ideology_proletarian
-					leader = {
-						has_ideology = ideology:ideology_social_democrat
-					}
-					AND = {
-						has_ideology = ideology:ideology_loyalist
-						owner = {
-							NOR = {
-								has_law = law_type:law_proportional_taxation
-								has_law = law_type:law_per_capita_based_taxation
-							}
-						}
-					}
-				}
-				owner = {
-					NOT = {
-						has_law = law_type:law_graduated_taxation
-					}
-				}
-			}
-			add = {
-				value = 3
-				desc = "from_no_graduated_taxation"
-			}
-		}
-		if = { # anti-serfdom
-			limit = {
-				owner = {
-					has_law = law_type:law_serfdom
-				}
-				OR = {
-					has_ideology = ideology:ideology_egalitarian
-					has_ideology = ideology:ideology_anti_slavery
-					has_ideology = ideology:ideology_laissez_faire
-					has_ideology = ideology:ideology_particularist
-					leader = {
-						has_ideology = ideology:ideology_abolitionist
-						has_ideology = ideology:ideology_social_democrat
-						has_ideology = ideology:ideology_communist
-					}
+					leader = { has_ideology = ideology:ideology_market_liberal }
 				}
 			}
 			add = {
 				value = 5
-				desc = "from_serfdom"
+				desc = "from_anti_laissez_faire"
 			}
 		}
 		if = { # general anti-slavery
@@ -619,15 +475,127 @@ social_democrat_party = {
 					}
 				}
 				OR = {
-					has_ideology = ideology:ideology_anti_slavery
+					bpm_ig_is_abolitionist = yes
 					leader = {
 						has_ideology = ideology:ideology_abolitionist
 					}
 				}
 			}
 			add = {
-				value = 5
+				value = 3
 				desc = "from_slavery"
+			}
+		}
+		if = { # anti-serfdom
+			limit = {
+				owner = {
+					has_law = law_type:law_serfdom
+				}
+				OR = {
+					bpm_ig_is_abolitionist = yes	
+					leader = {
+						bpm_leader_is_progressive_liberal = yes
+					}
+				}
+			}
+			add = {
+				value = 5
+				desc = "from_serfdom"
+			}
+		}
+		if = { # if no welfare
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_no_workers_rights
+						has_law = law_type:law_child_labor_allowed
+						has_law = law_type:law_no_social_security
+					}
+					NOT = { has_technology_researched = socialism }
+				}
+				bpm_ig_is_proletarian = yes
+			}
+			add = {
+				value = 4
+				desc = "bpm_from_pre_socialists"
+			}
+		}
+		if = { # lack of women's rights
+			limit = {
+				OR = {
+					leader = {
+						law_stance = {
+							law = law_type:law_womens_suffrage
+							value > neutral
+						}
+					}
+					law_stance = {
+						law = law_type:law_womens_suffrage
+						value > neutral
+					}
+				}
+				owner = {
+					OR = { 
+						has_law = law_type:law_no_womens_rights
+						has_law = law_type:law_women_own_property
+						has_law = law_type:law_women_in_the_workplace
+					}
+				}
+			}
+			add = {
+				value = 3
+				desc = from_no_womens_rights
+			}
+		}
+		if = { # anti-discriminiation
+			limit = {
+				OR = {
+					leader = { bpm_leader_is_progressive_liberal = yes }
+					has_ideology = ideology:ideology_cit_liberal_nationalist
+					has_ideology = ideology:ideology_cit_immigrant_nationalist
+				}
+				owner = {
+					OR = {
+						has_law = law_type:law_ethnostate
+						has_law = law_type:law_national_supremacy
+						has_law = law_type:law_racial_segregation
+					}
+				}
+			}
+			add = {
+				value = 3
+				desc = "bpm_from_anti_discrimination"
+			}
+		}
+		if = { # anticlerical
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_rel_secularist
+					leader = { has_ideology = ideology:ideology_atheist }
+					leader = { has_ideology = ideology:ideology_positivist }
+				}
+			}
+			add = {
+				value = 3
+				desc = "from_anticlerical"
+			}
+		}
+		if = { # Anti-electoralism
+			limit = {
+				bpm_ig_is_anti_electoralist_socialist = yes
+			}
+			add = {
+				value = -10
+				desc = "bpm_anti_electoralist"
+			}
+		}
+		if = { # Strong anti-electoralism
+			limit = {
+				bpm_ig_is_strongly_anti_electoralist_socialist = yes
+			}
+			add = {
+				value = -30
+				desc = "bpm_strongly_anti_electoralist"
 			}
 		}
 	}

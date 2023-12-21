@@ -5,20 +5,22 @@
 	index = 8
 
 	ideologies = {
-		ideology_populist
-		ideology_agrarian
-		ideology_egalitarian
-		ideology_particularist
-		ideology_anti_slavery
+		ideology_dop_radical_democrat
+		ideology_sta_decentralized_state
+		ideology_cit_liberal_nationalist
+		ideology_rel_secularist
+		ideology_mil_antimilitarist
+		ideology_eco_modern_agrarian
+		ideology_ban_averse
 	}
 	
 	enable = {
 		always = yes
 	}
-
+	
 	on_enable = {
 		ig:ig_agrarian_populists = {
-			set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
+			# set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
 			set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
 			set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
 		}
@@ -77,6 +79,22 @@
 		}	
 
 		add = {
+			desc = "POP_EDUCATED_FARMERS"
+			if = {
+				limit = { 
+					OR = {
+						pop_employment_building_group = bg_agriculture
+						pop_employment_building_group = bg_ranching
+						pop_employment_building_group = bg_plantations				
+					}
+					strata <= middle
+				}
+				value = literacy_rate
+				multiply = 100
+			}
+		}	
+
+		add = {
 			desc = "POP_RURAL_ABOLITIONISTS"
 			if = {
 				limit = { 
@@ -93,7 +111,81 @@
 						}
 					}
 				}
-				value = 50
+				value = 80
+			}
+		}
+
+		add = {
+			desc = "POP_RURAL_ANTICAPITALISM"
+			if = {
+				limit = { 
+					OR = {
+						pop_employment_building_group = bg_agriculture
+						pop_employment_building_group = bg_ranching
+						pop_employment_building_group = bg_plantations				
+					}
+					scope:interest_group = {
+						OR = {
+							bpm_ig_is_socialist = yes
+							leader = { bpm_leader_is_socialist = yes }
+						}
+					}
+					strata <= middle
+					owner = {
+						has_law = law_type:law_commercialized_agriculture
+					}
+				}
+				value = 100
+			}
+		}
+
+		add = {
+			desc = "POP_RURAL_WANTS_COLLECTIVIZATION"
+			if = {
+				limit = { 
+					OR = {
+						pop_employment_building_group = bg_agriculture
+						pop_employment_building_group = bg_ranching
+						pop_employment_building_group = bg_plantations				
+					}
+					scope:interest_group = {
+						OR = {
+							bpm_ig_is_socialist = yes
+							leader = { bpm_leader_is_socialist = yes }
+						}
+					}
+					strata <= middle
+					owner = {
+						has_law = law_type:law_council_republic
+						NOT = { has_law = law_type:law_collectivized_agriculture }
+					}
+				}
+				value = 60
+			}
+		}
+
+		add = {
+			desc = "POP_RURAL_HAPPY_UNDER_SOCIALISM"
+			if = {
+				limit = { 
+					OR = {
+						pop_employment_building_group = bg_agriculture
+						pop_employment_building_group = bg_ranching
+						pop_employment_building_group = bg_plantations				
+					}
+					scope:interest_group = {
+						OR = {
+							bpm_ig_is_socialist = yes
+							leader = { bpm_leader_is_socialist = yes }
+						}
+					}
+					strata <= middle
+					pop_radical_fraction = 0
+					owner = {
+						has_law = law_type:law_collectivized_agriculture
+					}
+				}
+				value = 150
 			}
 		}
 
@@ -128,6 +220,77 @@
 				value = 100
 			}
 		}
+
+		add = {
+			desc = "POP_SOLDIERS"
+			if = {
+				limit = { 
+					is_pop_type = soldiers
+					OR = {
+						owner = {
+							OR = {
+								radical_fraction = {
+									value >= 0.5
+									pop_type = farmers
+								}
+								radical_fraction = {
+									value >= 0.5
+									pop_type = peasants
+								}
+							}
+						}
+					}
+				}
+				value = 20
+			}
+		}
+
+		add = {
+			desc = "POP_CLERGY"
+			if = {
+				limit = { 
+					is_pop_type = clergymen
+					owner = {
+						OR = {
+							radical_fraction = {
+								value >= 0.25
+								pop_type = farmers
+							}
+							radical_fraction = {
+								value >= 0.25
+								pop_type = peasants
+							}
+						}
+					}
+				}
+				value = 50
+			}
+		}
+
+		add = {
+			desc = "POPS_ANGER_SYMPATHY"
+			if = {
+				limit = { 
+					OR = {
+						is_pop_type = clergymen
+						is_pop_type = academics
+					}
+					owner = {
+						OR = {
+							radical_fraction = {
+								value >= 0.2
+								pop_type = farmers
+							}
+							radical_fraction = {
+								value >= 0.2
+								pop_type = peasants
+							}
+						}
+					}
+				}
+				value = 100
+			}
+		}
 		
 		multiply = {
 			desc = "LEADER_POPULARITY"
@@ -150,6 +313,8 @@
 				}
 			}
 		}
+
+		multiply = bpm_ig_agitators_popularity
 
 		multiply = {
 			desc = "CAN_GET_LABOR_MOVEMENT"	
@@ -237,15 +402,35 @@
 				}
 				value = 1.1
 			}		
-		}	
+		}
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			multiply = {
+				desc = "IN_GOVERNMENT_ATTRACTION"
+				value = 1
+				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+				min = 0
+			}
+		}
+		multiply = ig_attraction_from_radicals_and_loyalists
 	}
 	
 	monarch_weight = {
-		value = 0.25
+		value = 0.1
 	}	
+
+	agitator_weight = {
+		value = 1.0
+		multiply = bpm_base_agitator_weight
+	}
 	
 	commander_weight = {
 		value = 1.0
+		multiply = bpm_commander_assignment_from_laws_factor
 	}	
 	
 	noble_chance = {
@@ -253,47 +438,18 @@
 	}
 	
 	female_commander_chance = {	
-		value = 0.0
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
 	}
 	
 	female_politician_chance = {
-		value = 0.0
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
 
-		if = {
-			limit = {
-				owner = {
-					has_law = law_type:law_women_own_property
-				}
-				
-			}
-			add = {
-				value = 0.05
-			}
-		}
-
-		if = {
-			limit = {
-				owner = {
-					has_law = law_type:law_women_in_the_workplace
-				}
-				
-			}
-			add = {
-				value = 0.05
-			}
-		}
-
-		if = {
-			limit = {
-				owner = {
-					has_law = law_type:law_womens_suffrage
-				}
-				
-			}
-			add = {
-				value = 0.05
-			}
-		}
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

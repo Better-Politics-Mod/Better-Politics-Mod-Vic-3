@@ -1,0 +1,4571 @@
+﻿ideology_moderate = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_no_ideology.dds"
+	
+	show_in_list = no
+	
+	character_ideology = yes
+	
+	possible = {
+		always = yes
+		NOT = { has_role = agitator }
+
+		scope:interest_group = {
+			NOR = {
+				bpm_ig_is_socialist = yes
+				bpm_ig_is_traditionalist = yes
+				bpm_ig_is_fascist = yes
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = 200	
+		if = {
+			limit = {
+				scope:interest_group = { bpm_ig_enabled = no }
+			}
+			multiply = { value = 1000.0 }
+		}
+		if = {
+			limit = {
+				scope:interest_group = {
+					ig_clout > 0.001
+				}
+				scope:interest_group = {
+					OR = {
+						bpm_ig_is_socialist = yes
+						bpm_ig_is_traditionalist = yes
+						bpm_ig_is_fascist = yes
+					}
+				}
+			}
+			add = -10000
+		}
+		# angry IG's more likely to have opinions
+		if = {
+			limit = {
+				scope:interest_group = {
+					ig_approval < -5
+				}
+			}
+			add = -200
+		}
+		if = {
+			limit = {
+				scope:interest_group = { 
+					OR = {
+						bpm_ig_is_radical_liberal = yes
+						bpm_ig_is_proletarian = yes
+					}
+				}
+			}
+			add = -200
+		}
+		# Powerful IGs are more likely to be moderate
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_powerful = yes
+				}
+			}
+			add = 100
+		}
+		# what makes a man turn neutral? lust for gold? power? or were you just born with a heart full of neutrality?
+		if = {
+			limit = {
+				scope:interest_group = {
+					ig_approval = 0
+				}
+			}
+			add = 1
+		}
+	}
+}
+
+
+ideology_traditionalist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_traditionalist.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_citizenship = {
+		law_ethnostate = neutral
+		law_national_supremacy = neutral
+		law_racial_segregation = neutral
+		law_cultural_exclusion = neutral
+		law_multicultural = strongly_disapprove
+	}
+
+	lawgroup_rights_of_women = {
+		law_no_womens_rights = approve
+		law_women_own_property = neutral
+		law_women_in_the_workplace = disapprove
+		law_womens_suffrage = strongly_disapprove
+	}
+
+	lawgroup_church_and_state = {
+		law_state_religion = approve
+		law_freedom_of_conscience = disapprove
+		law_total_separation = strongly_disapprove
+		law_state_atheism = strongly_disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_no_womens_rights
+				has_law = law_type:law_state_religion
+			}
+		}
+		scope:interest_group = {
+			NOR = {
+				bpm_ig_is_liberal = yes
+				bpm_ig_is_proletarian = yes
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = 50
+		# more likely for the right
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_traditionalist = yes
+				}
+			}
+			add = 50
+		}
+		# more likely for rural
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_rural_institutional = yes
+				}
+			}
+			add = 25
+		}
+		# less likely for urban
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_urban_institutional = yes
+				}
+			}
+			add = -25
+		}
+	}
+}
+
+ideology_atheist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_atheist.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_governance_principles = {
+		law_theocracy = strongly_disapprove
+		law_monarchy = disapprove
+		law_presidential_republic = neutral
+		law_parliamentary_republic = neutral
+		law_council_republic = disapprove
+	}
+
+	lawgroup_church_and_state = {
+		law_state_religion = strongly_disapprove
+		law_freedom_of_conscience = disapprove
+		law_total_separation = approve
+		law_state_atheism = strongly_approve
+
+	}
+	
+	possible = {
+		# Agitators should have an ideology at odds with current laws
+		scope:interest_group = { bpm_ig_enabled = yes }
+		NAND = {
+			has_role = agitator
+			owner = {
+				OR = {
+					has_law = law_type:law_presidential_republic
+					has_law = law_type:law_parliamentary_republic
+					has_law = law_type:law_council_republic
+				}
+				has_law = law_type:law_state_atheism
+			}
+		}
+		# Monarchs cannot be republicans
+		NAND = {
+			owner = {
+				has_law = law_type:law_monarchy
+			}
+			OR = {
+				is_ruler = yes
+				is_heir = yes
+				scope:interest_group = { bpm_ig_is_state_institutional = yes }
+			}
+		}
+		owner = {
+			has_technology_researched = empiricism
+		}
+		scope:interest_group = {
+			NOT = { is_interest_group_type = ig_devout }
+			OR = {
+				bpm_ig_is_urban_institutional = yes
+				bpm_ig_is_left_wing = yes
+			}
+		}
+		NAND = {
+			owner = { bpm_country_is_republic = no }
+			OR = {
+				bpm_ig_is_middle_institutional = yes
+				bpm_ig_is_upper_institutional = yes
+				is_interest_group_type = ig_rural_folk
+				bpm_ig_is_moderate_liberal = yes
+			}
+			scope:interest_group = {
+				ig_approval >= 0
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = 25
+		# more likely if the IG is unhappy with the monarchy
+		if = {
+			limit = {
+				owner = {
+					bpm_country_is_republic = no
+				}
+				scope:interest_group = {
+					ig_approval < 0
+				}
+			}
+			add = 50
+		}
+		else_if = {
+			limit = {
+				owner = {
+					bpm_country_is_republic = no
+				}
+			}
+			add = -50
+		}
+		# this is not very relevant if you're a republic with religious freedom
+		if = { 
+			limit = {
+				owner = {
+					NOR = {
+						bpm_country_laws_are_moralist = yes
+						has_law = law_type:law_monarchy
+					}
+				}
+			}
+			add = -100
+		}
+		# will emerge to counter a powerful Devout IG
+		if = {
+			limit = {
+				owner = {
+					any_interest_group = {
+						is_interest_group_type = ig_devout
+						is_powerful = yes
+					}
+				}
+			}
+			add = 50
+		}
+		# agrarian populists and anarchist are more likely to be nihilists
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						bpm_country_laws_are_moralist = yes
+						has_law = law_type:law_monarchy
+					}
+				}
+				scope:interest_group = {
+					OR = {
+						is_interest_group_type = ig_agrarian_populists
+						bpm_ig_is_anarchist = yes
+					}
+				}
+			}
+			add = 50
+		}
+		if = {
+			limit = { 
+				scope:interest_group = { 
+					has_variable = nihilism_var 
+				}
+			}
+			add = 150
+		}
+		if = {
+			limit = { 
+				scope:interest_group = {
+					has_variable = big_nihilism_var
+				}
+			}
+			add = 200
+		}
+	}
+}
+
+ideology_republican_leader = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_republican.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_governance_principles = {
+		law_presidential_republic = approve
+		law_parliamentary_republic = approve
+		law_council_republic = disapprove
+		law_monarchy = disapprove
+		law_theocracy = disapprove
+	}
+	
+	lawgroup_distribution_of_power = {
+		law_universal_suffrage = strongly_approve
+		law_census_voting = approve
+		law_wealth_voting = approve
+		law_landed_voting = neutral
+		law_oligarchy = disapprove
+		law_autocracy = disapprove
+		law_anarchy = strongly_disapprove
+		law_technocracy = neutral
+		law_military_junta = neutral
+	}	
+
+	lawgroup_bureaucracy = {
+		law_elected_bureaucrats = approve
+		law_appointed_bureaucrats = neutral
+		law_hereditary_bureaucrats = disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				bpm_country_is_republic = yes
+			}
+		}
+		# Monarchs cannot be republicans
+		NAND = {
+			owner = { bpm_country_is_republic = no }
+			OR = {
+				is_ruler = yes
+				is_heir = yes
+			}
+		}
+		scope:interest_group = {
+			NOR = {
+				bpm_ig_is_radical_socialist = yes
+				bpm_ig_is_traditionalist = yes
+			}
+		}
+		NAND = {
+			owner = { bpm_country_is_republic = no }
+			OR = {
+				bpm_ig_is_state_institutional = yes
+				bpm_ig_is_right_wing = yes
+			}
+		}
+		NAND = {
+			owner = { bpm_country_is_republic = no }
+			OR = {
+				bpm_ig_is_middle_institutional = yes
+				bpm_ig_is_upper_institutional = yes
+				is_interest_group_type = ig_rural_folk
+				bpm_ig_is_moderate_liberal = yes
+			}
+			scope:interest_group = {
+				ig_approval >= 0
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = 25
+		# not very relevant if issues are already addressed
+		if = {
+			limit = {
+				owner = {
+					NOR = { 
+						bpm_country_is_republic = no
+						has_law = law_type:law_hereditary_bureaucrats
+					}
+				}
+			}
+			add = -25
+		}
+		# more likely if the IG is unhappy with the monarchy
+		if = {
+			limit = {
+				owner = {
+					bpm_country_is_republic = no
+				}
+				scope:interest_group = {
+					ig_approval < 0
+				}
+			}
+			add = 50
+		}
+		else_if = {
+			limit = {
+				owner = {
+					bpm_country_is_republic = no
+				}
+			}
+			add = -50
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Dreyfusards won.
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = dreyfusard_victory
+				}
+			}
+			add = 10
+		}
+
+		# more likely if republican
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_republican = yes
+				}
+			}
+			add = 50
+		}
+		# more likely if proletarian
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_proletarian = yes
+				}
+			}
+			add = 25
+		}
+		# more likely if liberal
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_liberal = yes
+				}
+			}
+			add = 25
+		}
+		# less likely if conservative
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_moderate_conservative = yes
+				}
+			}
+			add = -25
+		}
+	}
+}
+
+ideology_radical = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_radical.dds"
+	
+	character_ideology = yes
+
+	lawgroup_governance_principles = {
+		law_monarchy = strongly_disapprove
+		law_theocracy = strongly_disapprove
+		law_council_republic = disapprove		
+		law_presidential_republic = approve
+		law_parliamentary_republic = approve
+	}
+	
+	lawgroup_distribution_of_power = {
+		law_universal_suffrage = strongly_approve
+		law_census_voting = approve
+		law_wealth_voting = neutral
+		law_landed_voting = disapprove
+		law_anarchy = strongly_disapprove
+		law_oligarchy = strongly_disapprove
+		law_autocracy = strongly_disapprove
+		law_technocracy = disapprove
+		law_military_junta = disapprove
+	}
+
+	lawgroup_free_speech = {
+		law_protected_speech = strongly_approve
+		law_right_of_assembly = approve
+		law_censorship = disapprove
+		law_outlawed_dissent = strongly_disapprove
+	}
+	
+	lawgroup_internal_security = {
+		law_guaranteed_liberties = strongly_approve
+		law_no_home_affairs = approve
+		law_national_guard = strongly_disapprove
+		law_secret_police = strongly_disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = { has_technology_researched = egalitarianism }
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				bpm_country_is_bourgeois_republic = yes
+				bpm_country_laws_are_liberal_democratic = yes
+				bpm_country_has_unfree_labor = no
+			}
+		}
+		# Monarchs cannot be republicans
+		NAND = {
+			owner = { bpm_country_is_republic = no }
+			OR = {
+				is_ruler = yes
+				is_heir = yes
+				scope:interest_group = { bpm_ig_is_state_institutional = yes }
+			}
+		}
+		scope:interest_group = { bpm_ig_is_right_wing = no }
+	}
+	
+	leader_weight = {
+		value = {
+			value = 0
+			# more likely for radicals
+			if = {
+				limit = {
+					scope:interest_group = {
+						bpm_ig_is_radical_liberal = yes
+					}
+				}
+				add = 120
+			}
+			# less likely for regular liberals
+			if = {
+				limit = {
+					scope:interest_group = {
+						bpm_ig_is_moderate_liberal = yes
+					}
+				}
+				add = -30
+			}
+			# more likely for populists
+			if = {
+				limit = {
+					scope:interest_group = {
+						OR = {
+							bpm_ig_is_republican = yes
+							bpm_ig_is_proletarian = yes
+						}
+					}
+				}
+				add = 40
+			}
+			# more likely for trade unions
+			if = {
+				limit = {
+					scope:interest_group = {
+						is_interest_group_type = ig_trade_unions
+					}
+				}
+				add = 40
+			}
+			# Unlikely for socialists after first intl
+			if = {
+				limit = {
+					scope:interest_group = {
+						bpm_ig_is_socialist = yes
+					}
+					has_global_variable = first_intl_chain_complete_var
+				}
+				add = -50
+			}
+			# more likely if issues are relevant and people are angry
+			if = {
+				limit = {
+					owner = {
+						bpm_country_laws_are_very_undemocratic = yes
+						any_scope_state = {
+							is_incorporated = yes
+							turmoil >= 0.25
+						}
+					}
+				}
+				add = 60
+			}
+			if = {
+				limit = {
+					owner = {
+						bpm_country_laws_are_moderately_undemocratic = yes
+						any_scope_state = {
+							is_incorporated = yes
+							turmoil >= 0.4
+						}
+					}
+				}
+				add = 50
+			}
+			# less likely if issues are not relevant
+			if = {
+				limit = {
+					owner = {
+						bpm_country_laws_are_very_undemocratic = no
+					}
+				}
+				add = -75
+			}
+			# very unlikely for socialists after second intl
+			if = {
+				limit = {
+					scope:interest_group = {
+						OR = {
+							bpm_ig_is_party_socialist = yes
+							bpm_ig_is_anarchist = yes
+						}
+					}
+					owner = {
+						has_technology_researched = socialism
+					}
+				}
+				add = -225
+			}
+			if = {
+				limit = {
+					owner = {
+						has_global_variable = peoples_springtime_happening
+						OR = {
+							capital.region = sr:region_north_germany
+							capital.region = sr:region_south_germany
+							capital.region = sr:region_england
+							capital.region = sr:region_iberia
+							capital.region = sr:region_france
+							capital.region = sr:region_occitania
+							capital.region = sr:region_rhine
+							capital.region = sr:region_italy	
+							capital.region = sr:region_poland
+							capital.region = sr:region_danubia
+							capital.region = sr:region_balkans
+							capital.region = sr:region_baltic
+						}
+					}
+				}
+				multiply = {
+					value = 3
+				}
+			}
+			if = {
+				limit = {
+					owner = { has_modifier = post_revolutionary_fervor }
+				}
+				multiply = { value = 2 }
+			}
+			if = {
+				limit = {
+					owner = { has_modifier = counter_revolutionary_fervor }
+				}
+				multiply = { value = 0.5 }
+			}
+			# liberal and/or radical leaders have a higher spawn chance if the Dreyfusards won.
+			if = {
+				limit = {
+					scope:interest_group = {
+						has_variable = dreyfusard_victory
+					}
+				}
+				add = 10
+			}
+			# less likely if conservative
+			if = {
+				limit = {
+					scope:interest_group = {
+						OR = {
+							bpm_ig_is_moderate_conservative = yes
+							bpm_ig_is_traditionalist = yes
+						}
+					}
+				}
+				add = -100
+			}
+		}
+	}
+}
+
+ideology_reformer = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_reformer.dds"
+	
+	character_ideology = yes
+
+	lawgroup_citizenship = {
+		law_ethnostate = strongly_disapprove
+		law_national_supremacy = strongly_disapprove
+		law_racial_segregation = disapprove
+		law_cultural_exclusion = approve
+		law_multicultural = disapprove
+	}
+	
+	lawgroup_rights_of_women = {
+		law_no_womens_rights = neutral
+		law_women_own_property = approve
+		law_women_in_the_workplace = approve
+		law_womens_suffrage = neutral
+	}
+	
+	lawgroup_childrens_rights = {
+		law_child_labor_allowed = disapprove
+		law_restricted_child_labor = approve
+		law_compulsory_primary_school = strongly_approve
+	}
+
+	lawgroup_slavery = {
+		law_slavery_banned = neutral
+		law_legacy_slavery = disapprove
+		law_debt_slavery = strongly_disapprove
+		law_slave_trade = strongly_disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = {
+			has_technology_researched = egalitarianism
+			NOT = { has_technology_researched = human_rights }
+		}
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_cultural_exclusion
+				has_law = law_type:law_compulsory_primary_school
+			}
+		}
+		scope:interest_group = {
+			NOR = {
+				bpm_ig_is_radical_right = yes
+				bpm_ig_is_radical_socialist = yes
+			}
+		}
+		NAND = {
+			owner = { bpm_country_has_unfree_labor = yes }
+			scope:interest_group = { is_interest_group_type = ig_landowners }
+		}
+	}
+	
+	leader_weight = {
+		value = 100
+		# less likely when issues are not relevant
+		if = {
+			limit = {
+				owner = {
+					NOR = {
+						bpm_country_laws_are_racist = yes
+						bpm_country_laws_are_patriarchal = yes
+					}
+				}
+			}
+			add = -100
+		}
+		# less likely among more progressive IG's if they're angry
+		if = {
+			limit = {
+				scope:interest_group = {
+					OR = {
+						bpm_ig_is_left_wing = yes
+					}
+					ig_approval < 0
+				}
+			}
+			add = -75
+		}
+		# less likely among radical IGs
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_radical_left = yes
+				}
+			}
+			add = -75
+		}
+		# more likely when issues are relevant
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						bpm_country_laws_are_racist = yes
+						bpm_country_laws_are_patriarchal = yes
+					}
+				}
+			}
+			add = 50
+		}
+		# less likely if conservative
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_right_wing = yes
+					is_interest_group_type = ig_landowners
+				}
+			}
+			add = -75
+		}
+	}
+}
+
+ideology_feminist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_womens_liberation.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_rights_of_women = {
+		law_womens_suffrage = strongly_approve
+		law_women_in_the_workplace = neutral
+		law_women_own_property = disapprove
+		law_no_womens_rights = strongly_disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = { 
+			has_technology_researched = feminism 
+			NOT = { has_law = law_type:law_womens_suffrage }
+	}
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_womens_suffrage
+			}
+		}
+		scope:interest_group = {
+			bpm_ig_is_radical_right = no
+		}
+	}
+	
+	leader_weight = {
+		value = {
+			value = 50
+			 # less likely if issues are not relevant
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_womens_suffrage
+					}
+				}
+				add = -100
+			}
+			# more likely if character is a woman after mass propaganda
+			if = {
+				limit = {
+					owner = { has_technology_researched = mass_propaganda }
+					is_female = yes
+				}
+				multiply = {
+					value = 1.25
+				}
+			}
+			# more likely with some women's rights
+			if = {
+				limit = {
+					owner = { 
+						OR = {
+							has_law = law_type:law_women_own_property
+							has_law = law_type:law_women_in_the_workplace
+						}
+					}
+				}
+				multiply = {
+					value = 1.25
+				}
+			}
+			# less likely if conservative
+			if = {
+				limit = {
+					scope:interest_group = {
+						bpm_ig_is_right_wing = yes
+					}
+				}
+				multiply = {
+					value = 0.25
+				}
+			}
+		}
+	}
+}
+
+ideology_abolitionist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_abolitionist.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_slavery = {
+		law_slavery_banned = strongly_approve
+		law_legacy_slavery = disapprove
+		law_debt_slavery = strongly_disapprove
+		law_slave_trade = strongly_disapprove
+	}
+
+	lawgroup_land_reform = {
+		law_serfdom = strongly_disapprove
+		law_tenant_farmers = neutral
+		law_homesteading = neutral
+		law_collectivized_agriculture = neutral
+		law_commercialized_agriculture = neutral
+	}
+	
+	# Character scope
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = { 
+			bpm_country_has_unfree_labor = yes
+		}
+		scope:interest_group = {
+			bpm_ig_is_right_wing = no
+			NOT = { is_interest_group_type = ig_landowners }
+		}
+	}
+	
+	leader_weight = {
+		value = 50
+		if = {
+			limit = { scope:interest_group = { bpm_ig_is_left_wing = yes } }
+			add = 100
+		}	
+		if = {
+			limit = { has_trait = tactful }
+			add = 75
+		}
+		if = {
+			limit = { has_trait = bigoted }
+			add = -100
+		}
+		if = {
+			limit = { has_trait = cruel }
+			add = -25
+		}		
+		if = {
+			limit = {
+				exists = c:USA
+				owner = { 
+					c:USA = THIS 
+					NOT = { has_variable = csa_will_spawn_var }
+				}
+			}
+			add = 150
+		}
+	}
+}
+
+ideology_slaver = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_slaver.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_slavery = {
+		law_slave_trade = strongly_approve
+		law_legacy_slavery = neutral
+		law_debt_slavery = neutral
+		law_slavery_banned = strongly_disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = { 
+			NOT = {
+				has_law = law_type:law_slavery_banned 
+			}
+		}
+		scope:interest_group = {
+			bpm_ig_is_left_wing = no
+			bpm_ig_is_urban_institutional = no
+			bpm_ig_is_abolitionist = no
+			bpm_ig_is_market_liberal = no
+		}
+	}
+	
+	leader_weight = {
+		value = 50
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_slavery_banned
+				}
+			}
+			add = -1000
+		}
+		if = {
+			limit = {
+				exists = c:HAI
+				owner = { c:HAI = THIS }
+			}
+			add = -1000
+		}		
+		if = {
+			limit = { scope:interest_group = { is_interest_group_type = ig_landowners } }
+			add = 500
+			
+			if = {
+				limit = {
+					owner = { has_journal_entry = je_acw_countdown }
+				}
+				add = 500
+			}			
+		}
+		if = {
+			limit = { 
+				scope:interest_group = { 
+					bpm_ig_is_traditionalist = yes
+				} 
+			}
+			add = 200
+		}
+		if = {
+			limit = { 
+				scope:interest_group = { 
+					bpm_ig_is_moderate_conservative = yes
+				} 
+			}
+			add = 50
+		}
+		if = {
+			limit = { 
+				scope:interest_group = { 
+					bpm_ig_is_urban_institutional = yes
+				} 
+			}
+			add = -50
+		}
+		if = {
+			limit = { has_trait = cruel }
+			add = 75
+		}		
+		if = {
+			limit = { has_trait = bigoted }
+			add = 75
+		}
+		if = {
+			limit = {
+				owner = { has_journal_entry = je_acw_countdown }
+			}
+			add = 100
+		}
+		if = {
+			limit = {
+				exists = c:USA
+				owner = { c:USA = THIS }
+			}
+			add = 50
+		}
+	}
+}
+
+ideology_pacifist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_pacifist.dds"
+	
+	character_ideology = yes
+
+	lawgroup_army_model = {
+		law_national_militia = approve
+		law_professional_army = disapprove
+		law_peasant_levies = disapprove
+		law_mass_conscription = disapprove
+	}
+
+	lawgroup_colonization = {		
+		law_no_colonial_affairs = approve
+		law_colonial_resettlement = strongly_disapprove
+		law_colonial_exploitation = strongly_disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = { bpm_country_laws_are_pacifistic = yes }
+		}
+		scope:interest_group = {
+			bpm_ig_is_militaristic = no
+		}
+	}
+	
+	leader_weight = {
+		value = 50
+		# emerges to counter powerful armed forces
+		if = {
+			limit = {
+				owner = {
+					ig:ig_armed_forces = {
+						is_powerful = yes
+					}
+				}
+			}
+			add = 100
+		}
+		# less likely if not very militaristic
+		if = {
+			limit = {
+				owner = {
+					bpm_country_laws_are_militaristic = no
+				}
+			}
+			add = -50
+		}
+		# less likely if issues are not relevant
+		if = {
+			limit = {
+				owner = {
+					bpm_country_laws_are_pacifistic = yes
+				}
+			}
+			add = -50
+		}
+		# more likely if a war you started isn't going well
+		if = {
+			limit = {
+				owner = {
+					is_at_war = yes
+					any_scope_war = {
+						attacker_warleader = { this = ROOT.owner }
+						has_war_support = {
+							target = root.owner
+							value < 0
+						}
+					}
+				}
+			}
+			add = 100
+		}
+		# more likely with devastation in incorporated states
+		if = {
+			limit = {
+				owner = {
+					any_scope_state = {
+						is_incorporated = yes
+						devastation > 20
+					}
+				}
+			}
+			add = 200
+		}
+		# less likely if patriotic
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_patriotic = yes
+				}
+			}
+			add = -100
+		}
+	}
+}
+
+ideology_jingoist_leader = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_jingoist.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_army_model = {
+		law_mass_conscription = strongly_approve
+		law_professional_army = approve
+		law_national_militia = neutral
+		law_peasant_levies = disapprove
+	}
+
+	lawgroup_colonization = {		
+		law_no_colonial_affairs = neutral
+		law_colonial_resettlement = approve
+		law_colonial_exploitation = strongly_approve
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				bpm_country_laws_are_very_militaristic = yes
+			}
+		}
+		scope:interest_group = {
+			bpm_ig_wants_small_government = no
+		}
+	}
+	
+	leader_weight = {
+		value = 50
+		# less likely if issues are not relevant
+		if = {
+			limit = {
+				owner = {
+					bpm_country_laws_are_very_militaristic = yes
+				}
+			}
+			add = -100
+		}
+		# more likely if there's something to colonize nearby
+		if = {
+			limit = {
+				any_country = {
+					is_country_type = decentralized
+					has_overlapping_interests = ROOT.owner
+				}
+			}
+			add = 50
+		}
+		# more likely if you border a rival
+		if = {
+			limit = {
+				owner = {
+					any_rival_country = {
+						any_neighbouring_state = {
+							owner = root.owner
+						}
+					}
+				}
+			}
+			add = 50
+		}
+		# more likely if you're the defender in a war
+		if = {
+			limit = {
+				owner = {
+					is_at_war = yes
+					any_scope_war = {
+						defender_warleader = { this = ROOT.owner }
+					}
+				}
+			}
+			add = 100
+		}
+		# less likely if liberal
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_liberal = yes
+				}
+			}
+			add = -100
+		}
+	}
+}
+
+ideology_royalist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_royalist.dds"
+	
+	character_ideology = yes
+
+	lawgroup_governance_principles = {
+		law_monarchy = strongly_approve
+		law_presidential_republic = disapprove
+		law_parliamentary_republic = disapprove
+		law_theocracy = disapprove
+		law_council_republic = strongly_disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_monarchy
+			}
+		}
+		# no monarchists in countries with strong republican tradition
+		owner = {
+			NOR = {
+				has_variable = monarchy_stamped_out_var
+				NOT = {
+					any_interest_group = {
+						bpm_ig_is_monarchist = yes
+					}
+				}
+			}
+		}
+		NOR = {
+			AND = {
+				owner = {
+					bpm_country_is_in_new_world = yes
+					NOT = { this = c:BRZ }
+				}
+			}
+			AND = {
+				owner = { bpm_country_is_republic = yes }
+				bpm_ig_is_state_institutional = yes
+			}
+		}
+		scope:interest_group = {
+			NOR = {
+				bpm_ig_is_republican = yes
+				bpm_ig_is_socialist = yes
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = 100
+		# less likely in a theocracy
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_theocracy
+				}
+			}
+			add = -75
+		}
+		# less likely in a republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_monarchy }
+				}
+			}
+			add = -50
+		}
+		# less likely if IG is happy in a republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_monarchy }
+				}
+				scope:interest_group = {
+					ig_approval > 0
+				}
+			}
+			add = -50
+		}
+		# more likely if IG is happy in a monarchy
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_monarchy
+				}
+				scope:interest_group = {
+					ig_approval > 5
+				}
+			}
+			add = 50
+		}
+		# less likely if IG is unhappy in a monarchy
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_monarchy
+				}
+				scope:interest_group = {
+					ig_approval < 0
+				}
+			}
+			add = -50
+		}
+		# less likely if liberal
+		if = {
+			limit = {
+				scope:interest_group = {
+					OR = {
+						bpm_ig_is_liberal = yes
+						bpm_ig_is_proletarian = yes
+					}
+				}
+			}
+			add = -75
+		}
+	}
+}
+
+ideology_socialist_leader = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_communist.dds"
+	
+	character_ideology = yes
+
+	lawgroup_labor_rights = {		
+		law_worker_protections = strongly_approve
+		law_regulatory_bodies = neutral
+		law_no_workers_rights = strongly_disapprove
+	}
+
+	lawgroup_land_reform = {
+		law_serfdom = strongly_disapprove
+		law_tenant_farmers = disapprove
+		law_homesteading = neutral
+		law_collectivized_agriculture = approve
+		law_commercialized_agriculture = neutral
+	}
+
+	lawgroup_distribution_of_power = {
+		law_anarchy = neutral
+		law_universal_suffrage = strongly_approve
+		law_census_voting = strongly_disapprove
+		law_wealth_voting = strongly_disapprove
+		law_landed_voting = strongly_disapprove
+		law_oligarchy = strongly_disapprove
+		law_autocracy = strongly_disapprove		
+		law_military_junta = disapprove
+		law_technocracy = disapprove
+	}
+
+	lawgroup_welfare = {
+		law_poor_laws = strongly_disapprove
+		law_no_social_security = strongly_disapprove
+		law_wage_subsidies = approve
+		law_old_age_pension = strongly_approve
+	}
+
+	lawgroup_governance_principles = {
+		law_monarchy = strongly_disapprove
+		law_presidential_republic = approve
+		law_parliamentary_republic = approve
+		law_theocracy = strongly_disapprove
+		law_council_republic = strongly_approve
+	}
+
+	lawgroup_labor_unions = {
+		law_illegal_labor_unions = strongly_disapprove
+		law_state_controlled_labor_unions = disapprove
+		law_limited_labor_unions = disapprove
+		law_all_labor_unions_allowed = approve
+		law_socialist_labor_unions = disapprove
+	}
+
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_council_republic
+			}
+		}
+		# Monarchs cannot be republicans
+		NAND = {
+			owner = {
+				has_law = law_type:law_monarchy
+			}
+			OR = {
+				is_ruler = yes
+				is_heir = yes
+			}
+		}
+		scope:interest_group = {
+			NOR = {
+				bpm_ig_is_right_wing = yes
+				bpm_ig_is_liberal = yes
+				bpm_ig_is_upper_institutional = yes
+				AND = {
+					owner = { bpm_country_is_republic = no }
+					bpm_ig_is_state_institutional = yes
+				}
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = 15
+		# Unlikely after reformist/revolutionist split
+		if = {
+			limit = {
+				owner = {
+					has_variable = local_socialists_split_var
+				}
+			}
+			add = -250
+		}
+		# more likely for socialists
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_socialist = yes
+				}
+			}
+			add = 110
+		}
+		# somewhat more likely for proletarians
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_proletarian = yes
+				}
+			}
+			add = 80
+		}
+		# very angry IG's more likely to turn to more radical socialism
+		if = {
+			limit = {
+				scope:interest_group = {
+					ig_approval <= -5
+				}
+			}
+			add = 10
+		}
+		# more likely for discontent trade unions outside of council republic
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_trade_unions
+					ig_approval <= 0
+				}
+				owner = {
+					NOT = { has_law = law_type:law_council_republic }
+				}
+			}
+			add = 80
+		}
+	}
+}
+
+ideology_social_democrat = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_proletarian.dds"
+	
+	character_ideology = yes
+
+	lawgroup_land_reform = {
+		law_serfdom = strongly_disapprove
+		law_tenant_farmers = disapprove
+		law_homesteading = neutral
+		law_collectivized_agriculture = approve
+		law_commercialized_agriculture = neutral
+	}
+
+	lawgroup_distribution_of_power = {
+		law_universal_suffrage = strongly_approve
+		law_census_voting = neutral
+		law_wealth_voting = disapprove
+		law_landed_voting = disapprove
+		law_anarchy = disapprove
+		law_oligarchy = strongly_disapprove
+		law_autocracy = strongly_disapprove
+		law_technocracy = neutral
+		law_military_junta = disapprove
+	}
+	
+	lawgroup_taxation = {
+		law_consumption_based_taxation = disapprove
+		law_land_based_taxation = disapprove
+		law_per_capita_based_taxation = neutral
+		law_proportional_taxation = approve
+		law_graduated_taxation = strongly_approve
+	}
+
+    lawgroup_education_system = {
+		law_no_schools = strongly_disapprove
+		law_religious_schools = disapprove
+		law_private_schools = disapprove
+		law_public_schools = strongly_approve
+	}
+
+    lawgroup_health_system = {
+		law_no_health_system = strongly_disapprove
+		law_charitable_health_system = disapprove
+		law_private_health_insurance = disapprove
+		law_public_health_insurance = strongly_approve
+	}
+
+    lawgroup_labor_rights = {
+		law_no_workers_rights = strongly_disapprove
+		law_regulatory_bodies = approve
+		law_worker_protections = strongly_approve
+	}
+
+    lawgroup_childrens_rights = {
+		law_child_labor_allowed = strongly_disapprove
+		law_restricted_child_labor = approve
+		law_compulsory_primary_school = strongly_approve
+	}
+
+    lawgroup_welfare = {
+		law_no_social_security = strongly_disapprove
+		law_poor_laws = disapprove
+		law_wage_subsidies = approve
+		law_old_age_pension = strongly_approve
+	}
+
+	lawgroup_labor_unions = {
+		law_illegal_labor_unions = strongly_disapprove
+		law_state_controlled_labor_unions = neutral
+		law_limited_labor_unions = disapprove
+		law_all_labor_unions_allowed = approve
+		law_socialist_labor_unions = disapprove
+	}
+
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = { has_technology_researched = labor_movement }
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				bpm_country_laws_have_max_welfare = yes
+				bpm_country_laws_are_liberal_democratic = yes
+			}
+		}
+		scope:interest_group = {
+			OR = {
+				bpm_ig_is_middle_institutional = yes
+				bpm_ig_is_lower_institutional = yes
+				AND = {
+					bpm_ig_is_left_wing = yes
+					bpm_ig_is_radical_socialist = no
+				}
+			}
+			bpm_ig_is_state_institutional = no
+		}
+	}
+	
+	leader_weight = {
+		value = 50
+		# less likely for moderate liberals and committed socialists
+		if = {
+			limit = {
+				scope:interest_group = {
+					OR = {
+						bpm_ig_is_moderate_liberal = yes
+						bpm_ig_is_proletarian_socialist = yes
+					}
+				}
+			}
+			add = -75
+		}
+		# very angry IG's more likely to turn to more radical socialism
+		if = {
+			limit = {
+				scope:interest_group = {
+					ig_approval <= -5
+				}
+			}
+			add = -75
+		}
+		# more likely when issues are relevant
+		if = {
+			limit = {
+				owner = {
+					bpm_country_laws_have_max_welfare = no
+				}
+			}
+			add = 50
+		}
+		# more likely for content devout in council republic
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_devout
+					ig_approval >= 0
+				}
+				owner = {
+					has_law = law_type:law_council_republic
+				}
+			}
+			add = 75
+		}
+		# more likely for content trade unions outside of council republic
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_trade_unions
+					ig_approval >= 0
+				}
+				owner = {
+					NOT = { has_law = law_type:law_council_republic }
+				}
+			}
+			add = 75
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Dreyfusards won.
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = dreyfusard_victory
+				}
+			}
+			add = 10
+		}
+	}
+}
+
+ideology_communist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_communist.dds"
+	
+	character_ideology = yes
+
+	lawgroup_labor_rights = {		
+		law_worker_protections = strongly_approve
+		law_regulatory_bodies = neutral
+		law_no_workers_rights = strongly_disapprove
+	}
+
+	lawgroup_land_reform = {
+		law_serfdom = strongly_disapprove
+		law_tenant_farmers = disapprove
+		law_homesteading = neutral
+		law_collectivized_agriculture = approve
+		law_commercialized_agriculture = disapprove
+	}
+
+	lawgroup_governance_principles = {
+		law_monarchy = strongly_disapprove
+		law_presidential_republic = disapprove
+		law_parliamentary_republic = disapprove
+		law_theocracy = strongly_disapprove
+		law_council_republic = strongly_approve
+	}
+
+	lawgroup_church_and_state = {
+		law_state_religion = strongly_disapprove
+		law_freedom_of_conscience = neutral
+		law_total_separation = approve
+		law_state_atheism = strongly_approve
+	}
+
+	lawgroup_economic_system = {	
+		law_command_economy = strongly_approve
+		law_interventionism = neutral
+		law_agrarianism = disapprove
+		law_traditionalism = strongly_disapprove		
+		law_laissez_faire = disapprove		
+		law_cooperative_ownership = strongly_approve
+		law_industry_banned = strongly_disapprove
+	}
+
+	lawgroup_labor_unions = {
+		law_illegal_labor_unions = strongly_disapprove
+		law_state_controlled_labor_unions = neutral
+		law_limited_labor_unions = disapprove
+		law_all_labor_unions_allowed = approve
+		law_socialist_labor_unions = approve
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_council_republic
+			}
+		}
+		# State forces outside of CR should not be communist
+		NAND = {
+			owner = { NOT = { has_law = law_type:law_council_republic } }
+			OR = {
+				is_ruler = yes
+				is_heir = yes
+				scope:interest_group = { bpm_ig_is_state_institutional = yes }
+			}
+		}
+		owner = { has_technology_researched = socialism }
+		scope:interest_group = {
+			OR = {
+				bpm_ig_is_middle_institutional = yes
+				bpm_ig_is_lower_institutional = yes
+				bpm_ig_is_labor = yes
+			}
+			NOT = { is_interest_group_type = ig_reformist_socialists }
+		}
+	}
+	
+	leader_weight = {
+		# Very likely for revsocs after Second Intl
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_revolutionary_socialist = yes
+				}
+				has_global_variable = second_intl_chain_complete_var
+			}
+			add = 50
+		}
+		# More likely for socialists
+		if = {
+			limit = {
+				scope:interest_group = {
+					OR = {
+						bpm_ig_is_radical_socialist = yes
+						has_ideology = ideology:ideology_eco_agrarian_socialist
+					}
+				}
+			}
+			add = 50
+		}
+		# Somewhat likely for unions
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_proletarian = yes
+				}
+			}
+			add = 30
+		}
+		# More likely for angry IG's outside of council republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_council_republic }
+				}
+				scope:interest_group = {
+					NOT = { is_interest_group_type = ig_armed_forces }
+					ig_approval <= -5
+				}
+			}
+			add = 100
+		}
+		# More likely when SoL is low outside of council republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_council_republic }
+					average_sol <= 10
+				}
+			}
+			add = 50
+		}
+		value = {
+			value = 100
+			if = {
+				limit = {
+					owner = { has_variable = communism_1_done }
+				}
+				multiply = 3
+			}
+			if = {
+				limit = {
+					owner = { has_variable = election_communist_support }
+				}
+				multiply = 2
+			}
+		}
+	}
+}
+
+ideology_vanguardist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_vanguardist.dds"
+	
+	character_ideology = yes
+
+	lawgroup_governance_principles = {
+		law_monarchy = strongly_disapprove
+		law_presidential_republic = disapprove
+		law_parliamentary_republic = disapprove
+		law_theocracy = strongly_disapprove
+		law_council_republic = strongly_approve
+	}
+
+	lawgroup_land_reform = {
+		law_serfdom = strongly_disapprove
+		law_tenant_farmers = disapprove
+		law_homesteading = disapprove
+		law_collectivized_agriculture = strongly_approve
+		law_commercialized_agriculture = disapprove
+	}
+	
+	lawgroup_free_speech = {
+		law_outlawed_dissent = approve
+		law_censorship = approve
+		law_right_of_assembly = neutral
+		law_protected_speech = disapprove
+	}
+
+    lawgroup_internal_security = {
+		law_no_home_affairs = strongly_disapprove
+		law_national_guard = disapprove
+		law_secret_police = approve
+		law_guaranteed_liberties = neutral
+	}
+
+    lawgroup_policing = {
+		law_no_police = disapprove
+		law_local_police = disapprove
+		law_dedicated_police = neutral
+		law_militarized_police = approve
+		law_elected_police = neutral
+	}
+
+	lawgroup_economic_system = {	
+		law_command_economy = strongly_approve
+		law_interventionism = neutral
+		law_agrarianism = disapprove
+		law_traditionalism = strongly_disapprove		
+		law_laissez_faire = disapprove		
+		law_cooperative_ownership = neutral
+		law_industry_banned = strongly_disapprove
+	}
+	
+	lawgroup_trade_policy = {		
+		law_protectionism = approve
+		law_mercantilism = neutral		
+		law_isolationism = disapprove
+		law_free_trade = strongly_disapprove
+	}				
+
+	lawgroup_labor_unions = {
+		law_illegal_labor_unions = strongly_disapprove
+		law_state_controlled_labor_unions = strongly_disapprove
+		law_limited_labor_unions = strongly_disapprove
+		law_all_labor_unions_allowed = neutral
+		law_socialist_labor_unions = strongly_approve
+	}
+
+	lawgroup_party_laws = {
+		law_no_party_bans = disapprove
+		law_party_anti_socialist = strongly_disapprove
+		law_party_anti_reactionary = neutral
+		law_party_reactionary_only = strongly_disapprove
+		law_party_socialist_only = approve
+		law_party_liberal_only = strongly_disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = { has_technology_researched = socialism }
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_council_republic
+			}
+		}
+		# State forces outside of CR should not be communist
+		NAND = {
+			owner = { NOT = { has_law = law_type:law_council_republic } }
+			OR = {
+				is_ruler = yes
+				is_heir = yes
+				scope:interest_group = { bpm_ig_is_state_institutional = yes }
+			}
+		}
+		scope:interest_group = {
+			OR = {
+				bpm_ig_is_revolutionary_socialist = yes
+				bpm_ig_is_middle_institutional = yes
+				bpm_ig_is_rural_institutional = yes
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = -10
+		# More likely for revolutionary socialists
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_revolutionary_socialist = yes
+				}
+			}
+			add = 100
+		}
+		# More likely when SoL is low outside of council republic
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_revolutionist_socialists
+				}
+				owner = {
+					NOT = { has_law = law_type:law_council_republic }
+					average_sol <= 10
+				}
+			}
+			add = 50
+		}
+		# More likely in an autocracy
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_revolutionist_socialists
+				}
+				owner = {
+					OR = {
+						has_law = law_type:law_autocracy
+						has_law = law_type:law_oligarchy
+					}
+				}
+			}
+			add = 50
+		}
+		# Unlikely for content IG's under anarchism
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_anarchy
+				}
+				scope:interest_group = {
+					ig_approval >= 5
+				}
+			}
+			add = -100
+		}
+		# Unlikely for Armed Forces outside of Council Republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_council_republic }
+				}
+				scope:interest_group = {
+					is_interest_group_type = ig_armed_forces
+				}
+			}
+			add = -100
+		}
+		# Impossible for Bureaucrats outside of Council Republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_council_republic }
+				}
+				scope:interest_group = {
+					is_interest_group_type = ig_petty_bourgeoisie
+				}
+			}
+			add = -1000
+		}
+		# Extremely likely for content Armed Forces and Bureaucrats in Council Republic
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_council_republic
+				}
+				scope:interest_group = {
+					OR = {
+						is_interest_group_type = ig_armed_forces
+						is_interest_group_type = ig_petty_bourgeoisie
+					}
+					ig_approval >= 0
+				}
+			}
+			add = 1000
+		}
+		# Power corrupts
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_council_republic
+					bpm_country_laws_are_moderately_undemocratic = yes
+				}
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			add = 50
+		}
+		if = {
+			limit = {
+				owner = { has_variable = communism_1_done }
+			}
+			multiply = 3
+		}
+		if = {
+			limit = {
+				owner = { has_variable = election_vanguardist_support }
+			}
+			multiply = 2
+		}
+	}
+}
+
+ideology_fascist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_fascist.dds"
+	
+	character_ideology = yes
+
+	lawgroup_distribution_of_power = {
+		law_autocracy = approve
+		law_oligarchy = neutral
+		law_anarchy = strongly_disapprove
+		law_universal_suffrage = strongly_disapprove
+		law_census_voting = strongly_disapprove
+		law_wealth_voting = strongly_disapprove
+		law_landed_voting = strongly_disapprove	
+		law_technocracy = approve
+		law_military_junta = approve		
+	}
+
+	lawgroup_centralization = {
+		law_unitary = approve
+		law_devolved = neutral
+		law_federated = neutral
+		law_confederated = disapprove
+		law_ad_hoc_centralization = strongly_disapprove
+	}
+
+	lawgroup_citizenship = {
+		law_ethnostate = strongly_approve
+		law_national_supremacy = approve
+		law_racial_segregation = approve
+		law_cultural_exclusion = disapprove
+		law_multicultural = strongly_disapprove	
+	}
+
+	lawgroup_army_model = {
+		law_mass_conscription = strongly_approve
+		law_professional_army = approve
+		law_national_militia = disapprove
+		law_peasant_levies = disapprove
+	}
+
+	lawgroup_free_speech = {
+		law_protected_speech = strongly_disapprove
+		law_right_of_assembly = disapprove
+		law_censorship = neutral
+		law_outlawed_dissent = strongly_approve
+	}
+
+	lawgroup_policing = {
+		law_local_police = approve
+		law_dedicated_police = approve
+		law_militarized_police = strongly_approve
+		law_no_police = disapprove
+		law_elected_police = strongly_disapprove
+	}
+
+	lawgroup_party_laws = {
+		law_no_party_bans = disapprove
+		law_party_anti_socialist = neutral
+		law_party_anti_reactionary = strongly_disapprove
+		law_party_reactionary_only = approve
+		law_party_socialist_only = strongly_disapprove
+		law_party_liberal_only = strongly_disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = { has_technology_researched = mass_propaganda }
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				OR = {
+					has_law = law_type:law_autocracy
+					has_law = law_type:law_military_junta
+					has_law = law_type:law_technocracy
+				}
+				has_law = law_type:law_ethnostate
+			}
+		}
+		# Any Interest Group
+		scope:interest_group = {
+			bpm_ig_is_left_wing = no
+		}
+	}
+	
+	leader_weight = {
+		value = 0
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_fascist = yes
+				}
+			}
+			add = 200
+		}
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_traditionalist = yes
+				}
+			}
+			add = 100
+		}
+		# More likely if paying war reparations
+		if = {
+			limit = {
+				any_country = {
+					has_diplomatic_pact = {
+						who = root.owner
+						type = war_reparations
+						is_initiator = yes
+					}
+				}
+			}
+			add = 50
+		}
+		# More likely with a convenient scapegoat
+		if = {
+			limit = {
+				owner = {
+					any_scope_state = {
+						is_incorporated = yes
+						any_scope_pop = {
+							pop_is_discriminated = yes
+						}
+					}
+				}
+			}
+			add = 50
+		}
+		# more likely if bankrupt
+		if = {
+			limit = {
+				owner = {
+					in_default = yes
+				}
+			}
+			add = 50
+		}
+		# Less likely in council republic
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_council_republic
+				}
+			}
+			add = -75
+		}
+		# more likely if angry non-unions
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_ethnostate }
+				}
+				scope:interest_group = {
+					ig_approval <= -5
+					NOT = { is_interest_group_type = ig_trade_unions }
+				}
+			}
+			add = 75
+		}
+		# less likely if content without ethnostate
+		if = {
+			limit = {
+				owner = {
+					NOT = {
+						has_law = law_type:law_ethnostate
+					}
+				}
+				scope:interest_group = {
+					ig_approval <= 5
+				}
+			}
+			add = -75
+		}
+		# more likely for PB and armed forces
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_state_institutional = yes
+				}
+			}
+			add = 50
+		}
+		# less likely for unions
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_labor = yes
+				}
+			}
+			add = -75
+		}
+		# more likely if in government with ethnostate
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_ethnostate
+					NOR = {
+						is_enacting_law = law_type:law_multicultural
+						is_enacting_law = law_type:law_national_supremacy
+						is_enacting_law = law_type:law_racial_segregation
+						is_enacting_law = law_type:law_cultural_exclusion
+					}
+				}
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			add = 150
+		}
+		# conservative and/or reactionary leaders have a higher spawn chance if the Anti-Dreyfusards won.
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = anti_dreyfusard_victory
+				}
+			}
+			add = 10
+		}
+	}
+}
+
+ideology_anarchist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_anarchist.dds"
+	
+	character_ideology = yes
+
+	lawgroup_citizenship = {
+		law_ethnostate = strongly_disapprove
+		law_national_supremacy = strongly_disapprove
+		law_racial_segregation = strongly_disapprove
+		law_cultural_exclusion = disapprove
+		law_multicultural = strongly_approve
+	}	
+
+	lawgroup_distribution_of_power = {
+		law_anarchy = strongly_approve
+		law_universal_suffrage = neutral
+		law_census_voting = disapprove
+		law_wealth_voting = strongly_disapprove	
+		law_landed_voting = strongly_disapprove	
+		law_oligarchy = strongly_disapprove
+		law_autocracy = strongly_disapprove		
+		law_technocracy = strongly_disapprove
+		law_military_junta = strongly_disapprove
+	}
+
+	lawgroup_economic_system = {	
+		law_command_economy = disapprove
+		law_interventionism = disapprove
+		law_agrarianism = disapprove
+		law_traditionalism = strongly_disapprove		
+		law_laissez_faire = disapprove		
+		law_cooperative_ownership = strongly_approve
+		law_industry_banned = strongly_disapprove
+	}
+	lawgroup_army_model = { 
+		law_professional_army = disapprove
+		law_national_militia = neutral
+		law_peasant_levies = disapprove
+		law_mass_conscription = strongly_disapprove
+	}
+
+	lawgroup_free_speech = {
+		law_protected_speech = strongly_approve
+		law_right_of_assembly = approve
+		law_censorship = disapprove
+		law_outlawed_dissent = strongly_disapprove
+	}
+
+	lawgroup_policing = {
+		law_no_police = approve
+		law_local_police = disapprove
+		law_dedicated_police = disapprove
+		law_militarized_police = strongly_disapprove
+		law_elected_police = strongly_approve
+	}
+
+	lawgroup_governance_principles = {
+		law_monarchy = strongly_disapprove
+		law_presidential_republic = disapprove
+		law_parliamentary_republic = disapprove
+		law_theocracy = strongly_disapprove
+		law_council_republic = strongly_approve
+	}
+
+	lawgroup_land_reform = {
+		law_serfdom = strongly_disapprove
+		law_tenant_farmers = strongly_disapprove
+		law_homesteading = approve
+		law_collectivized_agriculture = approve
+		law_commercialized_agriculture = disapprove
+	}
+
+	lawgroup_labor_unions = {
+		law_illegal_labor_unions = strongly_disapprove
+		law_state_controlled_labor_unions = strongly_disapprove
+		law_limited_labor_unions = strongly_disapprove
+		law_all_labor_unions_allowed = approve
+		law_socialist_labor_unions = disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = { has_technology_researched = anarchism }
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_anarchy
+			}
+		}
+		# Monarchs cannot be republicans
+		NAND = {
+			owner = {
+				has_law = law_type:law_monarchy
+			}
+			OR = {
+				is_ruler = yes
+				is_heir = yes
+			}
+		}
+		scope:interest_group = {
+			OR = {
+				bpm_ig_is_radical_socialist = yes
+				bpm_ig_is_lower_institutional = yes
+				is_interest_group_type = ig_agrarian_populists
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = -10
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_anarchists
+				}
+			}
+			add = 200
+		}
+		# More likely for angry IG's outside of council republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_council_republic }
+					has_variable = local_anarchists_split_var
+				}
+				scope:interest_group = {
+					ig_approval <= -10
+					bpm_ig_is_revolutionary_socialist = no
+				}
+			}
+			add = 30
+		}
+		# More likely for agrarian populists when serfdom is legal
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_serfdom
+				}
+				OR = {
+					scope:interest_group = {
+						is_interest_group_type = ig_agrarian_populists
+					}
+				}
+			}
+			add = 70
+		}
+		# More likely if under anarchy
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_anarchy
+				}
+			}
+			add = 110
+		}
+		if = {
+			limit = {
+				owner = { has_variable = communism_1_done }
+			}
+			multiply = 3
+		}
+		if = {
+			limit = {
+				owner = { has_variable = election_anarchist_support }
+			}
+			multiply = 2
+		}
+	}
+}
+
+ideology_agrarian_socialist_leader = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_Agrarian.dds"
+	
+	character_ideology = yes
+
+	lawgroup_distribution_of_power = {
+		law_anarchy = approve
+		law_universal_suffrage = strongly_approve
+		law_census_voting = disapprove
+		law_wealth_voting = strongly_disapprove	
+		law_landed_voting = strongly_disapprove	
+		law_oligarchy = strongly_disapprove
+		law_autocracy = strongly_disapprove		
+		law_technocracy = disapprove
+		law_military_junta = disapprove
+	}
+
+	lawgroup_land_reform = {
+		law_serfdom = strongly_disapprove
+		law_tenant_farmers = strongly_disapprove
+		law_homesteading = approve
+		law_collectivized_agriculture = strongly_approve
+		law_commercialized_agriculture = disapprove
+	}
+
+	lawgroup_army_model = { 
+		law_professional_army = strongly_disapprove
+		law_national_militia = neutral
+		law_peasant_levies = strongly_disapprove
+		law_mass_conscription = strongly_disapprove
+	}
+
+	lawgroup_policing = {
+		law_no_police = approve
+		law_local_police = disapprove
+		law_dedicated_police = disapprove
+		law_militarized_police = strongly_disapprove
+		law_elected_police = approve
+	}
+
+	lawgroup_economic_system = {	
+		law_command_economy = strongly_disapprove
+		law_interventionism = disapprove
+		law_agrarianism = approve
+		law_traditionalism = strongly_disapprove		
+		law_laissez_faire = disapprove		
+		law_cooperative_ownership = strongly_approve
+		law_industry_banned = approve
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = { has_technology_researched = socialism }
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				NOR = { 
+					has_law = law_type:law_serfdom
+					has_law = law_type:law_tenant_farmers
+				}
+				OR = {
+					has_law = law_type:law_agrarianism
+					has_law = law_type:law_industry_banned
+				}
+				OR = {
+					has_law = law_type:law_anarchy
+					has_law = law_type:law_universal_suffrage
+				}
+			}
+		}
+		# Monarchs cannot be republicans
+		NAND = {
+			owner = {
+				has_law = law_type:law_monarchy
+			}
+			OR = {
+				is_ruler = yes
+				is_heir = yes
+			}
+		}
+		scope:interest_group = {
+			OR = {
+				is_interest_group_type = ig_agrarian_populists
+				bpm_ig_is_anarchist = yes
+				bpm_ig_is_radical_liberal = yes
+				AND = {
+					bpm_ig_is_rural_institutional = yes
+					bpm_ig_is_upper_institutional = no
+				}
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = 0
+		# More likely for agrarian populists and anarchists when serfdom is legal
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_serfdom
+				}
+				scope:interest_group = {
+					bpm_ig_is_anarchist = yes
+				}
+			}
+			add = 75
+		}
+		# More likely for rural folk when agrarian populists are socialist
+		if = {
+			limit = {
+				owner = {
+					ig:ig_agrarian_populists = {
+						leader = { has_ideology = ideology_agrarian_socialist_leader }
+					}
+				}
+				scope:interest_group = {
+					is_interest_group_type = ig_rural_folk
+				}
+			}
+			add = 50
+		}
+		# More likely for rural folk in CR
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_anarchy
+						has_law = law_type:law_council_republic
+					}
+				}
+				scope:interest_group = {
+					is_interest_group_type = ig_rural_folk
+				}
+			}
+			add = 75
+		}
+	}
+}
+
+ideology_ethno_nationalist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_ethno_nationalist.dds" 
+	
+	character_ideology = yes
+
+	lawgroup_citizenship = {
+		law_ethnostate = strongly_approve
+		law_national_supremacy = approve
+		law_racial_segregation = approve
+		law_cultural_exclusion = disapprove
+		law_multicultural = strongly_disapprove	
+	}
+	
+	lawgroup_migration = {
+		law_migration_controls = strongly_approve
+		law_closed_borders = approve
+		law_no_migration_controls = disapprove	
+	}
+
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = {
+			has_technology_researched = political_agitation
+		}
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_ethnostate
+				has_law = law_type:law_migration_controls
+			}
+		}
+		scope:interest_group = {
+			bpm_ig_is_left_wing = no
+		}
+		
+	}
+	
+	leader_weight = {
+		value = 100
+		# More likely with unowned claims
+		if = {
+			limit = {
+				any_state = {
+					has_claim_by = root.owner
+				}
+			}
+			add = 75
+		}
+		# More likely with a convenient scapegoat
+		if = {
+			limit = {
+				owner = {
+					any_scope_state = {
+						is_incorporated = yes
+						any_scope_pop = {
+							pop_is_discriminated = yes
+						}
+					}
+				}
+			}
+			add = 50
+		}
+		# More likely with a convenient scapegoat and is angry without ethnostate
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_ethnostate }
+					any_scope_state = {
+						is_incorporated = yes
+						any_scope_pop = {
+							pop_is_discriminated = yes
+						}
+					}
+				}
+				scope:interest_group = {
+					ig_approval <= -5
+				}
+			}
+			add = 75
+		}
+		# More likely if angry and issues are relevant
+		if = {
+			limit = {
+				owner = {
+					NOR = {
+						has_law = law_type:law_ethnostate
+						has_law = law_type:law_national_supremacy
+					}
+				}
+				scope:interest_group = {
+					ig_approval <= -5
+				}
+			}
+			add = 50
+		}
+		# Less likely in council republic
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_council_republic
+				}
+			}
+			add = -75
+		}
+		# less likely if content without ethnostate
+		if = {
+			limit = {
+				owner = {
+					NOT = {
+						has_law = law_type:law_ethnostate
+					}
+				}
+				scope:interest_group = {
+					ig_approval <= 5
+				}
+			}
+			add = -75
+		}
+		# conservative and/or reactionary leaders have a higher spawn chance if the Anti-Dreyfusards won.
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = anti_dreyfusard_victory
+				}
+			}
+			add = 10
+		}
+	}
+}
+
+ideology_theocrat = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_theocrat.dds"
+	
+	character_ideology = yes
+
+	lawgroup_church_and_state = {
+		law_state_religion = approve
+		law_freedom_of_conscience = disapprove
+		law_total_separation = strongly_disapprove
+		law_state_atheism = strongly_disapprove
+	}
+
+	lawgroup_governance_principles = {
+		law_theocracy = strongly_approve	
+		law_monarchy = neutral
+		law_presidential_republic = disapprove
+		law_parliamentary_republic = disapprove
+		law_council_republic = disapprove
+	}
+	
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				bpm_country_laws_are_moralist = yes
+			}
+		}
+		OR = {
+			owner = {
+				has_law = law_type:law_theocracy
+			}
+			scope:interest_group = {
+				is_interest_group_type = ig_devout
+			}
+			scope:interest_group = {
+				bpm_ig_is_traditionalist = yes
+			}
+		}
+		NOR = {
+			AND = {
+				owner = {
+					bpm_country_is_in_new_world = yes
+					NOT = { this = c:BRZ }
+				}
+			}
+			AND = {
+				owner = { bpm_country_is_republic = yes }
+				is_interest_group_type = ig_petty_bourgeoisie
+			}
+		}
+		scope:interest_group = {
+			OR = {
+				bpm_ig_is_right_wing = yes
+				AND = {
+					bpm_ig_is_institutional = yes
+					bpm_ig_is_urban_institutional = no
+				}
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = 50
+		# more likely if devout and angry and issues are relevant
+		if = {
+			limit = {
+				scope:interest_group = {
+					ig_approval <= -5
+					OR = {
+						is_interest_group_type = ig_devout
+						is_interest_group_type = ig_reactionaries
+					}
+				}
+				owner = {
+					NOR = {
+						has_law = law_type:law_theocracy
+						has_law = law_type:law_monarchy
+					}
+					NOT = {
+						has_law = law_type:law_state_religion
+					}
+				}
+			}
+			add = 75
+		}
+		# More likely for devout
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_devout
+				}
+			}
+			add = 50
+		}
+		# Unlikely for content IG's when issues aren't relevant
+		if = {
+			limit = {
+				scope:interest_group = {
+					ig_approval >= 5
+				}
+				owner = {
+					NOR = {
+						has_law = law_type:law_theocracy
+						has_law = law_type:law_monarchy
+					}
+					NOT = {
+						has_law = law_type:law_state_religion
+					}
+				}
+			}
+			add = -150
+		}
+		# conservative and/or reactionary leaders have a higher spawn chance if the Anti-Dreyfusards won.
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = anti_dreyfusard_victory
+				}
+			}
+			add = 10
+		}
+	}
+}
+
+ideology_market_liberal = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_market_liberal.dds"
+	
+	character_ideology = yes
+
+	lawgroup_economic_system = {	
+		law_laissez_faire = strongly_approve
+		law_interventionism = neutral
+		law_agrarianism = disapprove
+		law_traditionalism = disapprove		
+		law_command_economy = strongly_disapprove
+		law_cooperative_ownership = disapprove
+		law_industry_banned = strongly_disapprove
+	}
+	
+	lawgroup_childrens_rights = {
+		law_child_labor_allowed = approve
+		law_restricted_child_labor = approve
+		law_compulsory_primary_school = neutral
+	}	
+	
+	lawgroup_trade_policy = {
+		law_free_trade = strongly_approve
+		law_mercantilism = disapprove
+		law_protectionism = disapprove		
+		law_isolationism = strongly_disapprove
+	}			
+
+	lawgroup_labor_rights = {
+		law_no_workers_rights = approve
+		law_regulatory_bodies = disapprove
+		law_worker_protections = strongly_disapprove
+	}
+
+	lawgroup_land_reform = {
+		law_collectivized_agriculture = strongly_disapprove
+		law_serfdom = strongly_disapprove
+		law_tenant_farmers = disapprove
+		law_homesteading = neutral
+		law_commercialized_agriculture = approve
+	}
+
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = {
+			has_technology_researched = stock_exchange
+			# capitalism must be relevant
+			exists = ig:ig_industrialists
+			ig:ig_industrialists = {
+				is_marginal = no
+			}
+		}
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				bpm_country_laws_are_very_capitalist = yes
+			}
+		}
+		scope:interest_group = {
+			bpm_ig_is_labor = no
+		}
+	}
+
+	leader_weight = {
+		value = 25
+		# more likely for industrialists
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_industrialists
+				}
+			}
+			add = 50
+		}
+		# more likely for liberals
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_moderate_liberal = yes
+				}
+			}
+			add = 50
+		}
+		# more likely for market liberals
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_market_liberals
+				}
+			}
+			add = 50
+		}
+		# more likely for intelligentsia, industrialists with traditional economic laws
+		if = {
+			limit = {
+				scope:interest_group = {
+					OR = {
+						is_interest_group_type = ig_intelligentsia
+						is_interest_group_type = ig_industrialists
+					}
+				}
+				owner = {
+					bpm_country_laws_have_traditional_economics = yes
+				}
+			}
+			add = 75
+		}
+		# more likely for weaker landowers when industrialists are powerful
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_landowners
+					is_powerful = no
+				}
+				owner = {
+					ig:ig_industrialists = {
+						is_powerful = yes
+					}
+				}
+			}
+			add = 75
+		}
+		# less likely for non-urban IGs
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_institutional = yes
+					bpm_ig_is_urban_institutional = no
+				}
+			}
+			add = -75
+		}
+		# less likely for landowners under traditional laws
+		if = {
+			limit = {
+				scope:interest_group = {
+					OR = {
+						is_interest_group_type = ig_landowners
+						bpm_ig_is_right_wing = yes
+					}
+				}
+				owner = {
+					bpm_country_laws_have_traditional_economics = yes
+				}
+			}
+			add = -75
+		}
+		# very unlikely in countries without a large urban center
+		if = {
+			limit = {
+				owner = {
+					NOT = {
+						any_scope_state = {
+							any_scope_building = {
+								is_building_type = building_urban_center
+								level >= 10
+							}
+						}
+					}
+				}
+			}
+			add = -150
+		}
+	}
+}
+
+ideology_luddite = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/luddite.dds"
+	
+	character_ideology = yes
+
+	lawgroup_economic_system = {
+		law_industry_banned = strongly_approve
+		law_agrarianism = approve
+		law_cooperative_ownership = neutral
+		law_traditionalism = neutral
+		law_laissez_faire = strongly_disapprove
+		law_interventionism = strongly_disapprove
+		law_command_economy = strongly_disapprove
+	}
+	
+	lawgroup_trade_policy = {
+		law_free_trade = strongly_disapprove
+		law_mercantilism = neutral
+		law_protectionism = approve		
+		law_isolationism = strongly_approve
+	}
+
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = {
+			has_technology_researched = romanticism
+			OR = {
+				has_law = law_type:law_command_economy
+				has_law = law_type:law_laissez_faire
+				has_law = law_type:law_interventionism
+			}
+		}
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_isolationism
+				has_law = law_type:law_industry_banned
+			}
+		}
+		scope:interest_group = {
+			OR = {
+				bpm_ig_is_agrarian = yes
+			}
+		}
+	}
+
+	leader_weight = {
+		value = 0 # this is not very likely
+		# More likely to support with some industry
+		if = {
+			limit = {
+				owner = {
+					any_scope_building = {
+						is_building_group = bg_heavy_industry
+						level >= 5
+					}
+				}
+			}
+			add = 40
+		}
+		# LESS likely to support with lots of industry
+		if = {
+			limit = {
+				owner = {
+					any_scope_building = {
+						is_building_group = bg_heavy_industry
+						level >= 10
+					}
+				}
+			}
+			add = -40
+		}
+		# More likely for unrecognized countries
+		if = {
+			limit = {
+				owner = {
+					is_country_type = unrecognized
+				}
+			}
+			add = 50
+		}
+		# less likely for GPs
+		if = {
+			limit = {
+				owner = {
+					country_rank = rank_value:great_power
+				}
+			}
+			add = -50
+		}
+	}
+}
+
+ideology_authoritarian = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/authoritarian.dds"
+	character_ideology = yes
+
+	lawgroup_distribution_of_power = {
+		law_anarchy = strongly_disapprove
+		law_universal_suffrage = strongly_disapprove
+		law_census_voting = disapprove
+		law_wealth_voting = neutral
+		law_landed_voting = neutral
+		law_technocracy = neutral
+		law_oligarchy = approve
+		law_autocracy = approve
+		law_military_junta = approve
+	}
+
+	lawgroup_free_speech = {
+		law_protected_speech = strongly_disapprove
+		law_right_of_assembly = disapprove
+		law_censorship = approve
+		law_outlawed_dissent = strongly_approve
+	}
+	
+	lawgroup_internal_security = {
+		law_guaranteed_liberties = strongly_disapprove
+		law_no_home_affairs = neutral
+		law_national_guard = approve
+		law_secret_police = strongly_approve
+	}
+
+	lawgroup_policing = {
+		law_militarized_police = approve
+		law_local_police = disapprove
+		law_dedicated_police = approve
+		law_no_police = strongly_disapprove
+		law_elected_police = strongly_disapprove
+	}
+
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_outlawed_dissent
+				has_law = law_type:law_secret_police
+				OR = {
+					has_law = law_type:law_oligarchy
+					has_law = law_type:law_autocracy
+					has_law = law_type:law_military_junta
+				}
+			}
+		}
+		scope:interest_group = {
+			bpm_ig_is_radical_left = no
+		}
+	}
+
+	leader_weight = {
+		value = 50
+		# less likely if issues are not relevant
+		if = {
+			limit = {
+				owner = { 
+					bpm_country_laws_are_very_undemocratic = yes
+				}
+			}
+			add = -50
+		}
+		# less likely if not in government
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = no
+				}
+			}
+			add = -50
+		}
+		# less likely for progressive IG's
+		if = {
+			limit = {
+				bpm_ig_is_liberal = yes	
+			}
+			add = -50
+		}
+		# more likely for more authoritarian IG's
+		if = {
+			limit = {
+				bpm_ig_is_traditionalist = yes
+			}
+			add = 50
+		}
+		# less likely for conservative French IG's
+		if = {
+			limit = {
+				owner = {
+					exists = c:FRA
+					this = c:FRA
+					has_journal_entry = je_divided_monarchists
+				}
+				scope:interest_group = {
+					OR = {
+						is_interest_group_type = ig_landowners
+						is_interest_group_type = ig_petty_bourgeoisie
+						is_interest_group_type = ig_devout
+					}
+				}
+			}
+			add = -100
+		}
+		# conservative and/or reactionary leaders have a higher spawn chance if the Anti-Dreyfusards won.
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = anti_dreyfusard_victory
+				}
+			}
+			add = 10
+		}
+	}
+}
+
+ideology_protectionist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/exp_ideology_leader_protectionism.dds"
+	
+	character_ideology = yes
+
+	lawgroup_economic_system = {
+		law_interventionism = approve
+		law_agrarianism = neutral
+		law_command_economy = disapprove
+		law_cooperative_ownership = disapprove
+		law_laissez_faire = disapprove
+		law_traditionalism = disapprove
+		law_industry_banned = strongly_disapprove
+	}
+	
+	lawgroup_trade_policy = {
+		law_protectionism = strongly_approve
+		law_mercantilism = approve
+		law_free_trade = disapprove
+		law_isolationism = neutral
+	}		
+
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = {
+			has_technology_researched = international_trade
+			# capitalism must be relevant
+			exists = ig:ig_industrialists
+			ig:ig_industrialists = {
+				is_marginal = no
+			}
+		}
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				bpm_country_laws_are_protectionist = yes
+			}
+		}
+		scope:interest_group = {
+			bpm_ig_is_socialist = no
+			NOT = { is_interest_group_type = ig_market_liberals }
+		}
+	}
+
+	leader_weight = {
+		value = 25
+		# more likely for industrialists
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_industrialists
+				}
+			}
+			add = 50
+		}
+		# more likely for rurals
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_rural_institutional = yes
+				}
+			}
+			add = 50
+		}
+		# more likely for intelligentsia, industrialists, and PB with traditional economic laws
+		if = {
+			limit = {
+				scope:interest_group = {
+					OR = {
+						bpm_ig_is_urban_institutional = yes
+						is_interest_group_type = ig_liberals
+					}
+				}
+				owner = {
+					bpm_country_laws_have_traditional_economics = yes
+				}
+			}
+			add = 50
+		}
+		# less likely for conservatives under traditional laws
+		if = {
+			limit = {
+				scope:interest_group = {
+					OR = {
+						is_interest_group_type = ig_landowners
+						bpm_ig_is_right_wing = yes
+					}
+				}
+				owner = {
+					bpm_country_laws_have_traditional_economics = yes
+				}
+			}
+			add = -100
+		}
+		# less likely when issues are not relevant
+		if = {
+			limit = {
+				owner = {
+					bpm_country_laws_are_protectionist = yes
+				}
+			}
+			add = -100
+		}
+		# More likely for unrecognized countries
+		if = {
+			limit = {
+				owner = {
+					is_country_type = unrecognized
+				}
+			}
+			add = 50
+		}
+		# less likely for GP's
+		if = {
+			limit = {
+				owner = {
+					country_rank = rank_value:great_power
+				}
+			}
+			add = -25
+		}
+		# less likely for conservative French IG's
+		if = {
+			limit = {
+				owner = {
+					exists = c:FRA
+					this = c:FRA
+					has_journal_entry = je_divided_monarchists
+				}
+				scope:interest_group = {
+					OR = {
+						is_interest_group_type = ig_industrialists
+						is_interest_group_type = ig_petty_bourgeoisie
+					}
+				}
+			}
+			add = -100
+		}
+	}
+}
+
+ideology_humanitarian = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_humanitarism.dds"
+	
+	character_ideology = yes
+
+	lawgroup_citizenship = {
+		law_ethnostate = strongly_disapprove
+		law_national_supremacy = strongly_disapprove
+		law_racial_segregation = disapprove
+		law_cultural_exclusion = approve
+		law_multicultural = neutral
+	}
+
+	lawgroup_internal_security = {
+		law_guaranteed_liberties = approve
+		law_no_home_affairs = neutral
+		law_national_guard = disapprove
+		law_secret_police = disapprove
+	}
+	
+	lawgroup_free_speech = {
+		law_protected_speech = approve
+		law_right_of_assembly = neutral
+		law_censorship = disapprove
+		law_outlawed_dissent = strongly_disapprove
+	}
+	
+	lawgroup_rights_of_women = {
+		law_no_womens_rights = strongly_disapprove
+		law_women_own_property = disapprove
+		law_women_in_the_workplace = neutral
+		law_womens_suffrage = approve
+	}
+
+	lawgroup_childrens_rights = {
+		law_child_labor_allowed = strongly_disapprove
+		law_restricted_child_labor = disapprove
+		law_compulsory_primary_school = approve
+	}
+
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = {
+			has_technology_researched = feminism
+		}
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_multicultural
+				has_law = law_type:law_guaranteed_liberties
+				has_law = law_type:law_protected_speech
+				has_law = law_type:law_womens_suffrage
+				has_law = law_type:law_compulsory_primary_school
+			}
+		}
+		scope:interest_group = {
+			OR = {
+				bpm_ig_is_urban_institutional = yes
+				bpm_ig_is_liberal = yes
+			}
+		}
+	}
+
+	leader_weight = {
+		value = 100
+		# less likely if issues are not relevant
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_multicultural
+				}
+			}
+			add = -10
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_guaranteed_liberties
+				}
+			}
+			add = -10
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_protected_speech
+				}
+			}
+			add = -10
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_womens_suffrage
+				}
+			}
+			add = -10
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_compulsory_primary_school
+				}
+			}
+			add = -10
+		}
+		# more likely if issues are relevant
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_ethnostate
+						has_law = law_type:law_national_supremacy
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_national_guard
+						has_law = law_type:law_secret_police
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_censorship
+						has_law = law_type:law_outlawed_dissent
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_no_womens_rights
+						has_law = law_type:law_women_own_property
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_restricted_child_labor
+						has_law = law_type:law_compulsory_primary_school
+					}
+				}
+			}
+			add = 25
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Dreyfusards won.
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = dreyfusard_victory
+				}
+			}
+			add = 10
+		}
+	}
+}
+
+ideology_jacksonian_democrat = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/jackson_democrat.dds"
+
+	character_ideology = yes
+
+	lawgroup_governance_principles = {
+		law_monarchy = strongly_disapprove
+		law_theocracy = strongly_disapprove
+		law_council_republic = strongly_disapprove
+		law_parliamentary_republic = neutral
+		law_presidential_republic = approve
+	}
+	
+	lawgroup_distribution_of_power = {
+		law_universal_suffrage = strongly_approve
+		law_census_voting = approve
+		law_wealth_voting = neutral
+		law_landed_voting = disapprove
+		law_anarchy = strongly_disapprove
+		law_oligarchy = strongly_disapprove
+		law_autocracy = strongly_disapprove
+		law_military_junta = disapprove
+		law_technocracy = strongly_disapprove
+	}
+
+	lawgroup_bureaucracy = {
+		law_elected_bureaucrats = approve
+		law_appointed_bureaucrats = neutral
+		law_hereditary_bureaucrats = disapprove
+	}
+
+	lawgroup_slavery = {
+		law_slavery_banned = strongly_disapprove
+		law_debt_slavery = strongly_disapprove		
+		law_slave_trade = neutral
+		law_legacy_slavery = approve
+	}
+
+	lawgroup_citizenship = {
+		law_ethnostate = strongly_disapprove
+		law_national_supremacy = neutral
+		law_racial_segregation = approve
+		law_cultural_exclusion = neutral
+		law_multicultural = strongly_disapprove	
+	}
+
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = {
+			AND = {
+				exists = c:USA
+				OR = {
+					c:USA = this
+					civil_war_origin_country = c:USA
+				}
+			}
+			any_scope_character = {
+				has_variable = is_andrew_jackson
+			}
+		}
+		scope:interest_group = {
+			bpm_ig_is_left_wing = no
+			bpm_ig_is_abolitionist = no
+		}
+	}
+
+	leader_weight = {
+		value = 300
+	}
+}
+
+ideology_positivist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_positivist.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_governance_principles = {
+		law_theocracy = strongly_disapprove
+		law_council_republic = disapprove
+		law_monarchy = neutral
+		law_parliamentary_republic = neutral	
+		law_presidential_republic = approve	
+	}
+
+	lawgroup_church_and_state = {
+		law_state_religion = strongly_disapprove
+		law_freedom_of_conscience = disapprove
+		law_total_separation = approve
+		law_state_atheism = strongly_approve
+	}
+
+	lawgroup_distribution_of_power = {
+		law_technocracy = strongly_approve
+		law_military_junta = neutral
+		law_wealth_voting = approve
+		law_autocracy = neutral
+		law_oligarchy = neutral
+		law_census_voting = disapprove
+		law_landed_voting = disapprove
+		law_universal_suffrage = strongly_disapprove
+		law_anarchy = strongly_disapprove
+	}
+
+	lawgroup_bureaucracy = {
+		law_appointed_bureaucrats = strongly_approve
+		law_elected_bureaucrats = disapprove
+		law_hereditary_bureaucrats = strongly_disapprove
+	}
+	
+	possible = {
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_appointed_bureaucrats
+				has_law = law_type:law_technocracy
+				has_law = law_type:law_state_atheism
+				has_law = law_type:law_presidential_republic
+			}
+		}
+		# Monarchs cannot be republicans
+		NAND = {
+			owner = {
+				has_law = law_type:law_monarchy
+			}
+			OR = {
+				is_ruler = yes
+				is_heir = yes
+			}
+		}
+		owner = {
+			has_technology_researched = empiricism
+		}
+		scope:interest_group = {
+			NOR = {
+				bpm_ig_is_rural_institutional = yes
+				bpm_ig_is_labor = yes
+				bpm_ig_is_radical_liberal = yes
+			}
+		}
+	}
+	
+	leader_weight = {
+		value = 10
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_middle_institutional = yes
+					is_powerful = yes
+				}
+			}
+			add = 25
+		}
+		# More likely among angry IG's
+		if = {
+			limit = {
+				scope:interest_group = {
+					ig_approval <= unhappy
+				}
+			}
+			add = 75
+		}
+		# More likely in constitutional monarchies
+		if = {
+			limit = {
+				owner = { 
+					has_law = law_type:law_monarchy
+					OR = {
+						has_law = law_type:law_wealth_voting
+						has_law = law_type:law_census_voting
+						has_law = law_type:law_universal_suffrage
+						has_law = law_type:law_landed_voting
+					}
+				}
+			}
+			add = 75
+		}
+		multiply = {
+			value = 0.5
+			if = {
+				limit = {
+					owner = { has_technology_researched = shift_work }
+				}
+				value = 1.0
+			}
+		}
+	}
+}
+
+ideology_land_reformer = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_land_reformer.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_centralization = {
+		law_unitary = neutral
+		law_devolved = neutral
+		law_federated = neutral
+		law_confederated = neutral
+		law_ad_hoc_centralization = strongly_disapprove
+	}
+
+	lawgroup_taxation = {
+		law_land_based_taxation = strongly_disapprove
+		law_consumption_based_taxation = neutral
+		law_per_capita_based_taxation = neutral
+		law_proportional_taxation = neutral
+		law_graduated_taxation = neutral
+	}
+
+	lawgroup_land_reform = {
+		law_serfdom = strongly_disapprove
+		law_tenant_farmers = disapprove
+		law_commercialized_agriculture = neutral
+		law_homesteading = approve
+		law_collectivized_agriculture = neutral
+	}
+
+	possible = {
+		owner = { has_technology_researched = enclosure }
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				NOT = {
+					has_law = law_type:law_land_based_taxation
+				}
+				has_law = law_type:law_homesteading
+			}
+		}
+		scope:interest_group = {
+			bpm_ig_is_upper_institutional = no
+			bpm_ig_is_socialist = no
+			NOT = { is_interest_group_type = ig_reactionaries }
+		}
+	}
+	
+	leader_weight = {
+		value = 100
+		# less likely for urbanites
+		if = {
+			limit = {
+				scope:interest_group = {
+					OR = {
+						bpm_ig_is_urban_institutional = yes
+						bpm_ig_is_state_institutional = yes
+					}
+				}
+			}
+			add = -100
+		}
+		# less likely for right wingers
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_right_wing = yes
+				}
+			}
+			add = -100
+		}
+		# more likely when issues are relevant
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_serfdom
+						has_law = law_type:law_tenant_farmers
+						has_law = law_type:law_land_based_taxation
+					}
+				}
+			}
+			add = 50
+		}
+		# more likely for displeased peasants
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_rural_folk
+					ig_approval <= 0
+				}
+				owner = {
+					OR = {
+						has_law = law_type:law_serfdom
+						has_law = law_type:law_tenant_farmers
+						has_law = law_type:law_land_based_taxation
+					}
+				}
+			}
+			add = 150
+		}
+		# likely to emerge if landowners are powerful
+		if = {
+			limit = {
+				owner = {
+					exists = ig:ig_landowners
+					ig:ig_landowners = {
+						is_powerful = yes
+					}
+				}
+			}
+			add = 50
+		}
+		# likely to emerge if agrarian
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_traditionalism
+						has_law = law_type:law_agrarianism
+						has_law = law_type:law_industry_banned
+					}
+				}
+			}
+			add = 50
+		}
+		# will not happen if land reform is essentially done
+		if = {
+			limit = {
+				owner = {
+					NOT = {
+						has_law = law_type:law_land_based_taxation
+					}
+					OR = {
+						has_law = law_type:law_homesteading
+						has_law = law_type:law_collectivized_agriculture
+					}
+				}
+			}
+			multiply = 0.01
+		}
+		# Pedro JE victory
+		if = {
+			limit = {
+				owner = {
+					has_variable = brz_enduring_empire
+				}
+			}
+			add = 50
+		}
+	}
+}
+
+ideology_integralist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_integralist.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_policing = {
+		law_militarized_police = strongly_approve
+		law_local_police = approve
+		law_dedicated_police = approve
+		law_no_police = disapprove
+		law_elected_police = strongly_disapprove
+	}
+
+	lawgroup_church_and_state = {
+		law_state_religion = strongly_approve
+		law_freedom_of_conscience = disapprove
+		law_total_separation = strongly_disapprove
+		law_state_atheism = strongly_disapprove
+	}
+
+	lawgroup_citizenship = {
+		law_cultural_exclusion = approve
+		law_racial_segregation = neutral
+		law_multicultural = disapprove	
+		law_ethnostate = disapprove
+		law_national_supremacy = disapprove
+	}
+
+	lawgroup_distribution_of_power = {
+		law_autocracy = strongly_approve
+		law_oligarchy = approve
+		law_landed_voting = neutral
+		law_wealth_voting = disapprove
+		law_technocracy = strongly_disapprove
+		law_census_voting = strongly_disapprove
+		law_universal_suffrage = strongly_disapprove
+		law_anarchy = strongly_disapprove
+		law_military_junta = strongly_approve
+	}
+
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		owner = { has_technology_researched = corporatism }
+		owner = { 
+			any_primary_culture = { 
+				OR = { 
+					has_discrimination_trait = lusophone 
+					has_discrimination_trait = hispanophone 
+					has_discrimination_trait = francophone 
+				} 
+			} 
+		}
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				OR = {
+					has_law = law_type:law_autocracy
+					has_law = law_type:law_military_junta
+					has_law = law_type:law_technocracy
+				}
+				has_law = law_type:law_ethnostate
+			}
+		}
+		# Any Interest Group
+		scope:interest_group = {
+			bpm_ig_is_left_wing = no
+		}
+	}
+	
+	leader_weight = {
+		value = 0
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_fascist = yes
+				}
+			}
+			add = 200
+		}
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_traditionalist = yes
+				}
+			}
+			add = 100
+		}
+		# More likely if paying war reparations
+		if = {
+			limit = {
+				any_country = {
+					has_diplomatic_pact = {
+						who = root.owner
+						type = war_reparations
+						is_initiator = yes
+					}
+				}
+			}
+			add = 50
+		}
+		# More likely with a convenient scapegoat
+		if = {
+			limit = {
+				owner = {
+					any_scope_state = {
+						is_incorporated = yes
+						any_scope_pop = {
+							pop_is_discriminated = yes
+						}
+					}
+				}
+			}
+			add = 50
+		}
+		# more likely if bankrupt
+		if = {
+			limit = {
+				owner = {
+					in_default = yes
+				}
+			}
+			add = 50
+		}
+		# Less likely in council republic
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_council_republic
+				}
+			}
+			add = -75
+		}
+		# more likely if angry non-unions
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law = law_type:law_ethnostate }
+				}
+				scope:interest_group = {
+					ig_approval <= -5
+					NOT = { is_interest_group_type = ig_trade_unions }
+				}
+			}
+			add = 75
+		}
+		# less likely if content without ethnostate
+		if = {
+			limit = {
+				owner = {
+					NOT = {
+						has_law = law_type:law_ethnostate
+					}
+				}
+				scope:interest_group = {
+					ig_approval <= 5
+				}
+			}
+			add = -75
+		}
+		# more likely for PB and armed forces
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_state_institutional = yes
+				}
+			}
+			add = 50
+		}
+		# less likely for unions
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_labor = yes
+				}
+			}
+			add = -75
+		}
+		# more likely if in government with ethnostate
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_ethnostate
+					NOR = {
+						is_enacting_law = law_type:law_multicultural
+						is_enacting_law = law_type:law_national_supremacy
+						is_enacting_law = law_type:law_racial_segregation
+						is_enacting_law = law_type:law_cultural_exclusion
+					}
+				}
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			add = 150
+		}
+		# conservative and/or reactionary leaders have a higher spawn chance if the Anti-Dreyfusards won.
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = anti_dreyfusard_victory
+				}
+			}
+			add = 10
+		}
+		# Vargas fosters fascism
+		if = {
+			limit = {
+				owner = {
+					has_journal_entry = je_new_republic
+				}
+			}
+			add = 50
+		}
+	}
+
+}
+
+ideology_liberal_leader = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_liberal.dds"
+	
+	character_ideology = yes
+	
+	lawgroup_distribution_of_power = {
+		law_universal_suffrage = neutral
+		law_census_voting = approve
+		law_wealth_voting = approve
+		law_landed_voting = approve
+		law_technocracy = disapprove
+		law_oligarchy = disapprove
+		law_autocracy = strongly_disapprove
+		law_anarchy = strongly_disapprove
+		law_military_junta = disapprove
+	}
+	
+	lawgroup_bureaucracy = {
+		law_elected_bureaucrats = approve
+		law_appointed_bureaucrats = neutral
+		law_hereditary_bureaucrats = disapprove
+	}
+	
+	possible = {
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				OR = {
+					has_law = law_type:law_universal_suffrage
+					has_law = law_type:law_census_voting
+					has_law = law_type:law_wealth_voting
+					has_law = law_type:law_landed_voting
+				}
+				has_law = law_type:law_elected_bureaucrats
+			}
+		}
+		NOR = {
+			bpm_ig_is_socialist = yes
+			bpm_ig_is_radical_right = yes
+			is_interest_group_type = ig_landowners
+		}
+	}
+	
+	leader_weight = {
+		value = 100
+		# less likely if rural
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_rural_institutional = yes
+				}
+				add = -50
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_universal_suffrage
+						has_law = law_type:law_census_voting
+						has_law = law_type:law_wealth_voting
+						has_law = law_type:law_landed_voting
+					}
+					has_law = law_type:law_elected_bureaucrats
+				}
+			}
+			add = -25
+		}
+		# IGs will not sabotage their own dictatorships
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_autocracy
+						has_law = law_type:law_oligarchy
+						has_law = law_type:law_technocracy
+						has_law = law_type:law_military_junta
+					}
+					OR = {
+						any_scope_character = {
+							is_ruler = yes
+							this.interest_group = scope:interest_group
+						}
+						scope:interest_group = {
+							OR = {
+								is_in_government = yes
+								bpm_ig_is_state_institutional = yes
+							}
+						}
+					}
+				}
+			}
+			add = -75
+		}
+		# More common in republics
+		if = {
+			limit = {
+				owner = {
+					bpm_country_is_bourgeois_republic = yes
+				}
+			}
+			add = 25
+		}
+		else = {
+			add = -50
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Dreyfusards won.
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = dreyfusard_victory
+				}
+			}
+			add = 25
+		}
+	}
+}
+
+ideology_corporatist_leader = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_corporatist.dds"
+	
+	character_ideology = yes
+	
+    lawgroup_education_system = {
+		law_no_schools = disapprove
+		law_religious_schools = neutral
+		law_private_schools = neutral
+		law_public_schools = approve
+	}
+
+    lawgroup_health_system = {
+		law_no_health_system = disapprove
+		law_charitable_health_system = neutral
+		law_private_health_insurance = approve
+		law_public_health_insurance = neutral
+	}
+
+    lawgroup_labor_rights = {
+		law_no_workers_rights = neutral
+		law_regulatory_bodies = approve
+		law_worker_protections = neutral
+	}
+
+    lawgroup_childrens_rights = {
+		law_child_labor_allowed = disapprove
+		law_restricted_child_labor = disapprove
+		law_compulsory_primary_school = approve
+	}
+
+    lawgroup_welfare = {
+		law_no_social_security = neutral
+		law_poor_laws = approve
+		law_wage_subsidies = neutral
+		law_old_age_pension = disapprove
+	}
+
+	lawgroup_work_time_regulations = {
+		law_unregulated_work_time = disapprove
+		law_token_time_regulations = approve
+		law_limited_work_hours = neutral
+		law_protected_leisure = disapprove
+	}
+
+	lawgroup_labor_unions = {
+		law_illegal_labor_unions = neutral
+		law_state_controlled_labor_unions = strongly_approve
+		law_limited_labor_unions = disapprove
+		law_all_labor_unions_allowed = strongly_disapprove
+		law_socialist_labor_unions = strongly_disapprove
+	}
+	
+	possible = {
+		owner = { has_technology_researched = corporatism }
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				NOT = {
+					has_law = law_type:law_council_republic
+				}
+				has_law = law_type:law_religious_schools
+				has_law = law_type:law_regulatory_bodies
+				has_law = law_type:law_wage_subsidies
+			}
+		}
+		scope:interest_group = {
+			bpm_ig_is_socialist = no
+		}
+	}
+	
+	leader_weight = {
+		value = 25
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_liberal = yes
+					NOT = { is_interest_group_type = ig_national_liberals }	
+				}
+			}
+			add = -50
+		}
+		if = {
+			limit = {
+				owner = { has_variable = local_patcon_split_var }
+			}
+			add = 75
+		}
+		# not very relevant if issues are already addressed
+		if = {
+			limit = {
+				owner = {
+					NOT = {
+						has_law = law_type:law_council_republic
+					}
+					has_law = law_type:law_religious_schools
+					has_law = law_type:law_regulatory_bodies
+					has_law = law_type:law_wage_subsidies
+				}
+			}
+			add = -25
+		}
+		# less likely for landowners and devout
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_landowners
+				}
+			}
+			add = -75
+		}
+		# more likely for content trade unions and rural folk outside of council republic
+		if = {
+			limit = {
+				scope:interest_group = {
+					bpm_ig_is_lower_institutional = yes
+					ig_approval >= 0
+				}
+				owner = {
+					NOT = { has_law = law_type:law_council_republic }
+				}
+			}
+			add = 25
+		}
+		# conservative and/or reactionary leaders have a higher spawn chance if the Anti-Dreyfusards won
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = anti_dreyfusard_victory
+				}
+			}
+			add = 25
+		}
+	}
+}
+
+ideology_humanitarian_royalist = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_humanitarian_royalist.dds"
+	
+	character_ideology = yes
+
+	lawgroup_governance_principles = {
+		law_monarchy = strongly_approve
+		law_presidential_republic = disapprove
+		law_parliamentary_republic = disapprove
+		law_theocracy = disapprove
+		law_council_republic = strongly_disapprove
+	}
+
+	lawgroup_citizenship = {
+		law_ethnostate = strongly_disapprove
+		law_national_supremacy = strongly_disapprove
+		law_racial_segregation = disapprove
+		law_cultural_exclusion = neutral
+		law_multicultural = approve	
+	}
+
+	lawgroup_free_speech = {
+		law_protected_speech = approve
+		law_right_of_assembly = neutral
+		law_censorship = disapprove
+		law_outlawed_dissent = strongly_disapprove
+	}
+	
+	lawgroup_rights_of_women = {
+		law_no_womens_rights = strongly_disapprove
+		law_women_own_property = disapprove
+		law_women_in_the_workplace = neutral
+		law_womens_suffrage = disapprove
+	}
+
+	lawgroup_childrens_rights = {
+		law_child_labor_allowed = strongly_disapprove
+		law_restricted_child_labor = disapprove
+		law_compulsory_primary_school = approve
+	}
+
+	possible = {
+		owner = {
+			has_technology_researched = feminism
+		}
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law = law_type:law_monarchy
+				has_law = law_type:law_multicultural
+				has_law = law_type:law_guaranteed_liberties
+				has_law = law_type:law_womens_suffrage
+				has_law = law_type:law_compulsory_primary_school
+			}
+		}
+		scope:interest_group = {
+			OR = {
+				bpm_ig_is_urban_institutional = yes
+				bpm_ig_is_liberal = yes
+			}
+		}
+		owner = {
+			haw_law = law_type:law_monarchy
+		}
+	}
+
+	leader_weight = {
+		value = 100
+		# more likely for intelligentsia
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_intelligentsia
+				}
+			}
+			add = 50
+		}
+		# less likely if issues are not relevant
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_multicultural
+				}
+			}
+			add = -25
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_protected_speech
+				}
+			}
+			add = -25
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_womens_suffrage
+				}
+			}
+			add = -25
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_compulsory_primary_school
+				}
+			}
+			add = -25
+		}
+		# more likely if issues are relevant
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_ethnostate
+						has_law = law_type:law_national_supremacy
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_national_guard
+						has_law = law_type:law_secret_police
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_censorship
+						has_law = law_type:law_outlawed_dissent
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_no_womens_rights
+						has_law = law_type:law_women_own_property
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_restricted_child_labor
+						has_law = law_type:law_compulsory_primary_school
+					}
+				}
+			}
+			add = 25
+		}
+		# less likely for angry trade unions, they should go communist instead
+		if = {
+			limit = {
+				owner = {
+					has_technology_researched = socialism
+				}
+				scope:interest_group = {
+					is_interest_group_type = ig_trade_unions
+					ig_approval < 5
+				}
+			}
+			add = -100
+		}
+		# Pedro JE victory
+		if = {
+			limit = {
+				owner = {
+					has_variable = brz_enduring_empire
+				}
+			}
+			add = 100
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Dreyfusards won.
+		if = {
+			limit = {
+				scope:interest_group = {
+					has_variable = dreyfusard_victory
+				}
+			}
+			add = 50
+		}
+	}
+}

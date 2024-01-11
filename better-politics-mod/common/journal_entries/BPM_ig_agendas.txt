@@ -1,0 +1,167 @@
+﻿je_government_petition = {
+    icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	group = je_group_crises
+    
+    immediate = {
+        random_interest_group = {
+            limit = {
+                is_in_government = yes
+                is_marginal = no
+                any_preferred_law = {
+                    law_is_valid_for_ig_petition = yes
+                }
+            }
+            save_scope_as = government_petition_ig
+            ordered_preferred_law = {
+                limit = {
+					law_is_valid_for_ig_petition = yes
+                }
+                min = 0 
+                max = 2
+                check_range_bounds = no
+                save_scope_as = government_petition_law
+            }
+        }
+        if = {
+            limit = {
+                exists = scope:government_petition_law
+            }
+            set_variable = { name = desired_law_var value = scope:government_petition_law }
+        }
+        trigger_event = { id = government_petition_events.1 popup = yes }
+    }
+
+    status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_government_petition_status
+			}
+		}
+	}
+
+    complete = {
+        exists = scope:government_petition_law
+        has_law = scope:government_petition_law.type
+    }
+
+    on_complete = {
+        add_loyalists = {
+            value = medium_radicals
+            interest_group = scope:government_petition_ig
+        }
+        add_modifier = {
+            name = modifier_successfully_met_petition_legitimacy
+            months = long_modifier_time
+            is_decaying = yes
+        }
+        remove_variable = desired_law_var
+    }
+
+    invalid = {
+        OR = {
+            var:bpm_political_stability > 0.8
+            scope:government_petition_ig ?= {
+                law_stance = {
+                    law = scope:government_petition_law.type
+                    value < approve
+                }
+            }
+            NOT = {
+                exists = scope:government_petition_law
+            }
+        }
+    }
+
+    fail = {
+        scope:government_petition_ig ?= {
+            is_in_government = no
+        }
+    }
+
+    on_timeout = {
+        if = {
+            limit = {
+                is_enacting_law = scope:government_petition_law.type
+            }
+            scope:government_petition_ig = {
+                if = {
+                    limit = {
+                        is_powerful = yes
+                    }
+                    add_modifier = {
+                        name = modifier_failed_to_meet_petition
+                        months = long_modifier_time
+                        is_decaying = yes
+                        multiplier = {
+                            add = 1.5
+                            divide = {
+                                add = 1
+                                add = ROOT.enactment_phase
+                            }
+                        }
+                    }
+                }
+                else = {
+                    add_modifier = {
+                        name = modifier_failed_to_meet_petition
+                        months = long_modifier_time
+                        is_decaying = yes
+                        multiplier = {
+                            add = 1
+                            divide = {
+                                add = 1
+                                add = ROOT.enactment_phase
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else = {
+            scope:government_petition_ig = {
+                if = {
+                    limit = {
+                        is_powerful = yes
+                    }
+                    add_modifier = {
+                        name = modifier_failed_to_meet_petition
+                        months = long_modifier_time
+                        is_decaying = yes
+                        multiplier = 1.5
+                    }
+                }
+                else = {
+                    add_modifier = {
+                        name = modifier_failed_to_meet_petition
+                        months = long_modifier_time
+                        is_decaying = yes
+                    }
+                }
+            }
+        }
+        remove_variable = desired_law_var
+    }
+
+    on_fail = {
+		scope:government_petition_ig = {
+			add_modifier = {
+				name = modifier_failed_to_meet_petition
+				months = long_modifier_time
+				is_decaying = yes
+				multiplier = 2
+			}
+		}
+        remove_variable = desired_law_var
+    }
+
+    on_invalid = {
+        remove_variable = desired_law_var
+    }
+
+    timeout = 1825
+
+    weight = 1000
+
+    should_be_pinned_by_default = yes
+}

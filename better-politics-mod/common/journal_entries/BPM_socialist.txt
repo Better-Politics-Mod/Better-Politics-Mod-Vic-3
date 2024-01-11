@@ -106,16 +106,25 @@ je_bpm_propaganda_of_the_deed = {
 	can_deactivate = yes
 	possible = {
 		NOT = { has_law = law_type:law_council_republic }
-		has_technology_researched = anarchism
-		OR = {
-			ig:ig_anarchists = {
-				is_marginal = no
-			}
-			any_scope_character = {
-				has_role = agitator
-				is_interest_group_type = ig_anarchists
-			}
+		custom_tooltip = {
+			text = "bpm_anarchists_are_present"
+			has_variable = local_anarchists_split_var
 		}
+		radical_fraction = {
+			value >= 0.1
+			strata = poor 
+		}
+		
+		# has_technology_researched = anarchism
+		#OR = {
+		#	ig:ig_anarchists = {
+		#		is_marginal = no
+		#	}
+		#	any_scope_character = {
+		#		has_role = agitator
+		#		is_interest_group_type = ig_anarchists
+		#	}
+		#}
 	}
 
 	complete = {
@@ -165,10 +174,30 @@ je_bpm_propaganda_of_the_deed = {
 
 	on_weekly_pulse = {
 		effect = {
-			change_variable = {
-				name = bpm_je_propaganda_of_the_deed_exhaustion
-				add = 0.1
+			# Exhaustion (to get the JE to disappear on its own if it lasts too long)
+			if = {
+				limit = {
+					OR = {
+						bpm_je_propaganda_of_the_deed_baseline_target >= 50
+						var:bpm_je_propaganda_of_the_deed >= 50
+					}
+				}
+				change_variable = {
+					name = bpm_je_propaganda_of_the_deed_exhaustion
+					add = 0.01
+				}
+			} else = {
+				change_variable = {
+					name = bpm_je_propaganda_of_the_deed_exhaustion
+					add = {
+						value = 75
+						subtract = bpm_je_propaganda_of_the_deed_baseline_target
+						multiply = 0.02
+					}
+				}
 			}
+
+			# Next bomb
 			change_variable = {
 				name = bpm_je_propaganda_of_the_deed_бомбометр
 				add = bpm_je_propaganda_of_the_deed_бомбометр_rate
@@ -190,6 +219,7 @@ je_bpm_propaganda_of_the_deed = {
 				}
 			}
 			
+			# Trend
 			bpm_handle_baseline_target_trend_script_value = {
 				RATE = 2.0
 				VARIABLE = bpm_je_propaganda_of_the_deed

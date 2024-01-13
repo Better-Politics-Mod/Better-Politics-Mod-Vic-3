@@ -81,10 +81,7 @@ je_bpm_propaganda_of_the_deed = {
 	is_shown_when_inactive = {
 		has_technology_researched = egalitarianism
 		NOT = { has_law = law_type:law_council_republic }
-		OR = {
-			country_rank >= rank_value:unrecognized_regional_power
-			is_player = yes
-		}
+		bpm_performance_significant_country = yes
 	}
 
 	immediate = {
@@ -245,4 +242,340 @@ je_bpm_propaganda_of_the_deed = {
 	weight = 100
 
 	should_be_pinned_by_default = yes
+}
+
+je_bpm_agrarian_socialism = {
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	group = je_group_internal_affairs
+
+	is_shown_when_inactive = {
+		has_technology_researched = egalitarianism
+		NOT = { has_law = law_type:law_council_republic }
+		bpm_performance_significant_country = yes
+	}
+
+	immediate = {
+		set_variable = {
+			name = bpm_je_agrarian_socialism
+			value = 0
+		}
+		trigger_event = { id = bpm_socialist_utils.6 days = 1 }
+		if = {
+			limit = {
+				NOT = { has_variable = bpm_agrarian_socialism_power }
+			}
+			set_variable = {
+				name = bpm_agrarian_socialism_power
+				value = 0
+			}
+		}
+	}
+
+	can_deactivate = no
+	possible = {
+		NOT = { has_law = law_type:law_council_republic }
+		any_interest_group = {
+			bpm_ig_is_socialist = yes
+			bpm_ig_is_popular = yes
+		}
+		OR = {
+			pop_type_percent_country = {
+				pop_type = peasants
+				percent > 0.25
+			}
+			pop_type_percent_country = {
+				pop_type = farmers
+				percent > 0.25
+			}
+		}
+		radical_fraction = {
+			value > 0.1
+			strata = poor 
+		}
+	}
+
+	complete = {
+		has_law = law_type:law_council_republic
+		custom_tooltip = {
+			text = "bpm_journal_final_stage"
+			var:bpm_je_agrarian_socialism >= 0.66
+		}
+	}
+
+	on_complete = {
+		
+	}
+
+	fail = {
+		ig:ig_agrarian_populists = {
+			has_ideology = ideology:ideology_gov_radical_proletarian
+		}
+		bpm_journal_progress_zero = {
+			VAR = bpm_je_agrarian_socialism
+		}
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			change_variable = {
+				name = bpm_je_agrarian_socialism
+				add = bpm_je_agrarian_socialism_rate
+				min = 0
+				max = 100
+			}
+			set_variable = {
+				name = bpm_agrarian_socialism_power
+				value = {
+					value = bpm_je_agrarian_socialism
+					subtract = 33
+					multiply = 1.5
+					min = 0
+					max = 100
+				}
+			}
+
+			# Handle global influence of agrarian socialism
+			set_variable = {
+				name = bpm_agrarian_socialism_power_global_candidate
+				value = {
+					value = bpm_agrarian_socialism_power
+					multiply = 0.25
+					if = {
+						limit = { country_rank = rank_value:great_power }
+						multiply = 2
+					}
+					min = 0
+					max = 100
+				}
+			}
+			if = {
+				limit = {
+					country_rank >= rank_value:unrecognized_regional_power
+					OR = {
+						NOT = { has_global_variable = bpm_agrarian_socialism_power_global }
+						global_var:bpm_agrarian_socialism_power_global < bpm_agrarian_socialism_power_global_candidate
+					}
+				}
+				set_global_variable = {
+					name = bpm_agrarian_socialism_power_global
+					value = bpm_agrarian_socialism_power_global_candidate
+				}
+			}
+
+			# Make Agrarian Populists into Agrarian Socialists
+			if = {
+				limit = { var:bpm_je_agrarian_socialism >= 0.33	}
+				ig:ig_agrarian_populists = {
+					leader = {
+						set_ideology = ideology:ideology_agrarian_socialist_leader
+					}
+				}
+			}
+			if = {
+				limit = { var:bpm_je_agrarian_socialism >= 0.66	}
+				ig:ig_agrarian_populists = {
+					add_ideology = ideology:ideology_gov_radical_proletarian
+				}
+			}
+		}
+	}
+
+	progressbar = yes
+	current_value = {
+		value = var:bpm_je_agrarian_socialism
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_agrarian_socialism_status_3
+				trigger = {
+					var:bpm_je_agrarian_socialism >= 0.66
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_agrarian_socialism_status_2
+				trigger = {
+					var:bpm_je_agrarian_socialism >= 0.33
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_agrarian_socialism_status_1
+				trigger = {
+					has_variable = bpm_je_agrarian_socialism
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_agrarian_socialism_status
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	weight = 75
+
+	should_be_pinned_by_default = no
+}
+
+je_bpm_syndicalism = {
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	group = je_group_internal_affairs
+
+	is_shown_when_inactive = {
+		has_global_variable = bpm_anarchist_potd_ended_in_gp
+		NOT = { has_law = law_type:law_council_republic }
+		bpm_performance_significant_country = yes
+	}
+
+	immediate = {
+		set_variable = {
+			name = bpm_je_syndicalism
+			value = 0
+		}
+	}
+
+	can_deactivate = no
+	possible = {
+		NOT = { has_law = law_type:law_council_republic }
+		any_interest_group = {
+			bpm_ig_is_socialist = yes
+			bpm_ig_is_popular = yes
+		}
+		pop_type_percent_country = {
+			pop_type = peasants
+			percent < 0.5
+		}
+		radical_fraction = {
+			value >= 0.1
+			strata = poor 
+		}
+	}
+
+	complete = {
+		has_law = law_type:law_council_republic
+		custom_tooltip = {
+			text = "bpm_journal_final_stage"
+			var:bpm_je_syndicalism >= 0.66
+		}
+	}
+
+	on_complete = {
+		# Legitimize Syndicalism worldwide permanently 
+		if = {
+			limit = {
+				country_rank >= rank_value:unrecognized_regional_power
+			}
+			trigger_event = { id = bpm_syndicalism.1 days = 7 popup = yes }
+		} else = {
+			trigger_event = { id = bpm_syndicalism.2 days = 7 popup = yes }
+		}
+
+		# Enact Syndicalism law 
+		activate_law = law_type:law_syndicalism
+	}
+
+	fail = {
+		any_scope_character = {
+			OR = {
+				has_ideology = ideology:ideology_syndicalist
+				has_ideology = ideology:ideology_anarchist_syndicalist
+			}
+		}
+		bpm_journal_progress_zero = {
+			VAR = bpm_je_syndicalism
+		}
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			change_variable = {
+				name = bpm_je_syndicalism
+				add = bpm_je_syndicalism_rate
+				min = 0
+				max = 100
+			}
+
+			# Make characters Syndicalist/Anarcho-Syndicalist at certain level
+			if = {
+				limit = { var:bpm_je_syndicalism >= 0.33 }
+				ig:ig_anarchists = {
+					if = {
+						limit = { bpm_ig_enabled = yes }
+						leader = {
+							set_ideology = ideology:ideology_anarchist_syndicalist
+						}
+					}
+				}
+			}
+			if = {
+				limit = { var:bpm_je_syndicalism >= 0.66 }
+				ig:ig_socialists = {
+					if = {
+						limit = { bpm_ig_enabled = yes }
+						leader = {
+							set_ideology = ideology:ideology_syndicalist
+						}
+					}
+				}
+				ig:ig_revolutionist_socialists = {
+					if = {
+						limit = { bpm_ig_enabled = yes }
+						leader = {
+							set_ideology = ideology:ideology_syndicalist
+						}
+					}
+				}
+			}
+		}
+	}
+
+	progressbar = yes
+	current_value = {
+		value = var:bpm_je_syndicalism
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_syndicalism_status_3
+				trigger = {
+					var:bpm_je_syndicalism >= 0.66
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_syndicalism_status_2
+				trigger = {
+					var:bpm_je_syndicalism >= 0.33
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_syndicalism_status_1
+				trigger = {
+					has_variable = bpm_je_syndicalism
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_syndicalism_status
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	weight = 75
+
+	should_be_pinned_by_default = no
 }

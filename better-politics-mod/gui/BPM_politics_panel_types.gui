@@ -2,6 +2,7 @@
 {
 	type ig_button = ig_icon {
 		visible = "[GreaterThanOrEqualTo_CFixedPoint(InterestGroup.GetClout,'(CFixedPoint)0.001')]"
+		blockoverride "influential" {}
 		blockoverride "icon" {
 			button_icon_round = {
 				visible = "[InterestGroup.IsValid]"
@@ -11,7 +12,12 @@
 				}
 
 				blockoverride "icon" {
-					texture = "[InterestGroup.GetTexture]"
+					influential_icon = {}
+					icon = {
+						size = { 100% 100% }
+						texture = "[InterestGroup.GetTexture]"
+						parentanchor = center
+					}
 				}
 				blockoverride "icon_size" {
 					size = { 80% 80% }
@@ -198,9 +204,9 @@
 		layoutpolicy_vertical = preferred
 		visible = "[Or( GreaterThanOrEqualTo_CFixedPoint(InterestGroup.GetClout,'(CFixedPoint)0.001'), Or( InterestGroup.IsInGovernment, Or( InterestGroup.IsBolstered,InterestGroup.IsSuppressed ) ) )]"
 		background = {
-			texture = "gfx/interface/tooltip/tooltip_title_bg.dds"
+			texture = "gfx/interface/masks/fade_horizontal_center.dds"
 			color = "[InterestGroup.GetColor]"
-			alpha = 0.6
+			alpha = 0.3
 
 			modify_texture = {
 				using = texture_velvet
@@ -237,15 +243,56 @@
 				spacing = 2
 				margin_bottom = 2
 
-				widget = { size = { 15 15 }}
-
 				### IG BUTTON
-				ig_button = {
-					block "ig_button_size" {
-						size = { 60 60 }
+				widget = {
+					size = { 80 60 }
+					ig_button = {
+						block "ig_button_size" {
+							size = { 60 60 }
+						}
+						margin_left = 20
+						using = tooltip_ws
+						parentanchor = right|vcenter
+						blockoverride "in_government_icon" {}
 					}
-					using = tooltip_ws
-					blockoverride "in_government_icon" {}
+					icon = {
+						texture = "gfx/interface/icons/generic_icons/leading_interest_group_icon.dds"
+						size = { 32 32 }
+						visible = "[InterestGroup.IsLeadingGovernment]"
+						tooltip = "LEADING_IG"
+						parentanchor = top|left
+					}
+					### REVOLUTION
+					icon = {
+						visible = "[InterestGroup.IsInsurrectionary]"
+						size = { 32 32 }
+						texture = "gfx/interface/icons/politics_icons/radicalized.dds"
+						tooltip = "RADICAL_IG_TOOLTIP"
+						parentanchor = top|left
+					}
+
+					icon = {
+						visible = "[InterestGroup.IsRevolutionary]"
+						size = { 32 32 }
+						texture = "gfx/interface/icons/politics_icons/revolution.dds"
+						tooltip = "REVOLUTION_IG_TOOLTIP"
+						parentanchor = top|left
+					}
+					### SUPPRESSED / BOLSTERED
+					icon = {
+						tooltip = "TOOLTIP_SUPPRESSED"
+						size = { 32 32 }
+						visible = "[InterestGroup.IsSuppressed]"
+						texture = "gfx/interface/icons/generic_icons/ig_suppress.dds"
+						parentanchor = bottom|left
+					}
+					icon = {
+						tooltip = "TOOLTIP_PROMOTED"
+						size = { 32 32 }
+						visible = "[InterestGroup.IsBolstered]"
+						texture = "gfx/interface/icons/generic_icons/ig_bolster.dds"
+						parentanchor = bottom|left
+					}
 				}
 
 				### CENTER INFO
@@ -271,40 +318,25 @@
 								blend_mode = alphamultiply
 							}
 						}
-						
-						### LEADING IG
-						icon = {
-							texture = "gfx/interface/icons/generic_icons/leading_interest_group_icon.dds"
-							size = { 32 32 }
-							visible = "[InterestGroup.IsLeadingGovernment]"
-							tooltip = "LEADING_IG"
-						}
-						### REVOLUTION
-						icon = {
-							visible = "[InterestGroup.IsInsurrectionary]"
-							size = { 32 32 }
-							texture = "gfx/interface/icons/politics_icons/radicalized.dds"
-							tooltip = "RADICAL_IG_TOOLTIP"
-						}
 
-						icon = {
-							visible = "[InterestGroup.IsRevolutionary]"
-							size = { 32 32 }
-							texture = "gfx/interface/icons/politics_icons/revolution.dds"
-							tooltip = "REVOLUTION_IG_TOOLTIP"
-						}
-						### SUPPRESSED / BOLSTERED
-						icon = {
-							tooltip = "TOOLTIP_SUPPRESSED"
-							size = { 32 32 }
-							visible = "[InterestGroup.IsSuppressed]"
-							texture = "gfx/interface/icons/generic_icons/ig_suppress.dds"
-						}
-						icon = {
-							tooltip = "TOOLTIP_PROMOTED"
-							size = { 32 32 }
-							visible = "[InterestGroup.IsBolstered]"
-							texture = "gfx/interface/icons/generic_icons/ig_bolster.dds"
+						widget = {
+							size = { 30 30 }
+
+							icon = {
+								visible = "[InterestGroup.GetPartyAffiliationHighest.IsValid]"
+								texture = "[InterestGroup.GetPartyAffiliationHighest.GetIcon]"
+								size = { 28 28 }
+								tooltip = "[InterestGroup.GetPartyAffiliationTooltip]"
+								parentanchor = center
+							}
+	
+							icon = {
+								visible = "[Not(InterestGroup.GetPartyAffiliationHighest.IsValid)]"
+								texture = "gfx/interface/icons/generic_icons/undecided_icon.dds"
+								size = { 28 28 }
+								tooltip = "[InterestGroup.GetPartyAffiliationTooltip]"
+								parentanchor = center
+							}
 						}
 
 						### NAME
@@ -319,33 +351,76 @@
 							elide = right
 						}
 
-						button_icon_goto = {
-							size = { 25 25 }
- 							onclick = "[InformationPanelBar.OpenInterestGroupPanel(InterestGroup.AccessSelf)]"
-							tooltip = "GO_TO_BUTTON_INTEREST_GROUP"
-							block "goto_visibility" {}
- 						}
+						# button_icon_goto = {
+						#	size = { 25 25 }
+ 						#	onclick = "[InformationPanelBar.OpenInterestGroupPanel(InterestGroup.AccessSelf)]"
+						#	tooltip = "GO_TO_BUTTON_INTEREST_GROUP"
+						#	block "goto_visibility" {}
+ 						# }
 
  						expand = {}
 						
-						### CLOUT
 						vbox = {
 							layoutpolicy_vertical = preferred
 							spacing = 0
-							using = clout_tooltip_with_graph
-							
-							textbox = {
-								layoutpolicy_horizontal = preferred
-								size = { 0 20 }
-								align = right|nobaseline
-								margin_right = 2
-								text = "[InterestGroup.GetClout|%1]"
-								default_format = "#variable"
-								using = fontsize_large
+							hbox = {
+								tooltip = "TOOLTIP_POPULATION"
+								widget = {
+									size = { 31 0 }
+								}
+								icon = {
+									texture = "gfx/interface/icons/generic_icons/population.dds"
+									size = { 20 20 }
+								}
+								textbox = {
+									size = { 69 20 }
+									align = right|nobaseline
+									text = "[InterestGroup.GetPopulation|v1*]"
+									default_format = "#variable"
+									using = fontsize_large
+								}
 							}
-							
 							bar_horizontal = {
-								size = { 150 10 }
+								size = { 120 10 }
+
+								blockoverride "values" {
+									min = 0
+									max = "[AccessPlayer.GetMaxCloutOrPopulationPercentage]"
+									value = "[FixedPointToFloat(InterestGroup.GetPopulationInCountryAsPercentage)]"
+									invertprogress = yes
+								}
+								blockoverride "marker_widgetanchor" {
+									widgetanchor = left
+									mirror = horizontal
+								}
+								blockoverride "color" {
+									color = "[InterestGroup.GetColor]"
+								}
+							}
+						}
+						vertical_divider_full = {}
+						vbox = {
+							layoutpolicy_vertical = preferred
+							spacing = 0
+							hbox = {
+								widget = {
+									size = { 48 0 }
+								}
+								using = clout_tooltip_with_graph
+								icon = {
+									texture = "gfx/interface/icons/generic_icons/government_building_icon.dds"
+									size = { 20 20 }
+								}
+								textbox = {
+									size = { 54 20 }
+									align = right|nobaseline
+									text = "[InterestGroup.GetClout|%1]"
+									default_format = "#variable"
+									using = fontsize_large
+								}
+							}
+							bar_horizontal = {
+								size = { 120 10 }
 
 								blockoverride "values" {
 									min = 0
@@ -362,20 +437,6 @@
 								}
 							}
 						}
-
-						icon = {
-							visible = "[InterestGroup.GetPartyAffiliationHighest.IsValid]"
-							texture = "[InterestGroup.GetPartyAffiliationHighest.GetIcon]"
-							size = { 30 30 }
-							tooltip = "[InterestGroup.GetPartyAffiliationTooltip]"
-						}
-
-						icon = {
-							visible = "[Not(InterestGroup.GetPartyAffiliationHighest.IsValid)]"
-							texture = "gfx/interface/icons/generic_icons/undecided_icon.dds"
-							size = { 30 30 }
-							tooltip = "[InterestGroup.GetPartyAffiliationTooltip]"
-						}
 					}
 
 					### BOTTOM PART
@@ -388,8 +449,9 @@
 							name = "traits_box"
 							flipdirection = yes
 							datamodel = "[InterestGroup.AccessTraits]"
-							addcolumn = 28
+							addcolumn = 20
 							addrow = 30
+							minimumsize = { 60 -1 }
 
 							item = {
 								widget = {
@@ -408,15 +470,24 @@
 								}
 							}
 						}
+
 						textbox = {
-							layoutpolicy_horizontal = expanding
-							align = left|nobaseline
 							margin_left = 10
-							size = { 0 25 }
-							elide = right
-							text = "[InterestGroup.GetApprovalRating] #bold ([InterestGroup.GetApprovalValue|=+])#!"
+							layoutpolicy_horizontal = growing
+							align = nobaseline
+							text = "#v ([InterestGroup.GetApprovalValue|=+])#!"
 							tooltip = "IG_APPROVAL_BREAKDOWN"
 						}
+
+						# dynamicgridbox = {
+						#	visible = "[Not(IsDataModelEmpty(InterestGroup.GetAgitators))]"
+						#	flipdirection = yes
+						#	datamodel = "[InterestGroup.GetAgitators]"
+						#	elide = right
+						#	item = {
+						#		character_portrait_small = {}
+						#	}
+						# }
 
 						### IDEOLOGIES
 						dynamicgridbox = {
@@ -425,15 +496,22 @@
 							datamodel = "[InterestGroup.AccessIntrinsicIdeologies]"
 							item = {
 								widget = {
-									size = { 30 30 }
+									size = { 23 23 }
+
+									icon = {
+										texture = "gfx/interface/backgrounds/circle_bg_simple_dark.dds"
+										size = { 23 23 }
+										parentanchor = center
+									}
 
 									icon = {
 										texture = "[Ideology.GetTexture]"
 										tooltipwidget = {
 											FancyTooltip_Ideology = {}
 										}
-										size = { 30 30 }
+										size = { 27 27 }
 										using = tooltip_above
+										parentanchor = center
 									}
 								}
 							}
@@ -450,14 +528,22 @@
 
 				### LEADER
 				widget = {
-					size = { 75 75 }
+					size = { 75 65 }
 
-					character_portrait_medium = {
+					character_portrait_base_head = {
 						datacontext = "[InterestGroup.AccessLeader]"
 						using = tooltip_above
 						blockoverride "show_hat" {}
-						parentanchor = vcenter
+						parentanchor = top|left
 						blockoverride "highlight" {}
+						blockoverride "rank_icon" {}
+						blockoverride "portrait_size" {
+							size = { 70 70 }
+						}
+						blockoverride "icon_size" {
+							size = { 0 0 }
+						}
+						size = {65 65}
 					}
 
 					icon = {
@@ -471,7 +557,7 @@
 					}
 				}
 				
-				widget = { size = { 15 15 }}
+				widget = { size = { 5 5 }}
 			}
 			
 			block "move_to_opposition_button" {

@@ -1,0 +1,220 @@
+﻿je_populist_unrest = {
+	icon = "gfx/interface/icons/invention_icons/nationalism.dds"
+
+	group = je_group_historical_content
+
+	is_shown_when_inactive = {
+		c:BRZ ?= this
+		OR = {
+			has_technology_researched = socialism
+			has_technology_researched = anarchism
+			has_technology_researched = corporatism
+		}
+		has_dlc_feature = rp1_content
+	}
+
+	possible = {
+		has_technology_researched = political_agitation
+		ig:ig_landowners = { 
+			is_in_government = yes
+			is_strongest_ig_in_government = yes
+		}
+		ig:ig_national_liberals = {
+			is_marginal = no
+		}
+		OR = {
+			AND = {
+				has_law = law_type:law_monarchy
+				custom_tooltip = {
+					text = completed_coffee_and_milk_je_tt
+					OR = {
+						has_variable = completed_coffee_and_milk_je_landowners
+						has_journal_entry = je_coffee_with_milk
+					}
+				}
+			}
+			has_law = law_type:law_presidential_republic
+			has_law = law_type:law_parliamentary_republic
+		}
+		OR = {
+			has_law = law_type:law_wealth_voting
+			has_law = law_type:law_landed_voting
+		}
+	}
+
+	immediate = {
+		ig:ig_landowners = {
+			save_scope_as = landowners_ig
+		}
+		ig:ig_national_liberals = {
+			save_scope_as = pb_ig
+		}
+		set_populism_vars = yes
+		set_variable = { name = populism_progress_var value = 0 }
+		trigger_event = { id = BRZ_populism.1 days = 1 popup = yes }
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			calculate_populism_progress = yes
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			add_populism_progress = yes
+		}
+		random_events = {
+			100 = 0
+			10 = BRZ_populism.2
+			10 = BRZ_populism.4
+			10 = BRZ_populism.5
+			10 = BRZ_populism.6
+			100 = BRZ_populism.7
+			10 = BRZ_populism.8
+			10 = BRZ_populism.9
+			10 = bp1_misc.2
+		}
+	}
+
+	complete = {
+		custom_tooltip = {
+			text = BRZ_populism_100_tt
+			var:populism_progress_var >= 100
+			has_variable = je_populist_unrest_start
+		}
+	}
+
+	on_complete = {
+		clear_populism_vars = yes
+		trigger_event = { id = BRZ_vargas.1 popup = yes }
+		show_as_tooltip = {
+			activate_law = law_type:law_autocracy
+			if = {
+				limit = {
+					NOT = {
+						has_law = law_type:law_presidential_republic
+					}
+				}
+				activate_law = law_type:law_presidential_republic
+			}
+			add_journal_entry = {
+				type = je_new_republic
+			}
+		}
+	}
+
+	fail = {
+		custom_tooltip = {
+			text = BRZ_populism_0_tt
+			var:populism_progress_var <= 0
+			has_variable = je_populist_unrest_start
+		}
+	}
+
+	on_fail = {
+		clear_populism_vars = yes
+		trigger_event = { id = BRZ_populism.3 popup = yes }
+	}
+
+	current_value = {
+		value = root.var:populism_progress_var
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	weight = 100
+
+	progressbar = yes
+
+	should_be_pinned_by_default = yes
+}
+
+je_new_republic = {
+	icon = "gfx/interface/icons/invention_icons/central_planning.dds"
+
+	group = je_group_historical_content
+
+	immediate = {
+		ruler = {
+			save_scope_as = vargas_scope
+			set_character_immortal = yes
+			interest_group = {
+				save_scope_as = pb_scope
+			}
+		}
+		root = {
+			save_scope_as = brazil_scope
+		}
+	}
+
+	on_monthly_pulse = {
+		random_events = {
+			100 = 0
+			10 = BRZ_vargas.4
+			10 = BRZ_vargas.5
+			10 = BRZ_vargas.6
+			10 = BRZ_vargas.7
+			10 = BRZ_vargas.8
+		}
+	}
+
+	fail = {
+		custom_tooltip = {
+			text = vargas_out_tt
+			has_variable = new_republic_start
+			NOT = {
+				ruler = {
+					interest_group = {
+						is_interest_group_type = ig_national_liberals
+					}
+				}
+			}
+		}
+	}
+
+	on_fail = {
+		trigger_event = { id = BRZ_vargas.3 popup = yes }
+		hidden_effect = {
+			scope:vargas_scope = {
+				set_character_immortal = no
+			}
+		}
+	}
+
+	complete = {
+		NOT = {
+			any_interest_group = {
+				is_marginal = no
+				leader = {
+					bpm_leader_is_party_socialist = yes
+				}
+			}
+		}
+		OR = {
+			has_law = law_type:law_regulatory_bodies
+			has_law = law_type:law_worker_protections
+		}
+		has_law = law_type:law_compulsory_primary_school
+		has_law = law_type:law_censorship
+		has_law = law_type:law_autocracy
+		has_law = law_type:law_interventionism
+		has_law = law_type:law_presidential_republic
+	}
+
+	on_complete = {
+		trigger_event = { id = BRZ_vargas.2 popup = yes }
+		hidden_effect = {
+			scope:vargas_scope = {
+				set_character_immortal = no
+			}
+		}
+		set_variable = estado_novo_achievement
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+}

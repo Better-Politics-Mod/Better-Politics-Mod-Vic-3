@@ -1,0 +1,532 @@
+﻿### Vargas
+
+calculate_populism_progress = {
+	set_variable = { name = populism_progress_var_next value = 0 }
+	set_variable = { name = populism_progress_from_radicals value = 0 }
+	every_scope_state = {
+		limit = {
+			is_incorporated = yes
+			turmoil >= 0.10
+		}
+		ROOT = {
+			change_variable = { name = populism_progress_from_radicals add = prev.turmoil }
+		}
+	}
+	set_variable = { name = populism_progress_from_loyalists value = 0 }
+	every_scope_state = {
+		limit = {
+			is_incorporated = yes
+			loyalty >= 0.10
+		}
+		ROOT = {
+			change_variable = { name = populism_progress_from_loyalists subtract = prev.loyalty }
+		}
+	}
+	set_variable = { name = populism_progress_from_unemployment value = 0 }
+	every_scope_state = {
+		limit = {
+			is_incorporated = yes
+		}
+		ROOT = {
+			change_variable = { name = populism_progress_from_unemployment add = prev.state_unemployment_rate }
+		}
+	}
+	set_variable = { name = populism_progress_from_pb value = 0 }
+	if = {
+		limit = {
+			ig:ig_national_liberals = {
+				is_marginal = yes
+			}
+		}
+		ROOT = {
+			change_variable = { name = populism_progress_from_pb add = -10 }
+		}
+	}
+	else_if = {
+		limit = {
+			ig:ig_national_liberals = {
+				is_powerful = yes
+			}
+		}
+		ROOT = {
+			change_variable = { name = populism_progress_from_pb add = 3 }
+		}
+	}
+
+	# From Laws
+	set_variable = { name = populism_progress_from_laws value = 0 }
+	# Cops
+	set_variable = { name = temp_policing_var_contribution value = institution:institution_police.investment }
+	if = {
+		limit = {
+			has_law = law_type:law_no_police
+		}
+		change_variable = { name = temp_policing_var_contribution add = 0.3 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_local_police
+		}
+		change_variable = { name = temp_policing_var_contribution multiply = -0.1 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_dedicated_police
+		}
+		change_variable = { name = temp_policing_var_contribution multiply = -0.3 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_militarized_police
+		}
+		change_variable = { name = temp_policing_var_contribution multiply = -0.5 }
+	}
+	
+	# Internal Affairs
+	set_variable = { name = temp_ha_var_contribution value = institution:institution_home_affairs.investment }
+	if = {
+		limit = {
+			has_law = law_type:law_no_home_affairs
+		}
+		change_variable = { name = temp_ha_var_contribution add = 0.3 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_guaranteed_liberties
+		}
+		change_variable = { name = temp_ha_var_contribution multiply = -0.1 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_national_guard
+		}
+		change_variable = { name = temp_ha_var_contribution multiply = -0.3 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_secret_police
+		}
+		change_variable = { name = temp_ha_var_contribution multiply = -0.5 }
+	}
+	change_variable = { name = populism_progress_from_laws add = var:temp_policing_var_contribution }
+	change_variable = { name = populism_progress_from_laws add = var:temp_ha_var_contribution }
+	remove_variable = temp_policing_var_contribution
+	remove_variable = temp_ha_var_contribution
+
+	change_variable = { name = populism_progress_var_next add = var:populism_progress_from_radicals }
+	change_variable = { name = populism_progress_var_next add = var:populism_progress_from_loyalists }
+	change_variable = { name = populism_progress_var_next add = var:populism_progress_from_unemployment }
+	change_variable = { name = populism_progress_var_next add = var:populism_progress_from_laws }
+	change_variable = { name = populism_progress_var_next add = var:populism_progress_from_pb }
+	change_variable = { name = populism_progress_var_next add = var:populism_progress_var_add }
+}
+
+# National Identity
+calculate_national_identity_progress = {
+	set_variable = { name = national_identity_progress_var_next value = 0 }
+	set_variable = { name = national_identity_progress_from_igs value = 0 }
+
+	# From Interest Groups
+	every_interest_group = {
+		limit = {
+			OR = {
+				has_ideology = ideology:ideology_cit_immigrant_nationalist
+				has_ideology = ideology:ideology_cit_liberal_nationalist
+				has_ideology = ideology:ideology_cit_nationalist
+				has_ideology = ideology:ideology_cit_multiethnic_nationalist
+				has_ideology = ideology:ideology_mil_patriotic
+				has_ideology = ideology:ideology_jingoist
+			}
+		}
+		ROOT = {
+			set_variable = { name = ig_weight value = prev.ig_clout }
+		}
+		if = {
+			limit = {
+				is_in_government = yes
+			}
+			ROOT = {
+				change_variable = { name = ig_weight multiply = 3 }
+			}
+		}
+		ROOT = {
+			change_variable = { name = national_identity_progress_from_igs add = var:ig_weight }
+		}
+	}
+
+	#Wars
+	set_variable = { name = national_identity_progress_from_wars value = 0 }
+	every_scope_war = {
+		limit = {
+			has_war_support = { target = root value > 50 }
+		}
+		ROOT = {
+			change_variable = { name = national_identity_progress_from_wars add = 0.50 }
+		}
+	}
+	every_scope_war = {
+		limit = {
+			has_war_support = { target = root value <= 50 }
+			has_war_support = { target = root value > 25 }
+		}
+		ROOT = {
+			change_variable = { name = national_identity_progress_from_wars add = 0.25 }
+		}
+	}
+	every_scope_war = {
+		limit = {
+			has_war_support = { target = root value <= 25 }
+			has_war_support = { target = root value > 0 }
+		}
+		ROOT = {
+			change_variable = { name = national_identity_progress_from_wars add = 0.10 }
+		}
+	}
+
+	#Buildings
+	set_variable = { name = national_identity_progress_from_universities value = 0 }
+	every_scope_building = {
+		limit = {
+			OR = {
+				is_building_type = building_arts_academy
+				is_building_type = building_university
+				is_building_type = building_government_administration
+			}
+			occupancy >= 0.75
+		}
+		ROOT = {
+			change_variable = { name = national_identity_progress_from_universities add = prev.level }
+		}
+	}
+	change_variable = { name = national_identity_progress_from_universities divide = 25 }
+
+	set_variable = { name = national_identity_progress_from_prestige value = 0 }
+
+	#Prestige
+	ROOT = {
+		change_variable = { name = national_identity_progress_from_prestige add = root.prestige }
+	}
+	change_variable = { name = national_identity_progress_from_prestige divide = 100 }
+
+	set_variable = { name = national_identity_progress_from_homelands value = 0 }
+
+	#Homelands
+	every_scope_state = {
+		limit = {
+			NOT = {
+				is_homeland_of_country_cultures = ROOT
+			}
+		}
+		ROOT = {
+			change_variable = { name = national_identity_progress_from_homelands subtract = 0.25 }
+		}
+	}
+
+	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_igs }
+	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_wars }
+	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_universities }
+	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_prestige }
+	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_homelands }
+	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_var_add }
+}
+
+calculate_brazil_slavery_progress = {
+	set_variable = { name = brz_slavery_next value = 0 }
+	if = {
+		limit = {
+			NOT = {
+				any_political_movement = {
+					is_political_movement_type = movement_to_preserve
+					OR = {
+						this.desired_law = law_type:law_legacy_slavery
+						this.desired_law = law_type:law_debt_slavery
+						this.desired_law = law_type:law_slave_trade
+					}
+				}
+			}
+		}
+		 # Towards Slaveowner Domination
+		if = {
+			limit = {
+				ig:ig_landowners = {
+					is_in_government = yes
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = -1
+			}
+		}
+		if = {
+			limit = {
+				ig:ig_landowners = {
+					is_powerful = yes
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = -1
+			}
+		}
+		if = {
+			limit = {
+				has_modifier = brz_regency
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = -1
+			}
+		}
+		if = {
+			limit = {
+				ruler = {
+					OR = {
+						interest_group = {
+							is_interest_group_type = ig_landowners
+						}
+						has_ideology = ideology:ideology_slaver
+					}
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = -1
+			}
+		}
+		if = {
+			limit = {
+				any_scope_character = {
+					filter = {
+						OR = {
+							has_role = admiral
+							has_role = general
+						}
+					}
+					OR = {
+						has_ideology = ideology:ideology_slaver
+						interest_group = {
+							is_interest_group_type = ig_landowners
+						}
+					}
+					percent >= 0.5
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = -1
+			}
+		}
+		# Away from slaveowner Domination
+		if = {
+			limit = {
+				has_variable = var_slave_trade_suppression_var
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				ig:ig_landowners = {
+					is_marginal = yes
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				any_interest_group = {
+					is_in_government = yes
+					law_stance = {
+						law = law_type:law_slave_trade
+						value <= disapprove
+					}
+				}
+				#ig:ig_intelligentsia = {
+				#	is_in_government = yes
+				#}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				NOT = { 
+					has_law = law_type:law_slave_trade
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				NOT = { 
+					has_modifier = brz_regency 
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				has_variable = isabel_confirmed_heir_var
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+	}
+}
+
+calculate_caudillo_progress = {
+	set_variable = { name = caudillo_next value = 0 }
+	if = {
+		limit = {
+			ig:ig_armed_forces = {
+				is_powerful = yes
+			}
+		}
+		change_variable = {
+			name = caudillo_next
+			add = 1
+		}
+	}
+	if = {
+		limit = {
+			ig:ig_armed_forces = {
+				is_in_government = yes
+			}
+		}
+		change_variable = {
+			name = caudillo_next
+			add = 1
+		}
+	}
+	if = {
+		limit = {
+			OR = {
+				has_law = law_type:law_autocracy
+				has_law = law_type:law_technocracy
+				has_law = law_type:law_oligarchy
+				has_law = law_type:law_military_junta
+			}
+		}
+		change_variable = {
+			name = caudillo_next
+			add = 1
+		}
+	}
+	if = {
+		limit = {
+			ig:ig_armed_forces = {
+				is_marginal = yes
+			}
+		}
+		change_variable = {
+			name = caudillo_next
+			add = -1
+		}
+	}
+	if = {
+		limit = {
+			ig:ig_armed_forces = {
+				is_in_government = no
+			}
+		}
+		change_variable = {
+			name = caudillo_next
+			add = -1
+		}
+	}
+	if = {
+		limit = {
+			any_scope_character = {
+				OR = {
+					has_role = general
+					has_role = admiral
+				}
+				popularity >= 50 # Loved
+			}
+		}
+		change_variable = {
+			name = caudillo_next
+			add = 1
+		}
+	}
+	if = {
+		limit = {
+			any_scope_character = {
+				has_role = politician
+				NOT = { has_role = general }
+				popularity >= 50 # Loved
+				interest_group = {
+					is_powerful = yes
+					AND = {
+						law_stance = {
+							law = law_type:law_autocracy
+							value <= neutral
+						}
+						law_stance = {
+							law = law_type:law_technocracy
+							value >= neutral
+						}
+						law_stance = {
+							law = law_type:law_oligarchy
+							value >= neutral
+						}
+						law_stance = {
+							law = law_type:law_military_junta
+							value >= neutral
+						}
+					}
+				}
+			}
+			NOT = {
+				any_scope_character = {
+					has_role = general
+					popularity >= 50 # Loved
+				}
+			}
+		}
+		change_variable = {
+			name = caudillo_next
+			add = -1
+		}
+	}
+	if = {
+		limit = {
+			any_scope_character = {
+				is_ruler = yes
+				has_ideology = ideology:ideology_authoritarian
+			}
+		}
+		change_variable = {
+			name = caudillo_next
+			add = 1
+		}
+	}
+	if = {
+		limit = {
+			OR = {
+				has_law = law_type:law_census_voting
+				has_law = law_type:law_universal_suffrage
+			}
+		}
+		change_variable = {
+			name = caudillo_next
+			add = -1
+		}
+
+	}
+}

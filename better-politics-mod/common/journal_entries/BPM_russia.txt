@@ -1,0 +1,145 @@
+
+je_bpm_zapadniks_and_slavophiles = {
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	group = je_group_internal_affairs
+
+	can_revolution_inherit = yes
+
+	is_shown_when_inactive = {
+		c:RUS = this
+	}
+
+	immediate = {
+		set_variable = {
+			name = bpm_je_zapadniks_and_slavophiles
+			value = 0
+		}
+		set_variable = {
+			name = bpm_je_zapadniks_and_slavophiles_duration
+			value = 0
+		}
+		trigger_event = { id = bpm_russia.1 days = 1 popup = yes }
+	}
+
+	can_deactivate = no
+	possible = {
+		game_date >= 1836.6.12
+	}
+
+	complete = {
+		OR = {
+			custom_tooltip = {
+				text = "bpm_journal_zapadniks_and_slavophiles_stagnant"
+				bpm_je_zapadniks_and_slavophiles_rate = 0
+				var:bpm_je_zapadniks_and_slavophiles = 50
+			}
+			AND = {
+				bpm_country_is_republic = yes
+				bpm_country_laws_no_voting = no
+				NOT = { has_law = law_type:law_serfdom }
+				NOT = { has_law = law_type:law_tenant_farmers }
+			}
+		}
+	}
+
+	on_complete = {
+		if = {
+			limit = {
+				AND = {
+					bpm_country_is_republic = yes
+					bpm_country_laws_no_voting = no
+					NOT = { has_law = law_type:law_serfdom }
+					NOT = { has_law = law_type:law_tenant_farmers }
+				}
+			}
+			trigger_event = { id = bpm_russia.3 popup = yes	}
+		} else = {
+			trigger_event = { id = bpm_russia.2 popup = yes	}
+		}
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			change_variable = {
+				name = bpm_je_zapadniks_and_slavophiles
+				add = bpm_je_zapadniks_and_slavophiles_rate
+				min = 0
+				max = 100
+			}
+			change_variable = {
+				name = bpm_je_zapadniks_and_slavophiles_duration
+				add = 1
+			}
+
+			# Applying proper buffs
+			remove_modifier = bpm_slavophile_buffs
+			remove_modifier = bpm_zapadnik_buffs
+			if = {
+				limit = { var:bpm_je_zapadniks_and_slavophiles <= 33 }
+				add_modifier = {
+					name = bpm_slavophile_buffs
+					multiplier = {
+						value = 33
+						subtract = var:bpm_je_zapadniks_and_slavophiles
+						multiply = 3
+						divide = 100
+					}
+				}
+			} else_if = {
+				limit = { var:bpm_je_zapadniks_and_slavophiles >= 66 }
+				add_modifier = {
+					name = bpm_zapadnik_buffs
+					multiplier = {
+						value = var:bpm_je_zapadniks_and_slavophiles
+						subtract = 66
+						multiply = 3
+						divide = 100
+					}
+				}
+			}
+		}
+	}
+
+	progressbar = yes
+	current_value = {
+		value = var:bpm_je_zapadniks_and_slavophiles
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_zapadniks_and_slavophiles_zapadnik_prominence
+				trigger = {
+					var:bpm_je_zapadniks_and_slavophiles >= 66
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_zapadniks_and_slavophiles_no_prominence
+				trigger = {
+					var:bpm_je_zapadniks_and_slavophiles >= 33
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_zapadniks_and_slavophiles_slavophile_prominence
+				trigger = {
+					has_variable = bpm_je_zapadniks_and_slavophiles
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_zapadniks_and_slavophiles_status
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+}

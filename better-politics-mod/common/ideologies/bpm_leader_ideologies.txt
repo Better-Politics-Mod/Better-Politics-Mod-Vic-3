@@ -895,6 +895,54 @@ ideology_feminist = {
 	}
 }
 
+ideology_serfdom_reformer = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_abolitionist.dds"
+	
+	character_ideology = yes
+
+	lawgroup_land_reform = {
+		law_serfdom = strongly_disapprove
+		law_tenant_farmers = strongly_approve
+		law_commercialized_agriculture = strongly_disapprove
+		law_collectivized_agriculture = strongly_disapprove
+		law_homesteading = strongly_disapprove
+	}
+	
+	# Character scope
+	possible = {
+		scope:interest_group = { bpm_ig_enabled = yes }
+		bpm_ig_is_right_wing = yes
+		scope:interest_group = {
+			NOT = { is_interest_group_type = ig_landowners }
+		}
+		has_law = law_type:law_serfdom
+	}
+	
+	leader_weight = {
+		value = 50
+		if = {
+			limit = { owner = { var:bpm_political_stability <= 75 } }
+			add = 50
+		}
+		if = {
+			limit = { owner = { var:bpm_political_stability <= 50 } }
+			add = 50
+		}
+		if = {
+			limit = { has_trait = tactful }
+			add = 75
+		}
+		if = {
+			limit = { has_trait = bigoted }
+			add = -100
+		}
+		if = {
+			limit = { has_trait = cruel }
+			add = -25
+		}	
+	}
+}
+
 ideology_abolitionist = {
 	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_abolitionist.dds"
 	
@@ -918,6 +966,7 @@ ideology_abolitionist = {
 			bpm_country_has_unfree_labor = yes
 		}
 		scope:interest_group = {
+			bpm_ig_is_right_wing = no
 			NOT = { is_interest_group_type = ig_landowners }
 		}
 	}
@@ -927,10 +976,6 @@ ideology_abolitionist = {
 		if = {
 			limit = { scope:interest_group = { bpm_ig_is_left_wing = yes } }
 			add = 100
-		}	
-		if = {
-			limit = { scope:interest_group = { bpm_ig_is_right_wing = yes } }
-			add = -125
 		}	
 		if = {
 			limit = { has_trait = tactful }
@@ -1531,10 +1576,25 @@ ideology_socialist_leader = {
 			}
 			add = 80
 		}
+		# Syndicalism JE's influence shifts chances
+		multiply = {
+			if = {
+				limit = { 
+					has_variable = var:bpm_je_syndicalism 
+					var:bpm_je_syndicalism >= 33
+				}
+				add = 66
+				subtract = var:bpm_je_syndicalism
+				add = 33
+				divide = 66
+			} else = {
+				value = 1
+			}
+		}
 	}
 }
 
-ideology_socialist_leader = {
+ideology_syndicalist = {
 	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_communist.dds" # TODO: Sydnicalist icon
 	
 	character_ideology = yes
@@ -1614,6 +1674,7 @@ ideology_socialist_leader = {
 				bpm_ig_is_right_wing = yes
 				bpm_ig_is_liberal = yes
 				bpm_ig_is_upper_institutional = yes
+				bpm_ig_is_anarchist = yes
 				AND = {
 					owner = { bpm_country_is_republic = no }
 					bpm_ig_is_state_institutional = yes
@@ -1632,8 +1693,6 @@ ideology_socialist_leader = {
 				}
 			}
 		}
-
-		# TODO: Track JE
 	}
 	
 	leader_weight = {
@@ -1687,8 +1746,31 @@ ideology_socialist_leader = {
 			}
 			add = 80
 		}
-
-		# TODO: Track JE
+		# More likely if syndicalism is legitimized or living under syndicalism
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_global_variable = bpm_syndicalism_legitimized
+						has_law = law_type:law_syndicalism
+					}
+				}
+			}
+			add = 110
+		}
+		# Syndicalism JE's influence shifts chances
+		multiply = {
+			value = 0
+			if = {
+				limit = { 
+					has_variable = var:bpm_je_syndicalism 
+					var:bpm_je_syndicalism >= 33
+				}
+				add = var:bpm_je_syndicalism
+				subtract = 33
+				divide = 66
+			}
+		}
 	}
 }
 
@@ -2033,6 +2115,21 @@ ideology_communist = {
 				multiply = 2
 			}
 		}
+		# Syndicalism JE's influence shifts chances
+		multiply = {
+			if = {
+				limit = { 
+					has_variable = var:bpm_je_syndicalism 
+					var:bpm_je_syndicalism >= 33
+				}
+				add = 66
+				subtract = var:bpm_je_syndicalism
+				add = 33
+				divide = 66
+			} else = {
+				value = 1
+			}
+		}
 	}
 }
 
@@ -2267,6 +2364,21 @@ ideology_vanguardist = {
 				owner = { has_variable = election_vanguardist_support }
 			}
 			multiply = 2
+		}
+		# Syndicalism JE's influence shifts chances
+		multiply = {
+			if = {
+				limit = { 
+					has_variable = var:bpm_je_syndicalism 
+					var:bpm_je_syndicalism >= 33
+				}
+				add = 66
+				subtract = var:bpm_je_syndicalism
+				add = 33
+				divide = 66
+			} else = {
+				value = 1
+			}
 		}
 	}
 }
@@ -2675,6 +2787,21 @@ ideology_anarchist = {
 			}
 			multiply = 2
 		}
+		# Syndicalism JE's influence shifts chances
+		multiply = {
+			if = {
+				limit = { 
+					has_variable = var:bpm_je_syndicalism 
+					var:bpm_je_syndicalism >= 33
+				}
+				add = 66
+				subtract = var:bpm_je_syndicalism
+				add = 33
+				divide = 66
+			} else = {
+				value = 1
+			}
+		}
 	}
 }
 
@@ -2800,8 +2927,6 @@ ideology_anarchist_syndicalist = {
 				}
 			}
 		}
-
-		# TODO: Track JE
 	}
 	
 	leader_weight = {
@@ -2863,8 +2988,31 @@ ideology_anarchist_syndicalist = {
 			}
 			multiply = 2
 		}
-
-		# TODO: Track JE
+		# More likely if syndicalism is legitimized or living under syndicalism
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_global_variable = bpm_syndicalism_legitimized
+						has_law = law_type:law_syndicalism
+					}
+				}
+			}
+			add = 110
+		}
+		# Syndicalism JE's influence shifts chances
+		multiply = {
+			value = 0
+			if = {
+				limit = { 
+					has_variable = var:bpm_je_syndicalism 
+					var:bpm_je_syndicalism >= 33
+				}
+				add = var:bpm_je_syndicalism
+				subtract = 33
+				divide = 66
+			}
+		}
 	}
 }
 
@@ -3019,6 +3167,27 @@ ideology_agrarian_socialist_leader = {
 				}
 			}
 			add = 75
+		}
+		# Higher chance if Agrarian Socialism is popular
+		if = {
+			limit = {
+				has_global_variable = bpm_agrarian_socialism_power_global
+				OR = {
+					NOT = { has_variable = bpm_agrarian_socialism_power }
+					bpm_agrarian_socialism_power_global > bpm_agrarian_socialism_power
+				}
+			}
+			add = global_var:bpm_agrarian_socialism_power_global
+		}
+		if = {
+			limit = {
+				has_variable = bpm_agrarian_socialism_power
+				OR = {
+					NOT = { has_global_variable = bpm_agrarian_socialism_power_global }
+					bpm_agrarian_socialism_power_global <= bpm_agrarian_socialism_power
+				}
+			}
+			add = var:bpm_agrarian_socialism_power_global
 		}
 	}
 }

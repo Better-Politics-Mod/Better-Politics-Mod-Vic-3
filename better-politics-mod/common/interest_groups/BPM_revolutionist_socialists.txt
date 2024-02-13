@@ -27,7 +27,9 @@
 			is_pop_type = aristocrats
 		}			
 		owner = {
-			has_variable = local_socialists_split_var
+			NOT = { is_country_type = decentralized }
+			exists = ig:ig_revolutionist_socialists
+			ig:ig_revolutionist_socialists = { NOT = { has_ideology = ideology:ideology_nonexistent } }
 		}
 	}
 	
@@ -47,62 +49,46 @@
 			}
 		}
 
-		add = {
-			desc = "URBAN_POP"
-			if = {
-				limit = { 
-					NOR = {
-						pop_employment_building_group = bg_agriculture
-						pop_employment_building_group = bg_ranching
-						pop_employment_building_group = bg_plantations
-					}
+		if = {
+			limit = { 
+				NOR = {
+					pop_employment_building_group = bg_agriculture
+					pop_employment_building_group = bg_ranching
+					pop_employment_building_group = bg_plantations
 				}
+			}
+			add = {
+				desc = "URBAN_POP"
 				value = 30
+			}
+			if = {
+				limit = { is_employed = no }
+				add = {
+					desc = "URBAN_UNEMPLOYED"
+					value = 100
+				}
+			}
+		}	
+	
+		if = {
+			limit = { 
+				OR = {
+					is_pop_type = clerks
+					is_pop_type = laborers
+					is_pop_type = machinists
+				}
+			}
+			add = {
+				desc = "POP_PROLETARIAT"
+				value = 50
+			}
+			add = {
+				desc = "POP_EDUCATED_PROLETARIAT"
+				value = literacy_rate
+				multiply = 200
 			}
 		}
 
-		add = {
-			desc = "URBAN_UNEMPLOYED"
-			if = {
-				limit = { 
-					NOR = {
-						pop_employment_building_group = bg_agriculture
-						pop_employment_building_group = bg_ranching
-						pop_employment_building_group = bg_plantations
-					}
-					is_employed = no
-				}
-				value = 100
-			}
-		}		
-	
-		add = {
-			desc = "POP_PROLETARIAT"
-			if = {
-				limit = { 
-					OR = {
-						is_pop_type = clerks
-						is_pop_type = laborers
-						is_pop_type = machinists
-					}
-				}
-				value = 30
-			}
-		}
-		add = {
-			desc = "POP_EDUCATED_PROLETARIAT"
-			if = {
-				limit = { 
-					OR = {
-						is_pop_type = clerks
-						is_pop_type = laborers
-						is_pop_type = machinists
-					}
-				}
-				value = literacy_rate
-				multiply = 100
-			}
-		}
 		add = {
 			desc = "POP_EDUCATED_FARMERS"
 			if = {
@@ -110,7 +96,7 @@
 					is_pop_type = farmers
 				}
 				value = literacy_rate
-				multiply = 100
+				multiply = 200
 			}
 		}	
 
@@ -123,7 +109,7 @@
 						is_pop_type = engineers
 					}
 				}
-				value = 50
+				value = 80
 			}
 		}
 
@@ -132,14 +118,9 @@
 			if = {
 				limit = { 
 					is_pop_type = soldiers
-					owner = {
-						radical_fraction = {
-							value >= 0.2
-							pop_type = laborers
-						}
-					}
+					owner = { has_variable = bpm_ig_laborers_angry_var }
 				}
-				value = 50
+				value = 200
 			}
 		}
 		add = {
@@ -147,18 +128,10 @@
 			if = {
 				limit = { 
 					OR = {
-						is_pop_type = laborers
-						is_pop_type = machinists
-						is_pop_type = soldiers
 						is_pop_type = farmers
 						is_pop_type = academics
 					}
-					owner = {
-						radical_fraction = {
-							value >= 0.2
-							pop_type = laborers
-						}
-					}
+					owner = { has_variable = bpm_ig_laborers_angry_var }
 				}
 				value = 150
 			}
@@ -181,13 +154,7 @@
 			if = {
 				limit = {
 					owner = {
-						OR = { 
-							has_law = law_type:law_autocracy
-							has_law = law_type:law_oligarchy
-							has_law = law_type:law_elder_council
-							has_law = law_type:law_outlawed_dissent
-							has_law = law_type:law_secret_police
-						}
+						has_variable = bpm_country_very_undemocratic_var
 					}
 				}
 				value = 1.5
@@ -199,14 +166,10 @@
 			if = {
 				limit = {
 					owner = {
-						OR = {
-							NOT = { has_law = law_type:law_universal_suffrage }
-							has_law = law_type:law_censorship
-							has_law = law_type:law_national_guard
-						}
+						has_variable = bpm_country_undemocratic_var
 					}
 				}
-				value = 1.5
+				value = 1.3
 			}
 		}
 
@@ -232,13 +195,10 @@
 			if = {
 				limit = { 
 					owner = {
-						ig:ig_trade_unions = {
-							is_marginal = yes
-						}
-						NOT = { has_law = law_type:law_council_republic }
+						owner = { NOT = { has_variable = bpm_country_has_non_marginal_unions_history_var } }
 					}
 				}
-				value = 0.2
+				value = 0.1
 			}		
 		}
 
@@ -248,14 +208,9 @@
 
 			if = {
 				limit = { 
-					owner = {
-						ig:ig_trade_unions = {
-							ig_clout < 5
-						}
-						NOT = { has_law = law_type:law_council_republic }
-					}
+					owner = { NOT = { has_variable = bpm_country_has_established_unions_history_var } }
 				}
-				value = 0.7
+				value = 0.5
 			}		
 		}
 
@@ -265,15 +220,12 @@
 
 			if = {
 				limit = { 
-					owner = {
-						ig:ig_trade_unions = {
-							is_powerful = yes
-						}
-					}
+					owner = { has_variable = bpm_country_has_powerful_unions_var }
 				}
 				value = 1.5
 			}		
-		}		
+		}
+
 		multiply = {
 			desc = "DEVASTATED"	
 			value = 1.0
@@ -297,48 +249,10 @@
 						is_at_war = yes
 					}
 				}
-				value = 2.0
+				value = 1.9
 			}		
 		}	
 
-		multiply = {
-			desc = "REFORMISTS_RADICALS_SUPPRESSED"	
-			value = 1.0
-
-			if = {
-				limit = { 
-					owner = {
-						any_interest_group = {
-							bpm_ig_is_revolutionary_socialist = no
-							OR = {
-								bpm_ig_is_radical_liberal = yes
-								bpm_ig_is_socialist = yes
-								leader = { bpm_leader_is_radical_liberal = yes }
-								leader = { bpm_leader_is_progressive_liberal = yes }
-							}
-							is_being_suppressed = yes
-						}
-					}
-				}
-				value = 1.2
-			}		
-		}
-		multiply = {
-			desc = "CONSERVATIVES_BOLSTERED"	
-			value = 1.0
-
-			if = {
-				limit = { 
-					owner = {
-						any_interest_group = {
-							bpm_ig_is_right_wing = yes
-							is_being_bolstered = yes
-						}
-					}
-				}
-				value = 1.1
-			}		
-		}	
 		multiply = {
 			desc = "BEFORE_FIRST_INTERNATIONAL"
 			value = 1.0
@@ -402,28 +316,8 @@
 				limit = { owner = { NOT = { has_technology_researched = labor_movement } } }
 				value = 0.7
 			}		
-		}		
-		multiply = {
-			desc = "NO_EGALITARIANISM"	
-			value = 1.0
-			if = {
-				limit = { owner = { NOT = { has_technology_researched = egalitarianism } } }
-				value = 0.0
-			}		
 		}
-		multiply = {
-			desc = "decentralized_power"	
-			value = 1.0
-			
-			if = {
-				limit = { 
-					owner = {
-						is_country_type = decentralized
-					}
-				}
-				value = 0.0
-			}		
-		}	
+
 		multiply = ig_attraction_from_radicals_and_loyalists
 		#multiply = ig_attraction_to_revolutionists_from_stability
 	}

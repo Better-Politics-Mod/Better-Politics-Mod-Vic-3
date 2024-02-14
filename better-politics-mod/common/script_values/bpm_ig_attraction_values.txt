@@ -95,18 +95,17 @@ ig_attraction_from_radicals_and_loyalists = {
 	if = {
 		limit = {
 			scope:interest_group = {
-				bpm_ig_is_radical_opposition = yes
-				bpm_ig_is_very_radical_opposition = no
-			}
-		}
-		multiply = ig_attraction_radical
-	} else_if = {
-		limit = {
-			scope:interest_group = {
-				bpm_ig_is_very_radical_opposition = yes
+				has_variable = bpm_ig_very_radical_opposition_var
 			}
 		}
 		multiply = ig_attraction_very_radical
+	} else_if = {
+		limit = {
+			scope:interest_group = {
+				has_variable = bpm_ig_radical_opposition_var
+			}
+		}
+		multiply = ig_attraction_radical
 	} else = {
 		multiply = ig_attraction_moderate
 	}
@@ -143,232 +142,225 @@ ig_attraction_to_interests_from_stability = {
 
 ig_attraction_tmp_bpm_non_rural_socialist = { # NOTE: This attraction script value will be DEPRECATED in a future rework of IG support weights
 
-	add = {
-		desc = "POP_LOWER_STRATA_VERY_POOR"
-		if = {
-			limit = {
-				strata = poor
-				standard_of_living <= 10
-				literacy_rate >= 0.5
-			}
-			value = 50
-		}
-	}
-	add = {
-		desc = "POP_LOWER_STRATA_POOR"
-		if = {
-			limit = {
-				strata = poor
-				standard_of_living <= 12
-				literacy_rate >= 0.5
-			}
-			value = 50
-		}
-	}
+	# add = {
+	# 	desc = "POP_LOWER_STRATA_VERY_POOR"
+	# 	if = {
+	# 		limit = {
+	# 			strata = poor
+	# 			standard_of_living <= 10
+	# 			literacy_rate >= 0.5
+	# 		}
+	# 		value = 50
+	# 	}
+	# }
+	# add = {
+	# 	desc = "POP_LOWER_STRATA_POOR"
+	# 	if = {
+	# 		limit = {
+	# 			strata = poor
+	# 			standard_of_living <= 15
+	# 			literacy_rate >= 0.5
+	# 		}
+	# 		value = 50
+	# 	}
+	# }
 
-	add = {
-		desc = "POP_URBAN_PROLETARIAT_SUPPORTS_COOPERATIVES"
-		if = {
-			limit = { 
-				NOR = {
-					pop_employment_building_group = bg_agriculture
-					pop_employment_building_group = bg_ranching
-					pop_employment_building_group = bg_plantations				
-				}
-
-				OR = {
-					is_pop_type = laborers
-					is_pop_type = machinists
-				}
-				scope:interest_group = {
-					law_stance = {
-						law = law_type:law_cooperative_ownership
-						value > neutral
-					}
-				}
-				owner = { has_law = law_type:law_council_republic }
-			}
-			value = 80
+	if = {
+		limit = { owner = { has_law = law_type:law_council_republic } }
+		add = {
+			desc = "POP_URBAN_PROLETARIAT_SUPPORTS_COOPERATIVES"
 			if = {
 				limit = { 
-					owner = {
-						has_law = law_type:law_cooperative_ownership
+					NOR = {
+						pop_employment_building_group = bg_agriculture
+						pop_employment_building_group = bg_ranching
+						pop_employment_building_group = bg_plantations				
+					}
+					OR = {
+						is_pop_type = laborers
+						is_pop_type = machinists
+					}
+					scope:interest_group = {
+						law_stance = {
+							law = law_type:law_cooperative_ownership
+							value > neutral
+						}
 					}
 				}
-				multiply = 2.0
+				value = 80
+				if = {
+					limit = { 
+						owner = { has_law = law_type:law_cooperative_ownership }
+					}
+					multiply = 2.0
+				}
+				multiply = bpm_nullify_if_radical
 			}
-			multiply = bpm_nullify_if_radical
 		}
-	}
-	add = {
-		desc = "POP_RURAL_SUPPORTS_COLLECTIVIZATION"
-		if = {
-			limit = { 
-				OR = {
-					pop_employment_building_group = bg_agriculture
-					pop_employment_building_group = bg_ranching
-					pop_employment_building_group = bg_plantations				
-				}
-				scope:interest_group = {
-					law_stance = {
-						law = law_type:law_collectivized_agriculture
-						value > neutral
-					}
-				}
-				strata <= middle
-				owner = { has_law = law_type:law_council_republic }
-			}
-			value = 40
+		add = {
+			desc = "POP_RURAL_SUPPORTS_COLLECTIVIZATION"
 			if = {
 				limit = { 
-					owner = {
-						has_law = law_type:law_collectivized_agriculture
+					OR = {
+						pop_employment_building_group = bg_agriculture
+						pop_employment_building_group = bg_ranching
+						pop_employment_building_group = bg_plantations				
 					}
+					scope:interest_group = {
+						law_stance = {
+							law = law_type:law_collectivized_agriculture
+							value > neutral
+						}
+					}
+					strata <= middle
 				}
-				multiply = 2.0
+				value = 40
+				if = {
+					limit = { 
+						owner = { has_law = law_type:law_collectivized_agriculture }
+					}
+					multiply = 2.0
+				}
+				multiply = bpm_nullify_if_radical
 			}
-			multiply = bpm_nullify_if_radical
 		}
-	}
-	add = {
-		desc = "POP_BUREAUCRATS_SUPPORT_COMMAND_ECONOMY"
-		if = {
-			limit = { 
-				OR = {
-					is_pop_type = clerks
-					is_pop_type = bureaucrats
-				}
-				scope:interest_group = {
-					law_stance = {
-						law = law_type:law_command_economy
-						value > neutral
-					}
-				}
-				owner = { has_law = law_type:law_council_republic }
-			}
-			value = 80
+		add = {
+			desc = "POP_BUREAUCRATS_SUPPORT_COMMAND_ECONOMY"
 			if = {
 				limit = { 
-					owner = {
-						has_law = law_type:law_command_economy
+					OR = {
+						is_pop_type = clerks
+						is_pop_type = bureaucrats
+					}
+					scope:interest_group = {
+						law_stance = {
+							law = law_type:law_command_economy
+							value > neutral
+						}
 					}
 				}
-				multiply = 2.0
+				value = 80
+				if = {
+					limit = { 
+						owner = { has_law = law_type:law_command_economy }
+					}
+					multiply = 2.0
+				}
 			}
 		}
-	}
-
-	add = {
-		desc = "POP_ARMY_IN_SOCIALIST_STATE"
-		if = {
-			limit = { 
-				OR = {
-					is_pop_type = soldiers
-					is_pop_type = officers
-				}
-				owner = {
-					has_law = law_type:law_council_republic
-				}
-			}
-			value = 75
-			multiply = bpm_nullify_if_radical
-		}
-	}
-
-	add = {
-		desc = "POP_SOLDIERS_SUPPORT_ELECTIONS_IN_ARMY"
-		if = {
-			limit = { 
-				OR = {
-					is_pop_type = soldiers
-				}
-				owner = {
-					has_law = law_type:law_elected_officers
-				}
-			}
-			value = 75
-			multiply = bpm_nullify_if_radical
-		}
-	}
-
-	add = {
-		desc = "POP_OFFICERS_SUPPORT_ELECTIONS_IN_ARMY"
-		if = {
-			limit = { 
-				is_pop_type = officers
-				owner = {
-					has_law = law_type:law_elected_officers
-				}
-			}
-			value = 50
-			multiply = bpm_nullify_if_radical
-		}
-	}
-
-	add = {
-		desc = "POP_HAPPY_WITH_ANARCHIST_LAWS"
-		value = 0.0
-		if = {
-			limit = { 
-				strata <= middle
-				scope:interest_group = {
-					bpm_ig_is_anarchist = yes
-				}
-			}
+		add = {
+			desc = "POP_ARMY_IN_SOCIALIST_STATE"
 			if = {
-				limit = {
-					owner = {
-						has_law = law_type:law_national_militia
+				limit = { 
+					OR = {
+						is_pop_type = soldiers
+						is_pop_type = officers
 					}
 				}
-				add = 20
+				value = 75
+				multiply = bpm_nullify_if_radical
 			}
+		}
+		add = {
+			desc = "POP_SOLDIERS_SUPPORT_ELECTIONS_IN_ARMY"
 			if = {
-				limit = {
+				limit = { 
+					OR = {
+						is_pop_type = soldiers
+					}
 					owner = {
 						has_law = law_type:law_elected_officers
 					}
 				}
-				add = 20
+				value = 75
+				multiply = bpm_nullify_if_radical
 			}
-			if = {
-				limit = {
-					owner = {
-						has_law = law_type:law_elected_police
-					}
-				}
-				add = 20
-			}
-			if = {
-				limit = {
-					owner = {
-						has_law = law_type:law_confederated
-					}
-				}
-				add = 20
-			}
-			if = {
-				limit = {
-					owner = {
-						has_law = law_type:law_anarchy
-					}
-				}
-				add = 60
-			}
-			multiply = bpm_nullify_if_radical
 		}
-  }
+	
+		add = {
+			desc = "POP_OFFICERS_SUPPORT_ELECTIONS_IN_ARMY"
+			if = {
+				limit = { 
+					is_pop_type = officers
+					owner = {
+						has_law = law_type:law_elected_officers
+					}
+				}
+				value = 50
+				multiply = bpm_nullify_if_radical
+			}
+		}
+	
+		add = {
+			desc = "POP_HAPPY_WITH_ANARCHIST_LAWS"
+			value = 0.0
+			if = {
+				limit = { 
+					strata <= middle
+					scope:interest_group = {
+						bpm_ig_is_anarchist = yes
+					}
+				}
+				if = {
+					limit = {
+						owner = {
+							has_law = law_type:law_national_militia
+						}
+					}
+					add = 20
+				}
+				if = {
+					limit = {
+						owner = {
+							has_law = law_type:law_elected_officers
+						}
+					}
+					add = 20
+				}
+				if = {
+					limit = {
+						owner = {
+							has_law = law_type:law_elected_police
+						}
+					}
+					add = 20
+				}
+				if = {
+					limit = {
+						owner = {
+							has_law = law_type:law_confederated
+						}
+					}
+					add = 20
+				}
+				if = {
+					limit = {
+						owner = {
+							has_law = law_type:law_anarchy
+						}
+					}
+					add = 60
+				}
+				multiply = bpm_nullify_if_radical
+			}
+		}
+	}
 }
 
 ig_attraction_to_reformists_from_stability = {
 	desc = "BPM_POP_REFORMISTS_FROM_STABILITY"
 	add = {
 		if = {
-			limit = { owner = { has_variable = bpm_political_stability } }
-			add = owner.var:bpm_political_stability
+			limit = {
+				has_variable = bpm_political_stability
+				var:bpm_political_stability >= 50
+			}
+			add = var:bpm_political_stability
 			divide = 100
+			multiply = 2.0
+		} else = {
+			add = 1.0
 		}
-		add = 1.0
 	}
 }
 
@@ -377,16 +369,16 @@ ig_attraction_to_revolutionists_from_stability = {
 	add = {
 		if = {
 			limit = {
-				owner = { has_variable = bpm_political_stability }
-				owner.var:bpm_political_stability < 50
+				has_variable = bpm_political_stability
+				var:bpm_political_stability <= 50
 			}
-			add = owner.var:bpm_political_stability
+			add = var:bpm_political_stability
 			divide = -100
 			add = 1.0
+			multiply = 2.0
 		} else = {
-			add = 0.5
+			add = 1.0
 		}
-		multiply = 2
 	}
 }
 
@@ -404,14 +396,16 @@ bpm_nullify_if_radical = {
 # Adds multipliers based on popularity of agitators to the IG
 bpm_ig_agitators_popularity = {
 	desc = "BPM_POP_FROM_AGITATOR_POPULARITY"
-	add = 1.0
 
 	scope:interest_group = {
-		every_scope_character = {
+		if = {
 			limit = {
-				has_role = agitator
+				has_variable = bpm_ig_agitator_popularity_var
 			}
-			multiply = bpm_ig_agitator_popularity
+			add = var:bpm_ig_agitator_popularity_var
+		}
+		else = {
+			add = 1.0
 		}
 	}
 }

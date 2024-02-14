@@ -1,8 +1,19 @@
-﻿ideology_moderate = {
+﻿ideology_placeholder_leader = {
+	icon = "gfx/interface/icons/ideology_icons/placeholder.dds"
+	show_in_list = no
+	character_ideology = yes
+	possible = {
+		always = no
+	}
+	leader_weight = {
+		value = 0
+	}
+}
+
+ideology_moderate = {
 	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_no_ideology.dds"
 	
 	show_in_list = no
-	
 	character_ideology = yes
 	
 	possible = {
@@ -10,6 +21,7 @@
 		NOT = { has_role = agitator }
 
 		scope:interest_group = {
+			bpm_ig_enabled = yes
 			NOR = {
 				bpm_ig_is_socialist = yes
 				bpm_ig_is_traditionalist = yes
@@ -19,28 +31,7 @@
 	}
 	
 	leader_weight = {
-		value = 200	
-		if = {
-			limit = {
-				scope:interest_group = { bpm_ig_enabled = no }
-			}
-			multiply = { value = 1000.0 }
-		}
-		if = {
-			limit = {
-				scope:interest_group = {
-					ig_clout > 0.001
-				}
-				scope:interest_group = {
-					OR = {
-						bpm_ig_is_socialist = yes
-						bpm_ig_is_traditionalist = yes
-						bpm_ig_is_fascist = yes
-					}
-				}
-			}
-			add = -10000
-		}
+		value = 150
 		# angry IG's more likely to have opinions
 		if = {
 			limit = {
@@ -70,18 +61,44 @@
 			}
 			add = 100
 		}
-		# what makes a man turn neutral? lust for gold? power? or were you just born with a heart full of neutrality?
-		if = {
-			limit = {
-				scope:interest_group = {
-					ig_approval = 0
-				}
-			}
-			add = 1
-		}
 	}
 }
 
+ideology_center_leader = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_blank.dds"
+
+	character_ideology = yes
+	show_in_list = no
+
+	possible = {
+		scope:interest_group = {
+			bpm_ig_is_institutional = no
+		}
+	}
+	
+	leader_weight = {
+		value = 100
+		# Agitators tend to be less orthodox
+		if = {
+			limit = {
+				has_role = agitator
+			}
+			add = -50
+		}
+		# Radicals are more disciplined
+		if = {
+			limit = {
+				scope:interest_group = { 
+					OR = {
+						bpm_ig_is_socialist = yes
+						bpm_ig_is_radical_left = yes
+					}
+				}
+			}
+			add = 100
+		}
+	}
+}
 
 ideology_traditionalist = {
 	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_traditionalist.dds"
@@ -3816,7 +3833,7 @@ ideology_positivist = {
 		if = {
 			limit = {
 				scope:interest_group = {
-					has_ideology = ideology_dop_technocrat
+					has_ideology = ideology:ideology_dop_technocrat
 				}
 			}
 			add = 25
@@ -4023,7 +4040,7 @@ ideology_land_reformer = {
 					}
 				}
 			}
-			add = 50
+			add = 100
 		}
 		# will not happen if land reform is essentially done
 		if = {
@@ -4108,7 +4125,6 @@ ideology_integralist = {
 				OR = { 
 					has_discrimination_trait = lusophone 
 					has_discrimination_trait = hispanophone 
-					has_discrimination_trait = francophone 
 				} 
 			} 
 		}
@@ -4580,7 +4596,7 @@ ideology_humanitarian_royalist = {
 		}
 		scope:interest_group = {
 			OR = {
-				bpm_ig_is_urban_institutional = yes
+				bpm_ig_is_rural_institutional = yes
 				bpm_ig_is_liberal = yes
 				bpm_ig_is_mainstream_conservative = yes
 			}
@@ -4591,7 +4607,7 @@ ideology_humanitarian_royalist = {
 	}
 
 	leader_weight = {
-		value = 100
+		value = 50
 		# more likely for conservatives/liberals
 		if = {
 			limit = {
@@ -4795,10 +4811,11 @@ ideology_orleanist = {
 		}
 		scope:interest_group = { 
 			OR = {
-				is_interest_group_type = ig_industrialists
-				is_interest_group_type = ig_petty_bourgeoisie
-				is_interest_group_type = ig_intelligentsia
-				is_interest_group_type = ig_armed_forces
+				bpm_ig_is_urban_institutional = yes
+				bpm_ig_is_state_institutional = yes
+				is_interest_group_type = ig_conservatives
+				is_interest_group_type = ig_liberals
+				is_interest_group_type = ig_market_liberals
 			}
 			AND = {
 				bpm_ig_is_radical_liberal = no
@@ -4967,10 +4984,8 @@ ideology_legitimist = {
 		}
 		scope:interest_group = { 
 			OR = {
-				is_interest_group_type = ig_devout
-				is_interest_group_type = ig_rural_folk
-				is_interest_group_type = ig_petty_bourgeoisie
-				is_interest_group_type = ig_landowners
+				bpm_ig_is_rural_institutional = yes
+				is_interest_group_type = ig_reactionaries
 			}
 			AND = {
 				bpm_ig_is_radical_liberal = no
@@ -5018,10 +5033,18 @@ ideology_legitimist = {
 				scope:interest_group = {
 					is_interest_group_type = ig_landowners
 					is_interest_group_type = ig_devout
-					is_interest_group_type = ig_reactionaries
 				}
 			}
 			add = 50
+		}
+		# very likely for reactionaries
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_reactionaries
+				}
+			}
+			add = 300
 		}
 		# conservative and/or reactionary leaders have a higher spawn chance if the Anti-Dreyfusards won.
 		if = {
@@ -5094,9 +5117,6 @@ ideology_bonapartist = {
 				}
 			}
 			NOR = {
-				any_interest_group = {
-					has_ideology = ideology:ideology_republican_paternalistic
-				}
 				has_variable = monarchy_stamped_out_var
 				AND = {
 					OR = {
@@ -5109,10 +5129,11 @@ ideology_bonapartist = {
 		}
 		scope:interest_group = { 
 			OR = {
+				bpm_ig_is_state_institutional = yes
 				is_interest_group_type = ig_rural_folk
-				is_interest_group_type = ig_petty_bourgeoisie
 				is_interest_group_type = ig_industrialists
-				is_interest_group_type = ig_armed_forces
+				is_interest_group_type = ig_national_liberals
+				is_interest_group_type = ig_market_liberals
 			}
 			AND = {
 				bpm_ig_is_radical_liberal = no
@@ -5163,6 +5184,15 @@ ideology_bonapartist = {
 				}
 			}
 			add = 50
+		}
+		# more likely for PB and AF
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_interest_group_type = ig_national_liberals
+				}
+			}
+			add = 300
 		}
 		# conservative and/or reactionary leaders have a higher spawn chance if the Anti-Dreyfusards won.
 		if = {

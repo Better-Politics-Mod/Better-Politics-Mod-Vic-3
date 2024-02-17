@@ -1,0 +1,549 @@
+﻿namespace = caudillo
+
+# Age of Caudillo startup event
+caudillo.1 = {
+	type = country_event
+	placement = ROOT
+	
+	title = caudillo.1.t
+	desc = caudillo.1.d
+	flavor = caudillo.1.f
+	
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/ig_icons/armed_forces.dds"
+	
+	duration = 3
+	
+	trigger = {
+		# triggered by generic monthly pulse
+		NOT = { has_variable = caudillo_var }
+		#ig:ig_armed_forces = {
+		#	has_ideology = ideology:ideology_caudillismo
+		#}
+		OR = {
+			country_has_primary_culture = cu:platinean
+			country_has_primary_culture = cu:south_andean
+			country_has_primary_culture = cu:north_andean
+			country_has_primary_culture = cu:central_american
+			country_has_primary_culture = cu:mexican
+		}
+		any_scope_character = {
+			has_role = general
+		}
+	}
+
+	immediate = {
+		set_variable = {
+			name = caudillo_var
+			value = 0
+		}
+		capital = {
+			save_scope_as = capital_scope
+		}
+		set_global_variable = { # ensures military presidents aren't replaced super early
+			name = continuismo_start_var
+			months = long_modifier_time
+		}
+		ig:ig_armed_forces = {
+			save_scope_as = army_scope
+		}
+		random_scope_character = {
+			limit = {
+				has_role = general
+			}
+			save_scope_as = general_scope
+		}
+		if = {
+			limit = {
+				ruler = {
+					interest_group = {
+						is_interest_group_type = ig_armed_forces
+					}
+				}
+			}
+			ruler = {
+				save_scope_as = powerful_caudillo
+			}
+		}
+		else = {
+			ig:ig_armed_forces = {
+				leader = {
+					save_scope_as = powerful_caudillo
+				}
+			}
+		}
+	}
+	option = { 
+		name = caudillo.1.a
+		default_option = yes
+		add_journal_entry = { type = je_caudillo }
+		if = { # This was less of an issue in Chile
+			limit = {
+				THIS = c:CHL
+			}
+			change_variable = {
+				name = caudillo_var
+				add = 400
+			}
+		}
+		else = {
+			change_variable = {
+				name = caudillo_var
+				add = 600
+			}
+		}
+		if = { # Starts the Francia JE
+			limit = {
+				c:PRG ?= this
+				NOR = { 
+					has_journal_entry = je_francocracia
+					has_variable = death_of_francia_var
+					year > 1836
+				}
+				has_dlc_feature = rp1_content
+			}
+			add_journal_entry = { type = je_francocracia }
+		}
+	}
+}
+
+# End of the Caudillo
+caudillo.2 = {
+	type = country_event
+	placement = ROOT
+	
+	title = caudillo.2.t
+	desc = caudillo.2.d
+	flavor = caudillo.2.f
+	
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/ig_icons/armed_forces.dds"
+	
+	duration = 3
+	
+	trigger = {
+		# triggered by je_caudillo
+	}
+
+	immediate = {
+		ig:ig_armed_forces = {
+			save_scope_as = army_scope
+		}
+	}
+	option = { 
+		name = caudillo.2.a
+		default_option = yes
+		#ig:ig_armed_forces = {
+		#	remove_ideology = ideology_caudillismo
+		#}
+		remove_modifier = age_of_caudillos_modifier
+	}
+}
+
+# The Fist Clenches
+caudillo.3 = {
+	type = country_event
+	placement = ROOT
+	
+	title = caudillo.3.t
+	desc = caudillo.3.d
+	flavor = caudillo.3.f
+	
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/ig_icons/armed_forces.dds"
+	
+	duration = 3
+	
+	trigger = {
+		# triggered by je_caudillo
+	}
+
+	immediate = {
+		capital = {
+			save_scope_as = capital_scope
+		}
+		ig:ig_armed_forces = {
+			save_scope_as = army_scope
+		}
+		ruler = {
+			save_scope_as = general_scope
+		}
+	}
+	option = { 
+		name = caudillo.3.a
+		default_option = yes
+		hidden_effect = {
+			remove_modifier = age_of_caudillos_modifier
+		}
+		add_modifier = {
+			name = age_of_caudillos_modifier
+			multiplier = 2
+		}
+	}
+}
+
+# Continuismo
+caudillo.4 = {
+	type = country_event
+	placement = ROOT
+	
+	title = caudillo.4.t
+	desc = caudillo.4.d
+	flavor = caudillo.4.f
+	
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/ig_icons/armed_forces.dds"
+	
+	duration = 3
+
+	cooldown = { months = long_modifier_time }
+	
+	trigger = {
+		# triggered by je_caudillo
+		NOT = { has_global_variable = continuismo_start_var }
+		ruler = {
+			interest_group = {
+				is_interest_group_type = ig_armed_forces
+			}
+		}
+		has_law = law_type:law_presidential_republic
+		OR = {
+			has_law = law_type:law_autocracy
+			has_law = law_type:law_oligarchy
+		}
+		OR = {
+			ig:ig_armed_forces = {
+				leader = {
+					is_ruler = no
+				}
+			}
+			any_scope_character = {
+				OR = {
+					has_role = general
+					has_role = admiral
+				}
+				interest_group = {
+					is_interest_group_type = ig_armed_forces
+				}
+				is_ruler = no
+			}
+		}
+	}
+
+	immediate = {
+		ig:ig_armed_forces = {
+			save_scope_as = army_scope
+		}
+		ruler = {
+			save_scope_as = ruler_scope
+		}
+		if = {
+			limit = {
+				ig:ig_armed_forces = {
+					leader = {
+						is_ruler = no
+					}
+				}
+			}
+			ig:ig_armed_forces = {
+				leader = {
+					save_scope_as = president_successor_scope
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				any_scope_character = {
+					OR = {
+						has_role = general
+						has_role = admiral
+					}
+					interest_group = {
+						is_interest_group_type = ig_armed_forces
+					}
+					is_ruler = no
+				}
+			}
+			random_scope_character = {
+				limit = {
+					OR = {
+						has_role = general
+						has_role = admiral
+					}
+					interest_group = {
+						is_interest_group_type = ig_armed_forces
+					}
+					is_ruler = no
+				}
+				save_scope_as = president_successor_scope
+			}
+		}
+	}
+	option = {
+		name = caudillo.4.a
+		default_option = yes
+		custom_tooltip = {
+			text = gain_large_caudillo_points
+			change_variable = {
+				name = caudillo_var
+				add = 200
+			}
+		}
+		ig:ig_armed_forces = {
+			add_modifier = {
+				name = continuismo
+				months = normal_modifier_time
+			}
+		}
+		ai_chance = {
+			base = 15
+		}
+	}
+	option = { # his term is over, time to step down
+		name = caudillo.4.b
+		custom_tooltip = {
+			text = retire_ruler
+			ruler = {
+				kill_character = { hidden = yes }
+			}
+		}
+		ig:ig_armed_forces = {
+			add_modifier = {
+				name = no_continuismo
+				months = normal_modifier_time
+			}
+		}
+		custom_tooltip = {
+			text = lose_large_caudillo_points
+			change_variable = {
+				name = caudillo_var
+				add = -200
+			}
+		}
+		ai_chance = {
+			base = 3
+		}
+	}
+	option = { # his successor takes over
+		name = caudillo.4.c
+		scope:president_successor_scope = {
+			set_character_as_ruler = yes
+		}
+		custom_tooltip = {
+			text = gain_caudillo_points
+			change_variable = {
+				name = caudillo_var
+				add = 100
+			}
+		}
+		ai_chance = {
+			base = 7
+		}
+	}
+}
+
+# Kingmaker
+caudillo.5 = {
+	type = country_event
+	placement = ROOT
+	
+	title = caudillo.5.t
+	desc = caudillo.5.desc
+	flavor = caudillo.5.f
+	
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/ig_icons/armed_forces.dds"
+	
+	duration = 3
+	
+	trigger = {
+		# triggered by on_action
+	}
+
+	immediate = {
+		ig:ig_armed_forces = {
+			save_scope_as = army_scope
+			leader = {
+				save_scope_as = army_leader
+				set_variable = caudillo_kingmaker
+			}
+		}
+		py:conservative_party = {
+			save_scope_as = conservative_party
+		}
+		py:liberal_party = {
+			save_scope_as = liberal_party
+		}
+		if = {
+			limit = {
+				any_active_party = {
+					is_party_type = communist_party
+				}
+			}
+			py:communist_party = {
+				save_scope_as = communist_party
+			}
+		}
+		if = {
+			limit = {
+				any_active_party = {
+					is_party_type = fascist_party
+				}
+			}
+			py:fascist_party = {
+				save_scope_as = fascist_party
+			}
+		}
+	}
+	option = { 
+		name = caudillo.5.a
+		default_option = yes
+		if = {
+			limit = {
+				has_journal_entry = je_caudillo
+			}
+			custom_tooltip = {
+				text = gain_caudillo_points
+				change_variable = {
+					name = caudillo_var
+					add = 100
+				}
+			}
+		}
+		custom_tooltip = {
+			text = armed_forces_support_conservative
+			ig:ig_armed_forces = {
+				leader = {
+					set_variable = caudillo_conservative
+				}
+			}
+		}
+		update_party_support = yes
+	}
+	option = { 
+		name = caudillo.5.b
+		if = {
+			limit = {
+				has_journal_entry = je_caudillo
+			}
+			custom_tooltip = {
+				text = gain_caudillo_points
+				change_variable = {
+					name = caudillo_var
+					add = 100
+				}
+			}
+		}
+		custom_tooltip = {
+			text = armed_forces_support_liberal
+			ig:ig_armed_forces = {
+				leader = {
+					set_variable = caudillo_liberal
+				}
+			}
+		}
+		update_party_support = yes
+	}
+	option = { 
+		name = caudillo.5.c
+		trigger = {
+			any_active_party = {
+				is_party_type = communist_party
+			}
+			ig:ig_armed_forces = {
+				leader = {
+					OR = {
+						has_ideology = ideology:ideology_vanguardist
+						has_ideology = ideology:ideology_communist
+						has_ideology = ideology:ideology_anarchist
+					}
+				}
+			}
+		}
+		highlighted_option = yes
+		if = {
+			limit = {
+				has_journal_entry = je_caudillo
+			}
+			custom_tooltip = {
+				text = gain_caudillo_points
+				change_variable = {
+					name = caudillo_var
+					add = 100
+				}
+			}
+		}
+		custom_tooltip = {
+			text = armed_forces_support_communist
+			ig:ig_armed_forces = {
+				leader = {
+					set_variable = caudillo_communist
+				}
+			}
+		}
+		update_party_support = yes
+	}
+	option = { 
+		name = caudillo.5.d
+		trigger = {
+			any_active_party = {
+				is_party_type = fascist_party
+			}
+			ig:ig_armed_forces = {
+				leader = {
+					OR = {
+						has_ideology = ideology:ideology_fascist
+						has_ideology = ideology:ideology_ethno_nationalist
+					}
+				}
+			}
+		}
+		highlighted_option = yes
+		if = {
+			limit = {
+				has_journal_entry = je_caudillo
+			}
+			custom_tooltip = {
+				text = gain_caudillo_points
+				change_variable = {
+					name = caudillo_var
+					add = 100
+				}
+			}
+		}
+		custom_tooltip = {
+			text = armed_forces_support_fascist
+			ig:ig_armed_forces = {
+				leader = {
+					set_variable = caudillo_fascist
+				}
+			}
+		}
+		update_party_support = yes
+	}
+}

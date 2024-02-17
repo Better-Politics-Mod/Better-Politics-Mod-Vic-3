@@ -1,0 +1,569 @@
+﻿namespace = pedro
+
+# Startup event
+pedro.1 = {
+	type = country_event
+	placement = ROOT
+	
+	title = pedro.1.t
+	desc = pedro.1.d
+	flavor = pedro.1.f
+	
+	event_image = {
+		video = "votp_monarch_holding_court"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	
+	duration = 3
+
+	#dlc = dlc008
+	
+	trigger = {
+		 # triggered by je_pedro_brazil
+		 NOT = { has_variable = pedro_startup_var }
+	}
+
+	immediate = {
+		set_variable = pedro_startup_var
+		random_scope_character = {
+			limit = {
+				has_variable = is_pedro
+			}
+			save_scope_as = pedro_scope
+		}
+		ig:ig_conservatives = { # old regency
+			save_scope_as = landowners_scope
+		}
+		ig:ig_reactionaries = { # old regency
+			save_scope_as = armed_forces_scope
+		}
+		ig:ig_liberals = { # new regency
+			save_scope_as = intelligentsia_scope
+			leader = {
+				save_scope_as = feijo_regent
+			}
+		}
+		if = {
+			limit = { 
+				py:liberal_party = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+			}
+			ig:ig_conservatives = { 
+				remove_ruling_interest_group = yes
+			}
+		}
+		if = {
+			limit = { owner = { exists = py:liberal_party }}
+			py:liberal_party = {
+				set_ruling_party = yes
+			}		
+		}		
+	}
+
+	option = {
+		name = pedro.1.a
+		default_option = yes
+		#custom_tooltip = {
+		#	text = pedro_regency_party_tt
+		#}
+		add_modifier = {
+			name = brz_regency
+			months = long_modifier_time
+		}
+	}
+}
+
+# Landowners become republicans
+pedro.2 = {
+	type = country_event
+	placement = ROOT
+	
+	title = pedro.2.t
+	desc = pedro.2.d
+	flavor = {
+		first_valid = {
+			triggered_desc = {
+				desc = pedro.2.f
+				trigger = {
+					has_law = law_type:law_slavery_banned
+				}
+			}
+			triggered_desc = {
+				desc = pedro.2.f2
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+	
+	duration = 3
+
+	#dlc = dlc008
+	
+	trigger = {
+		 # triggered by je_pedro_brazil
+		 root.var:pedropoints <= 2
+		 ig:ig_landowners = {
+		 	ig_approval <= unhappy
+		 }
+		 NOT = { has_variable = pedro_landowner_republicans }
+	}
+
+	immediate = {
+		set_variable = pedro_landowner_republicans
+		ruler = {
+			save_scope_as = pedro_scope
+		}
+		ig:ig_landowners = {
+			save_scope_as = landowners_scope
+			leader = {
+				save_scope_as = landowner_leader
+			}
+		}
+		i:ideology_gov_radical_republican = {
+			save_scope_as = elitist_scope
+		}
+	}
+
+	option = {
+		name = pedro.2.a
+		default_option = yes
+		ig:ig_landowners = {
+			bpm_remove_all_gov_ideologies = yes
+			add_ideology = ideology_gov_liberal_republican
+		}
+		#ig:ig_radicals = {
+		#	bpm_remove_all_gov_ideologies = yes
+		#	add_ideology = ideology_gov_radical_republican
+		#}
+	}
+}
+
+# The Monarchy survives, ending event
+pedro.7 = {
+	type = country_event
+	placement = ROOT
+	
+	title = pedro.7.t
+	desc = pedro.7.d
+	flavor = pedro.7.f
+	
+	gui_window = event_window_1char_tabloid
+
+	left_icon = root.ruler
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	
+	duration = 3
+
+	#dlc = dlc008
+	
+	trigger = {
+		# triggered by je_pedro_brazil		
+	}
+
+	immediate = {
+		ruler = {
+			save_scope_as = new_brz_monarch_scope
+		}
+		ROOT = {
+			save_scope_as = brazil_scope
+		}
+	}
+
+	option = {
+		name = pedro.7.a
+		default_option = yes
+		hidden_effect = {
+			ig:ig_landowners = {
+				bpm_remove_all_eco_ideologies = yes
+			#	bpm_remove_all_wel_ideologies = yes
+			#	add_ideology = ideology_dop_oligarch
+			#	add_ideology = ideology_rel_secularist
+				add_ideology = ideology_eco_conservative_agrarian
+			#	add_ideology = ideology_wel_paternalistic_welfare
+			}
+			ig:ig_reactionaries = {
+				bpm_remove_all_sta_ideologies = yes
+				add_ideology = ideology_sta_decentralized_state
+			}
+			#ig:ig_liberals = { 
+			#	bpm_remove_all_sta_ideologies = yes
+			#	add_ideology = ideology_sta_progressive_state
+			#}
+			ig:ig_radicals = { 
+				bpm_remove_all_sta_ideologies = yes
+				add_ideology = ideology_sta_progressive_state
+			}
+		}
+		custom_tooltip = pedro_je_royalists_more_common_tt
+		scope:new_brz_monarch_scope = {
+			add_modifier = {
+				name = brz_new_monarch_popular
+				months = normal_modifier_time
+			}
+			if = {
+				limit = {
+					has_ideology = ideology:ideology_abolitionist
+				}
+				set_ideology = ideology:ideology_humanitarian_royalist
+			}
+		}
+		every_country = {
+			limit = {
+				NOT = {
+					THIS = ROOT
+				}
+				has_interest_marker_in_region = region_brazil
+			}
+			post_notification = brz_isabel_accession
+		}
+		add_loyalists = {
+			value = large_radicals
+			culture = cu:brazilian
+		}
+		if = {
+			limit = {
+				cu:afro_brazilian = {
+					NOT = {
+						culture_is_discriminated_in = ROOT
+					}
+				}
+			}
+			add_loyalists = {
+				value = large_radicals
+				culture = cu:afro_brazilian
+			}
+		}
+	}
+}
+
+# The Monarchy is overthrown in a landowner/AF coup, ending event
+pedro.8 = {
+	type = country_event
+	placement = ROOT
+	
+	title = pedro.8.t
+	desc = pedro.8.d
+	flavor = pedro.8.f
+	
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+	
+	duration = 3
+
+	#dlc = dlc008
+	
+	trigger = {
+		# triggered by je_pedro_brazil		
+	}
+
+	immediate = {
+		ig:ig_armed_forces = {
+			save_scope_as = armed_forces_ig
+		}
+		ig:ig_landowners = {
+			save_scope_as = landowners_ig
+		}
+		ruler = {
+			save_scope_as = pedro_scope
+		}
+		ROOT = {
+			save_scope_as = brazil_scope
+		}
+		if = {
+			limit = {
+				NOT = { has_law = law_type:law_landed_voting }
+			}
+			activate_law = law_type:law_landed_voting
+		}
+		activate_law = law_type:law_presidential_republic
+	}
+
+	option = {
+		name = pedro.8.a
+		default_option = yes
+		hidden_effect = {
+			ig:ig_landowners = {
+				bpm_remove_all_eco_ideologies = yes
+				bpm_remove_all_wel_ideologies = yes
+				add_ideology = ideology_dop_oligarch
+				add_ideology = ideology_rel_secularist
+				add_ideology = ideology_eco_conservative_agrarian
+				add_ideology = ideology_wel_secular_anti_welfare
+			}
+			ig:ig_reactionaries = {
+				bpm_remove_all_sta_ideologies = yes
+				add_ideology = ideology_sta_decentralized_state
+			}
+			ig:ig_liberals = { 
+				bpm_remove_all_gov_ideologies = yes
+				add_ideology = ideology_gov_liberal_republican
+				#bpm_remove_all_sta_ideologies = yes
+				#add_ideology = ideology_sta_progressive_state
+			}
+			ig:ig_radicals = { 
+				bpm_remove_all_sta_ideologies = yes
+				add_ideology = ideology_sta_progressive_state
+			}
+			if = {
+				limit = {
+					ig:ig_market_liberals = {
+						NOT = { has_ideology = ideology:ideology_nonexistent }
+					}
+				}
+				ig:ig_market_liberals = { 
+					bpm_remove_all_gov_ideologies = yes
+					add_ideology = ideology_gov_liberal_republican
+				}
+			}
+		}
+		if = {
+			limit = {
+				ig:ig_landowners = {
+					is_in_government = no
+					is_marginal = no
+				}
+			}
+			ig:ig_landowners = {
+				add_ruling_interest_group = yes
+			}
+		}
+		if = {
+			limit = {
+				ig:ig_armed_forces = {
+					is_in_government = no
+					is_marginal = no
+				}
+			}
+			ig:ig_armed_forces = {
+				add_ruling_interest_group = yes
+			}
+		}
+		if = {
+			limit = {
+				ig:ig_armed_forces = {
+					is_marginal = no
+				}
+			}
+			ig:ig_armed_forces = {
+				leader = {
+					set_character_as_ruler = yes
+				}
+			}
+		}
+		else = {
+			ig:ig_landowners = {
+				leader = {
+					set_character_as_ruler = yes
+				}
+			}
+		}
+		add_radicals = {
+			value = large_radicals
+		}
+		every_country = {
+			limit = {
+				NOT = {
+					THIS = ROOT
+				}
+				has_interest_marker_in_region = region_brazil
+			}
+			post_notification = brz_brazil_coup
+		}
+	}
+}
+
+# The Republican Proposal
+pedro.9 = {
+	type = country_event
+	placement = ROOT
+	
+	title = pedro.9.t
+	desc = pedro.9.d
+	flavor = pedro.9.f
+	
+	event_image = {
+		video = "votp_monarch_holding_court"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+	
+	duration = 3
+
+	#dlc = dlc008
+	
+	trigger = {
+		# triggered by je_pedro_brazil
+		NOT = { has_variable = had_pedro_republican_proposal }
+		ruler = {
+			age >= 30
+		}
+		any_interest_group = {
+			#is_powerful = yes
+			is_in_government = yes
+			NOT = { is_interest_group_type = ig_landowners }
+			OR = {
+				leader = {
+					OR = {
+						has_ideology = ideology:ideology_positivist
+						has_ideology = ideology:ideology_republican_leader
+						has_ideology = ideology:ideology_radical
+						has_ideology = ideology:ideology_atheist
+					}
+				}
+				bpm_ig_is_republican = yes
+			}
+		}
+	}
+
+	immediate = {
+		set_variable = had_pedro_republican_proposal
+		ruler = {
+			save_scope_as = pedro_scope
+		}
+		random_interest_group = {
+			limit = {
+				#is_powerful = yes
+				is_in_government = yes
+				NOT = { is_interest_group_type = ig_landowners }
+				OR = {
+					leader = {
+						OR = {
+							has_ideology = ideology:ideology_positivist
+							has_ideology = ideology:ideology_republican_leader
+							has_ideology = ideology:ideology_radical
+							has_ideology = ideology:ideology_atheist
+						}
+					}
+					has_ideology = ideology:ideology_gov_liberal_republican
+					has_ideology = ideology:ideology_gov_radical_republican
+				}
+			}
+			save_scope_as = republican_ig
+			leader = {
+				save_scope_as = republican_leader
+				ideology = {
+					save_scope_as = republican_ideology
+				}
+			}
+		}
+	}
+
+	option = {
+		name = pedro.9.a
+		default_option = yes
+		remove_pedropoint_effect = yes
+		ai_chance = {
+			base = 19
+		}
+	}
+
+	option = {
+		name = pedro.9.b
+		default_option = yes
+		add_journal_entry = { type = je_pedro_republic }
+		# AI very unlikely to do this
+		ai_chance = {
+			base = 1
+		}
+	}
+}
+
+# President Pedro
+pedro.10 = {
+	type = country_event
+	placement = ROOT
+	
+	title = pedro.10.t
+	desc = pedro.10.d
+	flavor = pedro.10.f
+	
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+	
+	duration = 3
+
+	#dlc = dlc008
+	
+	trigger = {
+		# triggered by on_law_enactment_pass
+	}
+
+	immediate = {
+		random_character_in_void = {
+			limit = {
+				has_variable = is_pedro
+			}
+			free_character_from_void = yes
+			set_character_as_ruler = yes
+			set_as_interest_group_leader = yes
+			save_scope_as = pedro_scope
+		}
+	}
+
+	option = {
+		name = pedro.10.a
+		default_option = yes
+		show_as_tooltip = {
+			ruler = {
+				set_character_as_ruler = yes
+				set_as_interest_group_leader = yes
+			}
+		}
+		if = {
+			limit = {
+				scope:pedro_scope = {
+					interest_group = {
+						is_in_government = no
+					}
+				}
+			}
+			scope:pedro_scope = {
+				interest_group = {
+					add_ruling_interest_group = yes
+				}
+			}
+		}
+		ruler = {
+			add_modifier = {
+				name = president_pedro_legitimacy
+				months = long_modifier_time
+				is_decaying = yes
+			}
+		}
+		ig:ig_conservatives = { 
+			remove_ideology = ideology_gov_moderate_monarchist
+			add_ideology = ideology_gov_liberal_republican
+		}
+	}
+}

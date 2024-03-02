@@ -653,3 +653,109 @@ bpm_potd_pick_bombing_target = {
 		save_scope_as = $SAVE_AS$
 	}
 }
+
+#integralists
+bpm_je_split_integralists_progress_rate_update = {
+	set_variable = { name = bpm_je_split_integralists_progress_rate value = 0 }
+	set_variable = { name = bpm_je_split_integralists_progress_from_base value = -0.1 } # Base rate
+
+	# LOYALISM/RADICALISM/POVERTY --------------------------
+	set_variable = { name = bpm_je_split_integralists_progress_from_loyalists value = 0 } 
+	set_variable = { name = bpm_je_split_integralists_progress_from_radicals value = 0 } 
+	set_variable = { name = temp_incorporated_population value = 0 }
+	every_scope_state = {
+		limit = {
+			is_incorporated = yes
+			this.state_population > 0
+		}
+
+		set_variable = { name = temp_loyal value = this.loyalty }
+		# set_variable = { name = temp_poor value = this.population_below_expected_sol } #TODO: FIX THIS VALUE
+		set_variable = { name = temp_rad value = this.turmoil }
+
+		ROOT = {
+			change_variable = { 
+				name = bpm_je_split_integralists_progress_from_loyalists 
+				add = {
+					value = prev.var:temp_loyal
+					multiply = prev.state_population
+				}
+			}
+			change_variable = { 
+				name = bpm_je_split_integralists_progress_from_radicals
+				add = {
+					value = prev.var:temp_rad
+					multiply = prev.state_population
+				}
+			}
+			change_variable = { name = temp_incorporated_population add = prev.state_population }
+		}
+
+		remove_variable = temp_loyal
+		remove_variable = temp_rad
+	}
+	change_variable = { name = bpm_je_split_integralists_progress_from_radicals divide = var:temp_incorporated_population }
+	change_variable = { name = bpm_je_split_integralists_progress_from_radicals multiply = 2 }
+	change_variable = { name = bpm_je_split_integralists_progress_from_loyalists divide = var:temp_incorporated_population }
+	change_variable = { name = bpm_je_split_integralists_progress_from_loyalists multiply = 2 }
+	remove_variable = temp_incorporated_population
+	
+	# CONSERVATIVE STATUS --------------------------
+	set_variable = { name = bpm_je_split_integralists_progress_from_conservative_status value = 0 }
+	if = {
+		limit = { ig:ig_conservatives = { is_being_suppressed = yes } }
+		ROOT = { change_variable = { name = bpm_je_split_integralists_progress_from_conservative_status add = 0.2 } }
+	}
+
+	set_variable = { name = bpm_je_split_integralists_progress_from_church_status value = 0 }
+	if = {
+		limit = { ig:ig_devout = { leader = { bpm_leader_is_left_wing = yes } } }
+		ROOT = { change_variable = { name = bpm_je_split_integralists_progress_from_church_status add = 0.2 } }
+	}
+
+	# LEFT WING --------------------------
+	set_variable = { name = bpm_je_split_integralists_progress_from_left_wing_power value = 0 } 
+	every_interest_group = {
+		limit = {
+			bpm_ig_is_radical_left = yes 
+			is_marginal = no
+		}
+		ROOT = { change_variable = { name = bpm_je_split_integralists_progress_from_left_wing_power add = 0.1 } }
+	}
+	
+	set_variable = { name = bpm_je_split_integralists_progress_from_left_wing_government value = 0 }
+	if = {
+		limit = { 
+			ig:ig_conservatives = { is_in_government = no }
+			any_interest_group = {
+				bpm_ig_is_radical_left = yes
+				is_in_government = yes
+			}
+		}
+		ROOT = { change_variable = { name = bpm_je_split_integralists_progress_from_left_wing_government add = 0.1 } }
+	}
+
+	# NATLIBS --------------------------
+	set_variable = { name = bpm_je_split_integralists_progress_from_natlibs value = 0 }
+	if = {
+		limit = { has_variable = local_natlib_split_var }
+		change_variable = { name = bpm_je_split_integralists_progress_from_natlibs add = 0.5 }
+	}
+
+	set_variable = { name = bpm_je_split_integralists_progress_from_corporatism value = 0 }
+	if = {
+		limit = { has_technology_researched = corporatism }
+		change_variable = { name = bpm_je_split_integralists_progress_from_corporatism add = 0.2 }
+	}
+
+	# TOTAL --------------------------
+	change_variable = { name = bpm_je_split_integralists_progress_rate add = var:bpm_je_split_integralists_progress_from_base }
+	change_variable = { name = bpm_je_split_integralists_progress_rate add = var:bpm_je_split_integralists_progress_from_loyalists }
+	change_variable = { name = bpm_je_split_integralists_progress_rate add = var:bpm_je_split_integralists_progress_from_radicals }
+	change_variable = { name = bpm_je_split_integralists_progress_rate add = var:bpm_je_split_integralists_progress_from_conservative_status }
+	change_variable = { name = bpm_je_split_integralists_progress_rate add = var:bpm_je_split_integralists_progress_from_church_status }
+	change_variable = { name = bpm_je_split_integralists_progress_rate add = var:bpm_je_split_integralists_progress_from_left_wing_power }
+	change_variable = { name = bpm_je_split_integralists_progress_rate add = var:bpm_je_split_integralists_progress_from_left_wing_government }
+	change_variable = { name = bpm_je_split_integralists_progress_rate add = var:bpm_je_split_integralists_progress_from_natlibs }
+	change_variable = { name = bpm_je_split_integralists_progress_rate add = var:bpm_je_split_integralists_progress_from_corporatism }
+}

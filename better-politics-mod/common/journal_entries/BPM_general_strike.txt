@@ -47,13 +47,13 @@ je_bpm_general_strike_trigger = {
 		custom_tooltip = {
 			text = "bpm_general_strike_will_start"
 			post_notification = bpm_general_strike_start
-			add_journal_entry = je_bpm_general_strike
 		}
+		add_journal_entry = { type = je_bpm_general_strike_ongoing }
 	}
 
 	can_deactivate = yes
 	possible = {
-		NOT = { has_journal_entry = je_bpm_general_strike }
+		# NOT = { has_journal_entry = je_bpm_general_strike_ongoing }
 		has_technology_researched = labor_movement
 	}
 
@@ -109,7 +109,7 @@ je_bpm_general_strike_trigger = {
 }
 
 # STRIKE STRIKE STRIKE STRIKE STRIKE LET'S FVCKING GOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-je_bpm_general_strike = {
+je_bpm_general_strike_ongoing= {
 	icon = "gfx/interface/icons/event_icons/event_protest.dds"
 
 	scripted_button = bpm_je_general_strike_concessions
@@ -119,14 +119,15 @@ je_bpm_general_strike = {
 	group = je_group_crises
 
 	can_revolution_inherit = no
-
-	is_shown_when_inactive = {
-		always = no
-	}
+	transferable = no
 
 	immediate = {
 		set_variable = {
 			name = bpm_je_general_strike_progress
+			value = 0
+		}
+		set_variable = {
+			name = bpm_je_general_strike_trigger_random
 			value = 0
 		}
 		set_variable = {
@@ -147,6 +148,11 @@ je_bpm_general_strike = {
 	}
 
 	complete = {
+		NOT = { # Strike will continue while a revolution is ongoing
+			any_civil_war = {
+				is_revolutionary = yes
+			}
+		}
 		custom_tooltip = {
 			text = bpm_general_strike_exhaustion_above_50
 			var:bpm_je_general_strike_exhaustion > 50
@@ -157,7 +163,7 @@ je_bpm_general_strike = {
 	}
 
 	on_fail = {
-		add_journal_entry = je_bpm_general_strike_trigger
+		add_journal_entry = { type = je_bpm_general_strike_trigger }
 		remove_modifier = bpm_general_strike_modifier
 		if = { # Syndicalist revolution
 			limit = {
@@ -226,7 +232,7 @@ je_bpm_general_strike = {
 		custom_tooltip = {
 			text = "bpm_general_strike_will_fail"
 			post_notification = bpm_general_strike_fail
-			add_journal_entry = je_bpm_general_strike_trigger
+			add_journal_entry = { type = je_bpm_general_strike_trigger }
 		}
 		remove_modifier = bpm_general_strike_modifier
 		if = {
@@ -244,28 +250,20 @@ je_bpm_general_strike = {
 		}
 	}
 
-	can_deactivate = no
-	possible = {
-		always = yes
-	}
-
 	on_weekly_pulse = {
 		effect = {
 			change_variable = {
 				name = bpm_je_general_strike_progress
-				add = bpm_je_general_strike_progress
-				min = 0
-				max = 100
+				add = bpm_je_general_strike_power
 			}
 			clamp_variable = {
 				name = bpm_je_general_strike_progress
 				min = 0
-				max = 100000
+				max = 100
 			}
 			change_variable = {
 				name = bpm_je_general_strike_exhaustion
 				add = bpm_je_general_strike_exhaustion_rate
-				min = 0
 			}
 			clamp_variable = {
 				name = bpm_je_general_strike_exhaustion
@@ -273,13 +271,23 @@ je_bpm_general_strike = {
 				max = 100000
 			}
 
+			set_variable = {
+				name = bpm_je_general_strike_modifier_power
+				value = var:bpm_je_general_strike_progress
+			}
+			change_variable = {
+				name = bpm_je_general_strike_modifier_power
+				multiply = 0.01
+			}
+			clamp_variable = {
+				name = bpm_je_general_strike_modifier_power
+				max = 1
+				min = 0.33
+			}
 			remove_modifier = bpm_general_strike_modifier
 			add_modifier = {
 				name = bpm_general_strike_modifier
-				multiplier = {
-					add = var:bpm_je_general_strike_progress
-					multiply = 0.01
-				}
+				multiplier = var:bpm_je_general_strike_modifier_power
 			}
 
 			every_scope_war = {
@@ -290,7 +298,7 @@ je_bpm_general_strike = {
 
 	progressbar = yes
 	current_value = {
-		value = var:bpm_je_general_strike_progress
+		value = root.var:bpm_je_general_strike_progress
 	}
 
 	goal_add_value = {

@@ -13,6 +13,7 @@ on_half_yearly_pulse_country = {
 on_monthly_pulse_country = {
 	on_actions = {
 		on_bpm_monthly_pulse_country
+		bpm_update_enactment_success_on_action
 	}
 }
 
@@ -216,6 +217,7 @@ on_bpm_monthly_pulse_country = {
 			bpm_update_political_stability = yes
 			bpm_ig_update_ig_ban_support = yes
 			bpm_update_igs_current_party = yes
+			bpm_institution_workaround_effect = yes
 		}
 		if = {
 			limit = { 
@@ -280,7 +282,7 @@ on_bpm_law_activated = {
 	effect = {
 		owner = { update_party_support = yes }
 		owner = { bpm_fix_stupid_law_combinations = yes }
-		owner = { bpm_all_suffrage_institution_workaround = yes }
+		owner = { bpm_institution_workaround_effect = yes }
 	}
 }
 
@@ -334,6 +336,56 @@ on_bpm_revolution_start = {
 		bpm_add_political_stability_big = yes # Crackdowns, most disloyal people left for revolution
 		scope:target = {
 			set_variable = bpm_can_new_constitution
+		}
+
+		# Set target as a potential legitimator of syndicalism if they win
+		if = {
+			limit = {
+				country_rank >= rank_value:unrecognized_regional_power
+				has_journal_entry = je_bpm_syndicalism
+				var:bpm_je_syndicalism >= 0.66
+			}
+			scope:target = { 
+				set_variable = bpm_can_legitimize_syndicalism
+			}
+		}
+
+		# Enact Council Republic if revoluition is obviously communist
+		#if = {
+		#	limit = {
+		#		scope:target = {
+		#			is_secessionist = no
+		#			any_interest_group = {
+		#				is_in_government = yes
+		#				bmp_ig_is_socialist = yes
+		#				is_strongest_ig_in_government = yes
+		#			}
+		#		}
+		#	}
+		#	scope:target = { activate_law = law_type:law_council_republic }
+
+		#	# Also activate syndicalism if this is a syndicalist revolution
+		#	if = {
+		#		limit = {
+		#			has_journal_entry = je_bpm_syndicalism
+		#			var:bpm_je_syndicalism >= 0.66
+		#		}
+		#		scope:target = { activate_law = law_type:law_syndicalism }
+		#	}
+		#}
+
+		# Pass along agrarian socialism progress to rebels
+		if = {
+			limit = {
+				has_variable = bpm_agrarian_socialism_power
+			}
+
+			scope:target = {
+				set_variable = {
+					name = bpm_agrarian_socialism_power
+					value = root.var:bpm_agrarian_socialism_power
+				}
+			}
 		}
 	}
 }
@@ -392,6 +444,11 @@ on_bpm_civil_war_won = {
 				has_variable = bpm_can_new_constitution
 			}
 			trigger_event = { id = bpm_provisional_government_events.1 days = 7 popup = yes }
+		}
+
+		if = {
+			limit = { has_variable = bpm_can_legitimize_syndicalism }
+			trigger_event = { id = bpm_syndicalism.1 days = 2 popup = yes }
 		}
 	}
 }
@@ -460,15 +517,15 @@ bpm_on_actions_stubbornness = {
 	}
 }
 
-on_bpm_investment_increased = { 
+on_bpm_investment_increased = {
 	effect ={ 
-		owner = { bpm_all_suffrage_institution_workaround = yes }
+		owner = { bpm_institution_workaround_effect = yes }
 	}
 }
 
 on_bpm_investment_decreased = { 
 	effect = { 
-		owner = { bpm_all_suffrage_institution_workaround = yes }
+		owner = { bpm_institution_workaround_effect = yes }
 	}
 }
 

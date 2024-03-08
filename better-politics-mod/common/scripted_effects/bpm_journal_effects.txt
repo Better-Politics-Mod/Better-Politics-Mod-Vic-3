@@ -342,6 +342,12 @@ bpm_je_split_natlibs_progress_rate_update = {
 		}
 		change_variable = { name = bpm_je_split_natlibs_progress_rate add = var:bpm_je_split_natlibs_progress_from_radicals }
 	}
+	if = {
+		limit = {
+			ruler = { interest_group = { is_interest_group_type = ig_national_liberals } }
+		}
+		change_variable = { name = bpm_je_split_natlibs_progress_rate add = 1000 }
+	}
 	
 }
 
@@ -369,7 +375,7 @@ bpm_je_split_marlibs_progress_rate_update = {
 				is_enacting_law = law_type:law_free_trade
 			}
 		}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment add = 1.0 }
+		change_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment add = 0.8 }
 	}
 	if = {
 		limit = {
@@ -380,7 +386,7 @@ bpm_je_split_marlibs_progress_rate_update = {
 				is_enacting_law = law_type:law_protectionism
 			}
 		}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment add = 0.5 }
+		change_variable = { name = bpm_je_split_marlibs_progress_from_law_enactment add = 0.4 }
 	}
 	if = {
 		limit = {
@@ -394,7 +400,7 @@ bpm_je_split_marlibs_progress_rate_update = {
 				}
 			}
 		}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_movement add = 0.5 }
+		change_variable = { name = bpm_je_split_marlibs_progress_from_movement add = 0.4 }
 	}
 
 	# CURRENT LAWS --------------------------
@@ -439,7 +445,16 @@ bpm_je_split_marlibs_progress_rate_update = {
 				pop_type = capitalists
 			}
 		}
-		change_variable = { name = bpm_je_split_marlibs_progress_from_radcaps multiply = 1.2 }
+		change_variable = { name = bpm_je_split_marlibs_progress_from_radcaps add = 0.1 }
+	}
+	else_if = {
+		limit = {
+			radical_fraction = {
+				value > 0.3
+				pop_type = capitalists
+			}
+		}
+		change_variable = { name = bpm_je_split_marlibs_progress_from_radcaps add = 0.3 }
 	}
 
 	# TOTAL --------------------------
@@ -455,12 +470,13 @@ bpm_je_split_marlibs_progress_rate_update = {
 
 bpm_je_split_patcons_progress_rate_update = {
 	set_variable = { name = bpm_je_split_patcons_progress_rate value = 0 }
-	set_variable = { name = bpm_je_split_patcons_progress_from_base value = 0.0 } # Base rate
+	set_variable = { name = bpm_je_split_patcons_progress_from_base value = -0.1 } # Base rate
 
 	# LOYALISM/RADICALISM/POVERTY --------------------------
 	set_variable = { name = bpm_je_split_patcons_progress_from_poverty value = 0 } 
 	set_variable = { name = bpm_je_split_patcons_progress_from_loyalists value = 0 } 
 	set_variable = { name = bpm_je_split_patcons_progress_from_radicals value = 0 } 
+	set_variable = { name = temp_incorporated_population value = 0 }
 	every_scope_state = {
 		limit = {
 			is_incorporated = yes
@@ -473,22 +489,38 @@ bpm_je_split_patcons_progress_rate_update = {
 
 		ROOT = {
 			# change_variable = { name = bpm_je_split_patcons_progress_from_poverty add = prev.var:temp_poor }
-			change_variable = { name = bpm_je_split_patcons_progress_from_loyalists add = prev.var:temp_loyal }
-			change_variable = { name = bpm_je_split_patcons_progress_from_radicals add = prev.var:temp_rad }
+			change_variable = { 
+				name = bpm_je_split_patcons_progress_from_loyalists 
+				add = {
+					value = prev.var:temp_loyal
+					multiply = prev.state_population
+				}
+			}
+			change_variable = { 
+				name = bpm_je_split_patcons_progress_from_radicals
+				add = {
+					value = prev.var:temp_rad
+					multiply = prev.state_population
+				}
+			}
+			change_variable = { name = temp_incorporated_population add = prev.state_population }
 		}
 
 		remove_variable = temp_loyal
 		# remove_variable = temp_poor
 		remove_variable = temp_rad
 	}
-
-
+	change_variable = { name = bpm_je_split_patcons_progress_from_radicals divide = var:temp_incorporated_population }
+	change_variable = { name = bpm_je_split_patcons_progress_from_radicals multiply = 2 }
+	change_variable = { name = bpm_je_split_patcons_progress_from_loyalists divide = var:temp_incorporated_population }
+	change_variable = { name = bpm_je_split_patcons_progress_from_loyalists multiply = 2 }
+	remove_variable = temp_incorporated_population
 	
 	# CONSERVATIVE STATUS --------------------------
 	set_variable = { name = bpm_je_split_patcons_progress_from_conservative_status value = 0 }
 	if = {
 		limit = { ig:ig_conservatives = { is_being_suppressed = yes } }
-		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_conservative_status add = 0.25 } }
+		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_conservative_status add = 0.2 } }
 	}
 
 	# LEFT WING --------------------------
@@ -498,7 +530,7 @@ bpm_je_split_patcons_progress_rate_update = {
 			bpm_ig_is_radical_left = yes 
 			is_marginal = no
 		}
-		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_left_wing_power add = 0.25 } }
+		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_left_wing_power add = 0.1 } }
 	}
 
 	set_variable = { name = bpm_je_split_patcons_progress_from_left_wing_government value = 0 }
@@ -510,7 +542,7 @@ bpm_je_split_patcons_progress_rate_update = {
 				is_in_government = yes
 			}
 		}
-		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_left_wing_government add = 0.25 } }
+		ROOT = { change_variable = { name = bpm_je_split_patcons_progress_from_left_wing_government add = 0.1 } }
 	}
 
 	# COUNCIL REPUBLIC --------------------------

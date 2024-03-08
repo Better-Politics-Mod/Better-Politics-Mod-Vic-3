@@ -1,12 +1,54 @@
 ﻿bpm_setup_country = {
+	bpm_setup_country_sta_ideologies = yes
+	bpm_setup_country_rel_ideologies = yes
 	bpm_setup_country_gov_ideologies = yes
 	bpm_setup_country_dop_ideologies = yes
 	bpm_setup_country_eco_ideologies = yes
 	bpm_setup_country_mil_cit_ideologies = yes
 	bpm_setup_country_modifiers = yes
 	bpm_setup_country_stubbornness = yes
-	bpm_setup_country_init_igs = yes
 	trigger_event = { id = bpm_misc.2 }
+}
+
+bpm_setup_country_sta_ideologies = {
+	if = {
+		limit = {
+			has_law = law_type:law_federated
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					bpm_ig_is_left_wing = yes
+					is_interest_group_type = ig_intelligentsia
+				}
+				has_ideology = ideology:ideology_sta_powerful_state
+				bpm_ig_enabled = yes
+			}
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_federated_state
+		}
+	}
+}
+
+bpm_setup_country_rel_ideologies = {
+	if = {
+		limit = {
+			has_law = law_type:law_total_separation
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					bpm_ig_is_socialist = yes
+					bpm_ig_is_liberal = yes
+					is_interest_group_type = ig_petty_bourgeoisie
+				}
+				NOT = { is_interest_group_type = ig_agrarian_populists }
+				bpm_ig_enabled = yes
+			}
+			bpm_remove_all_rel_ideologies = yes
+			add_ideology = ideology_rel_radical_secularist
+		}
+	}
 }
 
 bpm_setup_country_gov_ideologies = {
@@ -26,7 +68,7 @@ bpm_setup_country_gov_ideologies = {
 			add_ideology = ideology_gov_liberal_republican
 		}
 	}
-	if = {
+	else_if = {
 		limit = { has_law = law_type:law_monarchy }
 		every_interest_group = {
 			limit = {
@@ -130,12 +172,9 @@ bpm_setup_country_eco_ideologies = {
 		bpm_make_igs_pro_serfdom = yes
 	}
 	else_if = {
-		limit = {
-			OR = {
-				bpm_country_has_modern_agriculture = yes
-				bpm_country_is_in_new_world = yes
-			}
-			NOT = {has_law = law_type:law_traditionalism}
+		limit = { 
+			NOT = { has_law = law_type:law_traditionalism }
+			NOT = { has_law = law_type:law_industry_banned }
 		}
 		bpm_make_igs_modern_agrarian = yes
 	}
@@ -169,13 +208,17 @@ bpm_setup_country_mil_cit_ideologies = {
 		every_interest_group = {
 			limit = {
 				has_ideology = ideology:ideology_mil_patriotic
+				owner = { has_law = law_type:law_national_militia }
 			}
 			remove_ideology = ideology_mil_patriotic
 			add_ideology = ideology_mil_frontier_expansion
 		}
 		every_interest_group = {
 			limit = {
-				has_ideology = ideology:ideology_cit_liberal_nationalist
+				OR = {
+					has_ideology = ideology:ideology_cit_liberal_nationalist
+					is_interest_group_type = ig_industrialists
+				}
 			}
 			remove_ideology = ideology_cit_liberal_nationalist
 			add_ideology = ideology_cit_immigrant_nationalist
@@ -190,6 +233,18 @@ bpm_setup_country_mil_cit_ideologies = {
 			remove_ideology = ideology_cit_nationalist
 			remove_ideology = ideology_cit_ethnonationalist
 			add_ideology = ideology_cit_segregationist
+		}
+		if = {
+			limit = {
+				bpm_country_is_bourgeois_republic = yes
+			}
+			every_interest_group = {
+				limit = {
+					bpm_ig_is_monarchist = yes
+				}
+				remove_ideology = ideology_gov_radical_monarchist
+				add_ideology = ideology_gov_liberal_republican
+			}
 		}
 	}
 }
@@ -220,17 +275,41 @@ bpm_setup_country_stubbornness = {
 	trigger_event = { id = bpm_reactionary_utils.2 } 
 }
 
-bpm_setup_country_init_igs = {
+# Do not use in bpm_setup_country effect, but directly in on_action due to scope
+bpm_copy_ig_initialized_status = {
 	if = {
 		limit = { has_variable = local_patcon_split_var }
-		bpm_initialize_patcons = yes
+		scope:target = {
+			set_variable = local_patcon_split_var
+			bpm_initialize_patcons = yes
+		}
 	}
 	if = {
 		limit = { has_variable = local_marlib_split_var }
-		bpm_initialize_marlibs = yes
+		scope:target = {
+			set_variable = local_marlib_split_var
+			bpm_initialize_marlibs = yes
+		}
 	}
 	if = {
 		limit = { has_variable = local_natlib_split_var }
-		bpm_initialize_natlibs = yes
+		scope:target = {
+			set_variable = local_natlib_split_var
+			bpm_initialize_natlibs = yes
+		}
+	}
+	if = {
+		limit = { has_variable = local_anarchists_split_var }
+		scope:target = {
+			set_variable = local_anarchists_split_var
+			bpm_initialize_anarchists = yes
+		}
+	}
+	if = {
+		limit = { has_variable = local_socialists_split_var }
+		scope:target = {
+			set_variable = local_socialists_split_var
+			bpm_initialize_reform_revolution = yes
+		}
 	}
 }

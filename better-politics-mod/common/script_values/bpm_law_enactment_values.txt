@@ -12,6 +12,14 @@ bpm_ig_law_support_total_value = {
 	if = {
 		limit = { owner = { enacting_any_law = yes } }
 		if = {
+			limit = { is_insurrectionary = yes }
+			add = {
+				value = -999
+				desc = "bpm_ig_law_support_from_insurrectionary"
+			}
+		}
+
+		if = {
 			limit = {
 				has_variable = bpm_ig_enacting_law_change_steps
 			}
@@ -49,6 +57,21 @@ bpm_ig_law_support_total_value = {
 				desc = "bpm_ig_law_support_from_party_whip"
 			}
 		}
+
+		if = {
+			limit = {
+				owner = {
+					has_variable = bpm_political_stability
+					var:bpm_political_stability > 50
+				}
+			}
+			add = {
+				value = owner.var:bpm_political_stability
+				# Weigh by clout difference with party whip
+				multiply = -0.1
+				desc = "bpm_ig_law_support_from_stability"
+			}
+		}
 	
 		if = {
 			limit = {
@@ -82,14 +105,6 @@ bpm_ig_law_support_total_value = {
 			add = {
 				value = ig_approval
 				desc = "bpm_ig_law_support_from_low_approval"
-			}
-		}
-
-		if = {
-			limit = { is_insurrectionary = yes }
-			add = {
-				value = -999
-				desc = "bpm_ig_law_support_from_insurrectionary"
 			}
 		}
 
@@ -241,29 +256,53 @@ bpm_law_enactment_sway_modifiers_value = {
 
 }
 
+bpm_law_enactment_non_marginal_votes = {
+	value = 0
+	if = {
+		limit = { is_player = yes }
+		every_interest_group = {
+			limit = {
+				is_marginal = no
+			}
+			add = {
+				value = ig_clout
+			}
+		}
+	}
+
+}
+
 bpm_law_enactment_yea_votes = {
 	value = 0
-	every_interest_group = {
-		limit = {
-			is_marginal = no
-			bpm_ig_law_support_total_value > 0
+	if = {
+		limit = { is_player = yes }
+		every_interest_group = {
+			limit = {
+				is_marginal = no
+				bpm_ig_law_support_total_value > 0
+			}
+			add = {
+				value = ig_clout
+			}
 		}
-		add = {
-			value = ig_clout
-		}
+		divide = bpm_law_enactment_non_marginal_votes
 	}
 }
 
 bpm_law_enactment_nay_votes = {
 	value = 0
-	every_interest_group = {
-		limit = {
-			is_marginal = no
-			bpm_ig_law_support_total_value <= 0
+	if = {
+		limit = { is_player = yes }
+		every_interest_group = {
+			limit = {
+				is_marginal = no
+				bpm_ig_law_support_total_value <= 0
+			}
+			add = {
+				value = ig_clout
+			}
 		}
-		add = {
-			value = ig_clout
-		}
+		divide = bpm_law_enactment_non_marginal_votes
 	}
 }
 

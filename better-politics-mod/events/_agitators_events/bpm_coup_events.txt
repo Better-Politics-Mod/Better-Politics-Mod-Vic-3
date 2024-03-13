@@ -437,6 +437,198 @@ coup.1 = {
 	}
 }
 
+# Alternate junta start event
+coup.1 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	dlc = dlc004
+
+	title = coup.1.t
+	desc = coup.1.d
+	flavor = coup.1.f
+
+	event_image = {
+		video = "votp_conspiring"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { months = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = voice_of_the_people_content
+		NOT = { has_journal_entry = je_coup }
+		is_interest_group_type = ig_armed_forces
+		is_powerful = yes
+		is_in_government = yes
+		ig_approval < -10
+	}	
+	immediate = {
+		remove_variable = coup_aftermath_event_fired
+		### State Power to Autocratic
+		if = {
+			limit = {
+				AND = {
+					NOR = {
+						has_law = law_type:law_autocracy
+						has_law = law_type:law_oligarchy
+					}
+					is_interest_group_type = ig_armed_forces
+					is_powerful = yes
+					is_in_government = yes
+					ig_approval < -10
+				}
+			}
+				set_variable = coup_ig_var
+				save_scope_as = coup_ig
+				bpm_remove_all_dop_ideologies = yes
+				add_ideology = ideology_dop_oligarch
+			set_variable = { name = coup_for_law value = 6 }
+			random_law = {
+				limit = {
+					type = law_type:law_autocracy
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+
+		### Anti-Communist Coup
+		else_if = {
+			limit = {
+				has_law = law_type:law_council_republic
+				any_interest_group = {
+					is_powerful = yes
+					is_in_government = yes
+					law_stance = {
+						law = law_type:law_council_republic
+						value < approve
+					}
+					ig_approval < -10
+				}
+			}
+			random_interest_group = {
+				limit = {
+					is_powerful = yes
+					is_in_government = yes
+					law_stance = {
+						law = law_type:law_council_republic
+						value < approve
+					}
+					ig_approval < -10
+				}
+				set_variable = coup_ig_var
+				save_scope_as = coup_ig
+			}
+			if = {
+				limit = {
+					scope:coup_ig = {
+						law_stance = {
+							law = law_type:law_presidential_republic
+							value >= approve
+						}
+					}
+				}
+				set_variable = { name = coup_for_law value = 2 }
+				random_law = {
+					limit = {
+						type = law_type:law_presidential_republic
+					}
+					save_scope_as = coup_desired_law
+				}
+			}
+			else_if = {
+				limit = {
+					scope:coup_ig = {
+						law_stance = {
+							law = law_type:law_theocracy
+							value >= approve
+						}
+					}
+				}
+				set_variable = { name = coup_for_law value = 5 }
+				random_law = {
+					limit = {
+						type = law_type:law_theocracy
+					}
+					save_scope_as = coup_desired_law
+				}
+			}
+			else_if = {
+				limit = {
+					scope:coup_ig = {
+						law_stance = {
+							law = law_type:law_monarchy
+							value >= approve
+						}
+					}
+				}
+				set_variable = { name = coup_for_law value = 1 }
+				random_law = {
+					limit = {
+						type = law_type:law_monarchy
+					}
+					save_scope_as = coup_desired_law
+				}
+			}
+			else = {
+				set_variable = { name = coup_for_law value = 4 }
+				random_law = {
+					limit = {
+						type = law_type:law_parliamentary_republic
+					}
+					save_scope_as = coup_desired_law
+				}
+			}
+		}
+	# Advance the coup
+	option = {
+		name = coup.1.a 
+		add_journal_entry = { type = je_coup }
+		custom_tooltip = {
+			text = coup_advance_25_tt
+			set_variable = {
+				name = coup_var
+				value = 25
+			}
+		}
+		scope:coup_ig = {
+			add_modifier = {
+				name = coup_supported
+				months = long_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+
+	# Resist the coup
+	option = {
+		name = coup.1.b
+		default_option = yes
+		add_journal_entry = { type = je_coup }
+		custom_tooltip = {
+			text = coup_advance_10_tt
+			set_variable = {
+				name = coup_var
+				value = 10
+			}
+		}
+		scope:coup_ig = {
+			add_modifier = {
+				name = coup_resisted
+				months = long_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+
+
 # Successful coup
 coup.2 = {
 	type = country_event

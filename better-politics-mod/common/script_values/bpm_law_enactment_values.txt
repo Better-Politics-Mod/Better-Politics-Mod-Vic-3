@@ -1,0 +1,346 @@
+﻿bpm_law_sway_maneuvers_value = {
+	value = 0
+	if = {
+		limit = { has_variable = bpm_law_sway_maneuvers }
+		add = var:bpm_law_sway_maneuvers
+	}
+}
+
+bpm_ig_law_support_total_value = {
+	value = 0
+
+	if = {
+		limit = { owner = { enacting_any_law = yes } }
+		if = {
+			limit = { is_insurrectionary = yes }
+			add = {
+				value = -999
+				desc = "bpm_ig_law_support_from_insurrectionary"
+			}
+		}
+
+		if = {
+			limit = {
+				owner = { has_political_movement = currently_enacting_law.type }
+				has_variable = bpm_ig_enacting_law_change_steps
+				var:bpm_ig_enacting_law_change_steps > 0
+			}
+			add = {
+				value = 20
+				desc = "bpm_ig_law_support_from_movement"
+			}
+		}
+
+		if = {
+			limit = {
+				has_variable = bpm_ig_enacting_law_change_steps
+			}
+			add = {
+				if = {
+					limit = { var:bpm_ig_enacting_law_change_steps = 0 }
+					add = 0
+				}
+				else = {
+					# 10*(steps^2) + 10
+					add = var:bpm_ig_enacting_law_change_steps
+					multiply = var:bpm_ig_enacting_law_change_steps # Squared
+					multiply = 10
+					add = 10
+					if = {
+						limit = { var:bpm_ig_enacting_law_change_steps < 0 }
+						multiply = -1
+					}
+				}
+				desc = "bpm_ig_law_support_enacting_law"
+			}
+			
+		}
+	
+		if = {
+			limit = {
+				has_variable = bpm_ig_party_whip_enacting_law_change_steps
+				ig_clout < var:bpm_most_powerful_ig.ig_clout
+			}
+			add = {
+				value = var:bpm_ig_party_whip_enacting_law_change_steps
+				# Weigh by clout difference with party whip
+				multiply = {
+					add = var:bpm_most_powerful_ig.ig_clout
+					subtract = this.ig_clout
+					divide = var:bpm_most_powerful_ig.ig_clout
+				}
+				multiply = 10
+				desc = "bpm_ig_law_support_from_party_whip"
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					has_variable = bpm_political_stability
+					var:bpm_political_stability > 50
+				}
+			}
+			add = {
+				value = owner.var:bpm_political_stability
+				# Weigh by clout difference with party whip
+				multiply = -0.1
+				desc = "bpm_ig_law_support_from_stability"
+			}
+		}
+	
+		if = {
+			limit = {
+				ig_approval < -10
+				NOR = { 
+					has_variable = bpm_blackmail_leader_sway_used
+					has_variable = bpm_redeem_favors_sway_used
+				}
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < strongly_approve
+				}
+			}
+			add = {
+				value = -100
+				desc = "bpm_ig_law_support_from_very_low_approval"
+			}
+		}
+		else_if = {
+			limit = {
+				ig_approval < 0
+				NOR = { 
+					has_variable = bpm_blackmail_leader_sway_used
+					has_variable = bpm_redeem_favors_sway_used
+				}
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < approve
+				}
+			}
+			add = {
+				value = ig_approval
+				desc = "bpm_ig_law_support_from_low_approval"
+			}
+		}
+
+		add = bpm_law_enactment_ruler_approval
+		
+		add = bpm_law_enactment_sway_modifiers_value
+	}
+
+	min = -999
+	max = 999
+}
+
+bpm_law_enactment_ruler_approval = {
+	value = 0
+	if = {
+		limit = {
+			owner.ruler ?= {
+				has_variable = bpm_ig_enacting_law_change_steps
+				interest_group = {
+					has_variable = bpm_ig_enacting_law_change_steps
+				}
+			}
+			ig_approval >= 0
+		}
+		add = {
+			if = {
+				# If no ruler stance, use interest group stance
+				limit = {
+					owner.ruler.var:bpm_ig_enacting_law_change_steps = 0
+				}
+				add = owner.ruler.interest_group.var:bpm_ig_enacting_law_change_steps
+			}
+			else = {
+				add = owner.ruler.var:bpm_ig_enacting_law_change_steps
+			}
+
+			if = {
+				limit = { owner = { has_law = law_type:law_autocracy } }
+				multiply = 10
+			}
+			else_if = {
+				limit = { owner = { has_law = law_type:law_presidential_republic } }
+				multiply = 2
+			}
+			else_if = {
+				limit = { owner = { has_law = law_type:law_monarchy } }
+				multiply = 2
+			}
+			else = {
+				multiply = 0
+			}
+			desc = "bpm_ig_law_support_from_ruler"
+		}
+	}	
+}
+
+bpm_law_enactment_sway_modifiers_value = {
+	value = 0
+	if = {
+		limit = { has_variable = bpm_assert_authority_sway_used }
+		add = {
+			value = bpm_law_sway_assert_authority_effect_value
+			desc = "bpm_law_sway_assert_authority_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_assert_authority_neg_sway_used }
+		add = {
+			value = bpm_law_sway_assert_authority_neg_effect_value
+			desc = "bpm_law_sway_assert_authority_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_redeem_favors_sway_used }
+		add = {
+			value = bpm_law_sway_redeem_favors_effect_value
+			desc = "bpm_law_sway_redeem_favors_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_blackmail_leader_sway_used }
+		add = {
+			value = bpm_law_sway_blackmail_leader_effect_value
+			desc = "bpm_law_sway_blackmail_leader_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_entrench_privileges_sway_used }
+		add = {
+			value = bpm_law_sway_entrench_privileges_effect_value
+			desc = "bpm_law_sway_entrench_privileges_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_public_debate_sway_used }
+		add = {
+			value = bpm_law_sway_public_debate_effect_value
+			desc = "bpm_law_sway_public_debate_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_decrease_suffrage_sway_used }
+		add = {
+			value = bpm_law_sway_decrease_institution_effect_value
+			desc = "bpm_law_sway_decrease_suffrage_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_decrease_police_sway_used }
+		add = {
+			value = bpm_law_sway_decrease_institution_effect_value
+			desc = "bpm_law_sway_decrease_police_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_decrease_home_affairs_sway_used }
+		add = {
+			value = bpm_law_sway_decrease_institution_effect_value
+			desc = "bpm_law_sway_decrease_home_affairs_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_decrease_centralization_sway_used }
+		add = {
+			value = bpm_law_sway_decrease_institution_effect_value
+			desc = "bpm_law_sway_decrease_centralization_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_tax_break_rich_sway_used }
+		add = {
+			value = bpm_law_sway_tax_break_rich_effect_value
+			desc = "bpm_law_sway_tax_break_rich_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_tax_break_middle_sway_used }
+		add = {
+			value = bpm_law_sway_tax_break_middle_effect_value
+			desc = "bpm_law_sway_tax_break_middle_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_tax_break_poor_sway_used }
+		add = {
+			value = bpm_law_sway_tax_break_poor_effect_value
+			desc = "bpm_law_sway_tax_break_poor_used"
+		}
+	}
+	if = {
+		limit = { has_variable = bpm_tax_break_peasant_sway_used }
+		add = {
+			value = bpm_law_sway_tax_break_peasant_effect_value
+			desc = "bpm_law_sway_tax_break_peasant_used"
+		}
+	}
+
+	if = {
+		limit = { has_variable = bpm_construction_racket_sway_used }
+		add = {
+			value = bpm_law_sway_construction_racket_effect_value
+			desc = "bpm_law_sway_construction_racket_used"
+		}
+	}
+
+}
+
+bpm_law_enactment_non_marginal_votes = {
+	value = 0
+	if = {
+		limit = { is_player = yes }
+		every_interest_group = {
+			limit = {
+				is_marginal = no
+			}
+			add = {
+				value = ig_clout
+			}
+		}
+	}
+
+}
+
+bpm_law_enactment_yea_votes = {
+	value = 0
+	if = {
+		limit = { is_player = yes }
+		every_interest_group = {
+			limit = {
+				is_marginal = no
+				bpm_ig_law_support_total_value > 0
+			}
+			add = {
+				value = ig_clout
+			}
+		}
+		divide = bpm_law_enactment_non_marginal_votes
+	}
+}
+
+bpm_law_enactment_nay_votes = {
+	value = 0
+	if = {
+		limit = { is_player = yes }
+		every_interest_group = {
+			limit = {
+				is_marginal = no
+				bpm_ig_law_support_total_value <= 0
+			}
+			add = {
+				value = ig_clout
+			}
+		}
+		divide = bpm_law_enactment_non_marginal_votes
+	}
+}
+
+bpm_law_vote_enactment_contribution_value = {
+	if = {
+		limit = { has_variable = bpm_law_vote_enactment_contribution_var }
+		value = var:bpm_law_vote_enactment_contribution_var
+	}
+}

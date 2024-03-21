@@ -1,38 +1,20 @@
 ﻿je_march_to_radicalism = {
-	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+	icon = "gfx/interface/icons/invention_icons/democracy.dds"
 
 	group = bpm_je_group_global
 
 	is_shown_when_inactive = {
-		has_global_variable = bpm_je_peoples_spring_progress
-		capital = {
-			OR = {
-				region = sr:region_england
-				region = sr:region_north_sea_coast
-				region = sr:region_iberia
-				region = sr:region_france
-				region = sr:region_occitania
-				region = sr:region_rhine
-				region = sr:region_italy
-				region = sr:region_balkans
-				region = sr:region_north_germany
-				region = sr:region_south_germany
-				region = sr:region_baltic
-				region = sr:region_danubia
-				region = sr:region_poland
-				#region = sr:region_russia
-				#region = sr:region_dnieper
-			}
-		}
+		has_global_variable = bpm_je_march_to_radicalism_progress
+		country_is_in_europe = yes
 	}
 
 	#change this for the compatch
 	possible = {
-		has_global_variable = bpm_je_peoples_spring_progress
+		has_global_variable = bpm_je_march_to_radicalism_progress
 	}
 
 	invalid = {
-		hidden_trigger = { has_global_variable = peoples_spring_complete_var } # The people have already sprung
+		hidden_trigger = { has_variable = march_to_radicalism_complete_local_var } # The people have already sprung
 	}
 
 	immediate = {
@@ -42,13 +24,13 @@
 	complete = {
 		custom_tooltip = {
 			text = "bpm_je_progress_complete"
-			global_var:bpm_je_peoples_spring_progress >= 100
+			global_var:bpm_je_march_to_radicalism_progress >= 100
 		}
 	}
 
 	progressbar = yes
 	current_value = {
-		value = global_var:bpm_je_peoples_spring_progress
+		value = global_var:bpm_je_march_to_radicalism_progress
 	}
 
 	goal_add_value = {
@@ -58,10 +40,18 @@
 
 	on_complete = {
 		set_global_variable = {
-			name = peoples_spring_complete_var
+			name = march_to_radicalism_complete_var
 		}
-		add_journal_entry = {
-			type = je_springtime_of_the_peoples
+		set_variable = {
+			name = march_to_radicalism_complete_local_var
+		}
+		if = {
+			limit = {
+				country_is_in_europe = yes
+			}
+			add_journal_entry = {
+				type = je_springtime_of_the_peoples
+			}
 		}
 	}
 
@@ -88,13 +78,34 @@ je_springtime_of_the_peoples = {
 		}
 		custom_tooltip = je_springtime_of_the_peoples_tt_3
 		hidden_effect = {
+			every_interest_group = {
+				remove_modifier = bpm_1848_stubborn_ig
+			}
+			ig:ig_liberals = {
+				leader = { set_ideology = ideology:ideology_center_leader }
+			}
+			every_interest_group = {
+				limit = {
+					bpm_ig_is_institutional = yes
+					leader = {
+						OR = {
+							has_ideology = ideology:ideology_radical
+							has_ideology = ideology:ideology_republican_leader
+						}
+					}
+				}
+				leader = { set_ideology = ideology:ideology_liberal_leader }
+			}
 			if = {
 				limit = {
 					any_interest_group = {
 						is_in_government = yes
-						leader = { has_ideology = ideology:ideology_radical }
+						OR = {
+							bpm_ig_is_radical_left = yes
+							leader = { bpm_leader_is_radical_leftist = yes }
+						}
 					}
-					NOT = { has_law = law_type:law_monarchy }
+					bpm_country_is_republic = yes
 					OR = {
 						has_law = law_type:law_wealth_voting
 						has_law = law_type:law_census_voting
@@ -110,7 +121,10 @@ je_springtime_of_the_peoples = {
 				limit = {
 					NOT = {
 						any_interest_group = {
-							leader = { has_ideology = ideology:ideology_radical }
+							OR = {
+								bpm_ig_is_radical_left = yes
+								leader = { bpm_leader_is_radical_leftist = yes }
+							}
 							is_marginal = no
 						}
 					}
@@ -123,6 +137,8 @@ je_springtime_of_the_peoples = {
 	on_monthly_pulse = {
 		events = {
 			1848.5
+			bpm_radlib_utils.5
+			bpm_radlib_utils.6
 		}
 		random_events = {
 			100 = 0
@@ -130,6 +146,7 @@ je_springtime_of_the_peoples = {
 			10 = peoples_springtime.4
 			10 = peoples_springtime.5
 		}
+		bpm_setup_country_stubbornness = yes
 	}
 
 	invalid = {
@@ -141,7 +158,6 @@ je_springtime_of_the_peoples = {
 
 	transferable = no
 	can_revolution_inherit = no
-	should_be_pinned_by_default = yes
 
-	timeout = 1825
+	timeout = 1600
 }

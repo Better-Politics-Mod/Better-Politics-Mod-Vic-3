@@ -1,0 +1,281 @@
+﻿
+
+bpm_calc_state_pol_share = {
+	set_variable = {
+		name = state_pol_share_returned
+		value = 0
+	}
+	set_variable = {
+		name = state_pol_share_precision
+		value = 50
+	}
+	while = {
+		limit = { 
+			var:state_pol_share_precision > 0.01
+		}
+		set_variable = {
+			name = temp
+			value = var:state_pol_share_returned
+		}
+		change_variable = {
+			name = temp
+			add = var:state_pol_share_precision
+		}
+		change_variable = {
+			name = temp
+			divide = 100
+		}
+		if = {
+			limit = {
+				ig_state_pol_strength_share = {
+					target = scope:target_ig
+					value > var:temp
+				}
+			 }
+			 change_variable = {
+				name = state_pol_share_returned
+				add = var:state_pol_share_precision
+			 }
+		}
+
+
+		change_variable = {
+			name = state_pol_share_precision
+			multiply = 0.5
+		 }
+
+	}
+	remove_variable = temp
+	remove_variable = state_pol_share_precision
+}
+
+bpm_state_largest_interest_group = {
+	#root = the state
+    #returns scope "largest_interest_group"
+	set_variable = {
+		name = current_maximum
+		value = 0
+	}
+	save_scope_as = home_state
+	owner = {
+		every_interest_group = {
+			save_scope_as = target_ig
+			scope:home_state = {
+				bpm_calc_state_pol_share = yes
+				
+				if = {
+					limit = { 
+						has_variable = current_maximum
+						var:state_pol_share_returned > var:current_maximum 
+					}
+					scope:target_ig = {
+						save_scope_as = largest_interest_group
+					}
+				}
+				change_variable = {
+					name = current_maximum
+					max = var:state_pol_share_returned
+				}
+				
+			}
+		}
+	}
+
+}
+
+calc_num_legislators = {
+	#root = interest_group
+	set_variable = {
+		name = bpm_ig_num_legislators
+		value = 0
+	}
+	while = {
+		limit = { 
+			has_variable_list = bpm_ig_legislator_list
+			variable_list_size = {
+				name = bpm_ig_legislator_list
+				value > var:ig_num_legislators
+			}
+		}
+		change_variable = {
+			name = bpm_ig_num_legislators
+			add = 1
+		}
+	}
+}
+
+calc_legislators = {
+	#root = country
+	set_variable = {
+		name = total_legislators
+		value = 0
+	}
+	every_interest_group = {
+		calc_num_legislators = yes
+		owner = {
+			change_variable = {
+				name = total_legislators
+				add = prev.var:bpm_ig_num_legislators
+			}
+		}
+	}
+	every_interest_group = {
+		set_variable = {
+			name = proportion_legislators
+			value = var:bpm_ig_num_legislators
+		}
+    
+        if = {
+            limit = {
+                owner = {
+                    has_variable = total_legislators
+                }
+                owner.var:total_legislators > 0
+            }
+            change_variable = {
+                name = proportion_legislators
+                divide = owner.var:total_legislators
+            }
+        }
+		
+	}
+}
+
+#create_list = {
+#	#character or ig
+#	#has saved scope input_law
+#	if = {
+#		limit = { 
+#			law_approval = $VALUE$
+#		}
+#		add_to_variable_list = {
+#			name = laws_$VALUE$_list
+#			target = scope:input_law
+#		}
+#	}
+#
+
+#update_approval_lists = {
+	#this = character
+	#save_scope_as = character_or_ig
+	#
+	#clear_variable_list = laws_2_list
+	#clear_variable_list = laws_1_list
+	#clear_variable_list = laws_0_list
+	#clear_variable_list = laws_-1_list
+	#clear_variable_list = laws_-2_list
+#
+	#owner = {
+	#	every_law = {
+	#		save_scope_as = input_law
+	#		scope:character_or_ig = {
+	#			create_list ={
+	#				VALUE = "-2"
+	#			}
+	#			create_list ={
+	#				VALUE = "-1"
+	#			}
+	#			create_list ={
+	#				VALUE = "0"
+	#			}
+	#			create_list ={
+	#				VALUE = "1"
+	#			}
+	#			create_list ={
+	#				VALUE = "2"
+	#			}
+	#		}
+	#	}
+	#}
+	#clear_saved_scope = character_or_ig
+#}
+
+
+bpm_state_create_new_legislator_character = {
+	#this = state
+	#should already have saved scope elected_interest_group and home_state
+	owner = {
+		create_character = {
+			age = {30 70}
+			interest_group = scope:elected_interest_group
+			save_scope_as = state_legislator
+		}
+		add_to_variable_list = {
+			name = country_legislators
+			target = scope:state_legislator
+		}
+	}
+	scope:state_legislator = {
+		set_variable = {
+			name = representing_state
+			value = scope:home_state
+		}
+		set_variable = {
+			name = term_number
+			value = 1
+		}
+		#update_approval_lists = yes
+		place_character_in_void = 1200
+	}
+	set_variable = {
+		name = legislator_of_state
+		value = scope:state_legislator
+	}
+	scope:largest_interest_group = {
+		add_to_variable_list = {
+			name = ig_legislator_list
+			target = scope:state_legislator
+		}
+	}
+}
+
+bpm_state_do_election = {
+	save_scope_as = home_state
+	
+	#deciding which ig wins the election
+	bpm_state_largest_interest_group = yes
+	scope:largest_interest_group = {
+		save_scope_as = elected_interest_group
+	}
+
+	if = {
+		limit = {
+			has_variable = legislator_of_state
+			var:legislator_of_state ?= {
+				#seeking_reelection = yes
+				interest_group = scope:largest_interest_group
+			}
+		}
+		var:legislator_of_state = {
+			change_variable = {
+				name = term_number
+				add = 1
+			}
+		}
+	}
+	
+	else = {
+		#there either was not a previous legislator, or the legislator was not reelected
+		if = {
+			#if there was a previous legislator who lost reelection, remove him from his IG list of legislator and the country's list of legislators
+			limit = { 
+				has_variable = legislator_of_state
+				exists = var:legislator_of_state
+			}
+			scope:state_legislator.interest_group = {
+				remove_list_variable = {
+					name = ig_legislator_list
+					target = scope:state_legislator
+				}
+			}
+			owner = {
+				remove_list_variable = {
+					name = country_legislators
+					target = scope:state_legislator
+				}
+			}
+		}
+		#in either case create a new legislator for the state
+		bpm_state_create_new_legislator_character = yes
+	}
+}

@@ -11,6 +11,7 @@
 			}
 			save_scope_as = coup_ig
 			remove_variable = coup_ig_var
+			leader = { save_scope_as = coup_leader }
 		}
 		if = {
 			limit = {
@@ -78,6 +79,29 @@
 				save_scope_as = coup_desired_law
 			}
 		}
+		else_if = {
+			limit = {
+				var:coup_for_law = 7
+			}
+			random_law = {
+				limit = {
+					type = law_type:law_oligarchy
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+		else_if = {
+			limit = {
+				var:coup_for_law = 8
+			}
+			random_law = {
+				limit = {
+					type = law_type:law_military_junta
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+
 		remove_variable = coup_for_law
 	}
 
@@ -138,7 +162,13 @@
 
 	complete = {
 		scope:coup_ig = {
-			is_powerful = yes
+			if = {
+				limit = { is_interest_group_type = ig_armed_forces }
+				is_marginal = no
+			}
+			else = {
+				is_powerful = yes
+			}
 			ig_approval < -10
 		}
 		scope:journal_entry = {
@@ -213,8 +243,19 @@
 				root.var:coup_var <= -10
 			}
 			# fail if the IG is kicked out of government
-			scope:coup_ig = {
-				is_in_government = no
+			trigger_if = {
+				limit = { scope:coup_ig = { bpm_ig_is_state_institutional = no } }
+				scope:coup_ig = {
+					is_in_government = no
+				}
+			}
+			# fail if the coup leader is no longer IG leader
+			custom_tooltip = {
+				text = bpm_coup_leader_changed
+				OR = {
+					NOT = { exists = scope:coup_leader }
+					NOT = { scope:coup_leader = scope:coup_ig.leader }
+				}
 			}
 			# fail if IG changes law stances
 			scope:coup_ig = {
@@ -236,6 +277,15 @@
 					NOT = {
 						has_variable = resigned_from_gov_coup
 					}
+				}
+			}
+			trigger_event = { id = coup.3 popup = yes }
+		}
+		# IG is angry that the coup leader was removed
+		else_if = {
+			limit = {
+				OR = {
+					NOT = { exists = scope:coup_leader }
 				}
 			}
 			trigger_event = { id = coup.3 popup = yes }

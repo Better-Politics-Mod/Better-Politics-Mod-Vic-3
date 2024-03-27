@@ -1,0 +1,913 @@
+﻿namespace = peoples_springtime
+
+# The Spark
+# Country has a revolution including Radicals
+peoples_springtime.1 = {
+	type = country_event
+	event_image = {
+		video = "europenorthamerica_springtime_of_nations"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.1.t
+	desc = peoples_springtime.1.d
+	flavor = peoples_springtime.1.f
+
+	trigger = {
+		NOT = { has_global_variable = peoples_springtime_happening }
+		NOT = { has_global_variable = peoples_springtime_happened }
+		bpm_country_is_in_europe = yes
+		any_interest_group = {
+			is_marginal = no
+			OR = {
+				ig_approval < -10 # ANGERY
+				is_insurrectionary = yes
+			}
+			OR = {
+				bpm_ig_is_radical_left = yes
+				leader = { bpm_leader_is_radical_leftist = yes }
+				any_scope_character = {
+					has_role = agitator
+					bpm_leader_is_radical_leftist = yes
+				}
+			}
+		}
+	}
+
+	immediate = {
+		set_global_variable = {
+			name = peoples_springtime_happening
+		}
+		set_global_variable = {
+			name = peoples_springtime_recent
+			months = normal_modifier_time
+		}
+		random_interest_group = {
+			limit = {
+				is_marginal = no
+				OR = {
+					is_insurrectionary = yes
+					ig_approval < -10 # ANGERY
+				}
+				OR = {
+					bpm_ig_is_radical_left = yes
+					leader = { bpm_leader_is_radical_leftist = yes }
+					any_scope_character = {
+						has_role = agitator
+						bpm_leader_is_radical_leftist = yes
+					}
+				}
+			}
+			leader = { save_scope_as = radical_ig_leader }
+		}
+	}
+
+	duration = 3
+
+	option = {
+		name = peoples_springtime.1.a
+		scope:radical_ig_leader = {
+			add_modifier = {
+				name = revolutionary_hero
+				months = normal_modifier_time
+			}
+		}
+	}
+
+    option = {
+		name = peoples_springtime.1.b
+        default_option = yes
+        scope:radical_ig_leader = {
+        	add_modifier = {
+        		name = treasonous_traitor
+        		months = normal_modifier_time
+        	}
+        }
+	}
+}
+
+# The Spread
+# Neighboring country has the Journal Entry
+peoples_springtime.2 = {
+	type = country_event
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.2.t
+	desc = peoples_springtime.2.d
+	flavor = peoples_springtime.2.f
+
+	trigger = {
+		# Triggered by peoples_springtime.4
+	}
+
+	duration = 3
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				is_marginal = no
+				bpm_ig_can_have_radical_leader_1848 = yes
+			}
+			save_scope_as = radical_ig
+		}
+	}
+
+	option = {
+		name = peoples_springtime.2.a
+		scope:radical_ig = {
+			leader = { 
+				set_ideology = ideology:ideology_radical 
+				add_modifier = {
+					name = revolutionary_hero
+					months = normal_modifier_time
+				}
+			}
+		}
+	}
+
+    option = {
+		name = peoples_springtime.2.b
+        default_option = yes
+        scope:radical_ig = {
+        	leader = { 
+				set_ideology = ideology:ideology_radical
+				add_modifier = {
+					name = treasonous_traitor
+					months = normal_modifier_time
+				}
+		 	}
+        }
+	}
+}
+
+# More Radical Leaders
+# Once you have the Journal Entry, more IGs want in on the action
+peoples_springtime.3 = {
+	type = country_event
+	event_image = {
+		video = "votp_agitator_speaking"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.3.t
+	desc = peoples_springtime.3.d
+	flavor = peoples_springtime.3.f
+
+	trigger = {
+		has_journal_entry = je_springtime_of_the_peoples
+		# has_technology_researched = egalitarianism
+
+		any_interest_group = {
+			is_marginal = no
+			bpm_ig_can_have_radical_leader_1848 = yes
+		}
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				is_marginal = no
+				bpm_ig_can_have_radical_leader_1848 = yes
+			}
+			save_scope_as = radical_ig
+		}
+	}
+
+	duration = 3
+
+	option = {
+		name = peoples_springtime.3.a
+		ai_chance = {
+			base = 25
+		}
+		custom_tooltip = {
+			text = peoples_springtime.3.a.tt
+			create_character = {
+				ig_leader = yes
+				ideology = ideology_radical
+				interest_group = scope:radical_ig
+			}
+		}
+	}
+
+	option = {
+		name = peoples_springtime.3.b
+		trigger = {
+			empty_agitator_slots >= 1
+		}
+		ai_chance = {
+			base = 75
+			modifier = {
+				trigger = {
+					scope:radical_ig = {
+						ig_approval < -5
+					}
+				}
+				add = -50
+			}
+		}
+		scope:radical_ig = {
+			add_modifier = {
+				name = dissident_radical_faction
+				months = short_modifier_time
+			}
+		}
+		create_character = {
+			is_agitator = yes
+			ideology = ideology_radical
+			interest_group = scope:radical_ig
+		}
+		default_option = yes
+	}
+}
+
+# Propagation
+# Deliberately spread Radicalism to neighbor
+peoples_springtime.4 = {
+	type = country_event
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.4.t
+	desc = peoples_springtime.4.d
+	flavor = peoples_springtime.4.f
+
+	trigger = {
+		has_journal_entry = je_springtime_of_the_peoples
+		any_neighbouring_state = {
+			owner = {
+				any_interest_group = {
+					is_powerful = yes
+					bpm_ig_can_have_radical_leader_1848 = yes
+				}
+			}
+		}
+	}
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	option = {
+		name = peoples_springtime.4.a
+		random_neighbouring_state = {
+			limit = {
+				owner = {
+					any_interest_group = {
+						is_powerful = yes
+						bpm_ig_can_have_radical_leader_1848 = yes
+					}
+				}
+			}
+			owner = {
+				trigger_event = {
+					id = peoples_springtime.2
+					days = 0
+				}
+			}
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					bpm_ig_is_radical_left = yes
+					leader = { bpm_leader_is_radical_leftist = yes }
+				}
+			}
+			add_modifier = {
+				name = spread_the_revolution
+				months = short_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = peoples_springtime.4.b
+		every_interest_group = {
+			limit = {
+				OR = {
+					bpm_ig_is_radical_left = yes
+					leader = { bpm_leader_is_radical_leftist = yes }
+				}
+			}
+			add_modifier = {
+				name = constrained_the_revolution
+				months = short_modifier_time
+			}
+		}
+		default_option = yes
+	}
+}
+
+# Low-key Revolutionary activity causes Turmoil
+peoples_springtime.5 = {
+	type = country_event
+	event_image = {
+		video = "votp_agitators_sneaking"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.5.t
+	desc = peoples_springtime.5.d
+	flavor = peoples_springtime.5.f
+
+	trigger = {
+		has_journal_entry = je_springtime_of_the_peoples
+		any_interest_group = {
+			is_marginal = no
+			OR = {
+				bpm_ig_is_radical_left = yes
+				leader = { bpm_leader_is_radical_leftist = yes }
+			}
+			ig_approval <= unhappy
+		}
+	}
+
+	duration = 3
+
+	option = {
+		name = peoples_springtime.5.a
+		trigger = {
+			any_scope_state = {
+				is_incorporated = yes
+				is_capital = no
+			}
+		}
+		random_scope_state = {
+			limit = {
+				is_incorporated = yes
+				is_capital = no
+			}
+			add_radicals_in_state = {
+				value = very_large_radicals
+			}
+		}
+	}
+
+	option = {
+		name = peoples_springtime.5.b
+		if = {
+			limit = {
+				any_scope_state = {
+					is_incorporated = yes
+					is_capital = no
+				}
+			}
+			capital = {
+				add_radicals_in_state = {
+					value = very_large_radicals
+				}
+			}
+		}
+		else = {
+			capital = {
+				add_radicals_in_state = {
+					value = medium_radicals
+				}
+			}
+		}
+		default_option = yes
+	}
+}
+
+# End of the Springtime of the Peoples
+peoples_springtime.6 = {
+	type = country_event
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.6.t
+	desc = peoples_springtime.6.d
+	flavor = peoples_springtime.6.f
+
+	trigger = {
+		OR = {
+			has_variable = completed_peoples_stringtime
+			has_journal_entry = je_springtime_of_the_peoples
+		}
+		has_global_variable = peoples_springtime_happening
+		NOT = { has_global_variable = peoples_springtime_recent }
+		NOT = {
+			any_country = {
+				has_variable = completed_peoples_stringtime_recent
+			}
+		}
+
+	}
+
+	duration = 3
+
+	option = {
+		name = peoples_springtime.6.a
+		custom_tooltip = peoples_springtime.6.a.tt
+		hidden_effect = {
+			if = {
+				limit = {
+					NOT = { has_global_variable = peoples_springtime_happened }
+				}
+				every_country = {
+					limit = {
+						OR = {
+							has_journal_entry = je_springtime_of_the_peoples
+							has_variable = completed_peoples_stringtime
+						}
+						NOT = { this = root }
+					}
+					trigger_event = {
+						id = peoples_springtime.6
+						days = 1
+					}
+				}
+			}
+			set_global_variable = {
+				name = peoples_springtime_happened
+				value = yes
+			}
+		}
+		if = {
+			limit = {
+				bpm_country_is_republic = no
+				bpm_country_laws_ok_voting = yes
+			}
+			ig:ig_radicals = {
+				bpm_remove_all_gov_ideologies = yes
+				bpm_reorder_ideologies = yes
+			}
+		}
+		default_option = yes
+	}
+}
+
+# The Revolution Victorious
+peoples_springtime.7 = {
+	type = country_event
+
+	event_image = {
+		video = "votp_barricade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.7.t
+	desc = peoples_springtime.7.d
+	flavor = peoples_springtime.7.f
+
+	duration = 3
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				is_in_government = yes
+				OR = {
+					bpm_ig_is_radical_left = yes
+					leader = { bpm_leader_is_radical_leftist = yes }
+				}
+			}
+			save_scope_as = radical_ig
+		}
+	}
+
+	option = {
+		name = peoples_springtime.7.a
+		add_modifier = {
+			name = post_revolutionary_fervor
+			months = normal_modifier_time
+		}
+		ig:ig_liberals = {
+			bpm_remove_all_dop_ideologies = yes
+			bpm_remove_all_gov_ideologies = yes
+			add_ideology = ideology_dop_radical_democrat
+			add_ideology = ideology_gov_liberal_republican
+			bpm_reorder_ideologies = yes
+			if = {
+				limit = { owner = c:FRA }
+				set_interest_group_name = ig_liberals
+			}
+		}
+		ig:ig_conservatives = {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_moderate_democrat
+			bpm_reorder_ideologies = yes
+			if = {
+				limit = { owner = c:FRA }
+				set_interest_group_name = ig_orleanists
+			}
+		}
+	}
+
+	option = {
+		name = peoples_springtime.7.b
+		default_option = yes
+		add_loyalists = {
+			value = 0.1
+		}
+		ig:ig_liberals = {
+			bpm_remove_all_dop_ideologies = yes
+			bpm_remove_all_gov_ideologies = yes
+			add_ideology = ideology_dop_radical_democrat
+			add_ideology = ideology_gov_liberal_republican
+			bpm_reorder_ideologies = yes
+			if = {
+				limit = { owner = c:FRA }
+				set_interest_group_name = ig_liberals
+			}
+		}
+		ig:ig_conservatives = {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_moderate_democrat
+			bpm_reorder_ideologies = yes
+			if = {
+				limit = { owner = c:FRA }
+				set_interest_group_name = ig_orleanists
+			}
+		}
+	}
+}
+
+# The Revolution Vanquished
+peoples_springtime.8 = {
+	type = country_event
+
+	event_image = {
+		video = "middleeast_police_breaking_door"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.8.t
+	desc = peoples_springtime.8.d
+	flavor = peoples_springtime.8.f
+
+	duration = 3
+
+	option = {
+		name = peoples_springtime.8.a
+		add_modifier = {
+			name = counter_revolutionary_fervor
+			months = normal_modifier_time
+		}
+	}
+
+	option = {
+		name = peoples_springtime.8.b
+		default_option = yes
+		add_loyalists = {
+			value = 0.1
+		}
+	}
+}
+
+# Austrosplosion chain starts
+peoples_springtime.9 = {
+	type = country_event
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.9.t
+	desc = peoples_springtime.9.d
+
+	duration = 3
+
+	option = {
+		name = peoples_springtime.9.a #lmao no
+		default_option = yes
+
+		trigger_event = { 
+		id = peoples_springtime.10
+		days = 30
+		popup = yes 
+		}
+	}
+
+	option = {
+		name = peoples_springtime.9.b #franticly negotiate
+
+		custom_tooltip = {
+			text = bpm_hungary_union
+		}
+		
+		s:STATE_TRANSDANUBIA = {
+				remove_homeland = cu:south_german
+		}
+		c:AUS = {
+			activate_law = law_type:law_federated
+		}
+		
+		hidden_effect = {
+			create_country = {
+					tag = HUN
+					origin = c:AUS
+					state = s:STATE_CENTRAL_HUNGARY.region_state:AUS
+			}
+			s:STATE_TRANSDANUBIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			s:STATE_BEKES.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			s:STATE_BANAT.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			s:STATE_DELVIDEK.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			s:STATE_WEST_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			s:STATE_EAST_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			s:STATE_NORTHERN_TRANSYLVANIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			s:STATE_SOUTHERN_TRANSYLVANIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			s:STATE_SLAVONIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			s:STATE_CROATIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		}
+		create_diplomatic_pact = {
+			country = c:HUN
+			type = personal_union
+		}
+	}
+}
+
+# hun revolution
+peoples_springtime.10 = {
+	type = country_event
+
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.10.t
+	desc = peoples_springtime.10.d
+
+	duration = 2
+
+	immediate = {
+		set_variable = bpm_hungarian_revolution_started
+		s:STATE_TRANSDANUBIA = {
+				remove_homeland = cu:south_german
+		}
+
+		create_country = {
+				tag = HUN
+				origin = c:AUS
+				state = s:STATE_CENTRAL_HUNGARY.region_state:AUS
+		}
+
+		s:STATE_TRANSDANUBIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		s:STATE_BEKES.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		s:STATE_BANAT.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		s:STATE_DELVIDEK.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		s:STATE_WEST_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		s:STATE_EAST_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		s:STATE_NORTHERN_TRANSYLVANIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		s:STATE_SOUTHERN_TRANSYLVANIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+
+		c:HUN = {
+			activate_law = law_type:law_devolved
+			# activate_law = law_type:law_parliamentary_republic # Hungary was a kingdom, but perhaps it should get an event to become a presidential republic (feat Kossuth)
+			activate_law = law_type:law_elected_bureaucrats
+			activate_law = law_type:law_census_voting
+			activate_law = law_type:law_right_of_assembly
+			activate_law = law_type:law_total_separation
+			activate_law = law_type:law_cultural_exclusion
+			activate_law = law_type:law_national_guard
+			activate_law = law_type:law_per_capita_based_taxation
+			activate_law = law_type:law_professional_army
+			activate_law = law_type:law_professional_officers
+		}
+	}
+
+	option = {
+		name = peoples_springtime.10.a
+		default_option = yes
+
+		create_diplomatic_play = {
+			name = hungarian_revolution
+			type = dp_annex_war
+			escalation = 80
+			target_state = s:STATE_TRANSDANUBIA.region_state:HUN
+		}
+		random_diplomatic_play = {
+				limit = {
+					any_scope_play_involved = {
+						c:HUN ?= this
+					}
+				}
+				if = {
+					limit = {
+						exists = s:STATE_SLAVONIA.region_state:AUS 
+					}
+					add_war_goal = {
+						holder = c:HUN
+						type = conquer_state
+						target_state = s:STATE_SLAVONIA.region_state:AUS
+					}
+				}
+				if = {
+					limit = {
+						exists = s:STATE_CROATIA.region_state:AUS 
+					}
+					add_war_goal = {
+						holder = c:HUN
+						type = conquer_state
+						target_state = s:STATE_CROATIA.region_state:AUS
+					}
+				}
+		}
+		hidden_effect = {
+			change_infamy = -250
+			trigger_event = { 
+				id = peoples_springtime.11
+				days = 90
+				popup = yes 
+			}
+		}
+	}
+}
+
+# milan revolution
+peoples_springtime.11 = {
+	type = country_event
+
+	event_image = {
+		video = "europenorthamerica_springtime_of_nations"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.11.t
+	desc = peoples_springtime.11.d
+	flavor = peoples_springtime.11.f
+
+	duration = 2
+
+	immediate = {
+		create_country = {
+			tag = LOM
+			origin = c:AUS
+			state = s:STATE_LOMBARDY.region_state:AUS
+		}
+		c:LOM = {
+			activate_law = law_type:law_unitary
+			activate_law = law_type:law_parliamentary_republic
+			activate_law = law_type:law_elected_bureaucrats
+			activate_law = law_type:law_universal_suffrage
+		}
+	}
+
+	option = {
+		name = peoples_springtime.11.a
+		default_option = yes
+
+		create_diplomatic_play = {
+				name = milan_revolution
+				type = dp_annex_war
+				escalation = 80
+				target_state = s:STATE_LOMBARDY.region_state:LOM
+		}
+		hidden_effect = {
+			change_infamy = -250
+			trigger_event = { 
+				id = peoples_springtime.12
+				days = 14
+				popup = yes 
+			}
+		}
+	}
+}
+
+# san marco revolution
+peoples_springtime.12 = {
+	type = country_event
+
+	event_image = {
+		video = "europenorthamerica_springtime_of_nations"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.12.t
+	desc = peoples_springtime.12.d
+	flavor = peoples_springtime.12.f
+
+	duration = 2
+
+	immediate = {
+		create_country = {
+				tag = RSM
+				origin = c:AUS
+				state = s:STATE_VENETIA.region_state:AUS
+		}
+		c:RSM = {
+			activate_law = law_type:law_unitary
+			activate_law = law_type:law_parliamentary_republic
+			activate_law = law_type:law_elected_bureaucrats
+			activate_law = law_type:law_universal_suffrage
+		}
+	}
+
+	option = {
+		name = peoples_springtime.12.a
+		default_option = yes
+
+		create_diplomatic_play = {
+				name = san_marco_revolution
+				type = dp_annex_war
+				escalation = 80
+				target_state = s:STATE_VENETIA.region_state:RSM
+		}
+		hidden_effect = {
+			change_infamy = -250
+		}
+	}
+}
+
+peoples_springtime.13 = {
+	type = country_event
+
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	title = peoples_springtime.13.t
+	desc = peoples_springtime.13.d
+	flavor = peoples_springtime.13.f
+
+	duration = 1
+
+	trigger = {
+		has_variable = bpm_hungarian_revolution_started
+		NOT = { has_variable = bpm_austria_empire_dissolved }
+		NOT = { owns_entire_state_region = STATE_CENTRAL_HUNGARY }
+		owner = {
+			is_at_war = no
+			is_diplomatic_play_initiator = no
+		}
+	}
+
+	immediate = {
+		create_country = {
+			tag = GAL
+			origin = c:AUS
+			state = s:STATE_EAST_GALICIA.region_state:AUS
+		}
+		s:STATE_WEST_GALICIA.region_state:AUS = { set_state_owner = c:GAL set_state_type = incorporated}
+		s:STATE_MOLDAVIA.region_state:AUS = { set_state_owner = c:GAL set_state_type = incorporated}
+		set_variable = {
+				name = bpm_austria_empire_dissolved
+		}
+		remove_variable = bpm_hungarian_revolution_started
+	}
+
+	option = {
+		name = peoples_springtime.13.a #release galicia
+
+		custom_tooltip = {
+			text = bpm_gl_union
+		}
+		
+		
+		hidden_effect = {
+			create_diplomatic_pact = {
+				country = c:GAL
+				type = personal_union
+			}
+		}
+	}
+
+}

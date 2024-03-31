@@ -140,71 +140,87 @@ ig_attraction_to_interests_from_stability = {
 	}
 }
 
-ig_attraction_agrarian_socialism = {
+ig_attraction_to_ruler_ideology_from_stability = {
+	desc = "BPM_RULER_IDEOLOGY_FROM_STABILITY"
 	add = {
-		desc = "BPM_POP_AGRARIAN_SOCIALISM_LOCAL"
-		value = 0
 		if = {
-			limit = { 
-				owner = { has_variable = bpm_agrarian_socialism_power }
-				owner = { global_var:bpm_agrarian_socialism_power_global < var:bpm_agrarian_socialism_power }
-				OR = {
-					pop_employment_building_group = bg_agriculture
-					pop_employment_building_group = bg_ranching
-					pop_employment_building_group = bg_plantations				
+			limit = {
+				owner = {
+					has_variable = bpm_political_stability
+					var:bpm_political_stability > 50
+					bpm_country_laws_no_voting = yes
+					ruler.interest_group = scope:interest_group
 				}
-				strata <= middle
 			}
-			add = 2
-			multiply = owner.var:bpm_agrarian_socialism_power
-
-			if = {
-				limit = {
-					scope:interest_group = { is_interest_group_type = ig_agrarian_populists }
+			add = owner.var:bpm_political_stability
+			divide = 100
+			if = { # Adding curve to attraction past 0.66
+				limit = {  owner.var:bpm_political_stability > 66 }
+				add = { # Formula after 66%: x + ((x-0.66)*3+1), essentially doubling the attraction by the end
+					add =  owner.var:bpm_political_stability
+					divide = 100
+					subtract = 0.66
+					multiply = 3
+					add = 1.0
 				}
-				multiply = 4
 			}
+		} else = {
+			add = 0.5
+		}
+		multiply = 2
+	}
+	min = 1
+}
 
-			if = {
-				limit = {
-					strata = middle
+ig_attraction_agrarian_socialism = {
+	value = 0
+	if = {
+		limit = {
+			has_global_variable = bpm_agrarian_socialism_power_global
+			OR = {
+				pop_employment_building_group = bg_agriculture
+				pop_employment_building_group = bg_ranching
+				pop_employment_building_group = bg_plantations				
+			}
+			strata <= middle
+		}
+		if = {
+			limit = {
+				owner = {
+					has_variable = bpm_agrarian_socialism_power
+					global_var:bpm_agrarian_socialism_power_global < var:bpm_agrarian_socialism_power
 				}
-				multiply = 0.25
+			}
+			add = {
+				desc = "BPM_POP_AGRARIAN_SOCIALISM_LOCAL"
+				value = 2
+				multiply = owner.var:bpm_agrarian_socialism_power
+	
+				if = {
+					limit = { scope:interest_group = { is_interest_group_type = ig_agrarian_populists } }
+					multiply = 4
+				}
+				if = {
+					limit = { strata = middle }
+					multiply = 0.25
+				}
 			}
 		}
-	}
-	add = {
-		desc = "BPM_POP_AGRARIAN_SOCIALISM_GLOBAL"
-		value = 0
-		if = {
-			limit = { 
-				has_global_variable = bpm_agrarian_socialism_power_global
-				OR = {
-					owner = { NOT = { has_variable = bpm_agrarian_socialism_power } }
-					owner = { global_var:bpm_agrarian_socialism_power_global >= var:bpm_agrarian_socialism_power }
-				}
-				OR = {
-					pop_employment_building_group = bg_agriculture
-					pop_employment_building_group = bg_ranching
-					pop_employment_building_group = bg_plantations				
-				}
-				strata <= middle
-			}
-			add = 2
-			multiply = global_var:bpm_agrarian_socialism_power_global
 
-			if = {
-				limit = {
-					scope:interest_group = { is_interest_group_type = ig_agrarian_populists }
+		else = {
+			add = {
+				desc = "BPM_POP_AGRARIAN_SOCIALISM_GLOBAL"
+				value = 2
+				multiply = global_var:bpm_agrarian_socialism_power_global
+	
+				if = {
+					limit = { scope:interest_group = { is_interest_group_type = ig_agrarian_populists } }
+					multiply = 4
 				}
-				multiply = 4
-			}
-
-			if = {
-				limit = {
-					strata = middle
+				if = {
+					limit = { strata = middle }
+					multiply = 0.25
 				}
-				multiply = 0.25
 			}
 		}
 	}
@@ -486,4 +502,20 @@ bpm_ig_agitator_popularity = {
 	add = 1
 	max = 2.0
 	min = 1.0
+}
+
+bpm_ig_ruler_popularity = {
+	desc = "BPM_POP_FROM_RULER_POPULARITY"
+	if = {
+		limit = { owner = { ruler.interest_group = scope:interest_group } }
+		owner.ruler = {
+			value = popularity
+			multiply = 0.005
+			add = 1
+			max = 1.5
+		}
+	}
+	else = {
+		value = 1.0
+	}
 }

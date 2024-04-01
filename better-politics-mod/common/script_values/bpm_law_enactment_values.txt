@@ -5,6 +5,56 @@
 		add = var:bpm_law_sway_maneuvers
 	}
 }
+bpm_ig_law_support_from_insurrectionary = {
+	value = -999
+	desc = "bpm_ig_law_support_from_insurrectionary"
+}
+bpm_ig_law_support_from_movement = {
+	value = 20
+	desc = "bpm_ig_law_support_from_movement"
+}
+bpm_ig_law_support_enacting_law = {
+	#this should take both character(legislator) or interest group scopes, 
+	#so long as they have bpm_ig_enacting_law_change_steps
+	value = 0
+	if = {
+		limit = { var:bpm_ig_enacting_law_change_steps = 0 }
+		add = 0
+	}
+	else = {
+		# 10*(steps^2) + 10
+		add = var:bpm_ig_enacting_law_change_steps
+		multiply = var:bpm_ig_enacting_law_change_steps # Squared
+		multiply = 10
+		add = 10
+		if = {
+			limit = { var:bpm_ig_enacting_law_change_steps < 0 }
+			multiply = -1
+		}
+	}
+	desc = "bpm_ig_law_support_enacting_law"
+}
+bpm_ig_law_support_from_party_whip = {
+	value = var:bpm_ig_party_whip_enacting_law_change_steps
+	# Weigh by clout difference with party whip
+	multiply = {
+		add = var:bpm_most_powerful_ig.ig_clout
+		subtract = this.ig_clout
+		divide = var:bpm_most_powerful_ig.ig_clout
+	}
+	multiply = 10
+	desc = "bpm_ig_law_support_from_party_whip"
+}
+bpm_ig_law_support_from_stability = {
+	value = owner.var:bpm_political_stability
+	# Weigh by clout difference with party whip
+	multiply = -0.1
+	desc = "bpm_ig_law_support_from_stability"
+}
+bpm_ig_law_support_from_very_low_approval = {
+	value = -100
+	desc = bpm_ig_law_support_from_very_low_approval
+}
 
 bpm_ig_law_support_total_value = {
 	value = 0
@@ -125,12 +175,53 @@ bpm_ig_law_support_total_value = {
 		}
 
 		add = bpm_law_enactment_ruler_effect_on_ig
-		
 		add = bpm_law_enactment_sway_modifiers_value
 	}
 
 	min = -999
 	max = 999
+}
+
+bpm_legislator_law_support_total_value = {
+	if = {
+		limit = { owner = { enacting_any_law = yes } }
+		
+		#if = {
+		#	limit = { interest_group = {is_insurrectionary = yes} }
+		#	add = bpm_ig_law_support_from_insurrectionary
+		#}
+
+		if = {
+			limit = {
+				owner = { has_political_movement = currently_enacting_law.type }
+				has_variable = bpm_ig_enacting_law_change_steps
+				var:bpm_ig_enacting_law_change_steps > 0
+			}
+			add = bpm_ig_law_support_from_movement
+		}
+		
+		if = {
+			#Character's law approval
+			limit = {
+				has_variable = bpm_ig_enacting_law_change_steps
+			}
+			add = bpm_ig_law_support_enacting_law
+		}
+
+		#if = {
+		#	#If character has no opinion, add half of ig's opinion
+		#	limit = {
+		#		has_variable = bpm_ig_enacting_law_change_steps
+		#		var:bpm_ig_enacting_law_change_steps = 0
+		#		interest_group.has_variable = bpm_ig_enacting_law_change_steps
+		#	}
+		#	add = {
+		#		value = interest_group.bpm_ig_law_support_enacting_law
+		#		divide = 2
+		#		desc = "bpm_legislator_no_strong_personal_opinion"
+		#	}
+		#}
+	}
 }
 
 bpm_law_enactment_ruler_effect_on_ig = {

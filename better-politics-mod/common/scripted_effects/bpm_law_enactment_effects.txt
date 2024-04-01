@@ -42,22 +42,83 @@
 	}
 }
 
+
+bpm_set_legislator_current_law_stance_to_number = {
+	set_variable = { name = bpm_ig_current_law_stance value = 0 }
+
+	if = {
+		limit = {
+			root = {
+				has_variable = bpm_country_current_law_type
+			}
+			law_stance = {
+				law = root.var:bpm_country_current_law_type
+				value = strongly_approve
+			}
+		}
+		set_variable = { name = bpm_ig_current_law_stance value = 2 }
+	}
+
+	if = {
+		limit = {
+			root = {
+				has_variable = bpm_country_current_law_type
+			}
+			law_stance = {
+				law = root.var:bpm_country_current_law_type
+				value = approve
+			}
+		}
+		set_variable = { name = bpm_ig_current_law_stance value = 1 }
+	}
+
+	if = {
+		limit = {
+			root = {
+				has_variable = bpm_country_current_law_type
+			}
+			law_stance = {
+				law = root.var:bpm_country_current_law_type
+				value = disapprove
+			}
+		}
+		set_variable = { name = bpm_ig_current_law_stance value = -1 }
+	}
+
+	if = {
+		limit = {
+			root = {
+				has_variable = bpm_country_current_law_type
+			}
+			law_stance = {
+				law = root.var:bpm_country_current_law_type
+				value = strongly_disapprove
+			}
+		}
+		set_variable = { name = bpm_ig_current_law_stance value = -2 }
+	}
+}
+
 bpm_set_ig_current_law_stance_to_number = {
 	set_variable = { name = bpm_ig_current_law_stance value = 0 }
 
 	save_scope_as = stance_ig
 
-	owner = {
-		every_law = {
-			limit = { 
-				exists = type
-				this.type ?= { is_same_law_group_as = prev.owner.currently_enacting_law.type }
-				owner = { has_law = prev.type }
-			}
-			scope:stance_ig = {
-				set_variable = { name = current_law value = prev }
-			}
-		}
+	#owner = {
+	#	every_law = {
+	#		limit = { 
+	#			exists = type
+	#			this.type ?= { is_same_law_group_as = prev.owner.currently_enacting_law.type }
+	#			owner = { has_law = prev.type }
+	#		}
+	#		scope:stance_ig = {
+	#			set_variable = { name = current_law value = prev }
+	#		}
+	#	}
+	#}
+	set_variable = { 
+		name = current_law 
+		value = owner.currently_enacting_law.currently_active_law_in_group
 	}
 	if = {
 		limit = {
@@ -184,7 +245,19 @@ bpm_set_all_igs_law_support_fixed_vars = {
 		bpm_set_ig_law_support_ruler = yes
 	}
 }
-
+bpm_set_all_legislators_law_support_fixed_vars = {
+	set_variable = {
+		name = bpm_country_current_law_type
+		value = currently_enacting_law.currently_active_law_in_group.type
+	}
+	every_character_in_void = {
+		#bpm_set_ig_law_support_fixed_vars = yes
+		bpm_set_ig_enacting_law_stance_to_number = yes
+		bpm_set_legislator_current_law_stance_to_number = yes
+		bpm_set_ig_enacting_law_change_steps = yes
+	}
+	remove_variable = bpm_coutnry_current_law_type
+}
 bpm_clear_law_sway_vars = {
 	every_interest_group = {
 		remove_variable = bpm_assert_authority_sway_used

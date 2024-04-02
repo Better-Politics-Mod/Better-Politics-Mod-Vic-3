@@ -313,34 +313,24 @@ je_bpm_agrarian_socialism = {
 		}
 	}
 
-	on_weekly_pulse = {
+	on_monthly_pulse = {
 		effect = {
-			if = {
-				limit = { bpm_je_agrarian_socialism_rate > 2 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_agrarian_socialism
-					RATE = 60
-					TECH1 = socialism
-					TECH2 = political_agitation
-				}
+			set_variable = {
+				name = bpm_je_agrarian_socialism_rate_temp
+				value = bpm_je_agrarian_socialism_rate
 			}
-			else_if = {
-				limit = { bpm_je_agrarian_socialism_rate > 1 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_agrarian_socialism
-					RATE = 30
-					TECH1 = socialism
-					TECH2 = political_agitation
-				}
-			}
-			else_if = {
-				limit = { bpm_je_agrarian_socialism_rate > 0.5 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_agrarian_socialism
-					RATE = 15
-					TECH1 = socialism
-					TECH2 = political_agitation
-				}
+			# Need to make steps discrete becuase adding tech progress is weird with non-primitive values
+			bpm_handle_je_progress_three_stage = {
+				VAR = bpm_je_agrarian_socialism
+				RATE = var:bpm_je_agrarian_socialism_rate_temp
+				RATE_LEVEL_1 = 0
+				RATE_LEVEL_2 = 2
+				RATE_LEVEL_3 = 4
+				TECH_RATE_1 = 60
+				TECH_RATE_2 = 120
+				TECH_RATE_3 = 240
+				TECH1 = socialism
+				TECH2 = political_agitation
 			}
 			set_variable = {
 				name = bpm_agrarian_socialism_power
@@ -484,7 +474,6 @@ je_bpm_syndicalism = {
 	can_deactivate = no
 	possible = {
 		NOT = { has_law = law_type:law_council_republic }
-		bpm_country_socialists_are_popular = yes
 		pop_type_percent_country = {
 			pop_type = peasants
 			percent < 0.5
@@ -493,6 +482,7 @@ je_bpm_syndicalism = {
 			value >= 0.1
 			strata = poor 
 		}
+		bpm_country_socialists_are_popular = yes
 	}
 
 	complete = {
@@ -530,34 +520,19 @@ je_bpm_syndicalism = {
 		}
 	}
 
-	on_weekly_pulse = {
+	on_monthly_pulse = {
 		effect = {
-			if = {
-				limit = { bpm_je_syndicalism_rate > 2 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_syndicalism
-					RATE = 60
-					TECH1 = anarchism
-					TECH2 = political_agitation
-				}
-			}
-			else_if = {
-				limit = { bpm_je_syndicalism_rate > 1 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_syndicalism
-					RATE = 30
-					TECH1 = anarchism
-					TECH2 = political_agitation
-				}
-			}
-			else_if = {
-				limit = { bpm_je_syndicalism_rate > 0.5 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_syndicalism
-					RATE = 15
-					TECH1 = anarchism
-					TECH2 = political_agitation
-				}
+			bpm_handle_je_progress_three_stage = {
+				VAR = bpm_je_syndicalism
+				RATE = var:bpm_je_syndicalism_rate_temp
+				RATE_LEVEL_1 = 0
+				RATE_LEVEL_2 = 2
+				RATE_LEVEL_3 = 4
+				TECH_RATE_1 = 60
+				TECH_RATE_2 = 120
+				TECH_RATE_3 = 240
+				TECH1 = anarchism
+				TECH2 = political_agitation
 			}
 
 			# Make characters Syndicalist/Anarcho-Syndicalist at certain level
@@ -566,30 +541,39 @@ je_bpm_syndicalism = {
 				ig:ig_anarchists = {
 					if = {
 						limit = { bpm_ig_enabled = yes }
-						leader = {
-							set_ideology = ideology:ideology_anarchist_syndicalist
-						}
+						leader = { set_ideology = ideology:ideology_anarchist_syndicalist }
 					}
 				}
 			}
 			if = {
 				limit = { var:bpm_je_syndicalism >= 66 }
-				ig:ig_socialists = {
+				ig:ig_trade_unions = {
 					if = {
-						limit = { bpm_ig_enabled = yes }
-						leader = {
-							set_ideology = ideology:ideology_syndicalist
+						limit = {
+							bpm_ig_enabled = yes
+							NOR = {
+								has_ideology = ideology:ideology_dop_syndical_unionist
+								owner = { has_law = law_type:law_state_controlled_labor_unions } 
+							}
 						}
+						bpm_remove_all_dop_ideologies = yes
+						add_ideology = ideology_dop_syndical_unionist
+						bpm_reorder_ideologies = yes
+						set_interest_group_name = ig_syndicalists
 					}
 				}
-				ig:ig_revolutionist_socialists = {
-					if = {
-						limit = { bpm_ig_enabled = yes }
-						leader = {
-							set_ideology = ideology:ideology_syndicalist
-						}
-					}
-				}
+				# ig:ig_socialists = {
+				# 	if = {
+				# 		limit = { bpm_ig_enabled = yes }
+				# 		leader = { set_ideology = ideology:ideology_syndicalist }
+				# 	}
+				# }
+				# ig:ig_revolutionist_socialists = {
+				# 	if = {
+				# 		limit = { bpm_ig_enabled = yes }
+				# 		leader = { set_ideology = ideology:ideology_syndicalist }
+				# 	}
+				# }
 			}
 		}
 	}

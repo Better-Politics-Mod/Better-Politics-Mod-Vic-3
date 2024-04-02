@@ -19,12 +19,16 @@ peoples_springtime.1 = {
 	trigger = {
 		NOT = { has_global_variable = peoples_springtime_happening }
 		NOT = { has_global_variable = peoples_springtime_happened }
+		has_global_variable = bpm_je_march_to_radicalism_progress
 		global_var:bpm_je_march_to_radicalism_progress >= 100
 		
 		bpm_country_is_in_europe = yes
 		any_interest_group = {
 			is_marginal = no
-			is_insurrectionary = yes
+			OR = {
+				is_revolutionary = yes
+				owner = { is_secessionist = yes }
+			}
 			OR = {
 				bpm_ig_is_radical_left = yes
 				leader = { bpm_leader_is_radical_leftist = yes }
@@ -353,7 +357,7 @@ peoples_springtime.5 = {
 				is_capital = no
 			}
 			add_radicals_in_state = {
-				value = very_large_radicals
+				value = medium_radicals
 			}
 		}
 	}
@@ -369,14 +373,14 @@ peoples_springtime.5 = {
 			}
 			capital = {
 				add_radicals_in_state = {
-					value = very_large_radicals
+					value = medium_radicals
 				}
 			}
 		}
 		else = {
 			capital = {
 				add_radicals_in_state = {
-					value = medium_radicals
+					value = small_radicals
 				}
 			}
 		}
@@ -400,43 +404,81 @@ peoples_springtime.6 = {
 	flavor = peoples_springtime.6.f
 
 	trigger = {
-		OR = {
-			has_variable = completed_peoples_springtime_je
-			has_journal_entry = je_springtime_of_the_peoples
-		}
-		has_global_variable = peoples_springtime_happening
-		NOT = { has_variable = recently_completed_peoples_springtime_je }
+		NOT = { has_variable = peoples_springtime_fully_ended }
+		has_variable = completed_peoples_springtime_je
+		has_revolution = no
+		has_any_secessionists_broken_out = no
+		is_revolutionary = no
+		is_secessionist = no
 	}
 
 	duration = 3
 
 	immediate = {
-		remove_global_variable = peoples_springtime_happening
+		set_variable = peoples_springtime_fully_ended
+		ig:ig_liberals = {
+			leader = { set_ideology = ideology:ideology_center_leader }
+		}
+		ig:ig_agrarian_populists = {
+			leader = { set_ideology = ideology:ideology_center_leader }
+		}
+		every_interest_group = {
+			limit = {
+				bpm_ig_is_institutional = yes
+				leader = {
+					OR = {
+						has_ideology = ideology:ideology_radical
+						has_ideology = ideology:ideology_republican_leader
+					}
+				}
+			}
+			leader = { set_ideology = ideology:ideology_liberal_leader }
+		}
+		# Revolution successful
 		if = {
 			limit = {
-				NOT = { has_global_variable = peoples_springtime_happened }
-			}
-			every_country = {
-				limit = {
+				any_interest_group = {
+					is_in_government = yes
 					OR = {
-						has_journal_entry = je_springtime_of_the_peoples
-						has_variable = completed_peoples_springtime_je
+						bpm_ig_is_radical_left = yes
+						leader = { bpm_leader_is_radical_leftist = yes }
 					}
-					NOT = { this = root }
 				}
-				trigger_event = {
-					id = peoples_springtime.6
-					days = 1
+				bpm_country_is_republic = yes
+				OR = {
+					has_law = law_type:law_wealth_voting
+					has_law = law_type:law_census_voting
+					has_law = law_type:law_universal_suffrage
 				}
+			}
+			trigger_event = { id = peoples_springtime.7 days = 30 popup = yes }
+		}
+		# Revolution Failed
+		else_if = {
+			limit = {
+				bpm_country_laws_ok_voting = no
+				is_player = no
+			}
+			bpm_add_political_stability_huge = yes
+			if = {
+				limit = { has_law = law_type:law_no_home_affairs }
+				activate_law = law_type:law_national_guard
 			}
 		}
-		set_global_variable = peoples_springtime_happened
+		# Revolution Vanquished
 		if = {
-			limit = { NOT = { has_global_variable = bpm_je_first_intl_progress } }
-			set_global_variable = {
-				name = bpm_je_first_intl_progress
-				value = 0
+			limit = {
+				NOT = {
+					any_interest_group = {
+						OR = {
+							bpm_ig_is_radical_left = yes
+							leader = { bpm_leader_is_radical_leftist = yes }
+						}
+						is_marginal = no
+					}
+				}
 			}
+			trigger_event = { id = peoples_springtime.8 popup = yes }
 		}
 	}
 
@@ -455,6 +497,7 @@ peoples_springtime.6 = {
 				bpm_remove_all_gov_ideologies = yes
 				bpm_reorder_ideologies = yes
 			}
+			bpm_add_political_stability_big = yes
 		}
 		default_option = yes
 	}

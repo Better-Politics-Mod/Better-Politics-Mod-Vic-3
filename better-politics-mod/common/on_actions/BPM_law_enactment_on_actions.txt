@@ -7,18 +7,21 @@
 on_law_checkpoint_advance = {
 	on_actions = {
 		bpm_update_enactment_success_on_action
+		bpm_update_guarantee_success_on_action
 	}
 }
 
 on_law_checkpoint_stall = {
 	on_actions = {
 		bpm_update_enactment_success_on_action
+		bpm_update_guarantee_success_on_action
 	}
 }
 
 on_law_checkpoint_debate = {
 	on_actions = {
 		bpm_update_enactment_success_on_action
+		bpm_update_guarantee_success_on_action
 	}
 }
 
@@ -30,14 +33,32 @@ on_bpm_law_enactment_started = {
 			name = bpm_law_sway_maneuvers
 			value = bpm_law_sways_per_phase_value
 		}
+		bpm_update_law_enactment_variables_modifiers = yes
 	}
 }
 
 bpm_update_enactment_success_on_action = {
 	effect = {
 		if = {
-			limit = { enacting_any_law = yes }
-			bpm_apply_law_vote_contribution_modifier = yes
+			limit = {
+				is_player = yes
+				enacting_any_law = yes
+			}
+			bpm_update_law_enactment_variables_modifiers = yes
+		}
+	}
+}
+
+bpm_update_guarantee_success_on_action = {
+	effect = {
+		if = {
+			limit = {
+				is_player = yes
+				enacting_any_law = yes
+				enactment_phase >= 2
+			}
+			clear_enactment_modifier = yes
+			add_enactment_modifier = { name = bpm_law_voting_guarantee_success }
 		}
 	}
 }
@@ -50,6 +71,7 @@ on_law_checkpoint_success = {
 			limit = {
 				enacting_any_law = yes
 			}
+			bpm_update_law_enactment_variables_modifiers = yes
 			change_variable = {
 				name = bpm_law_sway_maneuvers
 				add = bpm_law_sways_per_phase_value
@@ -59,7 +81,7 @@ on_law_checkpoint_success = {
 				if = {
 					limit = { enactment_phase = 2 }
 					if = {
-						limit = { bpm_law_enactment_yea_votes > bpm_law_enactment_nay_votes }
+						limit = { var:bpm_law_enactment_yea_votes_cached > var:bpm_law_enactment_nay_votes_cached }
 						if = {
 							limit = { bpm_law_enactment_must_accept = yes }
 							add_enactment_phase = 1

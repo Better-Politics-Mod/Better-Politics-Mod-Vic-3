@@ -46,26 +46,7 @@
 	}
 	
 	pop_weight = {
-		value = 20
-	
-		add = {
-			desc = "EXCLUSIONS"
-			if = {
-				limit = { 
-					NOR = {
-						pop_employment_building_group = bg_agriculture
-						pop_employment_building_group = bg_ranching
-						pop_employment_building_group = bg_plantations				
-					}
-					NOT = {
-						is_pop_type = academics
-					}
-				}
-				value = -100
-			}
-		}		
-
-		add = ig_attraction_agrarian_socialism
+		value = 20	
 
 		if = {
 			limit = { 
@@ -79,14 +60,15 @@
 				desc = "RURAL_POP"
 				value = 50
 			}
+			# Free farmers are more likely to be agpops
 			if = {
-				limit = { strata <= middle }
+				limit = { is_pop_type = farmers }
 				add = {
-					desc = "POP_EDUCATED_FARMERS"
-					value = literacy_rate
-					multiply = 250
+					desc = "POP_FARMERS"
+					value = 100
 				}
 			}
+			# Unfree labor makes more agpops
 			if = {
 				limit = {
 					owner = {
@@ -102,85 +84,73 @@
 					value = 80
 				}
 			}
-			if = {
-				limit = {
-					scope:interest_group = {
-						OR = {
-							bpm_ig_is_socialist = yes
-							leader = { bpm_leader_is_socialist = yes }
-						}
-					}
-					strata <= middle
-					owner = { has_law = law_type:law_commercialized_agriculture }
-				}
-				add = {
-					desc = "POP_RURAL_ANTICAPITALISM"
-					value = 100
-				}
-			}
-			if = {
-				limit = {
-					scope:interest_group = {
-						OR = {
-							bpm_ig_is_socialist = yes
-							leader = { bpm_leader_is_socialist = yes }
-						}
-					}
-					strata <= middle
-					owner = {
-						has_law = law_type:law_council_republic
-						NOT = { has_law = law_type:law_collectivized_agriculture }
-					}
-				}
-				add = {
-					desc = "POP_RURAL_WANTS_COLLECTIVIZATION"
-					value = 60
-				}
-			}
+			# Free peasants are less likely to be agpops
 			else_if = {
 				limit = {
+					is_pop_type = peasants
+				}
+				add = {
+					desc = "POP_FREE_PEASANTS"
+					value = -40
+				}
+			}
+			# Literacy adds to agpops
+			if = {
+				limit = { strata <= middle }
+				add = {
+					desc = "POP_EDUCATED_FARMERS"
+					value = literacy_rate
+					multiply = 250
+				}
+			}
+			# Agsocs
+			if = {
+				limit = {
+					strata <= middle
 					scope:interest_group = {
 						OR = {
 							bpm_ig_is_socialist = yes
 							leader = { bpm_leader_is_socialist = yes }
 						}
 					}
-					strata <= middle
-					pop_radical_fraction <= 0.05
-					owner = { has_law = law_type:law_collectivized_agriculture }
 				}
-				add = {
-					desc = "POP_RURAL_HAPPY_UNDER_SOCIALISM"
-					value = 150
+				if = {
+					limit = { owner = { has_law = law_type:law_commercialized_agriculture } }
+					add = {
+						desc = "POP_RURAL_ANTICAPITALISM"
+						value = 100
+					}
 				}
-			}
-		}	
-
-		add = {
-			desc = "POP_FARMERS"
-			if = {
-				limit = { 
-					is_pop_type = farmers
-				}
-				value = 100
-			}
-		}
-
-		add = {
-			desc = "POP_FREE_PEASANTS"
-			if = {
-				limit = { 
-					is_pop_type = peasants
-					owner = {
-						NOR = {
-							has_law = law_type:law_serfdom
-							has_law = law_type:law_slave_trade
-							has_law = law_type:law_legacy_slavery
+				if = {
+					limit = { owner = { has_law = law_type:law_council_republic } }
+					if = {
+						limit = {
+							owner = { NOT = { has_law = law_type:law_collectivized_agriculture } }
+						}
+						add = {
+							desc = "POP_RURAL_WANTS_COLLECTIVIZATION"
+							value = 60
+						}
+					}
+					else_if = {
+						limit = {
+							owner = { has_law = law_type:law_collectivized_agriculture }
+							pop_radical_fraction <= 0.05
+						}
+						add = {
+							desc = "POP_RURAL_HAPPY_UNDER_SOCIALISM"
+							value = 150
 						}
 					}
 				}
-				value = -40
 			}
+		}
+		else_if = {
+			limit = { NOT = { is_pop_type = academics }  }
+			add = {
+				desc = "EXCLUSIONS"
+				value = -100
+			}	
 		}
 
 		add = {
@@ -223,64 +193,27 @@
 			}
 		}
 		
-		multiply = {
-			desc = "LEADER_POPULARITY"
-			scope:interest_group = {
-				leader = {
-					value = popularity
-					multiply = 0.005
-					add = 1
-					max = 1.5
-					min = 0.67
-				}
-			}
-		}
-
-		multiply = bpm_ig_agitators_popularity
-		multiply = bpm_ig_ruler_popularity
-		multiply = ig_attraction_to_ruler_ideology_from_stability
-
-		multiply = {
-			desc = "CAN_GET_LABOR_MOVEMENT"	
-			value = 1.0
-			
-			if = {
-				limit = { 
-					owner = {
-						can_research = labor_movement
-					}
-				}
-				value = 2.0
-			}		
-		}	
-
-		multiply = {
-			desc = "NO_LABOR_MOVEMENT"	
-			value = 1.0
-			if = {
-				limit = { 
-					owner = {
-						NOT = { has_technology_researched = labor_movement }
-					}
-				}
-				value = 0.5
-			}		
-		}		
+		add = ig_attraction_agrarian_socialism
 
 		if = {
-			limit = {
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			multiply = {
+				desc = "LEADER_POPULARITY"
 				scope:interest_group = {
-					is_in_government = yes
+					leader = {
+						value = popularity
+						multiply = 0.005
+						add = 1
+						max = 1.5
+						min = 0.67
+					}
 				}
 			}
-			multiply = {
-				desc = "IN_GOVERNMENT_ATTRACTION"
-				value = 1
-				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
-				min = 0
-			}
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+			multiply = ig_attraction_from_radicals_and_loyalists
 		}
-		multiply = ig_attraction_from_radicals_and_loyalists
+		multiply = ig_attraction_to_ruler_ideology_from_stability	
 	}
 	
 	monarch_weight = {

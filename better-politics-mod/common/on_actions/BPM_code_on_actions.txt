@@ -1,4 +1,10 @@
-﻿on_yearly_pulse_country = {
+﻿on_five_year_pulse_country = {
+	on_actions = {
+		on_bpm_five_year_pulse_country
+	}
+}
+
+on_yearly_pulse_country = {
 	on_actions = {
 		on_bpm_yearly_pulse_country
 	}
@@ -52,6 +58,12 @@ on_revolution_start = {
 	on_actions = {
 		on_bpm_country_releasing
 		on_bpm_revolution_start
+	}
+}
+
+on_capitulation = {
+	on_actions = {
+		on_bpm_capitulation
 	}
 }
 
@@ -125,6 +137,15 @@ on_party_created = {
 	}
 }
 
+on_bpm_five_year_pulse_country == {
+	effect = {
+		every_interest_group = {
+			limit = { bpm_ig_enabled = yes }
+			bpm_reorder_ideologies = yes
+		}
+	}
+}
+
 on_bpm_yearly_pulse_country = {
 	events = {
 		#bpm_1st_intl.1
@@ -134,6 +155,21 @@ on_bpm_yearly_pulse_country = {
 	}
 
 	effect = {
+		bpm_rename_igs = yes
+		if = {
+			limit = { global_country_ranking = 1 }
+			every_character_in_exile_pool = {
+				limit = {
+					is_historical = no
+					has_role = agitator
+					OR = {
+						popularity < 50
+						age >= 56
+					}
+				}
+				kill_character = yes
+			}
+		}
 		if = {
 			limit = { 
 				NOT = { has_global_variable = bpm_je_march_to_radicalism_progress }
@@ -174,12 +210,6 @@ on_bpm_yearly_pulse_country = {
 				}
 			}
 		}
-		owner = {
-			every_interest_group = {
-				limit = { bpm_ig_enabled = yes }
-				bpm_reorder_ideologies = yes
-			}
-		}
 	}
 }
 on_bpm_monthly_pulse_state = {
@@ -191,6 +221,7 @@ on_bpm_monthly_pulse_state = {
 
 on_bpm_half_yearly_pulse_country = {
 	events = {
+		bpm_ig_attraction_utils.2
 		bpm_union_laws.1
 	}
 	effect = {
@@ -198,6 +229,8 @@ on_bpm_half_yearly_pulse_country = {
 			update_party_support = yes
 			bpm_setup_country_stubbornness = yes
 			bpm_half_yearly_decrement_party_loyalty = yes
+			bpm_setup_basic_igs = yes
+			bpm_ig_update_ig_ban_support = yes
 		}
 	}
 }
@@ -213,19 +246,16 @@ on_bpm_monthly_pulse_country = {
 		bpm_1st_commie_rev.3
 		bpm_revsoc_utils.3
 		bpm_socdem_utils.1
-		bpm_socdem_utils.2
 		bpm_radlib_utils.1
 		bpm_radlib_utils.2
-		bpm_ideology_soft_compat_events.1
-		bpm_ideology_soft_compat_events.2
-		bpm_ideology_soft_compat_events.3
-		bpm_ideology_soft_compat_events.4
-		bpm_ideology_soft_compat_events.5
-		bpm_ideology_soft_compat_events.6
 		bpm_socialist_utils.3
 		bpm_socialist_utils.4
 		bpm_natlib_split.4
 		bpm_socialist_utils.7
+		peoples_springtime.13
+		italian_springtime.3
+		peoples_springtime.6
+		bpm_france.3
 	}
 	random_events = {
 		5 = 0
@@ -235,22 +265,29 @@ on_bpm_monthly_pulse_country = {
 	effect = {
 		owner = { 
 			bpm_update_political_stability = yes
-			bpm_ig_update_ig_ban_support = yes
 			bpm_update_igs_current_party = yes
 			bpm_institution_workaround_effect = yes
 			bpm_auto_research = yes
-		}
-		if = {
-			limit = {
-				has_global_variable = march_to_radicalism_complete_var
-				owner = { global_country_ranking = 1 } # Making trigger happer once per month because paradox apparently has no on_action for global events??? what? how??
-			}
-			# Preparation for first international 
 			if = {
-				limit = { NOT = { has_global_variable = bpm_je_first_intl_progress } }
-				set_global_variable = {
-					name = bpm_je_first_intl_progress
-					value = 0
+				limit = { is_player = yes }
+				bpm_rename_igs = yes
+				bpm_ig_update_ig_ban_support = yes
+				every_interest_group = {
+					limit = { bpm_ig_enabled = yes }
+					bpm_reorder_ideologies = yes
+				}
+			}
+			every_interest_group = {
+				if = {
+					limit = {
+						bpm_ig_enabled = no
+						OR = {
+							is_being_bolstered = yes
+							is_being_suppressed = yes
+						}
+					}
+					set_ig_bolstering = no
+					set_ig_suppression = no
 				}
 			}
 		}
@@ -271,41 +308,6 @@ on_bpm_monthly_pulse_country = {
 				VARIABLE = bpm_je_second_intl_progress
 			}
 		}
-		if = {
-			limit = { owner = { has_law = law_type:law_state_controlled_labor_unions } }
-			owner.ig:ig_trade_unions.leader = {
-				set_ideology = ideology:ideology_moderate
-			}
-		} else_if = {
-			limit = { owner = { has_law = law_type:law_socialist_labor_unions } }
-			owner.ig:ig_trade_unions.leader = {
-				set_ideology = ideology:ideology_vanguardist
-			}
-		}
-		if = {
-			limit = { 
-				owner = { has_law = law_type:law_limited_labor_unions } 
-				owner.ig:ig_trade_unions.leader = { bpm_leader_is_socialist = yes }
-			}
-			owner.ig:ig_trade_unions.leader = {
-				set_ideology = ideology:ideology_moderate
-			}
-		}
-		owner = {
-			every_interest_group = {
-				if = {
-					limit = {
-						bpm_ig_enabled = no
-						OR = {
-							is_being_bolstered = yes
-							is_being_suppressed = yes
-						}
-					}
-					set_ig_bolstering = no
-					set_ig_suppression = no
-				}
-			}
-		}
 	}
 }
 
@@ -313,14 +315,8 @@ on_bpm_law_activated = {
 	on_actions = {
 		bpm_on_actions_stubbornness
 	}
-
-	effect = {
-		owner = {
-			update_party_support = yes
-			bpm_fix_stupid_law_combinations = yes
-			bpm_institution_workaround_effect = yes
-			# bpm_clear_law_sway_vars = yes
-		}
+	events = {
+		peoples_springtime.101
 	}
 }
 
@@ -329,9 +325,11 @@ on_bpm_seccession_start = {
 		scope:target = {
 			set_variable = bpm_can_new_constitution
 		}
+		# Add 1st intl progress
 		if = { 
 			limit = { 
 				NOT = { has_global_variable = first_intl_started_var } 
+				has_global_variable = bpm_je_first_intl_progress
 				country_rank = rank_value:great_power
 			}
 			change_global_variable = {
@@ -340,6 +338,42 @@ on_bpm_seccession_start = {
 			}
 			bpm_remove_political_stability_normal = yes
 		}
+		# Add 1848 progress
+		else_if = {
+			limit = {
+				NOT = { has_global_variable = march_to_radicalism_complete_var } 
+				has_global_variable = bpm_je_march_to_radicalism_progress
+				country_rank >= rank_value:minor_power
+				bpm_country_is_in_europe = yes
+			}
+			if = {
+				limit = { country_rank >= rank_value:great_power }
+				change_global_variable = {
+					name = bpm_je_march_to_radicalism_progress
+					add = 20
+				}
+			}
+			else_if = {
+				limit = { country_rank >= rank_value:major_power }
+				change_global_variable = {
+					name = bpm_je_march_to_radicalism_progress
+					add = 10
+				}
+			}
+			else_if = {
+				limit = { country_rank >= rank_value:minor_power }
+				change_global_variable = {
+					name = bpm_je_march_to_radicalism_progress
+					add = 5
+				}
+			}
+		}
+	}
+}
+
+on_bpm_capitulation = {
+	events = {
+		italian_springtime.8
 	}
 }
 
@@ -353,7 +387,7 @@ on_bpm_diplo_play_war_start = {
 	effect = {
 		if = {
 			limit = {
-				AND = {
+				war = {
 					attacker_warleader = {
 						country_rank > rank_value:insignificant_power
 					}
@@ -425,11 +459,45 @@ on_bpm_revolution_start = {
 				}
 			}
 		}
+
+		# Add 1848 progress
+		if = {
+			limit = {
+				NOT = { has_global_variable = march_to_radicalism_complete_var } 
+				has_global_variable = bpm_je_march_to_radicalism_progress
+				country_rank >= rank_value:minor_power
+				bpm_country_is_in_europe = yes
+			}
+			if = {
+				limit = { country_rank >= rank_value:great_power }
+				change_global_variable = {
+					name = bpm_je_march_to_radicalism_progress
+					add = 20
+				}
+			}
+			else_if = {
+				limit = { country_rank >= rank_value:major_power }
+				change_global_variable = {
+					name = bpm_je_march_to_radicalism_progress
+					add = 10
+				}
+			}
+			else_if = {
+				limit = { country_rank >= rank_value:minor_power }
+				change_global_variable = {
+					name = bpm_je_march_to_radicalism_progress
+					add = 5
+				}
+			}
+		}
 	}
 }
 
 on_bpm_acquired_technology = {
 	effect = {
+		bpm_setup_basic_igs = yes
+
+		# First intl stuff
 		if = {
 			limit = {
 				NOT = { has_global_variable = first_intl_started_var } 
@@ -480,7 +548,8 @@ on_bpm_acquired_technology_peoples_spring = {
 		if = {
 			limit = {
 				NOT = { has_global_variable = march_to_radicalism_complete_var } 
-				country_is_in_europe = yes
+				has_global_variable = bpm_je_march_to_radicalism_progress
+				bpm_country_is_in_europe = yes
 			}
 
 			if = {
@@ -491,7 +560,7 @@ on_bpm_acquired_technology_peoples_spring = {
 				set_variable = bpm_intl_egalitarianism_researched
 				change_global_variable = {
 					name = bpm_je_march_to_radicalism_progress
-					add = 0.1
+					add = 0.33
 				}
 			}
 
@@ -500,10 +569,10 @@ on_bpm_acquired_technology_peoples_spring = {
 					has_technology_researched = dialectics
 					NOT = { has_variable = bpm_intl_dialectics_researched }
 				}
-				set_variable = bpm_intl_egalitarianism_researched
+				set_variable = bpm_intl_dialectics_researched
 				change_global_variable = {
 					name = bpm_je_march_to_radicalism_progress
-					add = 0.1
+					add = 0.2
 				}
 			}
 
@@ -515,7 +584,7 @@ on_bpm_acquired_technology_peoples_spring = {
 				set_variable = bpm_intl_nationalism_researched
 				change_global_variable = {
 					name = bpm_je_march_to_radicalism_progress
-					add = 0.1
+					add = 0.33
 				}
 			}
 		}
@@ -534,6 +603,24 @@ on_bpm_civil_war_won = {
 		if = {
 			limit = { has_variable = bpm_can_legitimize_syndicalism }
 			trigger_event = { id = bpm_syndicalism.1 days = 2 popup = yes }
+		}
+
+		if = {
+			limit = {
+				has_global_variable = peoples_springtime_happening
+				NOT = { has_variable = completed_peoples_springtime_je }
+				OR = {
+					any_interest_group = {
+						bpm_ig_is_strongest_ig_in_government = yes
+						OR = {
+							bpm_ig_is_radical_left = yes
+							leader = { bpm_leader_is_radical_leftist = yes }
+						}
+					}
+					bpm_country_is_republic = yes
+				}
+			}
+			trigger_event = { id = peoples_springtime.101 days = 60 popup = yes }
 		}
 	}
 }

@@ -1,0 +1,404 @@
+﻿# Traditionalists and Reactionaries drawn to this party
+# Will attract weak conservatives
+
+reactionary_party = {
+	color = hsv{ 0.67 0.7 0.9 }
+	name = {
+		first_valid = {
+			triggered_desc = {
+				desc = party_reactionary_fra
+				trigger = {
+					exists = c:FRA
+					THIS = c:FRA
+				}
+			}
+			triggered_desc = {
+				desc = party_gbr_reactionaries
+				trigger = {
+					exists = c:GBR
+					THIS = c:GBR
+				}
+			}
+
+			triggered_desc = {
+				desc = party_reactionary_usa
+				trigger = {
+					exists = c:USA
+					THIS = c:USA
+				}
+			}
+			triggered_desc = {
+				desc = party_hun_reactionary
+				trigger = {
+					exists = c:HUN
+					THIS = c:HUN
+				}
+			}
+			triggered_desc = {
+				desc = party_aus_reactionary
+				trigger = {
+					exists = c:AUS
+					THIS = c:AUS
+				}
+			}
+			triggered_desc = {
+				desc = party_reactionary_ger
+				trigger = {
+					OR = {
+						country_has_primary_culture = cu:north_german
+						country_has_primary_culture = cu:south_german
+					}
+				}
+			}
+			triggered_desc = {
+				desc = party_ita_reactionaries
+				trigger = {
+					OR = {
+						country_has_primary_culture = cu:north_italian
+						country_has_primary_culture = cu:south_italian
+					}
+				}
+			}
+			triggered_desc = {
+				desc = party_spa_reactionaries
+				trigger = {
+					exists = c:SPA
+					THIS = c:SPA
+				}
+			}
+			triggered_desc = {
+				desc = party_reactionary_por
+				trigger = {
+					exists = c:POR
+					THIS = c:POR
+				}
+			}
+			triggered_desc = {
+				desc = party_rus_reactionaries
+				trigger = {
+					exists = c:RUS
+					THIS = c:RUS
+				}
+			}
+			triggered_desc = {
+				desc = party_reactionary_jap
+				trigger = {
+					exists = c:JAP
+					THIS = c:JAP
+				}
+			}
+			triggered_desc = {
+				desc = party_reactionary_egy
+				trigger = {
+					exists = c:EGY
+					THIS = c:EGY
+				}
+			}
+			triggered_desc = {
+				desc = party_reactionary_royal
+				trigger = {
+					has_law = law_type:law_monarchy
+				}
+			}
+			triggered_desc = {
+				desc = party_reactionaries
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	icon = {
+		default = "/gfx/interface/icons/political_parties/reactionary.dds"
+	}
+	unlocking_technologies = {
+		egalitarianism
+	}
+	# THIS IS RUN ONLY ONCE AT GAME START
+	valid_for_country = {
+		always = yes
+	}
+	available_for_interest_group = {
+		bpm_ig_enabled = yes
+		NOT = { bpm_is_party_banned = { PARTY = reactionary_party } }
+		OR = {
+			bpm_ig_is_right_wing = yes
+			leader = { # fascists and conservatives will work with reactionaries
+			bpm_leader_is_right_wing = yes
+			}
+		}	
+	}
+	join_weight = {
+		value = {
+			value = -2
+			desc = "base_value"
+		}
+		if = {
+			limit = {
+				var:bpm_current_party ?= {
+					is_party_type = reactionary_party
+					has_party_member = prev
+				}
+			}
+			add = {
+				value = bpm_party_loyalty_values
+			}
+		}
+		if = { # reactionaries are reactionary
+			limit = {
+				bpm_ig_is_traditionalist = yes
+			}
+			add = {
+				value = 7
+				desc = "bpm_from_reactionary_ig"
+			}
+		}
+		if = {
+			limit = {
+				is_powerful = yes
+				is_interest_group_type = ig_reactionaries
+			}
+			add = {
+				value = 10
+				desc = "bpm_from_powerful_reactionaries"
+			}
+		}
+		if = { # reactionaries are reactionary
+			limit = {
+				leader = { 
+					OR = {
+						bpm_leader_is_reactionary = yes 
+						bpm_leader_is_fascist = yes
+					}
+				}
+			}
+			add = {
+				value = 5
+				desc = "bpm_from_reactionary_leader"
+			}
+		}
+		if = { # attraction for reactionary clergy and rural folk
+			limit = {
+				AND = {
+					bpm_ig_is_rural_institutional = yes
+					NOT = { bpm_ig_is_upper_institutional = yes }
+				}
+				leader = { 
+					OR = {
+						bpm_leader_is_reactionary = yes 
+						bpm_leader_is_fascist = yes
+					}
+				}
+			}
+			add = {
+				value = 7
+				desc = "from_right_wing_rural"
+			}
+		}
+		if = { # weak trads will fall in line behind strong reactionaries in party
+			limit = {
+				is_powerful = no
+				NOT = { is_interest_group_type = ig_reactionaries }
+				bpm_ig_is_right_wing = yes
+				owner = {
+					any_interest_group = {
+						is_powerful = yes
+						OR = {
+							leader = { has_ideology = ideology:ideology_traditionalist }
+							is_interest_group_type = ig_reactionaries
+						}
+						has_party = yes
+						party = { is_party_type = reactionary_party }
+					}
+				}
+			}
+			add = {
+				value = 5
+				desc = "bpm_from_weak_cons_reactionary"
+			}
+		}
+		if = { # monarchists in a republic
+			limit = {
+				bpm_ig_is_monarchist = yes
+				owner = {
+					bpm_country_is_republic = yes
+					NOR = {
+						has_law = law_type:law_autocracy
+						has_law = law_type:law_oligarchy
+						has_law = law_type:law_landed_voting
+					}
+				}
+			}
+			add = {
+				value = 6
+				desc = "from_monarchist"
+			}
+		}
+		if = { # general pro-slavery
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_legacy_slavery
+						has_law = law_type:law_slave_trade
+					}
+				}
+				OR = {
+					has_ideology = ideology:ideology_eco_slave_economy
+					leader = { has_ideology = ideology:ideology_slaver }
+				}
+			}
+			add = {
+				value = 3
+				desc = "from_slavery"
+			}
+		}
+		if = { # pro-serfdom
+			limit = {
+				owner = {
+					has_law = law_type:law_serfdom
+				}
+				has_ideology = ideology:ideology_eco_serf_economy
+			}
+			add = {
+				value = 5
+				desc = "from_serfdom"
+			}
+		}
+		if = { # lack of women's wrongs
+			limit = {
+				bpm_ig_is_sexist = yes
+				owner = { bpm_country_has_womens_suffrage = yes }
+			}
+			add = {
+				value = 3
+				desc = "bpm_from_not_respect_women"
+			}
+		}
+		if = { # arbitrary weight for reactionaries to stay with the tories
+			limit = {
+				owner = {
+					THIS = c:GBR
+				}
+				is_interest_group_type = ig_reactionaries
+			}
+			add = {
+				value = -10
+				desc = "bpm_from_british_party_system"
+			}
+		}
+		if = { # legitimists and carlists form their own movement
+			limit = {
+				owner = {
+					OR = {
+						THIS = c:FRA
+						THIS = c:SPA
+					}
+				}
+				OR = {
+					is_interest_group_type = ig_reactionaries
+					leader = { has_ideology = ideology:ideology_legitimist }
+				}
+			}
+			add = {
+				value = 12
+				desc = "from_bourbon"
+			}
+		}
+		if = { # antireligious characters and IG's will never join
+			limit = {
+				OR = {
+					bpm_ig_is_non_religious = yes
+					leader = { 
+						OR = {
+							has_ideology = ideology:ideology_atheist
+							has_ideology = ideology:ideology_positivist
+						}
+					}
+				}
+			}
+			add = {	
+				value = -15
+				desc = "from_antireligious"
+			}
+		}
+		if = { # rural folk will ally with anti-migration faction
+			limit = {
+				law_stance = {
+					law = law_type:law_no_migration_controls
+					value <= disapprove
+				}
+				owner = {
+					has_law = law_type:law_no_migration_controls
+				}
+			}
+			add = {
+				value = 5
+				desc = "from_isolationist"
+			}
+		}
+		if = { # those who hate voting in democracies
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_gov_radical_monarchist
+					AND = {
+						bpm_ig_is_right_wing = yes
+						bpm_ig_is_anti_democratic = yes
+						NOR = {
+							has_ideology = ideology:ideology_dop_technocrat
+							has_ideology = ideology:ideology_dop_dissent
+							is_interest_group_type = ig_armed_forces
+						}
+					}
+				}
+			}
+			if = {
+				limit = {
+					has_ideology = ideology:ideology_gov_radical_monarchist
+					owner = {
+						AND = {
+							has_law = law_type:law_monarchy
+							NOT = { has_law = law_type:law_autocracy }
+							NOT = { has_law = law_type:law_oligarchy }
+						}
+					}
+				}
+				add = {
+					value = 3
+					desc = "bpm_from_anti_constitutional_monarchist"
+				}
+			}
+			else_if = {
+				limit = {
+					owner = {
+						bpm_country_laws_ok_voting = yes
+					}
+				}
+				add = {
+					value = 6
+					desc = "from_anti_democratic"
+				}
+			}
+		}
+
+		if = { # nobody will join if the reactionaries don't join
+			limit = {
+				NOT = { is_interest_group_type = ig_reactionaries }
+				OR = {
+					NOT = { exists = owner.py:reactionary_party }
+					AND = {
+						exists = owner.py:reactionary_party
+						owner = {
+							ig:ig_reactionaries = {
+								NOT = { is_member_of_party = owner.py:reactionary_party }
+							}
+						}
+					}
+				}
+			}
+			add = {
+				value = -30
+				desc = "from_no_reactionaries_in_party" # this should probably never actually display in game because the party won't exist
+			}
+		}
+	}
+}

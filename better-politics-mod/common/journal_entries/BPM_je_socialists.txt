@@ -30,13 +30,13 @@ je_bpm_socialist_electoralism = {
 	}
 	can_deactivate = yes
 	possible = {
+		has_technology_researched = labor_movement
 		custom_tooltip = {
 			text = "bpm_je_single_party_has_elections"
 			bpm_country_laws_no_voting = no
 		}
 		NOT = { has_law = law_type:law_council_republic }
 		bpm_banned_socialist_parties = no
-		has_technology_researched = labor_movement
 	}
 	on_weekly_pulse = {
 		effect = {
@@ -69,6 +69,32 @@ je_bpm_propaganda_of_the_deed = {
 
 	group = je_group_internal_affairs
 
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_propaganda_of_the_deed_status_1
+				trigger = {
+					OR = {
+						NOT = { has_variable = bpm_je_propaganda_of_the_deed }
+						var:bpm_je_propaganda_of_the_deed < 50
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_propaganda_of_the_deed_status_2
+				trigger = {
+					bpm_je_propaganda_of_the_deed < 80
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_propaganda_of_the_deed_status_2
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
 	is_shown_when_inactive = {
 		has_technology_researched = egalitarianism
 		NOT = { has_law = law_type:law_council_republic }
@@ -78,14 +104,18 @@ je_bpm_propaganda_of_the_deed = {
 	immediate = {
 		set_variable = {
 			name = bpm_je_propaganda_of_the_deed
-			value = 0
+			value = 45
 		}
 		set_variable = {
 			name = bpm_je_propaganda_of_the_deed_бомбометр
 			value = 0
 		}
 		set_variable = {
-			name = bpm_je_propaganda_of_the_deed_exhaustion
+			name = bpm_je_propaganda_of_the_deed_months_below
+			value = 0
+		}
+		set_variable = {
+			name = bpm_je_propaganda_of_the_deed_bombs_done
 			value = 0
 		}
 		hidden_effect = {
@@ -104,6 +134,7 @@ je_bpm_propaganda_of_the_deed = {
 			value >= 0.1
 			strata = poor 
 		}
+		bpm_performance_significant_country = yes
 		
 		# has_technology_researched = anarchism
 		#OR = {
@@ -122,11 +153,17 @@ je_bpm_propaganda_of_the_deed = {
 			has_variable = bpm_je_propaganda_of_the_deed_initialized
 		}
 		OR = {
-			bpm_journal_progress_complete = {
-				VAR = bpm_je_propaganda_of_the_deed
+			custom_tooltip = {
+				text = "je_bpm_propaganda_of_the_deed_full"
+				var:bpm_je_propaganda_of_the_deed >= 100
 			}
-			bpm_journal_progress_zero = {
-				VAR = bpm_je_propaganda_of_the_deed
+			custom_tooltip = {
+				text = "je_bpm_propaganda_of_the_deed_empty"
+				var:bpm_je_propaganda_of_the_deed <= 0
+			}
+			custom_tooltip = {
+				text = "je_bpm_propaganda_of_the_deed_timeout"
+				var:bpm_je_propaganda_of_the_deed_months_below >= 120
 			}
 		}
 	}
@@ -136,7 +173,10 @@ je_bpm_propaganda_of_the_deed = {
 		hidden_effect = {
 			if = {
 				limit = {
-					var:bpm_je_propaganda_of_the_deed <= 0
+					OR = {
+						var:bpm_je_propaganda_of_the_deed_months_below >= 120
+						var:bpm_je_propaganda_of_the_deed <= 0
+					}
 				}
 				trigger_event = { id = bpm_anarchist_potd.6 popup = yes }
 			} else_if = {
@@ -162,7 +202,7 @@ je_bpm_propaganda_of_the_deed = {
 		}
 	}
 
-	on_weekly_pulse = {
+	on_monthly_pulse = {
 		effect = {
 			# Exhaustion (to get the JE to disappear on its own if it lasts too long)
 			#if = {
@@ -178,15 +218,15 @@ je_bpm_propaganda_of_the_deed = {
 			#	}
 			#} else = {
 			#if = {
-				change_variable = {
-					name = bpm_je_propaganda_of_the_deed_exhaustion
-					add = {
-						value = 75
-						subtract = bpm_je_propaganda_of_the_deed_baseline_target
-						multiply = 0.02
-						min = 0
-					}
-				}
+				# change_variable = {
+				# 	name = bpm_je_propaganda_of_the_deed_exhaustion
+				# 	add = {
+				# 		value = 75
+				# 		subtract = bpm_je_propaganda_of_the_deed_baseline_target
+				# 		multiply = 0.02
+				# 		min = 0
+				# 	}
+				# }
 			#}
 
 			# Next bomb
@@ -197,8 +237,10 @@ je_bpm_propaganda_of_the_deed = {
 				change_variable = {
 					name = bpm_je_propaganda_of_the_deed_бомбометр
 					add = bpm_je_propaganda_of_the_deed_бомбометр_rate
-					min = 0
-					max = 100
+				}
+				set_variable = {
+					name = bpm_je_propaganda_of_the_deed_months_below
+					value = 0
 				}
 			}
 			if = {
@@ -209,16 +251,29 @@ je_bpm_propaganda_of_the_deed = {
 					name = bpm_je_propaganda_of_the_deed_бомбометр
 					value = 0
 				}
-
 				trigger_event = {
 					id = bpm_anarchist_potd.1
 					days = { 1 7 }
+				}
+				change_variable = {
+					name = bpm_je_propaganda_of_the_deed_bombs_done
+					add = 1
+				}
+				set_variable = {
+					name = bpm_je_propaganda_of_the_deed_months_below
+					value = 0
+				}
+			}
+			else = {
+				change_variable = {
+					name = bpm_je_propaganda_of_the_deed_months_below
+					add = 1
 				}
 			}
 			
 			# Trend
 			bpm_handle_baseline_target_trend_script_value = {
-				RATE = 0.1
+				RATE = 0.5
 				VARIABLE = bpm_je_propaganda_of_the_deed
 			}
 		}
@@ -226,7 +281,7 @@ je_bpm_propaganda_of_the_deed = {
 
 	progressbar = yes
 	current_value = {
-		value = var:bpm_je_propaganda_of_the_deed
+		value = var:bpm_je_propaganda_of_the_deed_бомбометр
 	}
 
 	goal_add_value = {
@@ -240,7 +295,7 @@ je_bpm_propaganda_of_the_deed = {
 
 
 je_bpm_agrarian_socialism = {
-	icon = "gfx/interface/icons/law_icons/collectivized_agriculture.dds"
+	icon = "gfx/interface/icons/invention_icons/enclosure.dds"
 
 	group = je_group_internal_affairs
 
@@ -313,34 +368,25 @@ je_bpm_agrarian_socialism = {
 		}
 	}
 
-	on_weekly_pulse = {
+	on_monthly_pulse = {
 		effect = {
-			if = {
-				limit = { bpm_je_agrarian_socialism_rate > 2 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_agrarian_socialism
-					RATE = 60
-					TECH1 = socialism
-					TECH2 = political_agitation
-				}
+			# Cache the rate as a variable to avoid calculating multiple times
+			set_variable = {
+				name = bpm_je_agrarian_socialism_rate_temp
+				value = bpm_je_agrarian_socialism_rate
 			}
-			else_if = {
-				limit = { bpm_je_agrarian_socialism_rate > 1 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_agrarian_socialism
-					RATE = 30
-					TECH1 = socialism
-					TECH2 = political_agitation
-				}
-			}
-			else_if = {
-				limit = { bpm_je_agrarian_socialism_rate > 0.5 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_agrarian_socialism
-					RATE = 15
-					TECH1 = socialism
-					TECH2 = political_agitation
-				}
+			# Need to make steps discrete becuase adding tech progress is weird with non-primitive values
+			bpm_handle_je_progress_three_stage = {
+				VAR = bpm_je_agrarian_socialism
+				RATE = var:bpm_je_agrarian_socialism_rate_temp
+				RATE_LEVEL_1 = 0
+				RATE_LEVEL_2 = 2
+				RATE_LEVEL_3 = 4
+				TECH_RATE_1 = 60
+				TECH_RATE_2 = 120
+				TECH_RATE_3 = 240
+				TECH1 = socialism
+				TECH2 = political_agitation
 			}
 			set_variable = {
 				name = bpm_agrarian_socialism_power
@@ -457,10 +503,11 @@ je_bpm_agrarian_socialism = {
 	weight = 75
 
 	should_be_pinned_by_default = no
+	can_revolution_inherit = yes
 }
 
 je_bpm_syndicalism = {
-	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	icon = "gfx/interface/icons/invention_icons/anarchy.dds"
 
 	group = je_group_internal_affairs
 
@@ -484,7 +531,6 @@ je_bpm_syndicalism = {
 	can_deactivate = no
 	possible = {
 		NOT = { has_law = law_type:law_council_republic }
-		bpm_country_socialists_are_popular = yes
 		pop_type_percent_country = {
 			pop_type = peasants
 			percent < 0.5
@@ -493,6 +539,7 @@ je_bpm_syndicalism = {
 			value >= 0.1
 			strata = poor 
 		}
+		bpm_country_socialists_are_popular = yes
 	}
 
 	complete = {
@@ -530,66 +577,78 @@ je_bpm_syndicalism = {
 		}
 	}
 
-	on_weekly_pulse = {
+	on_monthly_pulse = {
 		effect = {
-			if = {
-				limit = { bpm_je_syndicalism_rate > 2 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_syndicalism
-					RATE = 60
-					TECH1 = anarchism
-					TECH2 = political_agitation
-				}
+			# Cache the rate as a variable to avoid calculating multiple times
+			set_variable = {
+				name = bpm_je_syndicalism_rate_temp
+				value = bpm_je_syndicalism_rate
 			}
-			else_if = {
-				limit = { bpm_je_syndicalism_rate > 1 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_syndicalism
-					RATE = 30
-					TECH1 = anarchism
-					TECH2 = political_agitation
-				}
-			}
-			else_if = {
-				limit = { bpm_je_syndicalism_rate > 0.5 }
-				bpm_handle_je_progress_three_stage = {
-					VAR = bpm_je_syndicalism
-					RATE = 15
-					TECH1 = anarchism
-					TECH2 = political_agitation
-				}
+			bpm_handle_je_progress_three_stage = {
+				VAR = bpm_je_syndicalism
+				RATE = var:bpm_je_syndicalism_rate_temp
+				RATE_LEVEL_1 = 0
+				RATE_LEVEL_2 = 2
+				RATE_LEVEL_3 = 4
+				TECH_RATE_1 = 60
+				TECH_RATE_2 = 120
+				TECH_RATE_3 = 240
+				TECH1 = anarchism
+				TECH2 = political_agitation
 			}
 
 			# Make characters Syndicalist/Anarcho-Syndicalist at certain level
 			if = {
 				limit = { var:bpm_je_syndicalism >= 33 }
-				ig:ig_anarchists = {
+				ig:ig_anarchists ?= {
 					if = {
 						limit = { bpm_ig_enabled = yes }
-						leader = {
-							set_ideology = ideology:ideology_anarchist_syndicalist
-						}
+						leader = { set_ideology = ideology:ideology_anarchist_syndicalist }
 					}
 				}
 			}
 			if = {
 				limit = { var:bpm_je_syndicalism >= 66 }
-				ig:ig_socialists = {
+				ig:ig_anarchists ?= {
 					if = {
-						limit = { bpm_ig_enabled = yes }
-						leader = {
-							set_ideology = ideology:ideology_syndicalist
+						limit = {
+							bpm_ig_enabled = yes
+							NOT = { has_ideology = ideology:ideology_dop_anarcho_syndicalist }
 						}
+						bpm_remove_all_dop_ideologies = yes
+						add_ideology = ideology_dop_anarcho_syndicalist
+						bpm_reorder_ideologies = yes
+						set_interest_group_name = ig_anarcho_syndicalists
 					}
 				}
-				ig:ig_revolutionist_socialists = {
+				ig:ig_trade_unions ?= {
 					if = {
-						limit = { bpm_ig_enabled = yes }
-						leader = {
-							set_ideology = ideology:ideology_syndicalist
+						limit = {
+							bpm_ig_enabled = yes
+							NOR = {
+								has_ideology = ideology:ideology_dop_syndical_unionist
+								has_ideology = ideology:ideology_dop_syndicalist
+								owner = { has_law = law_type:law_state_controlled_labor_unions } 
+							}
 						}
+						bpm_remove_all_dop_ideologies = yes
+						add_ideology = ideology_dop_syndicalist
+						bpm_reorder_ideologies = yes
+						set_interest_group_name = ig_syndicalists
 					}
 				}
+				# ig:ig_socialists = {
+				# 	if = {
+				# 		limit = { bpm_ig_enabled = yes }
+				# 		leader = { set_ideology = ideology:ideology_syndicalist }
+				# 	}
+				# }
+				# ig:ig_revolutionist_socialists = {
+				# 	if = {
+				# 		limit = { bpm_ig_enabled = yes }
+				# 		leader = { set_ideology = ideology:ideology_syndicalist }
+				# 	}
+				# }
 			}
 		}
 	}
@@ -635,4 +694,5 @@ je_bpm_syndicalism = {
 	weight = 75
 
 	should_be_pinned_by_default = no
+	can_revolution_inherit = yes
 }

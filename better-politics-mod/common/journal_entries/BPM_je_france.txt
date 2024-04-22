@@ -1,5 +1,5 @@
 ﻿je_bpm_july_monarchy = {
-	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+	icon = "gfx/interface/icons/invention_icons/currency_standards.dds"
 
 	group = je_group_historical_content
 
@@ -11,42 +11,16 @@
 	}
 
 	is_progressing = {
+		government_legitimacy >= 50
 		NOT = {
 			any_civil_war = {
 				civil_war_progress > 0.10
 			}
 		}
-		government_legitimacy >= 50
 	}
 	
-	progress_desc = {
+	status_desc = {
 		first_valid = {
-			triggered_desc = {
-				desc = je_bpm_july_monarchy_progressing_fast
-				trigger = {
-					scope:journal_entry = {
-						is_progressing = yes
-					}
-					government_legitimacy >= 90
-				}
-			}
-			triggered_desc = {
-				desc = je_bpm_july_monarchy_progressing_normal
-				trigger = {
-					scope:journal_entry = {
-						is_progressing = yes
-					}
-					government_legitimacy >= 75
-				}
-			}
-			triggered_desc = {
-				desc = je_bpm_july_monarchy_progressing_slow
-				trigger = {
-					scope:journal_entry = {
-						is_progressing = yes
-					}
-				}
-			}
 			triggered_desc = {
 				desc = je_bpm_july_monarchy_progressing_civil_war
 				trigger = {
@@ -55,22 +29,55 @@
 					}
 				}
 			}
-			desc = je_bpm_july_monarchy_progressing_low_legitimacy
+			triggered_desc = {
+				desc = je_bpm_july_monarchy_paris_turmoil
+				trigger = {
+					capital = {
+						turmoil >= 0.25
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_july_monarchy_progressing_fast
+				trigger = {
+					scope:journal_entry = {
+						is_progressing = yes
+					}
+					government_legitimacy >= 75
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_july_monarchy_progressing_normal
+				trigger = {
+					scope:journal_entry = {
+						is_progressing = yes
+					}
+					government_legitimacy >= 50
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_july_monarchy_low_legitimacy
+				trigger = {
+					government_legitimacy < 50
+				}
+			}
 		}
 	}
 	
 	complete = {
-		scope:journal_entry = {
-			is_goal_complete = yes
+		custom_tooltip = {
+			text = "bpm_je_progress_complete"
+			has_variable = bpm_july_monarchy_prog_var
+			var:bpm_july_monarchy_prog_var >= 100
+		}
+		OR = {
+			has_law = law_type:law_census_voting
+			has_law = law_type:law_universal_suffrage
 		}
 		NOT = {
 			any_civil_war = {
 				civil_war_progress > 0.10
 			}
-		}
-		OR = {
-			has_law = law_type:law_census_voting
-			has_law = law_type:law_universal_suffrage
 		}
 	}
 
@@ -82,15 +89,17 @@
 	}
 
 	fail = {
-		has_journal_entry = je_springtime_of_the_peoples
 		OR = {
 			NOT = { has_law = law_type:law_monarchy }
 			capital = {
 				turmoil >= 0.33
 			}
 			OR = {
-				radical_fraction = {
-					value >= 0.25
+				AND = {
+					has_journal_entry = je_springtime_of_the_peoples
+					radical_fraction = {
+						value >= 0.25
+					}
 				}
 				any_civil_war = {
 					civil_war_progress > 0.75
@@ -100,7 +109,6 @@
 	}
 
 	on_fail = {
-		remove_variable = bpm_july_monarchy_prog_var
 		trigger_event = { id = bpm_france.1 popup = yes }
 	}
 
@@ -112,36 +120,25 @@
 						is_progressing = yes
 					}
 				}
-				if = {
-					limit = {
-						government_legitimacy >= 90
-					}
-					change_variable = {
-						name = bpm_july_monarchy_prog_var
-						add = 2
-					}
-				}
-				else_if = {
-					limit = {
-						government_legitimacy >= 75
-					}
-					change_variable = {
-						name = bpm_july_monarchy_prog_var
-						add = 1
+				change_variable = {
+					name = bpm_july_monarchy_prog_var
+					add = {
+						value = government_legitimacy
+						multiply = 0.04
+						subtract = 2
 					}
 				}
-				else = {
-					change_variable = {
-						name = bpm_july_monarchy_prog_var
-						add = 0.5
-					}
+				clamp_variable = {
+					name = bpm_july_monarchy_prog_var
+					max = 100
+					min = 0
 				}
 			}
 		}
 	}
 
 	current_value = {
-		value = root.var:bpm_july_monarchy_prog_var
+		value = var:bpm_july_monarchy_prog_var
 	}
 
 	goal_add_value = {

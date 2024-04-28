@@ -38,6 +38,8 @@
 	pop_potential = {
 		NOR = {
 			is_pop_type = aristocrats
+			is_pop_type = capitalists
+			is_pop_type = bureaucrats
 		}
 		owner = {
 			NOT = { is_country_type = decentralized }
@@ -48,6 +50,7 @@
 	pop_weight = {
 		value = 20	
 
+		##### RURAL POP WEIGHTS ONLY #####
 		if = {
 			limit = { 
 				OR = {
@@ -96,7 +99,7 @@
 			}
 			# Literacy adds to agpops
 			if = {
-				limit = { strata <= middle }
+				limit = { strata < rich }
 				add = {
 					desc = "POP_EDUCATED_FARMERS"
 					value = literacy_rate
@@ -106,13 +109,8 @@
 			# Agsocs
 			if = {
 				limit = {
-					strata <= middle
-					scope:interest_group = {
-						OR = {
-							bpm_ig_is_socialist = yes
-							leader = { bpm_leader_is_socialist = yes }
-						}
-					}
+					strata < rich
+					scope:interest_group = { has_variable = bpm_ig_is_socialist_var }
 				}
 				if = {
 					limit = { owner = { has_law = law_type:law_commercialized_agriculture } }
@@ -145,6 +143,7 @@
 				}
 			}
 		}
+		##### IF NOT RURAL POP AND NOT ACADEMIC, EXCLUDE #####
 		else_if = {
 			limit = { NOT = { is_pop_type = academics }  }
 			add = {
@@ -153,48 +152,46 @@
 			}	
 		}
 
+		##### ACADEMICS ARE LEADERS #####
 		add = {
 			desc = "POP_LEADERS"
 			if = {
 				limit = { 
-					OR = {
-						is_pop_type = academics
-					}
-					owner = {
-						has_law = law_type:law_serfdom
-					}
+					is_pop_type = academics
+					owner = { has_law = law_type:law_serfdom }
 				}
 				value = 100
 			}
 		}
 
-		add = {
-			desc = "POP_SOLDIERS"
+		##### PEASANT/FARMER ANGER SYMPATHY SUPPORT #####
+		if = {
+			limit = { owner = { has_variable = bpm_ig_farmers_angry_var } }
 			if = {
-				limit = { 
-					is_pop_type = soldiers
-					owner = { has_variable = bpm_ig_farmers_angry_var }
+				limit = { is_pop_type = soldiers }
+				add = {
+					desc = "POPS_ANGER_SYMPATHY"
+					value = 60
 				}
-				value = 60
 			}
-		}
-
-		add = {
-			desc = "POPS_ANGER_SYMPATHY"
-			if = {
-				limit = { 
+			else_if = {
+				limit = {
 					OR = {
 						is_pop_type = clergymen
 						is_pop_type = academics
 					}
-					owner = { has_variable = bpm_ig_farmers_angry_var }
 				}
-				value = 150
+				add = {
+					desc = "POPS_ANGER_SYMPATHY"
+					value = 150
+				}
 			}
 		}
 		
+		##### AGRARIAN SOCIALISM #####
 		add = ig_attraction_agrarian_socialism
 
+		##### EXPENSIVE CALCS #####
 		if = {
 			limit = { owner = { bpm_performance_significant_country = yes } }
 			multiply = {

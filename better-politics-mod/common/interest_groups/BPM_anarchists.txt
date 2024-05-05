@@ -25,18 +25,18 @@
 	pop_potential = {
 		NOR = {
 			is_pop_type = aristocrats
+			is_pop_type = capitalists
 		}
 		owner = {
 			NOT = { is_country_type = decentralized }
 			exists = ig:ig_anarchists
 			ig:ig_anarchists = { NOT = { has_ideology = ideology:ideology_nonexistent } }
+			has_variable = bpm_country_has_non_marginal_unions_history_var
 		}
 	}
 	
 	pop_weight = {
 		value = 5
-
-		add = ig_attraction_agrarian_socialism
 
 		if = {
 			limit = { 
@@ -129,7 +129,6 @@
 			}
 		}
 
-		add = ig_attraction_tmp_bpm_non_rural_socialist
 
 		add = {
 			desc = "POP_DISCRIMINATED"
@@ -141,31 +140,35 @@
 			}
 		}	
 		
-		multiply = {
-			desc = "LEADER_POPULARITY"
-			scope:interest_group = {
-				leader = {
-					value = popularity
-					multiply = 0.01
-					add = 1
-					max = 2.0
-					min = 0.5
+		add = ig_attraction_agrarian_socialism
+
+		if = {
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			add = ig_attraction_tmp_bpm_non_rural_socialist
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.01
+						add = 1
+						max = 2.0
+						min = 0.5
+					}
 				}
-			}
-		}	
-
-		multiply = bpm_ig_agitators_popularity
-		multiply = bpm_ig_ruler_popularity
-
+			}	
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+			multiply = ig_attraction_from_radicals_and_loyalists
+		}
+		
 		multiply = {
 			desc = "NO_UNIONS"	
 			value = 1.0
 
 			if = {
 				limit = { 
-					owner = {
-						owner = { NOT = { has_variable = bpm_country_has_non_marginal_unions_history_var } }
-					}
+					owner = { NOT = { has_variable = bpm_country_has_non_marginal_unions_history_var } }
 				}
 				value = 0.1
 			}		
@@ -208,20 +211,23 @@
 				value = 1.7
 			}		
 		}	
-		multiply = {
-			desc = "BEFORE_FIRST_INTERNATIONAL"
-			value = 1.0
+		owner = {
 			if = {
-				limit = { NOT = { has_global_variable = first_intl_chain_complete_var } }
-				value = 0.6
+				limit = { has_global_variable = second_intl_chain_complete_var }
+				multiply = 1.0
 			}
-		}
-		multiply = {
-			desc = "BEFORE_SECOND_INTERNATIONAL"
-			value = 1.0
-			if = {
-				limit = { NOT = { has_global_variable = second_intl_chain_complete_var } }
-				value = 0.8
+			else_if = {
+				limit = { has_global_variable = first_intl_chain_complete_var }
+				multiply = {
+					desc = "BEFORE_SECOND_INTERNATIONAL"
+					value = 0.7
+				}
+			}
+			else = {
+				multiply = {
+					desc = "BEFORE_FIRST_INTERNATIONAL"
+					value = 0.5
+				}
 			}
 		}
 		multiply = {
@@ -273,22 +279,6 @@
 				value = 0.5
 			}		
 		}
-
-		multiply = {
-			desc = "decentralized_power"	
-			value = 1.0
-			
-			if = {
-				limit = { 
-					owner = {
-						is_country_type = decentralized
-					}
-				}
-				value = 0.0
-			}		
-		}	
-		multiply = ig_attraction_from_radicals_and_loyalists
-		#multiply = ig_attraction_to_revolutionists_from_stability
 	}
 	
 	monarch_weight = {

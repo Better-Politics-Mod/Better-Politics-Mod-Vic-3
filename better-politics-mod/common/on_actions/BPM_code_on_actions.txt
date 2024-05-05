@@ -150,7 +150,20 @@ on_bpm_yearly_pulse_country = {
 
 	effect = {
 		bpm_rename_igs = yes
-		recalculate_pop_ig_support = yes
+		if = {
+			limit = { global_country_ranking = 1 }
+			every_character_in_exile_pool = {
+				limit = {
+					is_historical = no
+					has_role = agitator
+					OR = {
+						popularity < 50
+						age >= 56
+					}
+				}
+				kill_character = yes
+			}
+		}
 		if = {
 			limit = { 
 				NOT = { has_global_variable = bpm_je_march_to_radicalism_progress }
@@ -230,6 +243,7 @@ on_bpm_monthly_pulse_country = {
 		peoples_springtime.13
 		italian_springtime.3
 		peoples_springtime.6
+		bpm_france.3
 	}
 	random_events = {
 		5 = 0
@@ -266,6 +280,15 @@ on_bpm_monthly_pulse_country = {
 			}
 		}
 		if = {
+			limit = {
+				game_date > 1844.1.1
+				game_date < 1845.1.1
+				NOT = { has_variable = bpm_1848_famine_activated }
+				bpm_country_is_in_western_europe = yes
+			}
+			set_variable = bpm_1848_famine_activated
+		}
+		if = {
 			limit = { 
 				has_global_variable = first_intl_chain_complete_var 
 				owner = { global_country_ranking = 1 } # Making trigger happer once per month because paradox apparently has no on_action for global events??? what? how??
@@ -289,31 +312,11 @@ on_bpm_law_activated = {
 	on_actions = {
 		bpm_on_actions_stubbornness
 	}
-
 	effect = {
-		owner = {
-			update_party_support = yes
-			bpm_fix_stupid_law_combinations = yes
-			bpm_institution_workaround_effect = yes
-			bpm_rename_igs = yes
-			if = {
-				limit = {
-					has_global_variable = peoples_springtime_happening
-					NOT = { has_variable = completed_peoples_springtime_je }
-					OR = {
-						any_interest_group = {
-							is_in_government = yes
-							OR = {
-								bpm_ig_is_left_wing = yes
-								leader = { bpm_leader_is_left_wing = yes }
-							}
-						}
-						bpm_country_is_republic = yes
-					}
-				}
-				trigger_event = { id = peoples_springtime.101 days = 60 popup = yes }
-			}
-		}
+		owner = { bpm_institution_workaround_effect = yes }
+	}
+	events = {
+		peoples_springtime.101
 	}
 }
 
@@ -665,7 +668,6 @@ on_bpm_country_releasing = {
 		bpm_copy_ig_initialized_status = yes
 		scope:target = {
 			bpm_setup_country = yes
-			update_loyalties = yes
 		}
 	}
 }

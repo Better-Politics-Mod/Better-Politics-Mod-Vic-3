@@ -1,5 +1,5 @@
 ﻿ig_reformist_socialists = {
-	color = hsv{ 0 0.85 1 }
+	color = hsv{ 0.94 0.9 0.8 }
 	texture = "gfx/interface/icons/ig_icons/reformists.dds"
 	layer = "revolution_dynamic_trade_unions"
 	index = 14
@@ -31,6 +31,7 @@
 		}
 		NOR = {
 			is_pop_type = aristocrats
+			is_pop_type = capitalists
 		}
 	}
 	
@@ -40,27 +41,61 @@
 		add = {
 			desc = "POWERFUL_FAC"
 			if = {
-				limit = {
-					owner = { has_variable = bpm_country_has_powerful_fascists_var }
-				}
+				limit = { owner = { has_variable = bpm_country_has_powerful_fascists_var } }
 				value = 30
 			}
 		}
 		
-		add = {
-			desc = "POP_EXCLUSIONS"
-			if = {
-				limit = { 
-					OR = {
-						is_pop_type = capitalists
-						is_pop_type = peasants
-					}
+		if = {
+			limit = {
+				OR = {
+					is_pop_type = capitalists
+					is_pop_type = peasants
 				}
+			}
+			add = {
+				desc = "POP_EXCLUSIONS"
 				value = -50
 			}
 		}
-
-		add = ig_attraction_agrarian_socialism
+		else_if = {
+			limit = { 
+				OR = {
+					is_pop_type = clerks
+					is_pop_type = laborers
+					is_pop_type = machinists
+				}
+			}
+			add = {
+				desc = "POP_PROLETARIAT"
+				value = 50
+			}
+			add = {
+				desc = "POP_EDUCATED_PROLETARIAT"
+				value = literacy_rate
+				multiply = 200
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = farmers }
+			add = {
+				desc = "POP_EDUCATED_FARMERS"
+				value = literacy_rate
+				multiply = 200
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					is_pop_type = academics
+					is_pop_type = engineers
+				}
+			}
+			add = {
+				desc = "POP_LEADERS"
+				value = 80
+			}
+		}
 
 		if = {
 			limit = { 
@@ -82,49 +117,6 @@
 				}
 			}
 		}	
-	
-		if = {
-			limit = { 
-				OR = {
-					is_pop_type = clerks
-					is_pop_type = laborers
-					is_pop_type = machinists
-				}
-			}
-			add = {
-				desc = "POP_PROLETARIAT"
-				value = 50
-			}
-			add = {
-				desc = "POP_EDUCATED_PROLETARIAT"
-				value = literacy_rate
-				multiply = 200
-			}
-		}
-
-		add = {
-			desc = "POP_EDUCATED_FARMERS"
-			if = {
-				limit = { 
-					is_pop_type = farmers
-				}
-				value = literacy_rate
-				multiply = 200
-			}
-		}	
-
-		add = {
-			desc = "POP_LEADERS"
-			if = {
-				limit = { 
-					OR = {
-						is_pop_type = academics
-						is_pop_type = engineers
-					}
-				}
-				value = 80
-			}
-		}
 
 		add = {
 			desc = "POPS_ANGER_SYMPATHY"
@@ -141,8 +133,6 @@
 			}
 		}
 
-		add = ig_attraction_tmp_bpm_non_rural_socialist
-
 		add = {
 			desc = "POP_DISCRIMINATED"
 			if = {
@@ -153,21 +143,57 @@
 			}
 		}	
 		
-		multiply = {
-			desc = "LEADER_POPULARITY"
-			scope:interest_group = {
-				leader = {
-					value = popularity
-					multiply = 0.01
-					add = 1
-					max = 2.0
-					min = 0.75
-				}
-			}
-		}	
+		add = ig_attraction_agrarian_socialism
 
-		multiply = bpm_ig_agitators_popularity
-		multiply = bpm_ig_ruler_popularity
+		if = {
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			add = ig_attraction_tmp_bpm_non_rural_socialist
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.01
+						add = 1
+						max = 2.0
+						min = 0.75
+					}
+				}
+			}	
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+			multiply = {
+				desc = "INTERNATIONAL_EXCHANGE"	
+				value = 1.0
+				if = {
+					limit = { owner = { has_technology_researched = international_exchange_standards } }
+					value = 1.3
+				}		
+			}
+			multiply = {
+				desc = "POLITICAL_AGITATION"	
+				value = 1.0
+				if = {
+					limit = { owner = { has_technology_researched = political_agitation } }
+					value = 1.3
+				}		
+			}
+			multiply = {
+				desc = "DEVASTATED"	
+				value = 1.0
+	
+				if = {
+					limit = { 
+						state = {
+							devastation > 5
+						}
+					}
+					value = 1.5
+				}		
+			}
+			multiply = ig_attraction_from_radicals_and_loyalists
+		}
+
 		multiply = ig_attraction_to_ruler_ideology_from_stability
 
 		multiply = {
@@ -181,7 +207,6 @@
 				value = 0.5
 			}		
 		}
-
 		multiply = {
 			desc = "ESTABLISHED_UNIONS"	
 			value = 1.0
@@ -207,19 +232,6 @@
 				value = 1.25
 			}		
 		}	
-		multiply = {
-			desc = "DEVASTATED"	
-			value = 1.0
-
-			if = {
-				limit = { 
-					state = {
-						devastation > 5
-					}
-				}
-				value = 1.5
-			}		
-		}
 		
 		owner = {
 			if = {
@@ -248,44 +260,20 @@
 			}
 		}
 
-		multiply = {
-			desc = "INTERNATIONAL_EXCHANGE"	
-			value = 1.0
-			if = {
-				limit = { owner = { has_technology_researched = international_exchange_standards } }
-				value = 1.3
-			}		
+		if = {
+			limit = { owner = { NOT = { has_technology_researched = labor_movement } } }
+			multiply = {
+				desc = "NO_LABOR_MOVEMENT"
+				value = 0.5
+			}
 		}
-		multiply = {
-			desc = "POLITICAL_AGITATION"	
-			value = 1.0
-			if = {
-				limit = { owner = { has_technology_researched = political_agitation } }
-				value = 1.3
-			}		
-		}
-		multiply = {
-			desc = "NO_SOCIALISM"	
-			value = 1.0
-			if = {
-				limit = { owner = { NOT = { has_technology_researched = socialism } } }
+		else_if = {
+			limit = { owner = { NOT = { has_technology_researched = socialism } } }
+			multiply = {
+				desc = "NO_SOCIALISM"
 				value = 0.7
-			}		
+			}
 		}
-		multiply = {
-			desc = "NO_LABOR_MOVEMENT"	
-			value = 1.0
-			if = {
-				limit = { owner = { NOT = { has_technology_researched = labor_movement } } }
-				value = 0.7
-			}		
-		}
-
-		multiply = ig_attraction_from_radicals_and_loyalists
-		# multiply = {
-		# 	desc = "POLITICAL_RIGIDITY"
-		# 	value = owner.var:bpm_ig_attraction_to_reformists_from_stability_var
-		# }
 	}
 	
 	monarch_weight = {

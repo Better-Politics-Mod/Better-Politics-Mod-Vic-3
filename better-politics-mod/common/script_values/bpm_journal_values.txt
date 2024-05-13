@@ -54,7 +54,7 @@ bpm_je_propaganda_of_the_deed_baseline_target = {
 		}
 	}
 	add = {
-		desc = "BPM_VALUE_FROM_INSTITUTION_DEDICATED_POLICE"
+		desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_POLICE"
 		if = {
 			limit = { has_law = law_type:law_dedicated_police }
 			add = institution:institution_police.investment
@@ -366,7 +366,7 @@ bpm_je_propaganda_of_the_deed_бомбометр_rate = {
 		}
 	}
 	subtract = {
-		desc = "BPM_VALUE_FROM_INSTITUTION_DEDICATED_POLICE"
+		desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_POLICE"
 		if = {
 			limit = { has_law = law_type:law_dedicated_police }
 			add = institution:institution_police.investment
@@ -840,6 +840,23 @@ bpm_je_general_strike_trigger_progress_baseline_target = {
 	value = bpm_je_general_strike_power
 }
 
+bpm_je_general_strike_quadratic_trade_union_support = {
+	# 0.1 * (x^2 - 10x + 25)
+	value = 0
+	add = {
+		value = ig_approval
+		multiply = ig_approval
+	}
+	subtract = {
+		value = ig_approval
+		multiply = 10
+	}
+	add = 25
+	multiply = 0.01
+	max = 1
+	min = 0
+}
+
 bpm_je_general_strike_power = {
 	value = 0
 
@@ -855,11 +872,17 @@ bpm_je_general_strike_power = {
 	add = {
 		desc = "BPM_VALUE_FROM_PEASANT_POPULATION"
 		if = {
-			limit = { pop_type_percent_country = { pop_type = peasants percent > 0.5 } }
+			limit = {
+				has_variable = bpm_peasant_population_yandev_var
+				var:bpm_peasant_population_yandev_var >= 5
+			}
 			subtract = 10
 		}
 		else_if = {
-			limit = { pop_type_percent_country = { pop_type = peasants percent > 0.25 } }
+			limit = {
+				has_variable = bpm_peasant_population_yandev_var
+				var:bpm_peasant_population_yandev_var >= 2
+			}
 			subtract = 5
 		}
 	}
@@ -910,55 +933,56 @@ bpm_je_general_strike_power = {
 
 	# Socialist/TU IG Popularity (& anger potentially)
 	add = {
-		desc = "BPM_VALUE_FROM_POPULAR_SOCIALISTS"
+		desc = "BPM_VALUE_FROM_SOCIALISTS_APPROVAL_POPULARITY"
 		every_interest_group = {
 			limit = {
 				bpm_ig_is_socialist = yes
-				bpm_ig_is_popular = yes
+				ig_approval < 5
 			}
-			add = 10
+			add = {
+				value = bpm_je_general_strike_quadratic_trade_union_support
+				# Scale by population
+				multiply = interest_group_population_percentage
+				multiply = 100
+			}
 		}
+		max = 20 # Cap at 20% of population (all socialists)
+		min = 0
 	}
 	add = {
-		desc = "BPM_VALUE_FROM_POPULAR_TRADE_UNIONS"
+		desc = "BPM_VALUE_FROM_TRADE_UNIONS_APPROVAL_POPULARITY"
 		if = {
 			limit = {
 				ig:ig_trade_unions = {
-					bpm_ig_is_popular = yes
-					owner = {
-						NOT = { has_law = law_type:state_controlled_labor_unions }
-					}
+					ig_approval < 5
 				}
 			}
-			add = 10
+			ig:ig_trade_unions ?= {
+				add = bpm_je_general_strike_quadratic_trade_union_support
+				# Scale by population
+				multiply = interest_group_population_percentage
+				multiply = 100
+				max = 10 # Cap at 10% of population
+				min = 0
+			}
 		}
 	}
 	add = {
-		desc = "BPM_VALUE_FROM_INFLUENTIAL_TRADE_UNIONS"
+		desc = "BPM_VALUE_FROM_TRADE_UNIONS_APPROVAL_CLOUT"
 		if = {
 			limit = {
 				ig:ig_trade_unions = {
-					is_marginal = no
-					owner = {
-						NOT = { has_law = law_type:state_controlled_labor_unions }
-					}
+					ig_approval < 5
 				}
 			}
-			add = 10
-		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_POWERFUL_TRADE_UNIONS"
-		if = {
-			limit = {
-				ig:ig_trade_unions = {
-					is_powerful = yes
-					owner = {
-						NOT = { has_law = law_type:state_controlled_labor_unions }
-					}
-				}
+			ig:ig_trade_unions ?= {
+				add = bpm_je_general_strike_quadratic_trade_union_support
+				# Scale by population
+				multiply = ig_clout
+				multiply = 100
+				max = 10 # Cap at 10% of clout
+				min = 0
 			}
-			add = 20
 		}
 	}
 	add = {
@@ -968,9 +992,6 @@ bpm_je_general_strike_power = {
 				ig:ig_trade_unions = {
 					bpm_ig_is_popular = yes
 					ig_approval <= angry
-					owner = {
-						NOT = { has_law = law_type:state_controlled_labor_unions }
-					}
 				}
 			}
 			add = 25
@@ -1123,7 +1144,7 @@ bpm_je_general_strike_power = {
 		else_if = {
 			limit = { has_law = law_type:law_dedicated_police }
 			subtract = {
-				desc = "BPM_VALUE_FROM_INSTITUTION_DEDICATED_POLICE"
+				desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_POLICE"
 				value = institution:institution_police.investment
 				multiply = 0.2
 			}
@@ -1205,6 +1226,24 @@ bpm_je_general_strike_power = {
 		value = bpm_je_general_strike_multiplier
 	}
 
+	if = {
+		limit = {
+			NOR = {
+				is_at_war = yes
+				any_interest_group = {
+					limit = {
+						bpm_ig_is_labor = yes
+					}
+					interest_group_supports_political_movement = yes
+				}
+			}
+		}
+		subtract = {
+			desc = "BPM_VALUE_FROM_NO_GOAL"
+			value = 100
+		}
+	}
+
 	min = 0
 	max = 101
 }
@@ -1231,7 +1270,7 @@ bpm_je_general_strike_exhaustion_rate = {
 					bpm_ig_is_popular = yes
 					bpm_ig_is_prominent = no
 					owner = {
-						NOT = { has_law = law_type:state_controlled_labor_unions }
+						NOT = { has_law = law_type:law_state_controlled_labor_unions }
 					}
 				}
 			}
@@ -1245,7 +1284,7 @@ bpm_je_general_strike_exhaustion_rate = {
 				ig:ig_trade_unions = {
 					bpm_ig_is_prominent = yes
 					owner = {
-						NOT = { has_law = law_type:state_controlled_labor_unions }
+						NOT = { has_law = law_type:law_state_controlled_labor_unions }
 					}
 
 				}
@@ -1260,7 +1299,7 @@ bpm_je_general_strike_exhaustion_rate = {
 				ig:ig_trade_unions = {
 					is_marginal = no
 					owner = {
-						NOT = { has_law = law_type:state_controlled_labor_unions }
+						NOT = { has_law = law_type:law_state_controlled_labor_unions }
 					}
 				}
 			}
@@ -1274,11 +1313,22 @@ bpm_je_general_strike_exhaustion_rate = {
 				ig:ig_trade_unions = {
 					is_powerful = yes
 					owner = {
-						NOT = { has_law = law_type:state_controlled_labor_unions }
+						NOT = { has_law = law_type:law_state_controlled_labor_unions }
 					}
 				}
 			}
 			add = -10
+		}
+	}
+	add = {
+		desc = "BPM_VALUE_FROM_CONTENT_LABOR_IGS"
+		value = 0
+		every_interest_group = {
+			limit = {
+				bpm_ig_is_labor = yes
+				ig_approval >= 0
+			}
+			add = 2
 		}
 	}
 
@@ -1295,7 +1345,7 @@ bpm_je_general_strike_exhaustion_rate = {
 		}
 	}
 	add = {
-		desc = "BPM_VALUE_FROM_INSTITUTION_DEDICATED_POLICE"
+		desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_POLICE"
 		if = {
 			limit = { 
 				has_law = law_type:law_dedicated_police 
@@ -1352,25 +1402,6 @@ bpm_je_general_strike_exhaustion_rate = {
 			multiply = bpm_je_general_strike_multiplier
 		}
 	}
-
-	if = {
-		limit = {
-			NOR = {
-				is_at_war = yes
-				any_interest_group = {
-					limit = {
-						bpm_ig_is_labor = yes
-					}
-					interest_group_supports_political_movement = yes
-				}
-			}
-		}
-		subtract = {
-			desc = "BPM_VALUE_FROM_NO_GOAL"
-			value = 100
-		}
-	}
-
 
 	if = {
 		desc = "BPM_VALUE_REACHED_CEILING"

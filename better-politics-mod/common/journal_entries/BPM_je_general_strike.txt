@@ -44,7 +44,9 @@ je_bpm_general_strike_trigger = {
 			value = 0
 		}
 		if = {
-			limit = { NOT = { has_variable = bpm_je_general_strike_exhaustion } }
+			limit = {
+				NOT = { has_variable = bpm_je_general_strike_exhaustion }
+			}
 			set_variable = {
 				name = bpm_je_general_strike_exhaustion
 				value = 0
@@ -90,7 +92,6 @@ je_bpm_general_strike_trigger = {
 			change_variable = {
 				name = bpm_je_general_strike_exhaustion
 				add = bpm_je_general_strike_exhaustion_rate
-				min = 0
 			}
 			clamp_variable = {
 				name = bpm_je_general_strike_exhaustion
@@ -130,11 +131,37 @@ je_bpm_general_strike_ongoing= {
 	scripted_button = bpm_je_general_strike_concessions
 	scripted_button = bpm_je_general_strike_minor_concessions
 	scripted_button = bpm_je_general_strike_crackdown
+	scripted_button = bpm_je_general_strike_white_terror
 
 	group = je_group_crises
 
 	can_revolution_inherit = no
 	transferable = no
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_general_strike_ongoing_status_1
+				trigger = {
+					has_variable = bpm_je_general_strike_exhaustion
+					var:bpm_je_general_strike_exhaustion < 50
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_general_strike_ongoing_status_2
+				trigger = {
+					has_variable = bpm_je_general_strike_exhaustion
+					var:bpm_je_general_strike_exhaustion < 100
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_general_strike_ongoing_status_3
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
 
 	immediate = {
 		set_variable = {
@@ -145,41 +172,38 @@ je_bpm_general_strike_ongoing= {
 			name = bpm_je_general_strike_trigger_random
 			value = 0
 		}
-		set_variable = {
-			name = bpm_je_general_strike_exhaustion
-			value = 0
+	}
+
+	complete = {
+		bpm_journal_progress_complete = {
+			VAR = bpm_je_general_strike_progress
+		}
+		custom_tooltip = {
+			text = bpm_labor_igs_not_insurrectionary
+			NOT = {
+				any_interest_group = {
+					bpm_ig_is_labor = yes
+					is_insurrectionary = yes
+				}
+			}
 		}
 	}
 
 	fail = {
-		NOT = { # Strike will continue while a revolution is ongoing
-			any_civil_war = {
-				is_civil_war_type = revolution
-			}
-		}
-		bpm_journal_progress_complete = {
+		bpm_journal_progress_zero = {
 			VAR = bpm_je_general_strike_progress
-		}
-	}
-
-	complete = {
-		NOT = { # Strike will continue while a revolution is ongoing
-			any_civil_war = {
-				is_civil_war_type = revolution
-			}
 		}
 		custom_tooltip = {
 			text = bpm_general_strike_exhaustion_above_50
 			var:bpm_je_general_strike_exhaustion > 50
 		}
-		bpm_journal_progress_zero = {
-			VAR = bpm_je_general_strike_progress
-		}
 	}
 
-	on_fail = {
-		add_journal_entry = { type = je_bpm_general_strike_trigger }
-		remove_modifier = bpm_general_strike_modifier
+	on_complete = {
+		hidden_effect = {
+			remove_modifier = bpm_general_strike_modifier
+			add_journal_entry = { type = je_bpm_general_strike_trigger }
+		}
 		if = { # Syndicalist revolution
 			limit = {
 				has_journal_entry = je_bpm_syndicalism
@@ -201,12 +225,14 @@ je_bpm_general_strike_ongoing= {
 				}
 				activate_law = law_type:law_no_party_bans
 			}
-			call_election = {
-				months = 2
-			}
-			trigger_event = {
-				popup = yes
-				id = bpm_general_strike.3
+			hidden_effect = {
+				call_election = {
+					months = 2
+				}
+				trigger_event = {
+					popup = yes
+					id = bpm_general_strike.3
+				}
 			}
 		} else_if = {
 			limit = { is_at_war = yes }
@@ -230,26 +256,26 @@ je_bpm_general_strike_ongoing= {
 				popup = yes
 				id = bpm_general_strike.2
 			}
-		} else = { # General concessions (without loyalists)
-			bpm_give_labor_concession = yes
-			trigger_event = {
-				popup = yes
-				id = bpm_general_strike.1
+		} else = { # General concessions
+			bpm_fold_to_general_strike = yes
+			hidden_effect = {
+				trigger_event = {
+					popup = yes
+					id = bpm_general_strike.1
+				}
 			}
-		}
-		add_loyalists = {
-			value = very_large_radicals
-			strata = poor
 		}
 	}
 
-	on_complete = {
+	on_fail = {
 		custom_tooltip = {
 			text = "bpm_general_strike_will_fail"
 			post_notification = bpm_general_strike_fail
 			add_journal_entry = { type = je_bpm_general_strike_trigger }
 		}
-		remove_modifier = bpm_general_strike_modifier
+		hidden_effect = {
+			remove_modifier = bpm_general_strike_modifier
+		}
 		if = {
 			limit = {
 				has_journal_entry = je_bpm_syndicalism

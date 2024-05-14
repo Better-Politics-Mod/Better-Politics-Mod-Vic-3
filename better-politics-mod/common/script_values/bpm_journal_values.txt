@@ -1222,7 +1222,6 @@ bpm_je_general_strike_power = {
 	}
 
 	multiply = {
-		desc = "BPM_STRIKE_ALREADY_ACTIVE_MULTIPLIER"
 		value = bpm_je_general_strike_multiplier
 	}
 
@@ -1244,7 +1243,12 @@ bpm_je_general_strike_power = {
 		}
 	}
 
-	min = 0
+	if = {
+		limit = {
+			NOT = { has_journal_entry = je_bpm_general_strike_ongoing }
+		}
+		min = 0
+	}
 	max = 101
 }
 
@@ -1257,67 +1261,33 @@ bpm_je_general_strike_exhaustion_rate = {
 			limit = { has_journal_entry = je_bpm_general_strike_trigger }
 			value = -5
 		} else = {
-			value = 10
+			value = 5
 		}
 	}
 
 	# Larger and more powerful unions exhaust less
 	add = {
-		desc = "BPM_VALUE_FROM_POPULAR_TRADE_UNIONS"
-		if = {
-			limit = {
-				ig:ig_trade_unions = {
-					bpm_ig_is_popular = yes
-					bpm_ig_is_prominent = no
-					owner = {
-						NOT = { has_law = law_type:law_state_controlled_labor_unions }
-					}
-				}
-			}
-			add = -2
+		desc = "BPM_VALUE_FROM_TRADE_UNION_POPULARITY"
+		ig:ig_trade_unions ?= {
+			subtract = interest_group_population_percentage
+			multiply = 100
 		}
 	}
 	add = {
-		desc = "BPM_VALUE_FROM_PROMINENT_TRADE_UNIONS"
-		if = {
-			limit = {
-				ig:ig_trade_unions = {
-					bpm_ig_is_prominent = yes
-					owner = {
-						NOT = { has_law = law_type:law_state_controlled_labor_unions }
-					}
-
-				}
-			}
-			add = -5
+		desc = "BPM_VALUE_FROM_TRADE_UNION_CLOUT"
+		ig:ig_trade_unions ?= {
+			subtract = ig_clout
+			multiply = 100
 		}
 	}
 	add = {
-		desc = "BPM_VALUE_FROM_INFLUENTIAL_TRADE_UNIONS"
-		if = {
-			limit = {
-				ig:ig_trade_unions = {
-					is_marginal = no
-					owner = {
-						NOT = { has_law = law_type:law_state_controlled_labor_unions }
-					}
-				}
+		desc = "BPM_VALUE_FROM_SOCIALISTS_POPULARITY"
+		every_interest_group = {
+			limit = { bpm_ig_is_socialist = yes }
+			add = {
+				subtract = interest_group_population_percentage
+				multiply = 100
 			}
-			add = -5
-		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_POWERFUL_TRADE_UNIONS"
-		if = {
-			limit = {
-				ig:ig_trade_unions = {
-					is_powerful = yes
-					owner = {
-						NOT = { has_law = law_type:law_state_controlled_labor_unions }
-					}
-				}
-			}
-			add = -10
 		}
 	}
 	add = {

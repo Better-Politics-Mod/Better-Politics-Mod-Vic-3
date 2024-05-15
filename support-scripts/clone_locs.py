@@ -23,7 +23,7 @@ loc_dict = {language: {} for language in languages}
 
 
 def extract_loc_key_text(line: str):
-    match = re.match(r'(\w+):\d+\s+"(.*?)"(?:\s*#|$)', line.strip())
+    match = re.match(r'([\w.]+):\d+\s+"(.*?)"(?:\s*#|$)', line.strip())
     if match:
         key, text = match.groups()
         return key, text
@@ -47,13 +47,15 @@ def clone_file(file: Path):
         print(f"Processing {new_path}")
         if language in languages_with_loc:
             loc_dict = {}
-            with open(new_path, "r", encoding="utf-8-sig") as f2:
-                lines = f2.readlines()
-                for line in lines:
-                    key, text = extract_loc_key_text(line)
-                    if key:
-                        loc_dict[key] = text
+            if os.path.exists(new_path):
+                with open(new_path, "r", encoding="utf-8-sig") as f2:
+                    lines = f2.readlines()
+                    for line in lines:
+                        key, text = extract_loc_key_text(line)
+                        if key:
+                            loc_dict[key] = text
             with open(new_path, "a", encoding="utf-8-sig") as f2:
+                f2.write("\n")
                 for key, text in loc_dict_english.items():
                     if key not in loc_dict:
                         f2.write(f' {key}:0 "{loc_dict_english[key]}"\n')

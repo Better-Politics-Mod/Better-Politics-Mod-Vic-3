@@ -1,0 +1,725 @@
+﻿# Socialists are split on bourgeois republican electoralism. They also were split on the same question a century before because some things never change.
+# Socialists will become more electoralist if:
+# * There are powerful socialist IGs in the country 
+# * Any socialist IGs are in government 
+# * We have the Right of Assembly or even better, Protected Speech 
+# * We have Guaranteed Liberties (bonus for every level of institution)
+# * There are very happy non-marginal socialist IGs 
+# * There is a revolution brewing  
+# * Non-marginal socialist IGs are getting bolstered 
+# Socialists will become more anti-electoralist if:
+# * There's Censorship or even worse, Outlawed Dissent
+# * We have Secret Police (penalty for every level of institution)
+# * We have angry non-marginal socialist IGs
+# * Socialist IGs are getting suppressed 
+# These factors together will form the baseline value to which the JE's progress bar will trend. 
+
+je_bpm_socialist_electoralism = {
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	group = je_group_internal_affairs
+	is_shown_when_inactive = {
+		always = yes
+	}
+	immediate = {
+		set_variable = {
+			name = bpm_je_socialist_electoralism
+			value = 0
+		}
+		bpm_socialist_electoralism_update_baseline_target = yes
+		trigger_event = { id = bpm_socialist_utils.5 days = 1 }
+	}
+	can_deactivate = yes
+	possible = {
+		has_technology_researched = labor_movement
+		custom_tooltip = {
+			text = "bpm_je_single_party_has_elections"
+			bpm_country_laws_no_voting = no
+		}
+		NOT = { has_law = law_type:law_council_republic }
+		bpm_banned_socialist_parties = no
+	}
+	on_weekly_pulse = {
+		effect = {
+			bpm_socialist_electoralism_update_baseline_target = yes
+			bpm_handle_baseline_target_trend = {
+				RATE = 2.0
+				VARIABLE = bpm_je_socialist_electoralism
+			}
+		}
+	}
+	progressbar = yes
+	current_value = {
+		value = var:bpm_je_socialist_electoralism
+	}
+	goal_add_value = {
+		add = 100
+	}
+	weight = 25
+	should_be_pinned_by_default = no
+}
+
+# je_bpm_anarchist_funny
+# Propaganda of the Deed
+# Early anarchists were trigger happy on blowing up people, usually cops and tsars. Sometimes they even succeeded! 
+# Every time they did do an explosion, though, the state clamped down hard on them, so the strategy went out of favor.
+# This JE is rerpresenting that.
+
+je_bpm_propaganda_of_the_deed = {
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	group = je_group_internal_affairs
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_propaganda_of_the_deed_status_1
+				trigger = {
+					OR = {
+						NOT = { has_variable = bpm_je_propaganda_of_the_deed }
+						var:bpm_je_propaganda_of_the_deed < 50
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_propaganda_of_the_deed_status_2
+				trigger = {
+					var:bpm_je_propaganda_of_the_deed < 80
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_propaganda_of_the_deed_status_2
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	is_shown_when_inactive = {
+		OR = {
+			has_technology_researched = egalitarianism
+			has_global_variable = first_intl_chain_complete_var
+		}
+		NOT = { has_law = law_type:law_council_republic }
+		bpm_performance_significant_country = yes
+	}
+
+	immediate = {
+		set_variable = {
+			name = bpm_je_propaganda_of_the_deed
+			value = 40
+		}
+		set_variable = {
+			name = bpm_je_propaganda_of_the_deed_бомбометр
+			value = 0
+		}
+		set_variable = {
+			name = bpm_je_propaganda_of_the_deed_months_below
+			value = 0
+		}
+		set_variable = {
+			name = bpm_je_propaganda_of_the_deed_bombs_done
+			value = 0
+		}
+		hidden_effect = {
+			trigger_event = { id = bpm_anarchist_utils.5 days = 1 }
+			trigger_event = { id = bpm_anarchist_potd.7 popup = yes }
+		}
+	}
+
+	can_deactivate = no
+	possible = {
+		custom_tooltip = {
+			text = "bpm_first_intl_happened"
+			has_global_variable = first_intl_chain_complete_var
+		}
+		NOT = { has_law = law_type:law_council_republic }
+		custom_tooltip = {
+			text = "bpm_anarchists_are_present"
+			has_variable = local_anarchists_split_var
+		}
+		# radical_fraction = {
+		#	value >= 0.1
+		#	strata = poor 
+		# }
+		bpm_performance_significant_country = yes
+		
+		# has_technology_researched = anarchism
+		#OR = {
+		#	ig:ig_anarchists = {
+		#		is_marginal = no
+		#	}
+		#	any_scope_character = {
+		#		has_role = agitator
+		#		is_interest_group_type = ig_anarchists
+		#	}
+		#}
+	}
+
+	complete = {
+		hidden_trigger = {
+			has_variable = bpm_je_propaganda_of_the_deed_initialized
+		}
+		OR = {
+			custom_tooltip = {
+				text = "je_bpm_propaganda_of_the_deed_full"
+				var:bpm_je_propaganda_of_the_deed >= bpm_je_propaganda_of_the_deed_complete_threshold_value
+			}
+			custom_tooltip = {
+				text = "je_bpm_propaganda_of_the_deed_empty"
+				var:bpm_je_propaganda_of_the_deed <= 0
+			}
+			custom_tooltip = {
+				text = "je_bpm_propaganda_of_the_deed_timeout"
+				var:bpm_je_propaganda_of_the_deed_months_below >= 120
+			}
+		}
+	}
+
+	on_complete = {
+		custom_tooltip = bpm_je_propaganda_of_the_deed_complete
+		hidden_effect = {
+			if = {
+				limit = {
+					has_variable = bpm_je_propaganda_of_the_deed_months_below
+					OR = {
+						var:bpm_je_propaganda_of_the_deed_months_below >= 120
+						var:bpm_je_propaganda_of_the_deed <= 0
+					}
+				}
+				trigger_event = { id = bpm_anarchist_potd.6 popup = yes }
+			} else_if = {
+				limit = {
+					has_variable = bpm_je_propaganda_of_the_deed
+					var:bpm_je_propaganda_of_the_deed >= bpm_je_propaganda_of_the_deed_complete_threshold_value
+				}
+				
+				if = {
+					limit = {
+						ig:ig_anarchists = {
+							is_powerful = yes
+						}
+						any_scope_character = {
+							has_role = agitator
+							is_interest_group_type = ig_anarchists
+						}
+					}
+					trigger_event = { id = bpm_anarchist_potd.5 popup = yes }
+				} else = {
+					trigger_event = { id = bpm_anarchist_potd.4 popup = yes }
+				}
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			# Exhaustion (to get the JE to disappear on its own if it lasts too long)
+			#if = {
+			#	limit = {
+			#		OR = {
+			#			bpm_je_propaganda_of_the_deed_baseline_target >= 50
+			#			var:bpm_je_propaganda_of_the_deed >= 50
+			#		}
+			#	}
+			#	change_variable = {
+			#		name = bpm_je_propaganda_of_the_deed_exhaustion
+			#		add = 0.01
+			#	}
+			#} else = {
+			#if = {
+				# change_variable = {
+				# 	name = bpm_je_propaganda_of_the_deed_exhaustion
+				# 	add = {
+				# 		value = 75
+				# 		subtract = bpm_je_propaganda_of_the_deed_baseline_target
+				# 		multiply = 0.02
+				# 		min = 0
+				# 	}
+				# }
+			#}
+
+			# Next bomb
+			if = {
+				limit = {
+					var:bpm_je_propaganda_of_the_deed >= bpm_je_propaganda_of_the_deed_decay_threshold_value
+				}
+				change_variable = {
+					name = bpm_je_propaganda_of_the_deed_бомбометр
+					add = bpm_je_propaganda_of_the_deed_бомбометр_rate
+				}
+			}
+			if = {
+				limit = {
+					var:bpm_je_propaganda_of_the_deed_бомбометр >= 100
+				}
+				set_variable = {
+					name = bpm_je_propaganda_of_the_deed_бомбометр
+					value = 0
+				}
+				trigger_event = {
+					id = bpm_anarchist_potd.1
+					days = { 1 7 }
+				}
+				change_variable = {
+					name = bpm_je_propaganda_of_the_deed_bombs_done
+					add = 1
+				}
+				set_variable = {
+					name = bpm_je_propaganda_of_the_deed_months_below
+					value = 0
+				}
+			}
+			else = {
+				change_variable = {
+					name = bpm_je_propaganda_of_the_deed_months_below
+					add = 1
+				}
+			}
+			
+			# Trend
+			bpm_handle_baseline_target_trend_script_value = {
+				RATE = 0.5
+				VARIABLE = bpm_je_propaganda_of_the_deed
+			}
+		}
+	}
+
+	progressbar = yes
+	current_value = {
+		value = var:bpm_je_propaganda_of_the_deed_бомбометр
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+}
+
+
+je_bpm_agrarian_socialism = {
+	icon = "gfx/interface/icons/invention_icons/enclosure.dds"
+
+	group = je_group_internal_affairs
+
+	is_shown_when_inactive = {
+		has_variable = bpm_peasant_population_yandev_var
+		OR = {
+			has_technology_researched = egalitarianism
+			has_global_variable = first_intl_chain_complete_var
+		}
+		NOT = { has_law = law_type:law_council_republic }
+		bpm_performance_significant_country = yes
+	}
+
+	immediate = {
+		set_variable = {
+			name = bpm_je_agrarian_socialism
+			value = 0
+		}
+		hidden_effect = {
+			trigger_event = { id = bpm_socialist_utils.6 days = 1 }
+			trigger_event = { id = bpm_ig_attraction_utils.1 }
+		}
+		if = {
+			limit = {
+				NOT = { has_variable = bpm_agrarian_socialism_power }
+			}
+			set_variable = {
+				name = bpm_agrarian_socialism_power
+				value = 0
+			}
+		}
+	}
+
+	can_deactivate = no
+
+	possible = {
+		bpm_performance_significant_country = yes
+		custom_tooltip = {
+			text = "bpm_first_intl_happened"
+			has_global_variable = first_intl_chain_complete_var
+		}
+		NOT = { has_law = law_type:law_council_republic }
+		has_technology_researched = labor_movement
+		custom_tooltip = {
+			text = "bpm_peasant_population_gt_30"
+			has_variable = bpm_peasant_population_yandev_var
+			var:bpm_peasant_population_yandev_var >= 3
+		}
+	}
+
+	complete = {
+		has_law = law_type:law_council_republic
+		custom_tooltip = {
+			text = "bpm_journal_final_stage"
+			var:bpm_je_agrarian_socialism > 66
+		}
+	}
+
+	on_complete = {
+		
+	}
+
+	fail = {
+		OR = {
+			AND = {
+				custom_tooltip = {
+					text = "bpm_je_reached_stage_2"
+					has_variable = bpm_je_agrarian_socialism_reached_stage_2
+				}
+				bpm_journal_progress_zero = {
+					VAR = bpm_je_agrarian_socialism
+				}
+			}
+			custom_tooltip = {
+				text = "bpm_peasant_population_lt_30"
+				has_variable = bpm_peasant_population_yandev_var
+				var:bpm_peasant_population_yandev_var < 3
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			# Cache the rate as a variable to avoid calculating multiple times
+			set_variable = {
+				name = bpm_je_agrarian_socialism_rate_temp
+				value = bpm_je_agrarian_socialism_rate
+			}
+			# Need to make steps discrete becuase adding tech progress is weird with non-primitive values
+			bpm_handle_je_progress_three_stage = {
+				VAR = bpm_je_agrarian_socialism
+				RATE = var:bpm_je_agrarian_socialism_rate_temp
+				RATE_LEVEL_1 = 0
+				RATE_LEVEL_2 = 2
+				RATE_LEVEL_3 = 4
+				TECH_RATE_1 = 60
+				TECH_RATE_2 = 120
+				TECH_RATE_3 = 240
+				TECH1 = socialism
+				TECH2 = political_agitation
+			}
+			set_variable = {
+				name = bpm_agrarian_socialism_power
+				value = {
+					value = var:bpm_je_agrarian_socialism
+					subtract = 33
+					multiply = 1.5
+				}
+			}
+			clamp_variable = {
+				name = bpm_agrarian_socialism_power
+				max = 100
+				min = 0
+			}
+
+			# Handle global influence of agrarian socialism
+			set_variable = {
+				name = bpm_agrarian_socialism_power_global_candidate
+				value = {
+					value = var:bpm_agrarian_socialism_power
+					multiply = 0.25
+					if = {
+						limit = { country_rank = rank_value:great_power }
+						multiply = 2
+					}
+				}
+			}
+			clamp_variable = {
+				name = bpm_agrarian_socialism_power_global_candidate
+				max = 100
+				min = 0
+			}
+			if = {
+				limit = {
+					country_rank >= rank_value:unrecognized_regional_power
+					OR = {
+						NOT = { has_global_variable = bpm_agrarian_socialism_power_global }
+						global_var:bpm_agrarian_socialism_power_global < var:bpm_agrarian_socialism_power_global_candidate
+					}
+				}
+				set_global_variable = {
+					name = bpm_agrarian_socialism_power_global
+					value = var:bpm_agrarian_socialism_power_global_candidate
+				}
+			}
+
+			# Make Agrarian Populists into Agrarian Socialists
+			if = {
+				limit = { var:bpm_je_agrarian_socialism >= 33.1	}
+				set_variable = bpm_je_agrarian_socialism_reached_stage_2
+				every_interest_group = {
+					limit = { is_interest_group_type = ig_agrarian_populists }
+					leader = {
+						set_ideology = ideology:ideology_agrarian_socialist_leader
+					}
+				}
+			}
+			if = {
+				limit = { var:bpm_je_agrarian_socialism >= 66.1	}
+				every_interest_group = {
+					limit = { 
+						is_interest_group_type = ig_agrarian_populists
+						NOT = { has_ideology = ideology:ideology_gov_radical_proletarian } 
+					}
+					bpm_remove_all_gov_ideologies = yes
+					add_ideology = ideology_gov_radical_proletarian
+					bpm_remove_all_eco_ideologies = yes
+					add_ideology = ideology_eco_agrarian_socialist
+					bpm_reorder_ideologies = yes
+				}
+			}
+		}
+	}
+
+	progressbar = yes
+	current_value = {
+		value = var:bpm_je_agrarian_socialism
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_agrarian_socialism_status_3
+				trigger = {
+					has_variable = bpm_je_agrarian_socialism
+					var:bpm_je_agrarian_socialism >= 66
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_agrarian_socialism_status_2
+				trigger = {
+					has_variable = bpm_je_agrarian_socialism
+					var:bpm_je_agrarian_socialism >= 33
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_agrarian_socialism_status_1
+				trigger = {
+					has_variable = bpm_je_agrarian_socialism
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_agrarian_socialism_status
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	weight = 75
+
+	should_be_pinned_by_default = no
+	can_revolution_inherit = yes
+}
+
+je_bpm_syndicalism = {
+	icon = "gfx/interface/icons/invention_icons/anarchy.dds"
+
+	group = je_group_internal_affairs
+
+	is_shown_when_inactive = {
+		has_variable = bpm_peasant_population_yandev_var
+		has_global_variable = bpm_anarchist_potd_ended_in_gp
+		NOT = { has_law = law_type:law_council_republic }
+		bpm_performance_significant_country = yes
+	}
+
+	immediate = {
+		set_variable = {
+			name = bpm_je_syndicalism
+			value = 0
+		}
+		set_variable = {
+			name = bpm_syndicalist_strikes_failed
+			value = 0
+		}
+	}
+
+	can_deactivate = no
+	possible = {
+		bpm_performance_significant_country = yes
+		custom_tooltip = {
+			text = BPM_VALUE_POTD_ENDED_IN_GP
+			has_global_variable = bpm_anarchist_potd_ended_in_gp
+		}
+		NOT = { has_law = law_type:law_council_republic }
+		bpm_country_proletarian_are_popular = yes
+	}
+
+	complete = {
+		has_law = law_type:law_council_republic
+		custom_tooltip = {
+			text = "bpm_journal_final_stage"
+			has_variable = bpm_je_syndicalism
+			var:bpm_je_syndicalism > 66
+		}
+	}
+
+	on_complete = {
+		# Legitimize Syndicalism worldwide permanently 
+		if = {
+			limit = {
+				country_rank >= rank_value:unrecognized_regional_power
+			}
+			trigger_event = { id = bpm_syndicalism.1 days = 7 popup = yes }
+		} else = {
+			trigger_event = { id = bpm_syndicalism.2 days = 7 popup = yes }
+		}
+
+		# Enact Syndicalism law 
+		activate_law = law_type:law_syndicalism
+	}
+
+	fail = {
+		custom_tooltip = {
+			text = "bpm_je_reached_stage_2"
+			has_variable = bpm_je_syndicalism_reached_stage_2
+		}
+		bpm_journal_progress_zero = {
+			VAR = bpm_je_syndicalism
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			# Cache the rate as a variable to avoid calculating multiple times
+			set_variable = {
+				name = bpm_je_syndicalism_rate_temp
+				value = bpm_je_syndicalism_rate
+			}
+			bpm_handle_je_progress_three_stage = {
+				VAR = bpm_je_syndicalism
+				RATE = var:bpm_je_syndicalism_rate_temp
+				RATE_LEVEL_1 = 0
+				RATE_LEVEL_2 = 2
+				RATE_LEVEL_3 = 4
+				TECH_RATE_1 = 60
+				TECH_RATE_2 = 120
+				TECH_RATE_3 = 240
+				TECH1 = anarchism
+				TECH2 = political_agitation
+			}
+
+			# Make characters Syndicalist/Anarcho-Syndicalist at certain level
+			if = {
+				limit = { var:bpm_je_syndicalism > 33.1 }
+				set_variable = bpm_je_syndicalism_reached_stage_2
+				ig:ig_anarchists ?= {
+					if = {
+						limit = { bpm_ig_enabled = yes }
+						leader = { set_ideology = ideology:ideology_anarchist_syndicalist }
+					}
+				}
+				ig:ig_trade_unions ?= {
+					if = {
+						limit = { 
+							bpm_ig_enabled = yes 
+							NOT = { 
+								owner = { has_law = law_type:law_state_controlled_labor_unions } 
+							}
+						}
+						leader = { set_ideology = ideology:ideology_syndicalist }
+					}
+				}
+			}
+			if = {
+				limit = { var:bpm_je_syndicalism > 66.1 }
+				ig:ig_anarchists ?= {
+					if = {
+						limit = {
+							bpm_ig_enabled = yes
+							NOT = { has_ideology = ideology:ideology_dop_anarcho_syndicalist }
+						}
+						bpm_remove_all_dop_ideologies = yes
+						add_ideology = ideology_dop_anarcho_syndicalist
+						bpm_reorder_ideologies = yes
+						set_interest_group_name = ig_anarcho_syndicalists
+					}
+				}
+				ig:ig_trade_unions ?= {
+					if = {
+						limit = {
+							bpm_ig_enabled = yes
+							NOR = {
+								has_ideology = ideology:ideology_dop_syndical_unionist
+								has_ideology = ideology:ideology_dop_syndicalist
+								owner = { has_law = law_type:law_state_controlled_labor_unions } 
+							}
+						}
+						bpm_remove_all_dop_ideologies = yes
+						add_ideology = ideology_dop_syndicalist
+						bpm_reorder_ideologies = yes
+						set_interest_group_name = ig_syndicalists
+					}
+				}
+				# ig:ig_socialists = {
+				# 	if = {
+				# 		limit = { bpm_ig_enabled = yes }
+				# 		leader = { set_ideology = ideology:ideology_syndicalist }
+				# 	}
+				# }
+				# ig:ig_revolutionist_socialists = {
+				# 	if = {
+				# 		limit = { bpm_ig_enabled = yes }
+				# 		leader = { set_ideology = ideology:ideology_syndicalist }
+				# 	}
+				# }
+			}
+		}
+	}
+
+	progressbar = yes
+	current_value = {
+		value = var:bpm_je_syndicalism
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_syndicalism_status_3
+				trigger = {
+					has_variable = bpm_je_syndicalism
+					var:bpm_je_syndicalism > 66
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_syndicalism_status_2
+				trigger = {
+					has_variable = bpm_je_syndicalism
+					var:bpm_je_syndicalism > 33
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_syndicalism_status_1
+				trigger = {
+					has_variable = bpm_je_syndicalism
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_syndicalism_status
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	weight = 75
+
+	should_be_pinned_by_default = no
+	can_revolution_inherit = yes
+}

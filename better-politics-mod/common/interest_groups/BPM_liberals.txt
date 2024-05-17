@@ -7,7 +7,7 @@
 	ideologies = {
 		ideology_gov_liberal_republican
 		ideology_dop_moderate_democrat
-		ideology_sta_powerful_state
+		ideology_sta_weak_state
 		ideology_cit_liberal_nationalist
 		ideology_rel_secularist
 		ideology_mil_patriotic
@@ -15,6 +15,10 @@
 		ideology_wel_market_welfare
 		ideology_fem_benevolent_sexism
 		ideology_ban_averse
+		# Vanilla
+		ideology_liberal
+		ideology_laissez_faire
+		ideology_individualist
 	}
 	
 	enable = {
@@ -55,152 +59,113 @@
 			}
 		}
 
-		add = {
-			desc = "POP_EXCLUSIONS"
-			if = {
-				limit = { 
-					is_pop_type = peasants
-				}
+		if = {
+			limit = { is_pop_type = peasants }
+			add = {
+				desc = "POP_EXCLUSIONS"
 				value = -50
 			}
 		}
-		add = {
-			desc = "POP_EXCLUSIONS"
-			if = {
-				limit = { 
-					is_pop_type = clergymen
-				}
-				value = -15
-			}
-		}
-		add = {
-			desc = "POP_CAPITALISTS"
-			if = {
-				limit = { 
-					is_pop_type = capitalists
-				}
-				value = 195
-			}
-		}	
-		add = {
-			desc = "POP_ARISTOCRATS"
-			if = {
-				limit = { 
-					is_pop_type = aristocrats
-				}
+		else_if = {
+			limit = { is_pop_type = aristocrats }
+			add = {
+				desc = "POP_ARISTOCRATS"
 				value = 60
 			}
-		}	
-
-		add = {
-			desc = "MIDDLE_CLASS"
-			if = {
-				limit = { 
-					strata = middle
-				}
+		}
+		else_if = {
+			limit = { is_pop_type = capitalists }
+			add = {
+				desc = "POP_CAPITALISTS"
+				value = 195
+			}
+		}
+		else_if = {
+			limit = {
+				strata = middle
+				NOT = { is_pop_type = clergymen }
+			}
+			add = {
+				desc = "MIDDLE_CLASS"
 				value = 30
 			}
 		}
 
-		add = {
-			desc = "URBAN"
-			if = {
-				limit = { 
-					NOR = {
-						pop_employment_building_group = bg_agriculture
-						pop_employment_building_group = bg_ranching
-						pop_employment_building_group = bg_plantations
-					}
+		# URBAN EMPLOYMENT
+		if = {
+			limit = {
+				NOR = {
+					pop_employment_building_group = bg_agriculture
+					pop_employment_building_group = bg_ranching
+					pop_employment_building_group = bg_plantations
 				}
+			}
+			add = {
 				value = 30
+				desc = "URBAN"
 			}
-		}
-
-		add = {
-			desc = "URBAN_MIDDLE_CLASS"
 			if = {
-				limit = { 
-					NOR = {
-						pop_employment_building_group = bg_agriculture
-						pop_employment_building_group = bg_ranching
-						pop_employment_building_group = bg_plantations
-						is_pop_type = clergymen
-					}
+				limit = {
 					strata = middle
+					NOT = { is_pop_type = clergymen }
 				}
-				value = 100
+				add = {
+					value = 100
+					desc = "URBAN_MIDDLE_CLASS"
+				}
+			}
+			else_if = {
+				limit = { strata = rich }
+				add = {
+					value = 50
+					desc = "URBAN_UPPER_CLASS"
+				}
 			}
 		}
 
-		add = {
-			desc = "URBAN_UPPER_CLASS"
-			if = {
-				limit = { 
-					NOR = {
-						pop_employment_building_group = bg_agriculture
-						pop_employment_building_group = bg_ranching
-						pop_employment_building_group = bg_plantations
-					}
-					strata = rich
-				}
-				value = 50
-			}
-		}
-		
-		multiply = {
-			desc = "LEADER_POPULARITY"
-			scope:interest_group = {
-				leader = {
-					value = popularity
-					multiply = 0.005
-					add = 1
-					max = 1.5
-					min = 0.67
-				}
-			}
-		}	
-
-		multiply = bpm_ig_agitators_popularity
-
-		multiply = {
-			desc = "ABSOLUTISM"	
-			value = 1.0
-			
-			if = {
-				limit = { 
-					owner = {
-						has_law = law_type:law_monarchy
-						OR = {
-							has_law = law_type:law_oligarchy
-							has_law = law_type:law_autocracy
-						}
-					}
-				}
-				value = 0.75
-			}		
-		}
 		multiply = {
 			desc = "UNEDUCATED"
 			value = literacy_rate
 			multiply = 1.5
 			max = 1.0
 		}
+		multiply = ig_attraction_to_ruler_ideology_from_stability
 
-		multiply = {
-			desc = "NO_DEMOCRACY"	
-			value = 1.0
-			
-			if = {
-				limit = { 
-					owner = {
-						NOT = { has_technology_researched = democracy }
+		if = {
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.005
+						add = 1
+						max = 1.5
+						min = 0.67
 					}
 				}
-				value = 0.5
-			}		
+			}
+			multiply = {
+				desc = "TRADITIONAL_MONARCHY"	
+				value = 1.0
+				
+				if = {
+					limit = { 
+						owner = {
+							has_law = law_type:law_monarchy
+							OR = {
+								has_law = law_type:law_oligarchy
+								has_law = law_type:law_autocracy
+							}
+						}
+					}
+					value = 0.75
+				}		
+			}
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+			multiply = ig_attraction_from_radicals_and_loyalists
 		}
-
-		multiply = ig_attraction_from_radicals_and_loyalists	
 	}
 	
 	monarch_weight = {

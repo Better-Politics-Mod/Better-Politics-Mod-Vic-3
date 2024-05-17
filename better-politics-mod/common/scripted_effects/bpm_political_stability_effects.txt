@@ -24,48 +24,19 @@
 # Potential options:
 # Use a button to get a one-time boost to law passing success chance at the cost of pissing off the IGs that oppose it
 bpm_update_political_stability = {
-	# TRACKING INTEREST GROUPS --------------------------
-	set_variable = { name = bpm_political_stability_from_interest_groups value = 0 }
-	every_interest_group = {
-		if = {
-			limit = { NOT = { has_variable = bpm_ig_in_government_duration } }
-			set_variable = { name = bpm_ig_in_government_duration value = 0 }
-		}
 
-		if = {
-			limit = { is_in_government = yes }
-			change_variable = { name = bpm_ig_in_government_duration add = 1 }
-		} else = {
-			change_variable = { name = bpm_ig_in_government_duration subtract = 4 }
-		}
-		clamp_variable = { name = bpm_ig_in_government_duration min = 0 max = 600 }
-
-		# if = {
-		# 	limit = { var:bpm_ig_in_government_duration > 24 } # 2 years of consequetive presence in government 
-		# 	set_variable = { 
-		# 		name = bpm_political_stability_from_this_group
-		# 		value = bpm_ig_in_government_duration 
-		# 	}
-		# 	change_variable = {
-		# 		name = bpm_political_stability_from_this_group
-		# 		multiply = prev.ig_government_power_share
-		# 	} 
-		# 	owner = { 
-		# 		change_variable = { 
-		# 			name = bpm_political_stability_from_interest_groups 
-		# 			add = prev.bpm_political_stability_from_this_group 
-		# 		} 
-		# 	}
-		# }
-	}
-	change_variable = { name = bpm_political_stability_from_interest_groups divide = 12 }
-	clamp_variable = { name = bpm_political_stability_from_interest_groups min = 0 max = 50 }
-
-	# APPLYING CHANGE ---------------------------------
 	if = {
 		limit = { NOT = { has_variable = bpm_political_stability } }
 		set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
-		recalculate_pop_ig_support = yes
+		if = {
+			limit = {
+				OR = {
+					is_player = yes
+					game_date < 1836.3.1
+				}
+			}
+			recalculate_pop_ig_support = yes
+		}
 	} else = {
 		bpm_handle_baseline_target_trend_script_value = {
 			VARIABLE = bpm_political_stability
@@ -117,6 +88,14 @@ bpm_update_political_stability = {
 				max = 1.0 # (1-0.66)*3 will be 1.02, so we clamp it for nice numbers
 			}
 		}
+	}
+}
+
+bpm_add_political_stability_huge = {
+	custom_tooltip = {
+		text = "bpm_add_political_stability_huge"
+		post_notification = bpm_add_political_stability_huge
+		change_variable = {	name = bpm_political_stability add = 50 }
 	}
 }
 

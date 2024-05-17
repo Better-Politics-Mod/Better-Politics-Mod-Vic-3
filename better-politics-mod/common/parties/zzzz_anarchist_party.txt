@@ -1,0 +1,264 @@
+﻿# Niche party for anarchists in specific circumstances
+
+anarchist_party = {
+	color = { 0 0 0 }
+	name = {
+		first_valid = {
+			triggered_desc = {
+				desc = party_cnt
+				trigger = {
+					exists = c:SPA
+					THIS = c:SPA
+				}
+			}
+			triggered_desc = {
+				desc = party_socialist_league
+				trigger = {
+					exists = c:GBR
+					THIS = c:GBR
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_por
+				trigger = {
+					country_has_primary_culture = cu:portuguese
+				}
+			}
+			triggered_desc = {
+				desc = party_young_socialists
+				trigger = {
+					OR = {
+						country_has_primary_culture = cu:norwegian
+						country_has_primary_culture = cu:danish
+					}
+				}
+			}
+			triggered_desc = {
+				desc = party_italian_syndicalist_union
+				trigger = {
+					OR = {
+						country_has_primary_culture = cu:north_italian
+						country_has_primary_culture = cu:south_italian
+					}
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_brz
+				trigger = {
+					country_has_primary_culture = cu:brazilian
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_prg
+				trigger = {
+					exists = c:PRG
+					THIS = c:PRG
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_arg
+				trigger = {
+					exists = c:ARG
+					THIS = c:ARG
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_uru
+				trigger = {
+					exists = c:URU
+					THIS = c:URU
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_chl
+				trigger = {
+					exists = c:CHL
+					THIS = c:CHL
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_bol
+				trigger = {
+					exists = c:BOL
+					THIS = c:BOL
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_peu
+				trigger = {
+					exists = c:PEU
+					THIS = c:PEU
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_clm
+				trigger = {
+					exists = c:CLM
+					THIS = c:CLM
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_vnz
+				trigger = {
+					exists = c:VNZ
+					THIS = c:VNZ
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_ecu
+				trigger = {
+					exists = c:ECU
+					THIS = c:ECU
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist_mex
+				trigger = {
+					exists = c:MEX
+					THIS = c:MEX
+				}
+			}
+			triggered_desc = {
+				desc = party_anarchist
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	icon = {
+		default = "/gfx/interface/icons/political_parties/anarchist.dds"
+	}
+	unlocking_technologies = {
+		anarchism
+	}
+	# THIS IS RUN ONLY ONCE AT GAME START
+	valid_for_country = {
+		always = yes
+	}
+	available_for_interest_group = {
+		bpm_ig_enabled = yes
+		NOT = { bpm_is_party_banned = { PARTY = anarchist_party} }
+		NOR = { 
+			is_interest_group_type = ig_reactionaries
+			is_interest_group_type = ig_conservatives
+			is_interest_group_type = ig_liberals
+		}
+	}
+	join_weight = {
+		value = {
+			value = -5
+			desc = "base_value"
+		}
+		if = {
+			limit = {
+				var:bpm_current_party ?= {
+					is_party_type = anarchist_party
+					has_party_member = prev
+				}
+			}
+			add = {
+				value = bpm_party_loyalty_values
+			}
+		}
+		if = { # strong anarchists like anarchism
+			limit = {
+				is_powerful = yes
+				OR = {
+					is_interest_group_type = ig_anarchists
+					leader = { has_ideology = ideology:ideology_anarchist }
+				}
+			}
+			add = {
+				value = 20
+				desc = "powerful_anarchists"
+			}
+		}
+		if = { # Council republic anarchists would want a party
+			limit = {
+				owner = { has_law = law_type:law_council_republic }
+				OR = {
+					is_interest_group_type = ig_anarchists
+					leader = { has_ideology = ideology:ideology_anarchist }
+				}
+			}
+			add = {
+				value = 10
+				desc = "bpm_anarchists_in_council_republic"
+			}
+		}
+		if = { # weak agrarian socialists and trade unionists will fall behind anarchists
+			limit = {
+				owner = { exists = ig:ig_anarchists }
+				owner = {ig:ig_anarchists = { is_powerful = yes }}
+				is_powerful = no
+				OR = {
+					is_interest_group_type = ig_agrarian_populists
+					is_interest_group_type = ig_trade_unions
+				}
+			}
+			add = {
+				value = 10
+				desc = "powerful_anarchists"
+			}
+		}
+		if = { # anarchists don't like the revolution being hijacked
+			limit = {
+				OR = {
+					is_interest_group_type = ig_anarchists
+					leader = { has_ideology = ideology:ideology_anarchist }
+				}
+				owner = {
+					has_law = law_type:law_council_republic
+					ruler = {
+						has_ideology = ideology:ideology_vanguardist
+					}
+				}
+			}
+			add = {
+				value = 10
+				desc = "from_vanguard_anarchy"
+			}
+		}
+		if = { # anarchists will make their own party if there is no communist party to join
+			limit = {
+				OR = {
+					is_interest_group_type = ig_anarchists
+					leader = { has_ideology = ideology:ideology_anarchist }
+				}
+				owner = {
+					NOT = {
+						any_interest_group = {
+							is_marginal = no
+							leader = {
+								bpm_leader_is_communist = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				value = 5
+				desc = "from_no_communists"
+			}
+		}
+		if = { # Anti-electoralism
+			limit = {
+				bpm_ig_is_anti_electoralist_socialist = yes
+			}
+			add = {
+				value = -10
+				desc = "bpm_anti_electoralist"
+			}
+		}
+		if = { # Strong anti-electoralism
+			limit = {
+				bpm_ig_is_strongly_anti_electoralist_socialist = yes
+			}
+			add = {
+				value = -30
+				desc = "bpm_strongly_anti_electoralist"
+			}
+		}
+	}
+}

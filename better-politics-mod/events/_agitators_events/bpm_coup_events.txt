@@ -437,6 +437,149 @@ coup.1 = {
 	}
 }
 
+# Alternate junta start event
+coup.6= {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	dlc = dlc004
+
+	title = coup.6.t
+	desc = coup.6.d
+	flavor = coup.6.f
+
+	event_image = {
+		video = "votp_conspiring"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { months = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = voice_of_the_people_content
+		NOT = { has_journal_entry = je_coup }
+		NOR = {
+			has_law = law_type:law_military_junta
+			has_law = law_type:law_oligarchy
+		}
+		radical_fraction = {
+			value > 0.3
+		}
+		ig:ig_armed_forces = {
+			ig_approval < define:NPolitics|APPROVAL_THRESHOLD_UNHAPPY
+			leader = {
+				OR = {
+					has_trait = charismatic
+					has_trait = ambitious
+					has_trait = reckless
+					has_trait = brave
+					has_trait = direct
+					has_trait = persistent
+				}
+				OR = {
+					has_trait = popular_commander
+					has_trait = celebrity_commander
+					has_trait = experienced_political_operator
+					has_trait = expert_political_operator
+					has_trait = inspirational_orator
+					has_trait = demagogue
+					has_trait = firebrand
+				}
+				NOR = {
+					has_trait = trait_child
+					has_trait = cautious
+					has_trait = tactful
+					has_trait = reserved
+				}
+			}
+		}
+		ruler = {
+			popularity <= 0
+			NOT = { interest_group = { is_interest_group_type = ig_armed_forces } }
+		}
+	}
+
+	immediate = {
+		remove_variable = coup_aftermath_event_fired
+		ig:ig_armed_forces = {
+			set_variable = coup_ig_var
+			save_scope_as = coup_ig
+			leader = { save_scope_as = coup_leader }
+		}
+		if = { # State Power to Oligarchic
+			limit = {
+				NOT = {
+					ig:ig_armed_forces = { has_ideology = ideology:ideology_dop_oligarch }
+				}
+			}
+			set_variable = { name = coup_for_law value = 8 }
+			random_law = {
+				limit = { type = law_type:law_military_junta }
+				save_scope_as = coup_desired_law
+			}
+			ig:ig_armed_forces = {
+				bpm_remove_all_dop_ideologies = yes
+				add_ideology = ideology_dop_oligarch
+			}
+		}
+		else = { # Oligarch Makes Oligarchy
+			set_variable = { name = coup_for_law value = 7 }
+			random_law = {
+				limit = { type = law_type:law_oligarchy }
+				save_scope_as = coup_desired_law
+			}
+		}
+	}
+
+	# Advance the coup
+	option = {
+		name = coup.6.a 
+		add_journal_entry = { type = je_coup }
+		custom_tooltip = {
+			text = coup_advance_25_tt
+			set_variable = {
+				name = coup_var
+				value = 25
+			}
+		}
+		scope:coup_ig = {
+			add_modifier = {
+				name = coup_supported
+				months = long_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+
+	# Resist the coup
+	option = {
+		name = coup.6.b
+		default_option = yes
+		add_journal_entry = { type = je_coup }
+		custom_tooltip = {
+			text = coup_advance_10_tt
+			set_variable = {
+				name = coup_var
+				value = 10
+			}
+		}
+		scope:coup_ig = {
+			add_modifier = {
+				name = coup_resisted
+				months = long_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+
+
 # Successful coup
 coup.2 = {
 	type = country_event
@@ -966,15 +1109,6 @@ coup.2 = {
 		}
 		if = {
 			limit = {
-				has_technology_researched = political_agitation
-				NOT = {
-					has_law = law_type:law_single_party_state
-				}
-			}
-			activate_law = law_type:law_single_party_state
-		}
-		else_if = {
-			limit = {
 				NOT = {
 					has_law = law_type:law_oligarchy
 				}
@@ -1073,15 +1207,6 @@ coup.2 = {
 		}
 		if = {
 			limit = {
-				has_technology_researched = political_agitation
-				NOT = {
-					has_law = law_type:law_single_party_state
-				}
-			}
-			activate_law = law_type:law_single_party_state
-		}
-		else_if = {
-			limit = {
 				NOT = {
 					has_law = law_type:law_oligarchy
 				}
@@ -1162,6 +1287,10 @@ coup.3 = {
 			OR  = {
 				institution:institution_police.investment >= 3
 				institution:institution_home_affairs.investment >= 3
+			}
+			exists = scope:coup_leader
+			scope:coup_leader = {
+				this = scope:coup_ig.leader
 			}
 		}
 		create_character = {

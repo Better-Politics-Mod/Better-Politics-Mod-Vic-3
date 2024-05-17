@@ -1,0 +1,298 @@
+﻿ig_landowners = {
+	color = hsv{ 0 0 0.5 }
+	texture = "gfx/interface/icons/ig_icons/landowners.dds"
+	layer = "revolution_dynamic_landowners"
+	index = 5
+	
+	ideologies = {
+		ideology_sta_decentralized_state
+		ideology_mil_aristocratic_militarist
+		ideology_eco_traditional_agrarian
+		ideology_wel_no_welfare
+		# Vanilla
+		ideology_paternalistic
+		ideology_stratocratic
+		ideology_patriarchal
+	}
+	
+	enable = {
+		always = yes
+	}
+	
+	on_enable = {
+		ig:ig_landowners = {
+			set_ig_trait = ig_trait:ig_trait_rural_systematic_corruption
+			set_ig_trait = ig_trait:ig_trait_rural_well_oiled_machine
+			set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
+		}
+		# Squattocracy
+		if = {
+			limit = {
+				country_has_primary_culture = cu:australian
+			}
+			ig:ig_landowners = {
+				set_interest_group_name = ig_squattocracy
+			}
+		}
+		# Local Governors
+		else_if = {
+			limit = {
+				c:TUR ?= this
+			}
+			ig:ig_landowners = {
+				set_interest_group_name = ig_local_governors
+			}
+		}
+		# Junkers
+		else_if = {
+			limit = {
+				c:PRU ?= this
+			}
+			ig:ig_landowners = {
+				set_interest_group_name = ig_junkers
+				bpm_ig_make_junker_paternalistic = yes
+			}
+		}
+		# Gentry Assembly
+		else_if = {
+			limit = {
+				c:RUS ?= this
+			}
+			ig:ig_landowners = {
+				set_interest_group_name = ig_gentry_assembly
+			}
+		}
+		# Roman Landowners
+		else_if = {
+			limit = {
+				c:PAP ?= this
+			}
+			ig:ig_landowners = {
+				set_interest_group_name = ig_roman_landowners
+				bpm_ig_make_papal_paternalistic = yes
+			}
+		}
+		# Ali'i
+		else_if = {
+			limit = {
+				country_has_primary_culture = cu:hawaiian
+			}
+			ig:ig_landowners = {
+				set_interest_group_name = ig_alii
+			}
+		}
+		# Landed Gentry
+		else_if = {
+			limit = {
+				c:GBR ?= this
+			}
+			ig:ig_landowners = { 
+				set_interest_group_name = ig_landed_gentry
+			}
+		}
+		# Yangban Officials
+		else_if = {
+			limit = {
+				c:KOR ?= this
+			}
+			ig:ig_landowners = { 
+				set_interest_group_name = ig_yangban
+				bpm_ig_make_scholar_paternalistic = yes
+			}
+		}
+		# Scholar Officials
+		else_if = {
+			limit = {
+				c:CHI ?= this
+			}
+			ig:ig_landowners = { 
+				set_interest_group_name = ig_scholar_officials
+				bpm_ig_make_scholar_paternalistic = yes
+			}
+		}
+		# Pious Spanish Landowners
+		else_if = {
+			limit = {
+				country_has_primary_culture = cu:spanish
+			}
+			ig:ig_landowners = {
+				bpm_remove_all_rel_ideologies = yes
+				add_ideology = ideology_rel_radical_moralist
+			}
+		}
+		# Aristocracy of Officials
+		else_if = {
+			limit = {
+				country_has_primary_culture = cu:norwegian
+			}
+			ig:ig_landowners = {
+				set_interest_group_name = ig_aristocracy_of_officials
+			}
+		}
+		# Southern Planters
+		else_if = {
+			limit = {
+				OR = {
+					AND = {
+						c:USA ?= this
+						NOT = { exists = c:CSA }
+					}
+					country_has_primary_culture = cu:dixie
+				}
+			}
+			ig:ig_landowners = {
+				set_interest_group_name = ig_southern_planters
+				bpm_ig_make_republican_paternalistic = yes
+				remove_ideology = ideology_paternalistic
+				add_ideology = ideology_republican_paternalistic
+			}
+		}
+		# Caudillo Ideology
+		else_if = {
+			limit = {
+				OR = {
+					country_has_primary_culture = cu:platinean
+					country_has_primary_culture = cu:south_andean
+					country_has_primary_culture = cu:north_andean
+					country_has_primary_culture = cu:central_american
+					country_has_primary_culture = cu:mexican
+				}
+			}
+			ig:ig_landowners = {
+				bpm_ig_make_caudillismo = yes
+			}
+		}
+
+		ig:ig_landowners = { bpm_reorder_ideologies = yes }
+	}
+	on_disable = {}
+	on_character_ig_membership = {}
+	
+	pop_potential = {
+		owner = {
+			NOR = {
+				has_law = law_type:law_collectivized_agriculture
+				has_law = law_type:law_commercialized_agriculture
+			}
+		}
+		OR = {
+			is_pop_type = aristocrats
+			is_pop_type = clergymen
+			is_pop_type = officers
+			is_pop_type = farmers
+		}		
+	}
+	
+	pop_weight = {
+		value = 0
+
+		add = {
+			desc = "SLAVERY_DETRACTORS"
+			if = {
+				limit = {
+					owner = { NOT = { has_law = law_type:law_slavery_banned } }
+					OR = {
+						pop_has_primary_culture = no
+						state = { is_slave_state = no }
+					}
+				}
+				value = -300
+			}
+		}
+
+		if = {
+			limit = {
+				strata = rich
+				OR = {
+					pop_employment_building_group = bg_agriculture
+					pop_employment_building_group = bg_ranching
+					pop_employment_building_group = bg_plantations
+				}
+			}
+			add = {
+				desc = "RURAL_UPPER_CLASS"
+				value = 250
+			}
+			if = {
+				limit = { state = { is_slave_state = yes } }
+				add = {
+					desc = "SLAVEHOLDERS"
+					value = 400
+				}
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = clergymen }
+			add = {
+				desc = "POP_CLERGYMEN"
+				value = 50
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = officers }
+			add = {
+				desc = "POP_OFFICERS"
+				value = 50
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = farmers }
+			add = {
+				desc = "POP_FARMERS"
+				value = 50
+			}
+		}
+
+		multiply = ig_attraction_to_interests_from_stability
+
+	}
+	
+	monarch_weight = {
+		value = 1.0
+	}
+
+	agitator_weight = {
+		value = 1.0
+		multiply = bpm_base_agitator_weight
+	}
+	
+	commander_weight = {
+		value = 1.0
+		multiply = bpm_commander_assignment_from_laws_factor
+	}	
+	
+	noble_chance = {
+		value = 1.0
+	}
+	
+	female_commander_chance = {	
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
+	}
+	
+	female_politician_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
+
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
+	}
+	
+	# The chance that a commander belonging to this IG takes over leadership when it changes
+	# scope:character is the most popular commander in the IG
+	commander_leader_chance = {
+		value = 0.5
+		if = {
+			limit = {
+				exists = scope:character
+			}
+			multiply = {
+				value = 1
+				add = scope:character.popularity
+				min = 0
+			}
+		}
+	}
+}

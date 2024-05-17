@@ -1,0 +1,92 @@
+﻿namespace = bpm_law_veto
+
+bpm_law_veto.1 = {
+	type = country_event
+	placement = root
+	title = bpm_law_veto.1.t
+	desc = bpm_law_veto.1.d
+	flavor = bpm_law_veto.1.f
+
+	category = enactment
+
+	gui_window = event_window_1char_tabloid
+	left_icon = scope:executive
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+
+	duration = 10
+
+	dlc = dlc_bpm
+
+	trigger = {
+		# NOT = { ruler = { has_trait = trait_child } }
+	}
+
+	immediate = {
+		ruler = {
+			save_scope_as = executive
+		}
+	}
+
+	option = {
+		name = bpm_law_veto.1.a
+		default_option = yes
+		trigger = {
+			bpm_law_enactment_ruler_approval > 0
+		}
+		add_enactment_phase = 1
+	}
+	option = { 
+		name = bpm_law_veto.1.b
+		trigger = {
+			enactment_setback_count < 2
+			ruler = {
+				NOR = {
+					var:bpm_ig_enacting_law_change_steps > 0
+					AND = {
+						var:bpm_ig_enacting_law_change_steps = 0
+						interest_group.var:bpm_ig_enacting_law_change_steps > 0
+					}
+				}
+			}
+		}
+		add_enactment_setback = 1
+	}
+	option = {
+		name = bpm_law_veto.1.c
+		trigger = {
+			ruler = {
+				NOR = {
+					var:bpm_ig_enacting_law_change_steps > 0
+					AND = {
+						var:bpm_ig_enacting_law_change_steps = 0
+						interest_group.var:bpm_ig_enacting_law_change_steps > 0
+					}
+				}
+			}
+		}
+		every_interest_group = {
+			limit = { bpm_ig_law_support_total_value > 0 }
+			owner = {
+				add_radicals = {
+					value = very_large_radicals
+					interest_group = prev
+				}
+			}
+		}
+		ruler = {
+			hidden_effect = {
+				remove_modifier = corrupted_by_power
+			}
+			add_modifier = {
+				name = corrupted_by_power
+				months = 48
+				is_decaying = yes
+			}
+		}
+		trigger_event = { id = unable_to_enact.2 popup = yes }
+	}
+}

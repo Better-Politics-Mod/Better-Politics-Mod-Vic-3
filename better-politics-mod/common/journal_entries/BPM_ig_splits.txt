@@ -8,7 +8,7 @@
 # - Either Cons or Libs are Marginalized 
 
 je_bpm_split_natlibs = {
-	icon = "gfx/interface/icons/ig_icons/national_liberals.dds"
+	icon = "gfx/interface/icons/invention_icons/nationalism.dds"
 
 	group = bpm_je_group_interest_groups
 
@@ -103,7 +103,7 @@ je_bpm_split_natlibs = {
 # - Regressive Trade/Land/Econ laws
 
 je_bpm_split_marlibs = {
-	icon = "gfx/interface/icons/ig_icons/market_liberals.dds"
+	icon = "gfx/interface/icons/invention_icons/macroeconomics.dds"
 
 	group = bpm_je_group_interest_groups
 
@@ -177,13 +177,13 @@ je_bpm_split_marlibs = {
 # - High Loyalism for workers 
 
 je_bpm_split_patcons = {
-	icon = "gfx/interface/icons/ig_icons/paternal_conservatives.dds"
+	icon = "gfx/interface/icons/invention_icons/urbanization.dds"
 
 	group = bpm_je_group_interest_groups
 
 	is_shown_when_inactive = {
 		#always = yes
-		NOT = {
+		NAND = {
 			country_has_primary_culture = cu:brazilian
 			ig:ig_conservatives = {
 				has_ideology = ideology:ideology_eco_slave_economy
@@ -200,22 +200,21 @@ je_bpm_split_patcons = {
 	}
 
 	possible = {
-		OR = {
-			has_technology_researched = labor_movement
-			any_interest_group = {
-				bpm_ig_is_proletarian = yes
-				is_marginal = no
-			}
-		}
 		hidden_trigger = { NOT = { has_variable = local_patcon_split_var } }
-		any_interest_group = {
+		ig:ig_conservatives = {
 			OR = {
 				is_marginal = no
 				is_being_bolstered = yes
 			}
-			bpm_ig_is_mainstream_conservative = yes
 		}
 		bpm_country_laws_no_voting = no
+		OR = {
+			has_technology_researched = labor_movement
+			ig:ig_socialists ?= { is_marginal = no }
+			ig:ig_anarchists ?= { is_marginal = no }
+			ig:ig_reformist_socialists ?= { is_marginal = no }
+			ig:ig_revolutionist_socialists ?= { is_marginal = no }
+		}
 	}
 
 	complete = {
@@ -260,20 +259,34 @@ je_bpm_split_patcons = {
 
 
 je_bpm_first_international = {
-	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+	icon = "gfx/interface/icons/event_icons/firstIntl.dds"
 
 	group = bpm_je_group_global
 
 	is_shown_when_inactive = {
+		# has_global_variable = march_to_radicalism_complete_var
 		hidden_trigger = { NOT = { has_global_variable = first_intl_started_var } }
 	}
 
 	immediate = {
-
+		if = {
+			limit = { NOT = { has_global_variable = bpm_je_first_intl_progress } }
+			set_global_variable = {
+				name = bpm_je_first_intl_progress
+				value = 0
+			}
+		}
 	}
 
 	possible = {
-		has_global_variable = bpm_je_first_intl_progress
+		custom_tooltip = {
+			text = "bpm_je_trigger_wait_for_history"
+			OR = {
+				has_global_variable = peoples_springtime_happened
+				game_date > 1870.1.1
+			}
+			NOT = { has_global_variable = recently_completed_peoples_springtime_je }	
+		}
 	}
 
 	invalid = {
@@ -281,13 +294,17 @@ je_bpm_first_international = {
 	}
 
 	complete = {
-		custom_tooltip = {
-			text = "bpm_je_progress_complete"
-			global_var:bpm_je_first_intl_progress >= 100
+		trigger_if = {
+			limit = { has_global_variable = bpm_je_first_intl_progress }
+			custom_tooltip = {
+				text = "bpm_je_progress_complete"
+				global_var:bpm_je_first_intl_progress >= 100
+			}
 		}
 	}
 
 	on_complete = {
+		
 		trigger_event = { id = bpm_1st_intl.1 }
 	}
 
@@ -322,12 +339,12 @@ je_bpm_first_international = {
 
 
 je_bpm_second_international = {
-	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+	icon = "gfx/interface/icons/event_icons/secondIntl.dds"
 
 	group = bpm_je_group_global
 
 	is_shown_when_inactive = {
-		has_global_variable = first_intl_chain_complete_var
+		#has_global_variable = first_intl_chain_complete_var
 		NOT = { has_global_variable = second_intl_attempted_var }
 	}
 
@@ -336,12 +353,10 @@ je_bpm_second_international = {
 	}
 
 	possible = {
-		hidden_trigger = {
-			has_global_variable = bpm_je_second_intl_progress
-		}
 		custom_tooltip = {
 			text = "bpm_first_intl_happened"
 			has_global_variable = first_intl_chain_complete_var
+			has_global_variable = bpm_je_second_intl_progress
 		}
 	}
 
@@ -350,9 +365,12 @@ je_bpm_second_international = {
 	}
 
 	complete = {
-		custom_tooltip = {
-			text = "bpm_je_progress_complete"
-			global_var:bpm_je_second_intl_progress >= 100
+		trigger_if = {
+			limit = { has_global_variable = bpm_je_second_intl_progress }
+			custom_tooltip = {
+				text = "bpm_je_progress_complete"
+				global_var:bpm_je_second_intl_progress >= 100
+			}
 		}
 	}
 
@@ -379,4 +397,60 @@ je_bpm_second_international = {
 	weight = 150
 
 	should_be_pinned_by_default = yes
+}
+
+je_bpm_split_fascists = {
+	icon = "gfx/interface/icons/invention_icons/stormtroopers.dds"
+
+	group = bpm_je_group_interest_groups
+
+	is_shown_when_inactive = {
+		always = yes
+	}
+
+	immediate = {
+		set_variable = {
+			name = bpm_je_split_fascists_progress
+			value = 0
+		}
+		bpm_je_split_fascists_progress_rate_update = yes
+	}
+
+	possible = {
+		year > 1900
+		has_technology_researched = political_agitation
+		bpm_country_laws_no_voting = no
+	}
+
+	complete = {
+		bpm_journal_progress_complete = {
+			VAR = bpm_je_split_fascists_progress
+		}
+	}
+
+	on_complete = {
+		trigger_event = { id = bpm_fascist_split.1 }
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			bpm_je_split_fascists_progress_rate_update = yes
+			bpm_handle_steady_var_growth = {
+				VARIABLE = bpm_je_split_fascists_progress
+			}
+		}
+	}
+
+	progressbar = yes
+	current_value = {
+		value = var:bpm_je_split_fascists_progress
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = no
 }

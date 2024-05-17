@@ -1,0 +1,531 @@
+﻿je_divided_monarchists = {
+	icon = "gfx/interface/icons/event_icons/bicorne_hat.dds"
+
+	group = je_group_historical_content
+
+	immediate = {
+		set_variable = { name = fra_leading_dynasty_progress value = 0 }
+		fra_set_divided_monarchist_variables = yes
+		random_law = {
+			limit = { type = law_type:law_monarchy }
+			save_scope_as = monarchy_scope
+		}
+	}
+
+	complete = {
+		has_law = law_type:law_monarchy
+		custom_tooltip = {
+			text = je_divided_monarchists_02_tt
+			has_variable = one_true_french_dynasty #Can only ever complete upon finishing the Cement the Rightful Dynasty journal entry.
+		}
+	}
+
+	on_complete = {
+		custom_tooltip = {
+			text = je_divided_monarchists_03_tt
+			fra_clear_divided_monarchist_variables = yes #Removes all variables used for math in this JE, to save memory and performance.
+		}
+	}
+
+	scripted_button = french_monarchy_bonapartist_button
+	scripted_button = french_monarchy_orleanist_button
+	scripted_button = french_monarchy_legitimist_button
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = { # Cementing the Rightful Dynasty is active
+				desc = status_dynasty_cementing_fra
+				trigger = {
+					has_journal_entry = je_cement_the_rightful_dynasty
+				}
+			}
+			triggered_desc = { # In the lead and on the throne
+				desc = status_in_lead_and_on_throne_fra
+				trigger = {
+					OR = {
+						AND = {
+							ruler_is_orleanist = yes
+							var:orleanist_progress > var:legitimist_progress
+							var:orleanist_progress > var:bonapartist_progress
+						}
+						AND = {
+							ruler_is_bonapartist = yes
+							var:bonapartist_progress > var:legitimist_progress
+							var:bonapartist_progress > var:orleanist_progress
+						}
+						AND = {
+							ruler_is_legitimist = yes
+							var:legitimist_progress > var:bonapartist_progress
+							var:legitimist_progress > var:orleanist_progress
+						}
+					}
+				}
+			}
+			triggered_desc = {
+				desc = status_throne_challenged_fra
+				trigger = {
+					OR = {
+						AND = {
+							var:orleanist_progress > var:legitimist_progress
+							var:orleanist_progress > var:bonapartist_progress
+						}
+						AND = {
+							var:bonapartist_progress > var:legitimist_progress
+							var:bonapartist_progress > var:orleanist_progress
+						}
+						AND = {
+							var:legitimist_progress > var:bonapartist_progress
+							var:legitimist_progress > var:orleanist_progress
+						}
+					}
+				}
+			}
+			triggered_desc = { # Bar not moving, either no supported or not in government
+				desc = status_no_dynasty_fra
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	modifiers_while_active = {
+		fra_republican_unrest
+	}
+	
+	on_weekly_pulse = {
+		events = {
+			french_pretenders.5
+		}
+		effect = {
+			if = {
+				limit = {
+					NOT = {
+						has_variable = fra_divided_monarchists_freeze #This variable stops iteration, and is granted by reaching 360 with one dynasty. It's reset when this JE is completed, or when je_cement_the_rightful_dynasty fails.
+					}
+				}
+				fra_weekly_pulse_legitimist_progress = yes #Calculates how much the Legitimists will get next month. Updates weekly, but is not added until the monthly.
+				fra_weekly_pulse_orleanist_progress = yes  #Calculates how much the Orleanists will get next month. Updates weekly, but is not added until the monthly.
+				fra_weekly_pulse_bonapartist_progress = yes  #Calculates how much the Bonapartists will get next month. Updates weekly, but is not added until the monthly.
+			}
+			fra_define_leading_dynasty = yes 	#The progress bar in this JE is always equivalent to the progress of the dynasty that's currently doing best. This scripted effect determines which dynasty that is, and sets fra_leading_dynasty_progress to be equal to that dynasty's progress variable.
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					NOT = {
+						has_variable = fra_divided_monarchists_freeze
+					}
+				}
+				change_variable = { name = bonapartist_progress add = var:bonapartist_progress_next } #On the monthly tick, the value calculated in the fra_weekly_pulse_bonapartist_progress effect is added to the master progress variable.
+				change_variable = { name = orleanist_progress add = var:orleanist_progress_next }
+				change_variable = { name = legitimist_progress add = var:legitimist_progress_next }
+				fra_define_leading_dynasty = yes	#See above - this ensures that the monthly tick will not momentarily send the status loc out of sync with what the bar is representing.
+			}
+			if = {
+				limit = {
+					has_law = law_type:law_monarchy
+					scope:journal_entry = {
+						is_goal_complete = yes
+					}
+					NOT = {
+						has_variable = fra_divided_monarchists_freeze
+					}
+				}
+				if = { #Fires the event to enthrone the pretender - 1 if contextualised as coup, 10 if contextualised as reinforcement.
+					limit = {
+						var:bonapartist_progress > var:legitimist_progress
+						var:bonapartist_progress > var:orleanist_progress
+					} 
+					if = {
+						limit = {
+							ruler_is_bonapartist = yes
+						}
+						trigger_event = { id = french_pretenders.10 popup = yes} #Reinforcement event - fires if the leading dynasty is the one in power.
+					}
+					else = {
+						trigger_event = { id = french_pretenders.1 popup = yes} #Coup event - fires if the leading dynasty is not the one in power.
+					}
+				}
+				else_if = {
+					limit = {
+						var:orleanist_progress > var:legitimist_progress
+						var:orleanist_progress > var:bonapartist_progress
+					}
+					if = {
+						limit = {
+							ruler_is_orleanist = yes
+						}
+						trigger_event = { id = french_pretenders.10 popup = yes}
+					}
+					else = {
+						trigger_event = { id = french_pretenders.1 popup = yes}
+					}
+				}
+				else_if = {
+					limit = {
+						var:legitimist_progress > var:orleanist_progress
+						var:legitimist_progress > var:bonapartist_progress
+					}
+					if = {
+						limit = {
+							ruler_is_legitimist = yes
+						}
+						trigger_event = { id = french_pretenders.10 popup = yes}
+					}
+					else = {
+						trigger_event = { id = french_pretenders.1 popup = yes}
+					}
+				}
+				fra_freeze_divided_monarchist_progress = yes #Freezes the bars so that they no longer accumulate progress on the monthly tick, and stay as they are. In the case that Cement the Rightful Dynasty fails, the bars will be set back.
+			}
+		}
+		random_events = {
+			400 = 0
+			10 = french_pretenders_pulse.2
+			10 = french_pretenders_pulse.3
+			50 = french_pretenders_pulse.10
+			10 = french_pretenders_pulse.11
+			10 = french_pretenders_pulse.12
+			10 = french_pretenders_pulse.13
+			10 = french_pretenders_pulse.14
+			10 = french_pretenders_pulse.15
+			10 = french_pretenders_pulse.16
+			10 = french_pretenders_pulse.17
+			10 = french_pretenders_pulse.18
+		}
+	}
+	on_yearly_pulse = {
+		random_events = {
+			
+		}
+	}
+
+	fail = {
+		any_interest_group = {
+			is_marginal = no
+			law_stance = {
+				law = law_type:law_presidential_republic
+				value > neutral
+			}
+		}
+		capital = {
+			turmoil >= 0.25
+		}
+		OR = {
+			has_journal_entry = je_springtime_of_the_peoples
+			radical_fraction = {
+				value >= 0.25
+			}
+			any_civil_war = {
+				civil_war_progress > 0.75
+			}
+		}
+	}
+
+	on_fail = {
+		trigger_event = { id = french_pretenders.6 popup = yes }
+		if = {
+			limit = {
+				has_variable = fra_divided_monarchists_freeze
+			}
+			remove_variable = fra_divided_monarchists_freeze #Clears the freeze variable so that progress can be made if this JE is somehow activated again.
+		}
+		fra_clear_divided_monarchist_variables = yes #Removes all variables used for math in this JE, to save memory and performance.
+	}
+
+	invalid = { 
+		NOT = { #Previous "Stamp Out Monarchism" requirement is deprecated - this can now come back from the dead properly upon restoring the monarchy.
+			has_law = law_type:law_monarchy
+		}
+	}
+
+	on_invalid = {
+		if = {
+			limit = {
+				has_variable = fra_divided_monarchists_freeze
+			}
+			remove_variable = fra_divided_monarchists_freeze #Clears the freeze variable so that progress can be made if this JE is somehow activated again.
+		}
+		fra_clear_divided_monarchist_variables = yes #It should not be possible for this JE to somehow be deleted without these variables being cleared.
+	}
+
+	weight = 100
+	
+	current_value = {
+		value = root.var:fra_leading_dynasty_progress #Set to always be equal to the leading dynasty's progress by the fra_define_leading_dynasty effect.
+	}
+
+	goal_add_value = {
+		value = 360
+	}
+
+	progressbar = yes
+
+	should_be_pinned_by_default = yes
+}
+
+je_cement_the_rightful_dynasty = {
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	group = je_group_historical_content
+
+	immediate = {
+		set_variable = {
+			name = french_dynastic_primary_progress_var
+			value = 0
+		}
+
+		if = {
+			limit = {
+				any_scope_character = { ### This is load-bearing cursed script. Do NOT change this to ruler = { } ###
+					is_ruler = yes
+					has_variable = legitimist_leader
+				}
+			}
+			set_variable = {
+				name = legitimist_restoration_var
+			}
+		}
+		else_if = {
+			limit = {
+				any_scope_character = {
+					is_ruler = yes
+					has_variable = orleanist_leader
+				}
+			}
+			set_variable = {
+				name = orleanist_restoration_var
+			}
+		}
+		else_if = {
+			limit = {
+				any_scope_character = {
+					is_ruler = yes
+					has_variable = bonapartist_leader
+				}
+			}
+			set_variable = {
+				name = bonapartist_restoration_var
+			}
+		}
+	}
+	
+	is_progressing = {
+		NOT = {
+			any_civil_war = {
+				civil_war_progress > 0.10
+			}
+		}
+		government_legitimacy >= 50
+	}
+	
+	progress_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_cement_the_rightful_dynasty_progressing_fast
+				trigger = {
+					scope:journal_entry = {
+						is_progressing = yes
+					}
+					government_legitimacy >= 90
+				}
+			}
+			triggered_desc = {
+				desc = je_cement_the_rightful_dynasty_progressing_normal
+				trigger = {
+					scope:journal_entry = {
+						is_progressing = yes
+					}
+					government_legitimacy >= 75
+				}
+			}
+			triggered_desc = {
+				desc = je_cement_the_rightful_dynasty_progressing_slow
+				trigger = {
+					scope:journal_entry = {
+						is_progressing = yes
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_cement_the_rightful_dynasty_progressing_civil_war
+				trigger = {
+					any_civil_war = {
+						civil_war_progress > 0.10
+					}
+				}
+			}
+			desc = je_cement_the_rightful_dynasty_progressing_low_legitimacy
+		}
+	}
+	
+	complete = {
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+		NOT = {
+			any_civil_war = {
+				civil_war_progress > 0.10
+			}
+		}
+	}
+
+	on_complete = {
+		trigger_event = { id = french_pretenders_pulse.5 popup = yes }
+		set_variable = {
+			name = one_true_french_dynasty
+		}
+	}
+
+	fail = {
+		OR = {
+			NOT = { has_law = law_type:law_monarchy }
+			capital = {
+				turmoil >= 0.25
+			}
+			OR = {
+				AND = {
+					has_journal_entry = je_springtime_of_the_peoples
+					radical_fraction = {
+						value >= 0.25
+					}
+				}
+				any_civil_war = {
+					civil_war_progress > 0.75
+				}
+			}
+			custom_tooltip = {
+				text = je_divided_monarchists_02_fail_tt
+				OR = {
+					AND = {
+						has_variable = orleanist_restoration_var
+						OR = {
+							ruler = {
+								OR = {
+									has_variable = legitimist_leader
+									has_variable = bonapartist_leader
+								}
+							}
+						}
+					}
+					AND = {
+						has_variable = legitimist_restoration_var
+						OR = {
+							ruler = {
+								OR = {
+									has_variable = orleanist_leader
+									has_variable = bonapartist_leader
+								}
+							} 
+						}
+					}
+					AND = {
+						has_variable = bonapartist_restoration_var
+						OR = {
+							ruler = {
+								OR = {
+									has_variable = orleanist_leader
+									has_variable = legitimist_leader
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	on_fail = {
+		remove_variable = french_dynastic_primary_progress_var
+		if = {
+			limit = {
+				has_variable = fra_divided_monarchists_freeze
+			}
+			remove_variable = fra_divided_monarchists_freeze
+		}
+		if = {
+			limit = {
+				has_variable = orleanist_restoration_var
+			}
+			remove_variable = orleanist_restoration_var
+		}
+		if = {
+			limit = {
+				has_variable = legitimist_restoration_var
+			}
+			remove_variable = legitimist_restoration_var
+		}
+		if = {
+			limit = {
+				has_variable = bonapartist_restoration_var
+			}
+			remove_variable = bonapartist_restoration_var
+		}
+		change_variable = { name = bonapartist_progress subtract = 300 }
+		change_variable = { name = legitimist_progress subtract = 300 }
+		change_variable = { name = orleanist_progress subtract = 300 }
+		clamp_variable = { name = bonapartist_progress max = 360 min = 0 }
+		clamp_variable = { name = legitimist_progress max = 360 min = 0 }
+		clamp_variable = { name = orleanist_progress max = 360 min = 0 }
+		trigger_event = { id = french_pretenders.6 popup = yes }
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					scope:journal_entry = {
+						is_progressing = yes
+					}
+				}
+				if = {
+					limit = {
+						government_legitimacy >= 90
+					}
+					change_variable = {
+						name = french_dynastic_primary_progress_var
+						add = 2
+					}
+				}
+				else_if = {
+					limit = {
+						government_legitimacy >= 75
+					}
+					change_variable = {
+						name = french_dynastic_primary_progress_var
+						add = 1
+					}
+				}
+				else = {
+					change_variable = {
+						name = french_dynastic_primary_progress_var
+						add = 0.5
+					}
+				}
+			}
+		}
+		random_events = {
+			90 = 0
+			10 = french_pretenders_pulse.1
+			5 = french_pretenders_pulse.4
+		}
+	}
+
+	current_value = {
+		value = root.var:french_dynastic_primary_progress_var
+	}
+
+	goal_add_value = {
+		value = 120
+	}
+
+	progressbar = yes
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+}

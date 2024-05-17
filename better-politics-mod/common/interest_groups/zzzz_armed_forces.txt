@@ -1,0 +1,198 @@
+﻿ig_armed_forces = {
+	color = hsv{ 0 0 0.5 }
+	texture = "gfx/interface/icons/ig_icons/armed_forces.dds"
+	layer = "revolution_dynamic_armed_forces"
+	index = 0
+	
+	ideologies = {
+		ideology_dop_oligarch
+		ideology_sta_powerful_state
+		ideology_jingoist
+		# Vanilla
+		ideology_loyalist
+		ideology_patriotic
+	}
+	
+	enable = {
+		always = yes
+	}
+	
+	on_enable = {
+		ig:ig_armed_forces = {
+			set_ig_trait = ig_trait:ig_trait_military_systematic_corruption
+			set_ig_trait = ig_trait:ig_trait_military_well_oiled_machine
+			set_ig_trait = ig_trait:ig_trait_military_systematic_opposition
+		}
+		# Caudillo Ideology
+		if = {
+			limit = {
+				OR = {
+					country_has_primary_culture = cu:platinean
+					country_has_primary_culture = cu:south_andean
+					country_has_primary_culture = cu:north_andean
+					country_has_primary_culture = cu:central_american
+					country_has_primary_culture = cu:mexican
+				}
+			}
+			ig:ig_armed_forces = {
+				bpm_ig_make_caudillismo = yes
+			}
+		}
+		# Samurai
+		else_if = {
+			limit = {
+				country_has_primary_culture = cu:japanese
+				NOT = { has_global_variable = fall_of_the_samurai_global_var }
+			}
+			ig:ig_armed_forces = {
+				bpm_ig_make_samurai = yes
+				set_interest_group_name = ig_samurai
+			}
+		}
+	}
+	on_disable = {}
+	on_character_ig_membership = {}
+	
+	pop_potential = {
+		OR = {
+			is_pop_type = soldiers
+			is_pop_type = officers
+			is_pop_type = aristocrats
+			is_pop_type = bureaucrats
+			is_pop_type = capitalists
+			is_pop_type = shopkeepers
+		}		
+	}
+	
+	pop_weight = {
+		value = 0
+		
+		add = {
+			desc = "POP_NOT_DISCRIMINATED"
+			if = {
+				limit = { 
+					pop_is_discriminated = no
+				}
+				value = 25
+			}
+		}
+
+		add = {
+			desc = "POP_WAR_PROFITEERS"
+			if = {
+				limit = { 
+					OR = {
+						pop_employment_building = building_arms_industry
+						pop_employment_building = building_munition_plants	
+					}
+				}
+				value = 100
+			}
+		}
+		
+		if = {
+			limit = { is_pop_type = soldiers }
+			add = {
+				desc = "POP_SOLDIERS"
+				value = 50
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = officers }
+			add = {
+				desc = "POP_OFFICERS"
+				value = 300
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = aristocrats }
+			add = {
+				desc = "POP_ARISTOCRATS"
+				value = 100
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = bureaucrats }
+			add = {
+				desc = "POP_BUREAUCRATS"
+				value = 50
+			}
+		}
+
+		multiply = ig_attraction_to_interests_from_stability
+		multiply = {
+			desc = "IN_WAR"	
+			value = 1.0
+
+			if = {
+				limit = { 
+					owner = {
+						is_at_war = yes
+					}
+				}
+				value = 2
+			}		
+		}		
+		multiply = {
+			desc = "LEADER_POPULARITY"
+			scope:interest_group = {
+				leader = {
+					value = popularity
+					multiply = 0.01
+					add = 1
+					max = 2.0
+					min = 0.75
+				}
+			}
+		}	
+	}
+	
+	monarch_weight = {
+		value = 0.5
+	}
+
+	agitator_weight = {
+		value = 1.0
+		multiply = bpm_base_agitator_weight
+	}
+	
+	commander_weight = {
+		value = 10.0
+		multiply = bpm_commander_assignment_from_laws_factor
+	}
+	
+	noble_chance = {
+		value = 0.5
+	}
+	
+	female_commander_chance = {	
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
+	}
+	
+	female_politician_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
+
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
+	}
+	
+	# The chance that a commander belonging to this IG takes over leadership when it changes
+	# scope:character is the most popular commander in the IG
+	commander_leader_chance = {
+		value = 0.75
+		if = {
+			limit = {
+				exists = scope:character
+			}
+			multiply = {
+				value = 1
+				add = scope:character.popularity
+				min = 0
+			}
+		}
+	}
+}

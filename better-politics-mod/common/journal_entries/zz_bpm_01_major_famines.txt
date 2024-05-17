@@ -1,0 +1,171 @@
+﻿je_famine = {
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+
+	group = je_group_crises
+
+	is_shown_when_inactive = {
+		NOT = { has_variable = completed_major_famine_var }
+		NOT = { is_country_type = decentralized }
+	}
+
+	possible = {
+		institution_investment_level = {
+			institution = institution_social_security
+			value < 4
+		}
+		OR = {
+			has_variable = bpm_1848_famine_activated
+			any_scope_state = {
+				average_sol < 10
+				is_incorporated = yes
+				custom_tooltip = {
+					text = natural_disaster_variable
+					has_variable = natural_disaster_variable
+				}
+			}
+			any_scope_state = {
+				average_sol <= 5
+				any_scope_building = {
+					is_farm_building = yes
+					occupancy >= 0.1
+					weekly_profit <= 0.5
+				}
+			}
+		}
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				has_variable = bpm_1848_famine_activated
+			}
+			random_scope_state = {
+				limit = { is_incorporated = yes }
+				save_scope_as = famine_state
+				set_variable = famine_var
+			}
+			trigger_event = { id = 1848.13 }
+			remove_variable = bpm_1848_famine_activated
+		}
+		else_if = {
+			limit = {
+				any_scope_state = {
+					average_sol < 10
+					is_incorporated = yes
+					custom_tooltip = {
+						text = natural_disaster_variable
+						has_variable = natural_disaster_variable
+					}
+				}
+			}
+			random_scope_state = {
+				limit = {
+					average_sol <= 10
+					is_incorporated = yes
+					custom_tooltip = {
+						text = natural_disaster_variable
+						has_variable = natural_disaster_variable
+					}
+				}
+				save_scope_as = famine_state
+				set_variable = famine_var
+			}
+			trigger_event = { id = famine_events.1 }
+		}
+		else_if = {
+			limit = {
+				any_scope_state = {
+					average_sol <= 5
+					any_scope_building = {
+						is_farm_building = yes
+						occupancy >= 0.1
+						weekly_profit <= 0.5
+					}
+				}
+			}
+			random_scope_state = {
+				limit = {
+					average_sol <= 5
+					any_scope_building = {
+						is_farm_building = yes
+						occupancy >= 0.1
+						weekly_profit <= 0.5
+					}
+				}
+				save_scope_as = famine_state
+				set_variable = famine_var
+			}
+			trigger_event = { id = famine_events.1 }
+		}
+	}
+
+	current_value = {
+		value =	root.average_sol
+	}
+
+	goal_add_value = 0.1
+
+	complete = {
+		scope:journal_entry = {
+			custom_tooltip = {
+				text = je_major_famines_success
+				is_goal_complete = yes
+			}
+		}
+	}
+
+	on_complete = {
+		set_variable = {
+			name = completed_major_famine_var
+			months = normal_modifier_time
+		}
+		every_scope_state = {
+			limit = {
+			  has_modifier = great_famine_modifier
+			}
+			remove_modifier = great_famine_modifier
+		}
+		every_scope_state = {
+			limit = {
+			  has_modifier = emergency_famine_modifier
+			}
+			remove_modifier = emergency_famine_modifier
+		}
+		remove_variable = neighbor_country_1_var
+		remove_variable = famine_donations_var
+		remove_variable = bpm_1848_famine_activated
+	}
+
+	on_monthly_pulse = {
+		random_events = {
+			100 = 0
+			10 = famine_events.2
+			10 = famine_events.3
+			10 = famine_events.4
+			10 = famine_political.1
+			10 = famine_political.2
+			10 = famine_political.3
+			10 = famine_political.4
+			10 = famine_political.5
+		}
+		effect = {
+			every_scope_state = {
+				limit = { has_variable = famine_var }
+				set_variable = { name = temp_deaths_famine value = { 0 200 } }
+				kill_population_in_state = {
+					value = var:temp_deaths_famine
+				}
+			}
+		}
+	}
+
+	timeout = 1825
+
+	weight = 200
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+
+	progressbar = yes
+}

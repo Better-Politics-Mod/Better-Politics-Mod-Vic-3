@@ -530,3 +530,223 @@ calculate_caudillo_progress = {
 
 	}
 }
+
+calculate_communism_progress = {
+	set_variable = { name = communism_progress_var_next value = 0 }
+	set_variable = { name = communism_progress_from_radicals value = 0 }
+	every_scope_state = {
+		limit = {
+			is_incorporated = yes
+		}
+		ROOT = {
+			change_variable = { name = communism_progress_from_radicals add = prev.turmoil }
+		}
+	}
+	set_variable = { name = communism_progress_from_loyalists value = 0 }
+	every_scope_state = {
+		limit = {
+			is_incorporated = yes
+		}
+		ROOT = {
+			change_variable = { name = communism_progress_from_loyalists add = prev.loyalty }
+		}
+	}
+	change_variable = { name = communism_progress_from_loyalists multiply = -1 }
+	#From Poverty
+	set_variable = { name = communism_progress_from_poverty value = 0 }
+	# every_scope_state = {
+	# 	limit = {
+	# 		is_incorporated = yes
+	# 	}
+	# 	set_variable = { name = temp_sol value = this.population_below_expected_sol } 
+	# 	change_variable = { name = temp_sol multiply = this.state_population }
+	# 	change_variable = { name = temp_sol divide = root.total_population }
+	# 	change_variable = { name = temp_sol multiply = 10 } # This variable equals the percentage of pops in incorporated states below expected SoL times ten. If 25% of your pops in incorporated states are below expected SoL, this will equal 2.5.
+	# 	ROOT = {
+	# 		change_variable = { name = communism_progress_from_poverty add = prev.var:temp_sol }
+	# 	}
+	# }
+	#From Party Socialist TU Leaders
+	set_variable = { name = communism_progress_from_party_socialist_tu value = 0 }
+	if = {
+		limit = {
+			ig:ig_trade_unions ?= {
+				leader = { bpm_leader_is_party_socialist = yes }
+			}
+		}
+		ROOT = {
+			change_variable = { name = communism_progress_from_party_socialist_tu add = 1 }
+		}
+	}
+	# From TUs in party with Party Socialists
+	set_variable = { name = communism_progress_from_tu_party value = 0 }
+	if = {
+		limit = {
+			ig:ig_trade_unions ?= {
+				has_party = yes
+				party ?= {
+					any_member = {
+						bpm_ig_is_party_socialist = yes
+					}
+				}
+			}
+		}
+		ROOT = {
+			change_variable = { name = communism_progress_from_tu_party add = 1 }
+		}
+	}
+	#From Agitators
+	set_variable = { name = communism_progress_from_characters value = 0 }
+	every_scope_character = {
+		limit = {
+			has_role = agitator
+			OR = {
+				bpm_leader_is_party_socialist = yes
+				interest_group ?= { bpm_ig_is_party_socialist = yes }
+			}
+		}
+		ROOT = {
+			change_variable = { name = communism_progress_from_characters add = prev.popularity }
+		}
+	}
+	change_variable = { name = communism_progress_from_characters divide = 100 }
+	# From Interest Groups
+	set_variable = { name = communism_progress_from_igs value = 0 }
+	every_interest_group = {
+		limit = {
+			bpm_ig_is_party_socialist = yes
+		}
+		ROOT = {
+			change_variable = {
+				name = communism_progress_from_igs
+				add = {
+					value = prev.interest_group_population_percentage
+					multiply = 20
+				}
+			}
+		}
+	}
+	set_variable = { name = communism_progress_from_movements value = 0 }
+	random_political_movement = {
+		limit = {
+			any_supporting_interest_group = {
+				is_interest_group_type = ig_trade_unions
+			}
+			any_supporting_interest_group = {
+				OR = {
+					bpm_ig_is_party_socialist = yes
+					leader = { bpm_leader_is_party_socialist = yes }
+				}
+			}
+		}
+		ROOT = {
+			change_variable = {
+				name = communism_progress_from_movements
+				add = 0.5
+			}
+		}
+	}
+	set_variable = { name = communism_progress_from_revolutions value = 0 }
+	random_political_movement = {
+		limit = {
+			any_supporting_interest_group = {
+				is_interest_group_type = ig_trade_unions
+			}
+			any_supporting_interest_group = {
+				OR = {
+					bpm_ig_is_party_socialist = yes
+					leader = { bpm_leader_is_party_socialist = yes }
+				}
+			}
+			is_revolutionary_movement = yes
+		}
+		ROOT = {
+			change_variable = {
+				name = communism_progress_from_revolutions
+				add = 1
+			}
+		}
+	}
+	# From Laws
+	set_variable = { name = communism_progress_from_laws value = 0 }
+	# Cops
+	set_variable = { name = temp_policing_var_contribution value = institution:institution_police.investment }
+	if = {
+		limit = {
+			has_law = law_type:law_no_police
+		}
+		change_variable = { name = temp_policing_var_contribution add = 0.3 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_local_police
+		}
+		change_variable = { name = temp_policing_var_contribution multiply = -0.1 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_dedicated_police
+		}
+		change_variable = { name = temp_policing_var_contribution multiply = -0.3 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_militarized_police
+		}
+		change_variable = { name = temp_policing_var_contribution multiply = -0.5 }
+	}
+	
+	# Internal Affairs
+	set_variable = { name = temp_ha_var_contribution value = institution:institution_home_affairs.investment }
+	if = {
+		limit = {
+			has_law = law_type:law_no_home_affairs
+		}
+		change_variable = { name = temp_ha_var_contribution add = 0.3 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_guaranteed_liberties
+		}
+		change_variable = { name = temp_ha_var_contribution multiply = -0.1 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_national_guard
+		}
+		change_variable = { name = temp_ha_var_contribution multiply = -0.3 }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_secret_police
+		}
+		change_variable = { name = temp_ha_var_contribution multiply = -0.5 }
+	}
+	if = {
+		limit = {
+			has_variable = temp_policing_var_contribution
+		}
+		change_variable = { name = communism_progress_from_laws add = var:temp_policing_var_contribution }
+		remove_variable = temp_policing_var_contribution
+	}
+	if = {
+		limit = {
+			has_variable = temp_ha_var_contribution
+		}
+		change_variable = { name = communism_progress_from_laws add = var:temp_ha_var_contribution }
+		remove_variable = temp_ha_var_contribution
+	}
+
+	# Compilation
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_from_party_socialist_tu }
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_from_tu_party }
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_from_movements }
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_from_revolutions }
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_from_radicals }
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_from_loyalists }
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_from_poverty }
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_from_igs }
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_from_characters }
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_from_laws }
+	change_variable = { name = communism_progress_var_next add = var:communism_progress_var_add }
+}

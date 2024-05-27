@@ -1,0 +1,281 @@
+je_bpm_guilty_land = {
+	icon = "gfx/interface/icons/production_method_icons/unused/slavery.dds"
+
+	group = je_group_historical_content
+
+	immediate = {
+		set_variable = {
+			name = bpm_slave_power_prog_var
+			value = 0
+		}
+    set_variable = {
+			name = bpm_states_rights_prog_var
+			value = 6
+		}
+    set_variable = {
+			name = bpm_secession_tension_prog_var
+			value = {
+        bpm_states_rights_prog_var 
+        add = bpm_slave_power_prog_var
+      }
+		}
+		set_variable = {
+			name = acw_progress_var
+			value = 0
+		}
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = bpm_je_guilty_four_civil_war
+				trigger = {
+					bpm_secession_tension_prog_var > 40
+				}
+			}
+			triggered_desc = {
+				desc = bpm_je_guilty_three_civil_war
+				trigger = {
+					bpm_secession_tension_prog_var > 30
+				}
+			}
+			triggered_desc = {
+				desc = bpm_je_guilty_two_civil_war
+				trigger = {
+					bpm_secession_tension_prog_var > 20
+				}
+			}
+      triggered_desc = {
+				desc = bpm_je_guilty_one_civil_war
+				trigger = {
+					bpm_secession_tension_prog_var > 0  
+				}
+			}
+		}
+	}
+	
+	complete = {
+		custom_tooltip = {
+			text = "bpm_je_john_brown"
+      in_election_campaign = yes # for the JE to close, an election must be ongoing
+			has_variable = bpm_john_brown # for the JE to close, John Brown must have begun his raid
+		}
+	}
+
+	on_complete = {
+		if = {
+      limit = {
+        bpm_slave_power_prog_var > bpm_states_rights_prog_var
+      }
+		  trigger_event = { id = bpm_acw_events.1 days = 0 popup = yes } # FSA Trigger Event
+    }
+    else = {
+      limit = {
+        bpm_states_rights_prog_var > bpm_slave_power_prog_var
+      }
+		  trigger_event = { id = bpm_acw_events.2 days = 0 popup = yes } # CSA Trigger Event
+    }
+    remove_variable = bpm_slave_power_prog_var
+    remove_variable = bpm_slave_power_prog_var
+    remove_variable = bpm_secession_tension_prog_var
+    remove_variable = acw_progress_var
+	}
+
+  fail = {
+	  OR = {
+      AND = {
+        has_law = law_type:law_slavery_banned
+        text = "bpm_je_eradicate_slavery"
+        acw_progress_var = 60
+      AND = {
+        OR = {
+	  	  	has_revolution_over_law_type = law_type:law_slavery_banned
+		    	has_revolution_over_law_type = law_type:law_slave_trade
+		    	has_revolution_over_law_type = law_type:law_legacy_slavery
+		    	has_revolution_over_law_type = law_type:law_debt_slavery
+	    	}			
+	    	OR = { 
+	    		# CSA
+	    		custom_tooltip = {
+	    			text = acw_landowner_revolt
+	    			any_country = {
+	    				is_revolutionary = yes
+	    				country_definition = root.country_definition
+	    				ig:ig_landowners = {
+	    					is_in_government = yes
+	    				}					
+	    			}
+	    		}
+	    		# FSA
+	    		custom_tooltip = {
+	    			text = acw_antislaver_revolt
+	    			OR = {
+              ig:ig_landowners = {
+                is_in_government = yes
+	    			  }
+              ig:ig_reactionaries = {
+	  			      is_in_government = yes
+	  			    }
+            }
+	  		  	NOT = { has_law = law_type:law_slavery_banned }
+	  		  	NOT = { is_enacting_law = law_type:law_slavery_banned }
+	  		  	any_country = {
+	  		  		is_revolutionary = yes
+	  		  		country_definition = root.country_definition
+	  		  	}
+	  		  }
+	  	  }
+	    }
+    }
+  }
+
+	on_fail = {
+		if = {
+      limit = {
+        has_law = law_type:law_slavery_banned
+        acw_progress_var = 120
+      }
+		  set_variable = je_acw_countdown_complete
+		  remove_modifier = missouri_compromise
+		  trigger_event = { id = slavery_law_events.7 days = 0 popup = yes }
+    else = {
+      if = {
+		  	limit = {
+		  		any_country = {
+		  			is_revolutionary = yes
+		  			country_definition = root.country_definition
+		  			ig:ig_landowners = {
+		  				is_in_government = yes
+		  			}				
+		  		}
+		  	}
+		    trigger_event = { id = bpm_acw_events.2 days = 0 popup = yes } # CSA Trigger Event
+		  }
+	  	else = {
+		    trigger_event = { id = bpm_acw_events.1 days = 0 popup = yes } # FSA Trigger Event
+		  }
+    }
+    remove_variable = bpm_slave_power_prog_var
+    remove_variable = bpm_slave_power_prog_var
+    remove_variable = bpm_secession_tension_prog_var
+    remove_variable = acw_progress_var
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			change_variable = {
+				name = bpm_secession_tension_prog_var
+				value = {
+         bpm_states_rights_prog_var
+         add = bpm_slave_power_prog_var
+        }
+			}
+			clamp_variable = {
+				name = bpm_secession_tension_prog_var
+				max = 50
+				min = 0
+			}
+      if = {
+				limit = {
+					has_law = law_type:law_slavery_banned
+				}
+				change_variable = {
+					name = acw_progress_var
+					add = 1
+				}
+			}
+		}
+	}
+
+	on_yearly_pulse = {
+    first_valid = {
+      if = {
+			  limit = {
+          bpm_secession_tension_prog_var > 20
+          NOT = { has_variable = bpm_gag_rule_ended }
+        }
+				trigger_event = { id = bpm_acw_events.3 days = 0 popup = yes } # whigs strike down the gag rule
+			}
+      if = {
+			  limit = {
+          bpm_secession_tension_prog_var > 30
+          NOT = { has_variable = bpm_whigs_collapsed }
+        }
+				trigger_event = { id = bpm_acw_events.4 days = 0 popup = yes } # whigs collapse
+			}
+      if = {
+			  limit = {
+          bpm_secession_tension_prog_var > 30
+          NOT = { has_variable = bpm_william_walker }
+        }
+				trigger_event = { id = bpm_acw_events.5 days = 0 popup = yes } # william walker goes to Central America
+      }
+      if = {
+			  limit = {
+          bpm_secession_tension_prog_var > 30
+           has_variable = bpm_wilmot_proviso
+        }
+				trigger_event = { id = bpm_acw_events.6 days = 0 popup = yes } # wilmot overturned
+      }
+      if = {
+			  limit = {
+          bpm_secession_tension_prog_var > 30
+          has_variable = bpm_1850_compromise
+        }
+				trigger_event = { id = bpm_acw_events.7 days = 0 popup = yes } # 1850 nullified
+      }
+      if = {
+			  limit = {
+          bpm_secession_tension_prog_var > 30
+          NOT = { has_variable = bpm_bleeding_state }
+        }
+				trigger_event = { id = bpm_acw_events.8 days = 0 popup = yes } # john brown begins his march
+      }
+      if = {
+			  limit = {
+          bpm_secession_tension_prog_var > 30
+        }
+				trigger_event = { id = bpm_acw_events.9 days = 0 popup = yes } # dred scott v sandford
+      }
+      if = {
+			  limit = {
+          bpm_secession_tension_prog_var > 40
+          NOT = { has_variable = bpm_john_brown }
+        }
+				trigger_event = { id = bpm_acw_events.10 days = 0 popup = yes } # john brown launches his raid
+      }
+      if = {
+			  limit = {
+          has_variable = bpm_mexican_war
+        }
+				trigger_event = { id = bpm_acw_events.11 days = 0 popup = yes } # do we expand slavery west?
+      }
+      if = {
+			  limit = {
+          has_variable = bpm_canadian_war
+        }
+				trigger_event = { id = bpm_acw_events.12 days = 0 popup = yes } # South pissed we can't expand slavery north
+      }
+      if = {
+			  limit = {
+          has_variable = bpm_caribbean_war
+        }
+				trigger_event = { id = bpm_acw_events.13 days = 0 popup = yes } # North pissed we are expanding slavery south
+      }
+		}
+	}
+
+	current_value = {
+		value = var:bpm_secession_tension_prog_var
+	}
+
+	goal_add_value = {
+		value = 50
+	}
+
+	progressbar = yes
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+}

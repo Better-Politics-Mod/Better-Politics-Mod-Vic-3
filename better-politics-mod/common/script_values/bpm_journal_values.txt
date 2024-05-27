@@ -1264,150 +1264,158 @@ bpm_je_general_strike_exhaustion_rate = {
 
 	add = {
 		desc = "BPM_VALUE_BASE"
+		value = 0
 		if = {
 			limit = { has_journal_entry = je_bpm_general_strike_trigger }
-			value = -5
+			add = {
+				value = var:bpm_je_general_strike_exhaustion
+				multiply = -0.01
+				max = -1
+			}
 		} else = {
-			value = 6
+			add = 6
 		}
 	}
 
 	if = {
-		limit = {
-			has_journal_entry = je_bpm_general_strike_ongoing
-			has_variable = bpm_je_general_strike_power_cached
-			var:bpm_je_general_strike_power_cached < 0
-		}
-		add = {
-			desc = "BPM_VALUE_FROM_RETREATING_STRIKERS"
-			value = 10
-		}
-	}
-
-	# Larger and more powerful unions exhaust less
-	add = {
-		desc = "BPM_VALUE_FROM_TRADE_UNION_POPULARITY"
-		ig:ig_trade_unions ?= {
-			subtract = interest_group_population_percentage
-			multiply = 100
-		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_TRADE_UNION_CLOUT"
-		ig:ig_trade_unions ?= {
-			subtract = ig_clout
-			multiply = 100
-		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_SOCIALIST_IGS_POPULARITY"
-		every_interest_group = {
-			limit = { bpm_ig_is_socialist = yes }
+		limit = { has_journal_entry = je_bpm_general_strike_ongoing }
+		if = {
+			limit = {
+				has_journal_entry = je_bpm_general_strike_ongoing
+				has_variable = bpm_je_general_strike_power_cached
+				var:bpm_je_general_strike_power_cached < 0
+			}
 			add = {
+				desc = "BPM_VALUE_FROM_RETREATING_STRIKERS"
+				value = 10
+			}
+		}
+	
+		# Larger and more powerful unions exhaust less
+		add = {
+			desc = "BPM_VALUE_FROM_TRADE_UNION_POPULARITY"
+			ig:ig_trade_unions ?= {
 				subtract = interest_group_population_percentage
 				multiply = 100
 			}
 		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_CONTENT_LABOR_IGS"
-		value = 0
-		every_interest_group = {
-			limit = {
-				bpm_ig_is_labor = yes
-				ig_approval >= 0
+		add = {
+			desc = "BPM_VALUE_FROM_TRADE_UNION_CLOUT"
+			ig:ig_trade_unions ?= {
+				subtract = ig_clout
+				multiply = 100
 			}
-			add = 3
 		}
-	}
-
-	# Police exhausts protests faster
-	add = {
-		desc = "BPM_VALUE_FROM_INSTITUTION_LOCAL_POLICE"
+		add = {
+			desc = "BPM_VALUE_FROM_SOCIALIST_IGS_POPULARITY"
+			every_interest_group = {
+				limit = { bpm_ig_is_socialist = yes }
+				add = {
+					subtract = interest_group_population_percentage
+					multiply = 100
+				}
+			}
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_CONTENT_LABOR_IGS"
+			value = 0
+			every_interest_group = {
+				limit = {
+					bpm_ig_is_labor = yes
+					ig_approval >= 0
+				}
+				add = 3
+			}
+		}
+	
+		# Police exhausts protests faster
+		add = {
+			desc = "BPM_VALUE_FROM_INSTITUTION_LOCAL_POLICE"
+			if = {
+				limit = { 
+					has_law = law_type:law_local_police  
+					has_journal_entry = je_bpm_general_strike_ongoing
+				}
+				add = institution:institution_police.investment
+				multiply = 1
+			}
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_POLICE"
+			if = {
+				limit = { 
+					has_law = law_type:law_dedicated_police 
+					has_journal_entry = je_bpm_general_strike_ongoing
+				}
+				add = institution:institution_police.investment
+				multiply = 2
+			}
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_INSTITUTION_MILITARIZED_POLICE"
+			if = {
+				limit = { 
+					has_law = law_type:law_militarized_police  
+					has_journal_entry = je_bpm_general_strike_ongoing
+				}
+				add = institution:institution_police.investment
+				multiply = 5
+			}
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_GUARD"
+			if = {
+				limit = { 
+					has_law = law_type:law_national_guard
+					has_journal_entry = je_bpm_general_strike_ongoing
+				}
+				add = institution:institution_home_affairs.investment
+				multiply = 2
+			}
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_INSTITUTION_SECRET_POLICE"
+			if = {
+				limit = { 
+					has_law = law_type:law_secret_police
+					has_journal_entry = je_bpm_general_strike_ongoing
+				}
+				add = institution:institution_home_affairs.investment
+				multiply = 2
+			}
+		}
+	
+		# Aside from Elected Police
+		subtract = {
+			desc = "BPM_VALUE_FROM_INSTITUTION_ELECTED_POLICE"
+			if = {
+				limit = { 
+					has_law = law_type:law_elected_police 
+					has_journal_entry = je_bpm_general_strike_ongoing
+				}
+				add = institution:institution_police.investment
+				multiply = 5
+				multiply = bpm_je_general_strike_multiplier
+			}
+		}
+	
 		if = {
 			limit = { 
-				has_law = law_type:law_local_police  
 				has_journal_entry = je_bpm_general_strike_ongoing
+				has_revolution = no
 			}
-			add = institution:institution_police.investment
-			multiply = 1
-		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_POLICE"
+			min = -1
+		} 
+	
 		if = {
+			desc = "BPM_MAX_EXHAUSTION_RATE_IN_REVOLUTION"
 			limit = { 
-				has_law = law_type:law_dedicated_police 
 				has_journal_entry = je_bpm_general_strike_ongoing
+				has_revolution = yes
 			}
-			add = institution:institution_police.investment
-			multiply = 2
-		}
+			max = 0
+		} 	
 	}
-	add = {
-		desc = "BPM_VALUE_FROM_INSTITUTION_MILITARIZED_POLICE"
-		if = {
-			limit = { 
-				has_law = law_type:law_militarized_police  
-				has_journal_entry = je_bpm_general_strike_ongoing
-			}
-			add = institution:institution_police.investment
-			multiply = 5
-		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_GUARD"
-		if = {
-			limit = { 
-				has_law = law_type:law_national_guard
-				has_journal_entry = je_bpm_general_strike_ongoing
-			}
-			add = institution:institution_home_affairs.investment
-			multiply = 2
-		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_INSTITUTION_SECRET_POLICE"
-		if = {
-			limit = { 
-				has_law = law_type:law_secret_police
-				has_journal_entry = je_bpm_general_strike_ongoing
-			}
-			add = institution:institution_home_affairs.investment
-			multiply = 2
-		}
-	}
-
-	# Aside from Elected Police
-	subtract = {
-		desc = "BPM_VALUE_FROM_INSTITUTION_ELECTED_POLICE"
-		if = {
-			limit = { 
-				has_law = law_type:law_elected_police 
-				has_journal_entry = je_bpm_general_strike_ongoing
-			}
-			add = institution:institution_police.investment
-			multiply = 5
-			multiply = bpm_je_general_strike_multiplier
-		}
-	}
-
-	if = {
-		limit = { 
-			has_journal_entry = je_bpm_general_strike_ongoing
-			has_revolution = no
-		}
-		min = -1
-	} 
-
-	if = {
-		desc = "BPM_MAX_EXHAUSTION_RATE_IN_REVOLUTION"
-		limit = { 
-			has_journal_entry = je_bpm_general_strike_ongoing
-			has_revolution = yes
-		}
-		max = -1
-	} 
 }
 
 bpm_je_general_strike_button_result_small = {

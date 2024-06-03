@@ -77,9 +77,18 @@
 			is_pop_type = soldiers
 			is_pop_type = officers
 		}
-		owner = {
-			ig:ig_trade_unions ?= { NOT = { has_ideology = ideology:ideology_nonexistent } }
-			NOT = { is_country_type = decentralized }
+		custom_tooltip = {
+			text = BPM_VALID_POP_FOR_IG
+			owner = {
+				NOT = {
+					is_country_type = decentralized
+				}
+				ig:ig_trade_unions ?= {
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
+			}
 		}
 	}
 	
@@ -112,9 +121,18 @@
 
 		if = {
 			limit = { 
+				is_pop_type = peasants
+			}
+			add = {
+				desc = "NOT_PEASANTS"
+				value = -100
+			}
+		}
+		else_if = {
+			limit = { 
 				OR = {
-					is_pop_type = clerks
 					is_pop_type = laborers
+					is_pop_type = clerks
 					is_pop_type = machinists
 				}
 			}
@@ -128,34 +146,24 @@
 				multiply = 100
 			}
 		}
-
-		add = {
-			desc = "POP_LEADERS"
-			if = {
-				limit = { 
-					OR = {
-						is_pop_type = academics
-						is_pop_type = engineers
-					}
+		else_if = {
+			limit = { 
+				OR = {
+					is_pop_type = academics
+					is_pop_type = engineers
 				}
+			}
+			add = {
+				desc = "POP_LEADERS"
 				value = 80
 			}
 		}
-		add = {
-			desc = "NOT_UPPER"
-			if = {
-				limit = { 
-					strata = rich
-				}
-				value = -100
+		else_if = {
+			limit = {
+				strata = rich
 			}
-		}
-		add = {
-			desc = "NOT_PEASANTS"
-			if = {
-				limit = { 
-					is_pop_type = peasants
-				}
+			add = {
+				desc = "NOT_UPPER"
 				value = -100
 			}
 		}
@@ -181,31 +189,33 @@
 		}	
 		
 		if = {
-			limit = {
-				owner = { has_variable = bpm_je_syndicalism }
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			if = {
+				limit = { owner = { has_variable = bpm_je_syndicalism } }
+				multiply = {
+					desc = "FROM_SYNDICALISM_JE"
+					value = 1
+					add = {
+						value = owner.var:bpm_je_syndicalism
+						multiply = 0.01
+					}
+				}
 			}
 			multiply = {
-				desc = "FROM_SYNDICALISM_JE"
-				value = 1
-				add = {
-					value = owner.var:bpm_je_syndicalism
-					multiply = 0.01
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.005
+						add = 1
+						max = 1.5
+						min = 0.67
+					}
 				}
-			}
+			}	
+			multiply = bpm_ig_agitators_popularity
+			multiply = ig_attraction_from_radicals_and_loyalists
 		}
-
-		multiply = {
-			desc = "LEADER_POPULARITY"
-			scope:interest_group = {
-				leader = {
-					value = popularity
-					multiply = 0.005
-					add = 1
-					max = 1.5
-					min = 0.67
-				}
-			}
-		}	
 
 		# multiply = {
 		# 	desc = "LOW_WELFARE"
@@ -246,8 +256,6 @@
 				value = 0.25
 			}		
 		}
-
-		multiply = ig_attraction_from_radicals_and_loyalists
 	}
 	
 	monarch_weight = {

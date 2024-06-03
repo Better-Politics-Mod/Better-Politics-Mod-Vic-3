@@ -3,12 +3,14 @@
 	custom_tooltip = {
 		text = bpm_law_effect_tt_officer_law_change
 		every_scope_admiral = {
+			limit = { NOT = { has_role = ruler } }
 			kill_character = {
 				value = yes 
 				hidden = yes
 			}
 		}
 		every_scope_general = {
+			limit = { NOT = { has_role = ruler } }
 			kill_character = {
 				value = yes 
 				hidden = yes
@@ -34,15 +36,16 @@ bpm_fix_stupid_law_combinations = {
 		activate_law = law_type:law_council_republic
 	}
 
-	if = { # Enforcing minimum censorship for party ban laws
-		limit = {
-			has_law = law_type:law_protected_speech
-			NOT = { has_law = law_type:law_no_party_bans }
-			NOT = { has_law = law_type:law_party_single }
-		}
-
-		activate_law = law_type:law_right_of_assembly
-	}
+	# Commented out due to tweaks to right of assembly 
+	#if = { # Enforcing minimum censorship for party ban laws
+	#	limit = {
+	#		has_law = law_type:law_protected_speech
+	#		NOT = { has_law = law_type:law_no_party_bans }
+	#		NOT = { has_law = law_type:law_party_single }
+	#	}
+	#	
+	#	activate_law = law_type:law_right_of_assembly
+	#}
 }
 
 
@@ -50,5 +53,141 @@ bpm_deactivate_syndicalism = {
 	if = {
 		limit = { has_law = law_type:law_syndicalism }
 		activate_law = law_type:law_all_labor_unions_allowed
+	}
+}
+
+bpm_finalize_repeatable_law = {
+	hidden_effect = {
+		set_variable = {
+			name = bpm_repeatable_law_$LAW$_cooldown
+			years = bpm_repeatable_law_cooldown
+		}
+		every_interest_group = {
+			limit = {
+				NOT = {
+					law_stance = {
+						law = law_type:$LAW$
+						value = neutral
+					}
+				}
+			}
+			
+			if = {
+				limit = {
+					law_stance = {
+						law = law_type:$LAW$
+						value > neutral
+					}
+				}
+	
+				add_modifier = {
+					name = bpm_repeatable_law_ig_happy
+					years = bpm_repeatable_law_result_duration
+					is_decaying = yes
+				}
+			} else = {
+				add_modifier = {
+					name = bpm_repeatable_law_ig_unhappy
+					years = bpm_repeatable_law_result_duration
+					is_decaying = yes
+				}
+			}
+		}
+		trigger_event = {
+			id = bpm_misc.3
+			days = 1
+		}
+	}
+}
+
+
+bpm_repeatable_culture_influence_apply_modifiers = {
+	custom_tooltip = bpm_law_effect_tt_culture_generic_result
+	every_interest_group = {
+		limit = {
+			bpm_ig_is_ideological = yes
+		}
+
+		if = {
+			limit = { 
+				law_stance = {
+					law = law_type:law_repeatable_culture_promote_$VALUES$_values
+					value = strongly_approve
+				}
+			}
+
+			add_modifier = {
+				name = bpm_repeatable_law_culture_generic_result_ig_positive
+				years = bpm_repeatable_law_result_duration
+				is_decaying = yes
+				multiplier = {
+					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					multiply = 0.2
+				}
+			}
+		} else_if = {
+			limit = { 
+				law_stance = {
+					law = law_type:law_repeatable_culture_promote_$VALUES$_values
+					value = approve
+				}
+			}
+
+			add_modifier = {
+				name = bpm_repeatable_law_culture_generic_result_ig_positive
+				years = bpm_repeatable_law_result_duration
+				is_decaying = yes
+				multiplier = {
+					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					multiply = 0.2
+					multiply = 0.5
+				}
+			}
+		} else_if = {
+			limit = { 
+				law_stance = {
+					law = law_type:law_repeatable_culture_promote_$VALUES$_values
+					value = disapprove
+				}
+			}
+
+			add_modifier = {
+				name = bpm_repeatable_law_culture_generic_result_ig_negative
+				years = bpm_repeatable_law_result_duration
+				is_decaying = yes
+				multiplier = {
+					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					multiply = 0.2
+					multiply = 0.5
+				}
+			}
+		} else_if = {
+			limit = { 
+				law_stance = {
+					law = law_type:law_repeatable_culture_promote_$VALUES$_values
+					value = strongly_disapprove
+				}
+			}
+
+			add_modifier = {
+				name = bpm_repeatable_law_culture_generic_result_ig_negative
+				years = bpm_repeatable_law_result_duration
+				is_decaying = yes
+				multiplier = {
+					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					multiply = 0.2
+				}
+			}
+		}
+	}
+
+	add_modifier = {
+		name = bpm_repeatable_law_promote_$VALUES$_values_result
+		years = bpm_repeatable_law_result_duration
+		is_decaying = yes
+		multiplier = {
+			value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+			multiply = 0.2
+		}
 	}
 }

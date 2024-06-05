@@ -59,14 +59,16 @@
 	pop_weight = {
 		value = 20	
 
-		##### RURAL POP WEIGHTS ONLY #####
+		##### RURAL POP WEIGHTS ONLY NOT USA#####
 		if = {
 			limit = { 
 				OR = {
 					pop_employment_building_group = bg_agriculture
 					pop_employment_building_group = bg_ranching
-					pop_employment_building_group = bg_plantations				
+					pop_employment_building_group = bg_plantations
+					
 				}
+				NOT = { owner = { has_modifier = missouri_compromise } }
 			}
 			add = {
 				desc = "RURAL_POP"
@@ -152,6 +154,103 @@
 				}
 			}
 		}
+
+		##### RURAL POP WEIGHTS ONLY IS USA#####
+		if = {
+			limit = { 
+				OR = {
+					pop_employment_building_group = bg_agriculture
+					pop_employment_building_group = bg_ranching
+					pop_employment_building_group = bg_plantations
+					
+				}
+				owner = { has_modifier = missouri_compromise }
+			}
+			add = {
+				desc = "RURAL_POP"
+				value = 25
+			}
+			# Free farmers are more likely to be agpops
+			if = {
+				limit = { is_pop_type = farmers }
+				add = {
+					desc = "POP_FARMERS"
+					value = 50
+				}
+			}
+			# Unfree labor makes more agpops
+			if = {
+				limit = {
+					owner = {
+						OR = {
+							has_law = law_type:law_serfdom
+							has_law = law_type:law_slave_trade
+							has_law = law_type:law_legacy_slavery
+						}
+					}
+				}
+				add = {
+					desc = "POP_RURAL_ABOLITIONISTS"
+					value = 40
+				}
+			}
+			# Free peasants are less likely to be agpops
+			else_if = {
+				limit = {
+					is_pop_type = peasants
+				}
+				add = {
+					desc = "POP_FREE_PEASANTS"
+					value = -20
+				}
+			}
+			# Literacy adds to agpops
+			if = {
+				limit = { strata < rich }
+				add = {
+					desc = "POP_EDUCATED_FARMERS"
+					value = literacy_rate
+					multiply = 125
+				}
+			}
+			# Agsocs
+			if = {
+				limit = {
+					strata < rich
+					scope:interest_group = { has_variable = bpm_ig_is_socialist_var }
+				}
+				if = {
+					limit = { owner = { has_law = law_type:law_commercialized_agriculture } }
+					add = {
+						desc = "POP_RURAL_ANTICAPITALISM"
+						value = 50
+					}
+				}
+				if = {
+					limit = { owner = { has_law = law_type:law_council_republic } }
+					if = {
+						limit = {
+							owner = { NOT = { has_law = law_type:law_collectivized_agriculture } }
+						}
+						add = {
+							desc = "POP_RURAL_WANTS_COLLECTIVIZATION"
+							value = 30
+						}
+					}
+					else_if = {
+						limit = {
+							owner = { has_law = law_type:law_collectivized_agriculture }
+							pop_radical_fraction <= 0.05
+						}
+						add = {
+							desc = "POP_RURAL_HAPPY_UNDER_SOCIALISM"
+							value = 75
+						}
+					}
+				}
+			}
+		}
+		
 		##### IF NOT RURAL POP AND NOT ACADEMIC, EXCLUDE #####
 		else_if = {
 			limit = { NOT = { is_pop_type = academics }  }

@@ -1,0 +1,417 @@
+je_bpm_guilty_land = {
+	icon = "gfx/interface/icons/production_method_icons/unused/slavery.dds"
+
+	group = je_group_historical_content
+
+	immediate = {
+		set_variable = {
+			name = bpm_slave_power_prog_var
+			value = 0
+		}
+    		set_variable = {
+			name = bpm_states_rights_prog_var
+			value = 6
+		}
+		set_variable = {
+			name = bpm_secession_tension_prog_var
+			value = 6
+		}
+		c:USA = {
+			every_state = {
+				if = {
+					
+					limit = { 
+						is_incorporated = yes 
+						owner = { has_variable = bpm_2nd_party_system }
+					}
+					add_modifier = {
+						name = bpm_voting_state
+						is_decaying = no
+					}
+				}
+			}
+		}
+	}
+	
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = bpm_je_guilty_four_civil_war
+				trigger = {
+					var:bpm_secession_tension_prog_var > 40 
+				}
+			}
+			triggered_desc = {
+				desc = bpm_je_guilty_three_civil_war
+				trigger = {
+					var:bpm_secession_tension_prog_var > 30 
+				}
+			}
+			triggered_desc = {
+				desc = bpm_je_guilty_two_civil_war
+				trigger = {
+					var:bpm_secession_tension_prog_var > 20 
+				}
+			}
+      			triggered_desc = {
+				desc = bpm_je_guilty_one_civil_war
+				trigger = {
+					var:bpm_secession_tension_prog_var > 0 
+				}
+			}
+		}
+	}
+	
+	complete = {
+		custom_tooltip = {
+			text = "bpm_je_john_brown"
+      			in_election_campaign = yes # for the JE to close, an election must be ongoing
+			owner = { has_variable = bpm_john_brown } # for the JE to close, John Brown must have begun his raid
+		}
+	}
+
+	on_complete = {
+		if = {
+      			limit = {
+				var:bpm_slave_power_prog_var > 20 
+      			}
+		 	trigger_event = { id = bpm_acw_events.1 days = 210 popup = yes } # FSA Trigger Event
+    		}
+    		else = {
+		  	trigger_event = { id = bpm_acw_events.2 days = 210 popup = yes } # CSA Trigger Event
+    		}
+    		remove_variable = bpm_slave_power_prog_var
+    		remove_variable = bpm_slave_power_prog_var
+    		remove_variable = bpm_secession_tension_prog_var
+    		remove_variable = acw_progress_var
+		c:USA = {
+			ig:ig_radicals = {
+				bpm_remove_all_rel_ideologies = yes
+				add_ideology = ideology_rel_radical_secularist
+			}
+		}
+	}
+
+	scripted_button = bpm_mexican_destiny_button
+	scripted_button = bpm_canadian_destiny_button
+	scripted_button = bpm_caribbean_destiny_button
+
+  	fail = {
+      		OR = {
+			AND = {
+        			OR = {
+	  	  			has_revolution_over_law_type = law_type:law_slavery_banned
+					has_revolution_over_law_type = law_type:law_slave_trade
+			    		has_revolution_over_law_type = law_type:law_legacy_slavery
+		    			has_revolution_over_law_type = law_type:law_debt_slavery
+	    			}			
+	    			OR = { 
+					# CSA
+	    				custom_tooltip = {
+	    					text = acw_landowner_revolt
+	    					any_country = {
+							is_revolutionary = yes
+	    						country_definition = root.country_definition
+	    						ig:ig_landowners = {
+	    							is_in_government = yes
+	    						}					
+	    					}
+	    				}
+	    				# FSA
+	    				custom_tooltip = {
+	    					text = acw_antislaver_revolt
+	    					OR = {
+              						ig:ig_landowners = {
+                						is_in_government = yes
+	    		  				}
+              						ig:ig_reactionaries = {
+	  		     					is_in_government = yes
+							}
+            					}
+	  		  			NOT = { has_law = law_type:law_slavery_banned }
+	  		  			NOT = { is_enacting_law = law_type:law_slavery_banned }
+	  					any_country = {
+	  	  					is_revolutionary = yes
+		  					country_definition = root.country_definition
+	  		  			}
+	  				}
+	    			}
+  			}
+			exists = c:CSA
+			exists = c:FSA
+		}
+	}
+
+	on_fail = {
+		if = {
+		  	limit = {
+		  		any_country = {
+					is_revolutionary = yes
+	  				country_definition = root.country_definition
+		  			ig:ig_landowners = {
+		  				is_in_government = yes
+		  			}				
+				}
+	  		}
+		    	trigger_event = { id = bpm_acw_events.2 days = 0 popup = yes } # CSA Trigger Event
+		}
+	  	else_if = {
+			limit = {
+				any_country = {
+					is_revolutionary = yes
+	  				country_definition = root.country_definition
+				}
+			}
+		    	trigger_event = { id = bpm_acw_events.1 days = 0 popup = yes } # FSA Trigger Event
+		}
+		else = {}
+		remove_variable = bpm_slave_power_prog_var
+    		remove_variable = bpm_slave_power_prog_var
+    		remove_variable = bpm_secession_tension_prog_var
+    		remove_variable = acw_progress_var
+		c:USA = {
+			ig:ig_radicals = {
+				bpm_remove_all_rel_ideologies = yes
+				add_ideology = ideology_rel_radical_secularist
+			}
+		}
+	}
+
+	on_weekly_pulse = {
+		clear_saved_scope = bpm_new_state
+		events = {
+			bpm_acw_events.26
+			bpm_acw_events.27
+			bpm_acw_events.28
+			bpm_acw_events.29
+			bpm_acw_events.30
+		}
+	}
+
+	on_monthly_pulse = {
+		events = {
+			bpm_acw_events.11 # do we expand slavery west?
+			bpm_acw_events.12 # South pissed we can't expand slavery north
+			bpm_acw_events.13 # North pissed we are expanding slavery south
+		}
+	}
+
+	on_yearly_pulse = { 
+		events = {
+			bpm_acw_events.3 # whigs strike down the gag rule
+			bpm_acw_events.4 # whigs collapse
+			bpm_acw_events.5 # william walker goes to Central America
+			bpm_acw_events.6 # wilmot overturned
+			bpm_acw_events.7 # 1850 nullified
+			bpm_acw_events.8 # john brown begins his march
+			bpm_acw_events.9 # dred scott v sandford
+			bpm_acw_events.10 # john brown launches his raid
+		}
+	}
+
+	weight = 100
+
+	should_be_pinned_by_default = yes
+}
+
+je_bpm_gag_rule = {
+	icon = "gfx/interface/icons/law_icons/protectionism.dds"
+
+	group = je_group_historical_content
+
+	immediate = {
+		set_variable = {
+			name = bpm_reflection_prog_var
+			value = 0
+		}
+	}
+
+	complete = {
+		OR = {
+			custom_tooltip = {
+				text = "bpm_je_abomination_slayer"
+				AND = {
+					# has_law = law_type:law_free_trade
+					any_scope_state = {
+						state_region = s:STATE_LOUISIANA
+						any_scope_building = { 
+							is_building_type = building_cotton_plantation
+							level >= 15
+						}
+					}
+					any_scope_state = {
+						state_region = s:STATE_MISSISSIPPI
+						any_scope_building = { 
+							is_building_type = building_cotton_plantation
+							level >= 15
+						}
+					}
+					any_scope_state = {
+						state_region = s:STATE_ALABAMA
+						any_scope_building = { 
+							is_building_type = building_cotton_plantation
+							level >= 15
+						}
+					}
+					any_scope_state = {
+						state_region = s:STATE_GEORGIA
+						any_scope_building = { 
+							is_building_type = building_cotton_plantation
+							level >= 15
+						}
+					}
+					any_scope_state = {
+						state_region = s:STATE_SOUTH_CAROLINA
+						any_scope_building = { 
+							is_building_type = building_cotton_plantation
+							level >= 15
+						}
+					}
+				}
+			}
+			custom_tooltip = {
+				text = "bpm_je_american_system"
+				AND = {
+					any_scope_state = {
+						state_region = s:STATE_LOUISIANA
+						AND = {
+							any_scope_building = { 
+								is_building_type = building_construction_sector
+								level >= 5
+							}
+							any_scope_building = { 
+								is_building_type = building_port
+								level >= 5
+							}
+						}
+					}
+					any_scope_state = {
+						state_region = s:STATE_MISSISSIPPI
+						AND = {
+							any_scope_building = { 
+								is_building_type = building_construction_sector
+								level >= 5
+							}
+							any_scope_building = { 
+								is_building_type = building_port
+								level >= 5
+							}
+						}
+					}
+					any_scope_state = {
+						state_region = s:STATE_ALABAMA
+						AND = {
+							any_scope_building = { 
+								is_building_type = building_construction_sector
+								level >= 5
+							}
+							any_scope_building = { 
+								is_building_type = building_port
+								level >= 5
+							}
+						}
+					}
+					any_scope_state = {
+						state_region = s:STATE_GEORGIA
+						AND = {
+							any_scope_building = { 
+								is_building_type = building_construction_sector
+								level >= 5
+							}
+							any_scope_building = { 
+								is_building_type = building_port
+								level >= 5
+							}
+						}
+					}
+					any_scope_state = {
+						state_region = s:STATE_SOUTH_CAROLINA
+						AND = {
+							any_scope_building = { 
+								is_building_type = building_construction_sector
+								level >= 5
+							}
+							any_scope_building = { 
+								is_building_type = building_port
+								level >= 5
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	on_complete = {
+		remove_modifier = bpm_gag_rule
+		remove_variable = bpm_reflection_prog_var
+		if = {	
+			limit = {
+				owner = { 
+					any_scope_state = {
+						any_scope_building = { 
+							is_building_type = building_cotton_plantation
+							level >= 15
+						}
+					} 
+				}
+			}
+			trigger_event = { id = bpm_acw_events.15 days = 0 popup = yes } # Nullifiers unite behind Democrats
+			custom_tooltip = {
+				text = "bpm_je_dem_south"
+				remove_variable = bpm_divided_south
+			}
+		}
+		else = {
+			trigger_event = { id = bpm_acw_events.14 days = 0 popup = yes } # Nullifiers unite behind Whigs
+			custom_tooltip = {
+				text = "bpm_je_whig_south"
+				remove_variable = bpm_divided_sout
+				set_variable = bpm_whig_south
+			}
+		}
+	}
+
+	fail = {
+		custom_tooltip = {
+			text = "bpm_je_gag_failure"
+			var:bpm_reflection_prog_var >= 36
+		}
+	}
+
+	on_fail = {
+      		trigger_event = { id = bpm_acw_events.16 days = 0 popup = yes } # gag rule cemented
+		change_variable = {
+			name = bpm_slave_power_prog_var
+			add = 3
+		}
+		change_variable = {
+			name = bpm_secession_tension_prog_var
+			add = 3
+		}
+		remove_variable = bpm_reflection_prog_var
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			change_variable = {
+				name = bpm_reflection_prog_var
+				add = 1
+			}
+		}
+	}
+
+	weight = 100
+
+	current_value = {
+		value = root.var:bpm_reflection_prog_var
+	}
+
+	goal_add_value = {
+		value = 36
+	}
+
+	progressbar = yes
+
+	should_be_pinned_by_default = yes
+}

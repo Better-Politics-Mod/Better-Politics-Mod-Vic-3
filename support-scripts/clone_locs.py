@@ -55,7 +55,7 @@ def clone_file(file: Path):
                         if key:
                             loc_dict[key] = text
             with open(new_path, "a", encoding="utf-8-sig") as f2:
-                f2.write("\n")
+                # f2.write("\n")
                 for key, text in loc_dict_english.items():
                     if key not in loc_dict:
                         f2.write(f' {key}:0 "{loc_dict_english[key]}"\n')

@@ -12,10 +12,36 @@ bpm_ig_law_support_total_value = {
 	if = {
 		limit = { owner = { enacting_any_law = yes } }
 		if = {
-			limit = { is_insurrectionary = yes }
+			limit = {
+				is_insurrectionary = yes
+				# Trigger this if the revolutionary movement is not supporting the law
+				NOT = {
+					owner = {
+						any_political_movement = {
+							is_revolutionary_movement = yes
+							desired_law = prev.currently_enacting_law.type
+						}
+					}
+				}
+			}
 			add = {
 				value = -999
 				desc = "bpm_ig_law_support_from_insurrectionary"
+			}
+		}
+
+		if = {
+			limit = { 
+				var:bpm_ig_enacting_law_change_steps > 0
+				owner = {
+					has_journal_entry = je_government_petition
+					has_variable = desired_law_var
+					var:desired_law_var.type = currently_enacting_law.type
+				}
+			}
+			add = {
+				value = 20
+				desc = "bpm_ig_law_support_from_petition"
 			}
 		}
 
@@ -28,6 +54,15 @@ bpm_ig_law_support_total_value = {
 			add = {
 				value = 20
 				desc = "bpm_ig_law_support_from_movement"
+			}
+		}
+		else_if = {
+			limit = {
+				owner = { has_variable = bpm_law_enactment_desired_by_revolution }
+			}
+			add = {
+				desc = "bpm_ig_law_support_from_insurrection_threat"
+				value = 10
 			}
 		}
 
@@ -143,7 +178,6 @@ bpm_law_enactment_ruler_effect_on_ig = {
 					has_variable = bpm_ig_enacting_law_change_steps
 				}
 			}
-			ig_approval >= 0
 		}
 		add = {
 			if = {
@@ -171,6 +205,12 @@ bpm_law_enactment_ruler_effect_on_ig = {
 			}
 			else = {
 				multiply = 0
+			}
+			multiply = {
+				value = ig_approval
+				divide = 5
+				min = 0
+				max = 1
 			}
 			desc = "bpm_ig_law_support_from_ruler"
 		}
@@ -276,19 +316,17 @@ bpm_law_enactment_ruler_approval = {
 	# Movement: 10
 	if = {
 		limit = { has_political_movement = currently_enacting_law.type }
+		add = {
+			value = 10
+			desc = "bpm_ruler_law_support_from_movement"
+		}
 		if = {
 			limit = {
-				any_political_movement = {
-					desired_law = prev.currently_enacting_law.type
-					any_supporting_interest_group = { is_insurrectionary = yes }
-				}
+				has_variable = bpm_law_enactment_desired_by_revolution
 			}
-			add = { value = 20 desc = "bpm_ruler_law_support_from_insurrection" }
-		}
-		else = {
 			add = {
-				value = 10
-				desc = "bpm_ruler_law_support_from_movement"
+				desc = "bpm_ruler_law_support_from_insurrection"
+				value = 15
 			}
 		}
 	}

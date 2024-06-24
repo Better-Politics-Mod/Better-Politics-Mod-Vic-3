@@ -1,0 +1,235 @@
+﻿namespace = isolation
+
+# stall event - unequal treaties
+isolation.1 = {
+	type = country_event
+	placement = ROOT
+	
+	title = isolation.1.t
+	desc = isolation.1.d
+	flavor = isolation.1.f
+
+	category = enactment
+	
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		OR = {
+			has_law = law_type:law_isolationism
+			has_law = law_type:law_traditionalism
+		}
+		OR = {
+			is_enacting_law = law_type:law_mercantilism
+			is_enacting_law = law_type:law_agrarianism
+			is_enacting_law = law_type:law_free_trade
+			is_enacting_law = law_type:law_command_economy
+		}
+		any_country = {
+			country_rank = rank_value:great_power
+			OR = {
+				is_country_type = recognized
+				is_country_type = colonial
+			}
+			NOR = {
+				has_law = law_type:law_isolationism
+				has_law = law_type:law_traditionalism
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		capital = {
+			save_scope_as = capital_scope
+		}
+		random_country = {
+			limit = {
+				country_rank = rank_value:great_power
+				OR = {
+					is_country_type = recognized
+					is_country_type = colonial
+				}
+				NOR = {
+					has_law = law_type:law_isolationism
+					has_law = law_type:law_traditionalism
+				}
+			}
+			save_scope_as = fraud_country
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = isolation.1.a
+		default_option = yes
+		# harm relations with the country
+		change_relations = {
+			country = scope:fraud_country
+			value = -30
+		}
+		# lose some law chance
+		add_enactment_modifier = {
+			name = unequal_treaties_isolation
+		}
+		every_interest_group = {
+			limit = { bpm_ig_not_approves_enactment = yes }
+			bpm_ig_decrease_law_enactment_approval_small = yes
+		}
+		bpm_add_political_stability_small = yes
+	}
+
+	option = {
+		name = isolation.1.b
+		trigger = {
+			enactment_setback_count < 2
+		}
+		highlighted_option = yes
+		add_enactment_setback = 1
+		change_relations = {
+			country = scope:fraud_country
+			value = -15
+		}
+		bpm_remove_political_stability_small = yes
+	}
+
+	option = {
+		name = isolation.1.c
+		change_relations = {
+			country = scope:fraud_country
+			value = 30
+		}
+		set_owes_obligation_to = {
+			country = scope:fraud_country
+			setting = yes
+		}
+		bpm_remove_political_stability_small = yes
+	}
+}
+
+# debate event - foreign dignitary murdered
+isolation.2 = {
+	type = country_event
+	placement = ROOT
+	
+	title = isolation.2.t
+	desc = isolation.2.d
+	flavor = isolation.2.f
+
+	category = enactment
+	
+	event_image = {
+		video = "southamerica_public_figure_assassination"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+
+	cooldown = { months = normal_modifier_time }
+	
+	duration = 3
+	
+	trigger = {
+		OR = {
+			has_law = law_type:law_isolationism
+			has_law = law_type:law_traditionalism
+		}
+		OR = {
+			is_enacting_law = law_type:law_mercantilism
+			is_enacting_law = law_type:law_agrarianism
+			is_enacting_law = law_type:law_free_trade
+			is_enacting_law = law_type:law_command_economy
+		}
+		any_country = {
+			country_rank = rank_value:great_power
+			OR = {
+				is_country_type = recognized
+				is_country_type = colonial
+			}
+			NOR = {
+				has_law = law_type:law_isolationism
+				has_law = law_type:law_traditionalism
+			}
+		}
+		any_political_movement = {
+			is_political_movement_type = movement_to_preserve
+		}
+	}
+
+	immediate = {
+		capital = {
+			save_scope_as = capital_scope
+		}
+		random_country = {
+			limit = {
+				country_rank = rank_value:great_power
+				OR = {
+					is_country_type = recognized
+					is_country_type = colonial
+				}
+				NOR = {
+					has_law = law_type:law_isolationism
+					has_law = law_type:law_traditionalism
+				}
+			}
+			save_scope_as = murdered_visitor_country
+			capital = {
+				save_scope_as = foreign_capital
+			}
+		}
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		bpm_remove_political_stability_normal = yes
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # frame a scapegoat
+		name = isolation.2.a
+		default_option = yes
+		change_relations = {
+			country = scope:murdered_visitor_country
+			value = -30
+		}
+		add_enactment_modifier = {
+			name = legal_scapegoat
+		}
+	}
+
+	option = { # investigate the crime
+		name = isolation.2.b
+		# investigate. law takes longer, movement loses support
+		add_enactment_modifier = {
+			name = investigating_foreign_murder
+		}
+		random_political_movement = {
+			limit = {
+				is_political_movement_type = movement_to_preserve
+			}
+			add_modifier = {
+				name = movement_investigation_isolation
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+# advancement events are in meiji restoration file

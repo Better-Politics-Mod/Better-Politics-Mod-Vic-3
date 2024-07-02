@@ -13,7 +13,6 @@ on_yearly_pulse_country = {
 on_half_yearly_pulse_country = {
 	on_actions = {
 		on_bpm_half_yearly_pulse_country
-		bpm_opposition_tries_to_topple_government
 	}
 }
 
@@ -33,7 +32,6 @@ on_law_activated = {
 on_government_reformed = {
 	on_actions = {
 		on_bpm_government_reformed
-		on_bpm_check_if_resigned_to_topple_government
 	}
 }
 
@@ -228,55 +226,6 @@ on_bpm_half_yearly_pulse_country = {
 			bpm_half_yearly_decrement_party_loyalty = yes
 			bpm_setup_basic_igs = yes
 			bpm_ig_update_ig_ban_support = yes
-		}
-	}
-}
-
-bpm_opposition_tries_to_topple_government = {
-	effect = {
-		if = {
-			limit = {
-				bpm_can_topple_government = yes
-				NOT = { is_enacting_law = law_type:law_repeatable_politics_topple_government }
-				bpm_repeatable_law_not_on_cooldown = {
-					LAW = law_type:law_repeatable_politics_topple_government
-				}
-				is_player = yes
-				in_election_campaign = no
-				OR = {
-					any_interest_group = {
-						count = 1
-						is_in_government = no
-						ig_clout > 0.30
-						ig_approval < -10
-					}
-					any_interest_group = {
-						count = 2
-						is_in_government = no
-						ig_clout > 0.15
-						ig_approval < -10
-					}
-					any_interest_group = {
-						count = 3
-						is_in_government = no
-						ig_clout > 0.10
-						ig_approval < -10
-					}
-					any_interest_group = {
-						count = 4
-						is_in_government = no
-						ig_clout > 0.075
-						ig_approval < -10
-					}
-				}
-			}
-			if = {
-				limit = {
-					enacting_any_law = yes
-				}
-				cancel_enactment = yes
-			}
-			trigger_event = { id = bpm_topple_government.2 days = 0 }
 		}
 	}
 }
@@ -769,7 +718,7 @@ on_bpm_civil_war_won = {
 				NOT = { has_variable = completed_peoples_springtime_je }
 				OR = {
 					any_interest_group = {
-						bpm_is_strongest_ig_in_government = yes
+						bpm_ig_is_strongest_ig_in_government = yes
 						OR = {
 							bpm_ig_is_radical_left = yes
 							leader = { bpm_leader_is_radical_leftist = yes }
@@ -876,79 +825,6 @@ on_bpm_character_creation = {
 				interest_group ?= { bpm_ig_is_institutional = yes }
 			}
 			set_variable = bpm_character_in_institutional_ig_var
-		}
-	}
-}
-
-on_bpm_check_if_resigned_to_topple_government = {
-	effect = {
-		save_scope_as = country_target
-		if = {
-			limit = {
-				is_enacting_law = law_type:law_repeatable_politics_topple_government
-			}
-			remove_variable = bpm_wait_for_next_reform_topple
-			every_active_party = {
-				limit = {
-					any_member = {
-						is_in_government = no
-					}
-				}
-				save_scope_as = current_target_party
-
-				if = {
-					limit = {
-						scope:country_target = {
-							var:bpm_toppled_party = scope:current_target_party
-						}
-						scope:country_target = {
-							is_target_in_variable_list = {
-								name = bpm_list_party_is_target_of_topple_government
-								target = scope:current_target_party
-							}
-							NOT = { has_variable = bpm_wait_for_next_reform_topple }
-						} 
-
-					
-					}
-
-					scope:country_target = {
-						set_variable = bpm_wait_for_next_reform_topple
-						trigger_event = { id = bpm_topple_government.3 days = 1 }
-					}
-				}
-				else_if = {
-					limit = {
-						scope:country_target = {
-							is_target_in_variable_list = {
-								name = bpm_list_party_is_target_of_topple_government
-								target = scope:current_target_party
-							}
-						}
-						NOT = { 
-							scope:country_target = {
-								var:bpm_toppled_party = scope:current_target_party
-							}
-						} 
-					}
-
-
-
-					scope:country_target = {
-						set_variable = {
-							name = bpm_caved_party
-							value = scope:current_target_party
-						}
-
-						remove_list_variable = {
-							name = bpm_list_party_is_target_of_topple_government
-							target = scope:current_target_party
-						}	
-
-						trigger_event = { id = bpm_topple_government.4 days = 1 }
-					}
-				}
-			}
 		}
 	}
 }

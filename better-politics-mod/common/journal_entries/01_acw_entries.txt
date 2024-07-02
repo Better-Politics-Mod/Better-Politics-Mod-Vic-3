@@ -1,0 +1,280 @@
+je_acw_war = {
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	group = je_group_historical_content
+
+	complete = {
+		custom_tooltip = {
+			text = acw_war_tt_complete
+			scope:target = { is_country_alive = no }
+		}
+	}
+
+	on_complete = {
+		trigger_event = { id = acw_je_events.2 }
+		if = {
+			limit = { 
+				has_variable = csa_will_spawn_var
+			}
+			ruler = {
+				set_variable = abraham_lincoln
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		events = {
+			acw_je_events.4
+		}
+	}
+
+	should_be_pinned_by_default = yes
+	
+	can_revolution_inherit = no
+
+	# acw_events.7 fires for the FSA or CSA, but requires the je_acw_war journal to be active
+	# acw_events.8 fires for the USA, FSA or CSA, but requires the je_acw_war journal to be active
+}
+
+je_acw_reconstruction = {
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	group = je_group_historical_content
+
+	complete = {
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+	}
+
+	on_complete = {
+		trigger_event = { id = acw_je_events.3 }
+		hidden_effect = { # sanity check just in case something somehow falls through the cracks
+			every_scope_state = {
+				limit = { has_modifier = unreconstructed_state }
+				remove_modifier = unreconstructed_state
+			}
+		}
+	}
+
+	current_value = {
+		value = var:reconstruction_var
+	}
+
+	goal_add_value = {
+		add = 3
+	}
+
+	timeout = 4380
+
+	should_be_pinned_by_default = yes
+
+	on_timeout = {
+		trigger_event = { id = acw_je_events.3 }
+	}
+}
+
+je_acw_reincorporate = {
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	group = je_group_historical_content
+
+	complete = {
+		NOT = {
+			any_scope_state = {
+				has_modifier = unreconstructed_state
+				is_incorporated = no
+			}
+		}
+		NOT = {
+			any_scope_state = {
+				state_region = {
+					is_homeland = cu:dixie
+				}
+				loyalist_fraction = {
+					value < 0.2
+					culture = cu:dixie
+				}
+			}
+		}
+	}
+
+	on_complete = {
+		custom_tooltip = {
+			text = dont_lose_dixie_culture
+			set_variable = acw_keep_dixie
+		}
+		custom_tooltip = {
+			text = reconstruction_progress
+			change_variable = {
+				name = reconstruction_var
+				add = 1
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		random_events = {
+			180 = 0
+			20 = acw_followup_events.6
+			20 = acw_followup_events.7
+			20 = acw_followup_events.8
+		}
+	}
+
+	invalid = {
+		NOT = {
+			any_scope_state = {
+				state_region = {
+					is_homeland = cu:dixie
+				}
+			}
+		}
+	}
+
+	timeout = 4380
+}
+
+je_acw_equality = {
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	group = je_group_historical_content
+
+	complete = {
+		custom_tooltip = {
+			text = acw_african_american_culture_complete_tt
+			cu:afro_american = {
+				NOT = { culture_is_discriminated_in = ROOT }
+			}
+		}
+	}
+
+	on_complete = {
+		custom_tooltip = {
+			text = acw_african_american_culture
+			set_variable = acw_gain_african_american
+		}
+		custom_tooltip = {
+			text = reconstruction_progress
+			change_variable = {
+				name = reconstruction_var
+				add = 1
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		random_events = {
+			180 = 0
+			20 = acw_followup_events.4 # Forty Acres and a Mule
+			20 = acw_followup_events.5 # Supremacist Violence
+			20 = acw_followup_events.6 # Redeemers
+		}
+	}
+
+	timeout = 4380
+
+	invalid = {
+		NOT = {
+			any_scope_state = {
+				state_region = {
+					is_homeland = cu:afro_american
+				}
+			}
+		}
+	}
+}
+
+je_acw_wild_wild_west = {
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	group = je_group_historical_content
+
+	complete = {
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+		NOT = {
+			any_scope_state = {
+				state_region = {
+					OR = {
+						is_homeland = cu:dixie
+						is_homeland = cu:yankee
+					}
+				}
+				devastation > 0.1
+				turmoil > 0.1
+			}
+		}
+	}
+
+	on_complete = {
+		custom_tooltip = {
+			text = acw_no_outlaw_crisis
+		}
+		custom_tooltip = {
+			text = reconstruction_progress
+			change_variable = {
+				name = reconstruction_var
+				add = 1
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		random_events = {
+			100 = 0
+			10 = crime_events.1 # train robbery
+			10 = wild_west.1 # bank robberies
+			10 = wild_west.2 # Raids on the Iron Horse
+			10 = wild_west.3 # Gunfight at the Corral
+		}
+		effect = {
+			if = {
+				limit = {
+					NOT = {
+						any_scope_state = {
+							state_region = {
+								OR = {
+									is_homeland = cu:dixie
+									is_homeland = cu:yankee
+								}
+							}
+							devastation > 0.1
+							turmoil > 0.1
+						}
+					}
+				}
+				change_variable = {
+					name = je_acw_wild_west_var
+					add = 1
+				}
+			}
+		}
+	}
+
+	invalid = {
+		NOT = {
+			any_scope_state = {
+				state_region = {
+					OR = {
+						is_homeland = cu:dixie
+						is_homeland = cu:yankee
+					}
+				}
+			}
+		}
+	}
+
+	current_value = {
+		value = var:je_acw_wild_west_var
+	}
+	
+	goal_add_value = {
+		add = 60
+	}
+
+	progressbar = yes
+
+	timeout = 4380
+}

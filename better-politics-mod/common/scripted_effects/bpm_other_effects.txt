@@ -133,3 +133,105 @@ bpm_fold_to_general_strike = {
 	activate_law = scope:revolutionaries_law
 	bpm_give_labor_concession = yes
 }
+
+bpm_transfer_money_to_investors = {
+	add_treasury = { value = $AMT$ multiply = -1 }
+	add_investment_pool = $AMT$
+}
+
+bpm_upgrade_country_modifier = {
+	hidden_effect = {
+		remove_modifier = $MOD$
+		if = {
+			limit = { NOT = { has_variable = bpm_modifier_$MOD$_level } }
+			set_variable = { name = bpm_modifier_$MOD$_level value = $AMT$ }
+			add_modifier = {
+				name = $MOD$
+				multiplier = $AMT$
+			}
+		}
+		else = {
+			change_variable = { name = bpm_modifier_$MOD$_level add = $AMT$ }
+			add_modifier = {
+				name = $MOD$
+				multiplier = var:bpm_modifier_$MOD$_level
+			}
+		}
+
+	}
+	show_as_tooltip = { # The previous code does functionally that, except it doesn't make extra modifiers; to avoid player confusion we'll just hide all that scary stuff above and show them a nice white lie below that is functionally the same
+		add_modifier = {
+			name = $MOD$
+			multiplier = $AMT$
+		}
+	}
+}
+
+bpm_clear_upgradeable_country_modifier = {
+	remove_modifier = $MOD$
+	hidden_effect = { remove_variable = bpm_modifier_$MOD$_level }
+}
+
+bpm_select_target_parties_for_topple_motion = {
+		# Select the ruling party to be toppled
+		# In a Presidential Republic, this is only president's party
+		# In other systems that is all the parties in the government
+	if = {
+		limit = {
+			NOT = {
+				has_law = law_type:law_presidential_republic
+			}
+		}
+
+		every_active_party = {
+			limit = {
+				any_member = {
+					is_in_government = yes
+				}
+			}
+			
+			save_scope_as = government_party_target
+			owner = { 
+				add_to_variable_list = {
+					name = bpm_list_party_is_target_of_topple_government
+					target = scope:government_party_target
+				}
+			}
+		}
+	
+
+		random_active_party = {
+			limit = {
+				any_member = {
+					bpm_is_strongest_ig_in_government = yes
+				}
+			}
+			save_scope_as = current_ruling_party
+		}
+
+		set_variable = {
+			name = bpm_toppled_party
+			target = scope:current_ruling_party
+		}
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_presidential_republic
+		}
+
+		ruler.interest_group.party = {
+			save_scope_as = ruler_party_scope
+		}
+
+		set_variable = {
+			name = bpm_toppled_party
+			value = scope:ruler_party_scope
+		}
+
+		add_to_variable_list = {
+			name = bpm_list_party_is_target_of_topple_government
+			target = scope:ruler_party_scope
+		}
+	}
+
+}

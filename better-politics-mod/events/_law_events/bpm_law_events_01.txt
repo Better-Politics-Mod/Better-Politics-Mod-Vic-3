@@ -1,0 +1,1517 @@
+﻿namespace = generic_laws
+
+# Advancement event
+#Rousing Speech held - IG leader in favour of current law turns out to be quite the orator. Speech widely distributed, swaying people towards supporting the law
+generic_laws.1 = {
+	type = country_event
+	placement = root
+	title = generic_laws.1.t
+	desc = generic_laws.1.d
+	flavor = generic_laws.1.f
+
+	category = enactment
+
+	event_image = {
+		video = "unspecific_ruler_speaking_to_people"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		enacting_any_law = yes
+		any_interest_group = {
+			bpm_ig_approves_enactment = yes
+		}
+	}
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_approves_enactment = yes
+			}
+			save_scope_as = orator_ig_scope
+			leader = {
+				save_scope_as = orator_ig_leader_scope
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.1.a 						# Focus attention on passing the law
+        default_option = yes
+
+		if = { 
+			limit = { is_player = yes }
+			random_interest_group = {
+				limit = { bpm_ig_disapproves_to_neutral_enactment = yes }
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+			ruler = {
+				bpm_ig_increase_law_enactment_approval_small = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = rising_support_for_law_major 
+			}
+		}
+	}
+	option = {
+		name = generic_laws.1.b 						# Divert attention to IG and IG leader
+		
+		if = { 
+			limit = { is_player = yes }
+			random_interest_group = {
+				limit = { bpm_ig_disapproves_to_neutral_enactment = yes }
+				bpm_ig_increase_law_enactment_approval_small = yes
+			}
+		}
+		else = {
+			add_enactment_modifier = {
+				name = rising_support_for_law_minor 
+			}
+		}
+		scope:orator_ig_leader_scope = {
+			add_modifier = {
+				name = skilled_orator	
+				months = normal_modifier_time
+			}
+		}
+		scope:orator_ig_scope = {
+			add_modifier = {
+				name = rising_support_for_ig_minor 	
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+# Stall event
+# Corrupt Connections uncovered - IG in favour of passing law cought in corruption scandal. 
+generic_laws.2 = {
+	type = country_event
+	placement = root
+	title = generic_laws.2.t
+	desc = generic_laws.2.d
+	flavor = generic_laws.2.f
+
+	category = enactment
+
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		enacting_any_law = yes
+		any_interest_group = {
+			bpm_ig_approves_enactment = yes
+		}
+	}
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_approves_enactment = yes
+			}
+			save_scope_as = corrupt_ig_scope
+			leader = {
+				save_scope_as = corrupt_ig_leader_scope
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.2.a 							# nothing is done about the corruption. bad for law passing and bad PR for IG and IG leader
+        default_option = yes
+
+		if = { 
+			limit = { is_player = yes }
+			every_interest_group = { 
+				limit = { bpm_ig_not_approves_enactment = yes }
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = corrupt_connections_exposed 
+			}
+		}
+		scope:corrupt_ig_leader_scope = {
+			add_modifier = {
+				name = ignored_corruption	
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = generic_laws.2.b 							# negative effects mitigated somewhat, but at a cost to bureaucracy
+
+		if = { 
+			limit = { is_player = yes }
+			every_interest_group = { 
+				limit = { bpm_ig_not_approves_enactment = yes }
+				bpm_ig_decrease_law_enactment_approval_small = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = corrupt_connections_exposed_minor
+			}
+		}
+		add_modifier = {
+			name = dealing_with_corruption
+			months = normal_modifier_time
+		}
+	}
+	
+	option = {
+		name = generic_laws.2.c 		# Corruption is actually very good.
+		trigger = {
+			enactment_setback_count < 2
+		}
+		highlighted_option = yes
+		add_enactment_modifier = {
+			name = modifier_benefiting_from_corruption 
+		}
+		add_enactment_setback = 1
+		add_modifier = {
+			name = dealing_with_corruption
+			months = normal_modifier_time
+			multiplier = 0.5
+		}
+	}
+}
+
+# Debate event
+# Opposition Members table Demands - More pragmatically inclined members of IG opposed to current law offer a compromise solution, where they will support the law in return for certain concessions
+
+generic_laws.3 = {
+	type = country_event
+	placement = root
+	title = generic_laws.3.t
+	desc = generic_laws.3.d
+	flavor = generic_laws.3.f
+
+	category = enactment
+
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		enacting_any_law = yes
+		any_interest_group = {
+			bpm_ig_disapproves_to_neutral_enactment = yes
+		}
+		any_interest_group = {
+			bpm_ig_approves_enactment = yes
+		}
+	}
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_disapproves_to_neutral_enactment = yes
+			}
+			save_scope_as = opposition_demands_ig_scope
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_approves_enactment = yes
+			}
+			save_scope_as = opposition_demands_supporting_ig_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.3.a 							# agree to the proposal. gain support for law passing, but strenghten opposing party
+        default_option = yes
+
+		if = { 
+			limit = { is_player = yes }
+			scope:opposition_demands_ig_scope = { 
+				bpm_ig_increase_law_enactment_approval_big = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = cross_bench_support	
+			}
+		}
+		scope:opposition_demands_supporting_ig_scope = {
+			add_modifier = {
+				name = unpopular_compromises
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = generic_laws.3.b 							# reject them. compromise is for weaklings
+
+		scope:opposition_demands_supporting_ig_scope = {
+			add_modifier = {
+				name = steadfast_conviction	
+				months = normal_modifier_time
+			}
+		}
+		if = { 
+			limit = { is_player = yes }
+			scope:opposition_demands_ig_scope = { 
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = political_advances_spurned	
+			}
+		}
+	}
+	
+	option = {
+		name = generic_laws.3.c 							# Use this chance to pull the bill out of committee
+		trigger = {
+			enactment_phase < 2
+		}
+		highlighted_option = yes
+		add_enactment_phase = 1
+		add_enactment_modifier = {
+			name = modifier_short_term_benefit 
+		}
+		scope:opposition_demands_supporting_ig_scope = {
+			add_modifier = {
+				name = unpopular_compromises
+				months = normal_modifier_time
+				multiplier = 2
+			}
+		}
+	}
+}
+
+# Advancement Event
+# Popular Playwright Endorses Reform
+generic_laws.4 = {
+	type = country_event
+	placement = scope:playwright_state_scope
+	title = generic_laws.4.t
+	desc = generic_laws.4.d
+	flavor = generic_laws.4.f
+
+	category = enactment
+
+	event_image = {
+		video = "middleeast_middleclass_cafe"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		enacting_any_law = yes
+		any_interest_group = {
+			bpm_ig_approves_enactment = yes
+			OR = {
+				bpm_ig_is_urban_institutional = yes
+				bpm_ig_is_left_wing = yes
+			}
+		}
+		any_scope_state = {
+			is_incorporated = yes
+		}
+		NOT = { has_variable = playwright_var }
+	}
+	
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_scope_state = {
+			limit = {
+				is_incorporated = yes
+			}
+			save_scope_as = playwright_state_scope
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_approves_enactment = yes
+				OR = {
+					bpm_ig_is_urban_institutional = yes
+					bpm_ig_is_left_wing = yes
+				}
+			}
+			save_scope_as = playwright_ig_scope
+		}
+		set_variable = {
+			name = playwright_var
+			months = normal_modifier_time
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.4.a 						# Play convinces/puts pressure, making passing law easier
+        default_option = yes
+
+		add_enactment_modifier = {
+			name = popular_support_for_law
+		}												
+	}
+	option = {
+		name = generic_laws.4.b 						# Play strenghens IG that playwright alligns with
+
+		scope:playwright_ig_scope = {
+			add_modifier = {
+				name = rising_support_for_ig 
+				months = normal_modifier_time
+			}
+		}
+	}
+	option = {
+		name = generic_laws.4.c 						# Play generates prestige for country
+
+		add_modifier = {
+			name = renowned_playwright
+			months = normal_modifier_time
+		}
+	}
+}
+
+# Stall Event
+# Bureaucratic Imbroglio
+generic_laws.5 = {
+	type = country_event
+	placement = root
+	title = generic_laws.5.t
+	desc = generic_laws.5.d
+	flavor = generic_laws.5.f
+
+	category = enactment
+
+	event_image = {
+		video = "africa_leader_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		enacting_any_law = yes
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_scope_state = {
+			limit = {
+				is_capital = yes
+			}
+		save_scope_as = imbroglio_state_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.5.a 						# That's bad, but not much to do about it.
+        default_option = yes
+
+		add_enactment_modifier = {
+			name = mired_in_bureaucracy 
+		}				
+	}
+
+	option = {
+		name = generic_laws.5.b	# Cut through some red tape, decreasing maluses, but angering bureaucrats
+
+		add_enactment_modifier = {
+			name = mired_in_bureaucracy_minor
+		}
+		add_modifier = {
+			name = cutting_red_tape
+			months = normal_modifier_time
+		}
+		scope:imbroglio_state_scope = {
+			add_radicals_in_state = { # bureaucracts pissed off
+				value = large_radicals
+				pop_type = bureaucrats
+			}
+		}
+	}
+}
+
+# Debate event
+#King/Queen/Emperor intervenes in political process
+generic_laws.6 = {
+	type = country_event
+	placement = root
+	title = generic_laws.6.t
+	desc = generic_laws.6.d
+	flavor = generic_laws.6.f
+
+	category = enactment
+
+	event_image = {
+		video = "votp_monarch_holding_court"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		has_law = law_type:law_monarchy
+		enacting_any_law = yes
+		ruler = {
+			OR = {
+				has_variable = bpm_ig_current_law_stance
+				var:bpm_ig_current_law_stance > 0
+				interest_group = {
+					bpm_ig_approves_enactment = yes
+				}
+			}
+		}
+	}
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.6.a # Advance the bill instantly.
+		trigger = {
+			OR = {
+				has_law = law_type:law_autocracy
+				has_law = law_type:law_oligarchy
+			}
+		}
+		highlighted_option = yes
+		add_enactment_phase = 3
+		every_interest_group = {
+			if = {
+				limit = {
+					is_marginal = no
+					OR = {
+						AND = {
+							bpm_ig_is_republican = yes
+							bpm_ig_not_strongly_approves_enactment = yes
+						}
+						bpm_ig_disapproves_enactment = yes
+					}
+				}
+				add_modifier = {
+					name = royal_prerogative
+					months = normal_modifier_time
+					multiplier = 2
+				}
+			}
+			else_if = {
+				limit = {
+					is_marginal = no
+					bpm_ig_neutral_enactment = yes
+				}
+				add_modifier = {
+					name = royal_prerogative
+					months = normal_modifier_time
+					multiplier = 1
+				}
+			}
+		}
+	}
+	option = {
+		name = generic_laws.6.b 						# Let the King have his way
+
+		every_interest_group = {
+			limit = {
+				is_marginal = no
+				bpm_ig_is_republican = yes
+				bpm_ig_not_approves_enactment = yes
+			}
+			add_modifier = {
+				name = royal_prerogative
+				months = normal_modifier_time
+			}
+		}
+		if = {
+			limit = {
+				is_player = yes
+			}
+			every_interest_group = { 
+				limit = { 
+					is_marginal = no
+					bpm_ig_is_republican = no
+					bpm_ig_not_approves_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = backed_by_court	
+			}
+		}
+	}
+	option = {
+		name = generic_laws.6.c # Preserve the bill
+        default_option = yes
+		add_enactment_modifier = {
+			name = ruler_restrained	
+		}
+	}
+}
+
+# Advancement Event
+# Grassroots Support for Law
+generic_laws.7 = {
+	type = country_event
+	placement = scope:grassroots_state_scope
+	title = generic_laws.7.t
+	desc = generic_laws.7.d
+	flavor = generic_laws.7.f
+
+	category = enactment
+
+	event_image = {
+		video = "middleeast_middleclass_cafe"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		enacting_any_law = yes
+		any_interest_group = {
+			bpm_ig_approves_enactment = yes
+		}
+		any_scope_state = {
+			is_incorporated = yes
+		}
+		any_political_movement = {
+			is_political_movement_type = movement_to_enact
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_approves_enactment = yes
+			}
+			save_scope_as = grassroots_ig_scope
+		}
+		random_scope_state = {
+			limit = {
+				is_incorporated = yes
+			}
+			save_scope_as = grassroots_state_scope
+		}
+		random_political_movement = {
+			limit = {
+				is_political_movement_type = movement_to_enact
+			}
+			save_scope_as = enacting_movement
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.7.a # popular support for law and pro-law IG
+        default_option = yes
+
+		if = {
+			limit = {
+				scope:enacting_movement = { desired_law = scope:current_law_scope.type }
+			}
+			scope:enacting_movement = {
+				add_modifier = {
+					name = grassroots_support_for_movement
+				}
+			}
+		}
+		else_if = { 
+			limit = { is_player = yes }
+			random_interest_group = {
+				limit = { bpm_ig_not_disapproves_enactment = yes } 
+				bpm_ig_increase_law_enactment_approval_small = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = wave_of_popular_support
+			}
+		}
+		scope:grassroots_ig_scope = {
+			add_modifier = {
+				name = grassroots_support
+				months = normal_modifier_time
+			}
+		}										
+	}
+	option = {
+		name = generic_laws.7.b 											# calm the masses
+
+		scope:grassroots_state_scope = {
+			add_loyalists_in_state = {
+				strata = poor
+				value = 0.2
+			}
+		}
+	}
+}
+
+
+# Stall event
+#Public Address Goes Awry
+generic_laws.8 = {
+	type = country_event
+	placement = scope:publicaddress_state_scope
+	title = generic_laws.8.t
+	desc = generic_laws.8.d
+	flavor = generic_laws.8.f
+
+	category = enactment
+
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		enacting_any_law = yes
+		any_interest_group = {
+			bpm_ig_approves_enactment = yes
+			leader = {
+				NOR = {
+					has_trait = charismatic
+					has_trait = inspirational_orator
+					has_trait = meticulous
+					has_trait = tactful
+				}
+			}
+		}
+		any_scope_state = {
+			is_incorporated = yes
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_approves_enactment = yes
+				leader = {
+					NOR = {
+						has_trait = charismatic
+						has_trait = inspirational_orator
+						has_trait = meticulous
+						has_trait = tactful
+					}
+				}
+			}
+			save_scope_as = publicaddress_ig_scope
+			leader = {
+				save_scope_as = publicaddress_ig_leader_scope
+			}
+		}
+		random_scope_state = {
+			limit = {
+				is_incorporated = yes
+			}
+			save_scope_as = publicaddress_state_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.8.a 						# Preserve the IG
+        default_option = yes
+
+		if = { 
+			limit = { is_player = yes }
+			every_interest_group = {
+				limit = { bpm_ig_not_strongly_approves_enactment = yes }
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = poorly_formulated_law	
+			}
+		}
+	}
+	option = {
+		name = generic_laws.8.b 						# Preserve the bill
+
+		if = { 
+			limit = { is_player = yes }
+			every_interest_group = {
+				limit = {  bpm_ig_not_approves_enactment = yes }
+				bpm_ig_decrease_law_enactment_approval_small = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = poorly_formulated_law_minor
+			}
+		}
+		scope:publicaddress_ig_leader_scope = {
+			add_modifier = {
+				name = hapless_orator
+				months = normal_modifier_time
+			}
+		}
+		scope:publicaddress_ig_scope = {
+			add_modifier = {
+				name = tainted_by_incompetence
+				months = normal_modifier_time
+			}
+		}
+	}
+	
+	option = {
+		name = generic_laws.8.c 						# Spend setback
+		trigger = {
+			enactment_setback_count < 2
+		}
+		highlighted_option = yes
+		add_enactment_setback = 1
+		if = { 
+			limit = { is_player = yes }
+			random_interest_group = {
+				limit = { bpm_ig_approves_enactment = yes }
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		add_enactment_modifier = {
+			name = modifier_rewritten_law
+		} 
+		scope:publicaddress_ig_leader_scope = {
+			add_modifier = {
+				name = modifier_shrewd_opportunist
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+# Debate event
+# Law proposal angers minority
+generic_laws.9 = {
+	type = country_event
+	placement = scope:minority_state_scope
+	title = generic_laws.9.t
+	desc = generic_laws.9.d
+	flavor = generic_laws.9.f
+
+	category = enactment
+
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		law_can_hurt_minorities = yes 	# laws that in some way or form could hit minority worse than majority
+		any_interest_group = {
+			bpm_ig_approves_enactment = yes
+			OR = { 
+				has_ideology = ideology_cit_nationalist
+				has_ideology = ideology_cit_segregationist
+				has_ideology = ideology_cit_ethnonationalist
+				has_ideology = ideology_cit_traditional_culture
+			}
+		}
+		any_scope_state = {
+			is_incorporated = yes
+			any_scope_pop = { pop_is_discriminated = yes }
+			any_scope_pop = { pop_is_discriminated = no }
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		any_interest_group = {
+			limit = {
+				bpm_ig_approves_enactment = yes
+				OR = { 
+					has_ideology = ideology_cit_nationalist
+					has_ideology = ideology_cit_segregationist
+					has_ideology = ideology_cit_ethnonationalist
+					has_ideology = ideology_cit_traditional_culture
+				}
+				save_scope_as = racist_ig_scope
+			}
+		}
+		random_scope_state = {
+			limit = {
+				any_scope_pop = { pop_is_discriminated = yes }
+				any_scope_pop = { pop_is_discriminated = no }
+			}
+			random_scope_pop = {
+				limit = { pop_is_discriminated = no }
+				save_scope_as = primary_culture_pop_scope
+			}
+			random_scope_pop = {
+				limit = { pop_is_discriminated = yes }
+				save_scope_as = non_accepted_culture_pop_scope
+				culture = {
+					save_scope_as = non_accepted_culture_scope
+				}
+			}
+			save_scope_as = minority_state_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.9.a	# the bill looks fine as it is, force the issue through, angering minority
+
+		if = { 
+			limit = {
+				is_player = yes
+			}
+			scope:racist_ig_scope = { 
+				bpm_ig_increase_law_enactment_approval_small= yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = forceful_approach
+			}
+		}
+
+		add_modifier = {
+			name = minority_protests
+			months = normal_modifier_time
+		}
+		scope:minority_state_scope = {
+			add_radicals_in_state = {
+				value = medium_radicals
+				culture = scope:non_accepted_culture_pop_scope.culture
+			}
+		}
+	}
+	option = {
+		name = generic_laws.9.b # token concessions
+	    default_option = yes
+	    scope:minority_state_scope = {
+			add_radicals_in_state = {
+				value = small_radicals
+				culture = scope:non_accepted_culture_pop_scope.culture
+			}
+		}
+	}
+	option = {
+		name = generic_laws.9.c # please minority
+		if = { 
+			limit = {
+				is_player = yes
+			}
+			scope:racist_ig_scope = { 
+				bpm_ig_decrease_law_enactment_approval_small= yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = displeased_establishment
+			}
+		}
+		scope:minority_state_scope = {
+			add_loyalists_in_state = {
+				value = medium_radicals
+				culture = scope:non_accepted_culture_pop_scope.culture
+			}
+		}
+	}
+}
+
+# Advancement event
+# Members of Neutral IG leave in frustration over neutral stance on law
+generic_laws.10 = {
+	type = country_event
+	placement = root
+	title = generic_laws.10.t
+	desc = generic_laws.10.d
+	flavor = generic_laws.10.f
+
+	category = enactment
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		enacting_any_law = yes
+		OR = { 
+			AND = { 
+				any_interest_group = {
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_liberal = yes
+				}
+				any_interest_group = {
+					bpm_ig_approves_enactment = yes
+					bpm_ig_is_liberal = yes
+				}
+			}
+			AND = { 
+				any_interest_group = {
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_labor = yes
+				}
+				any_interest_group = {
+					bpm_ig_approves_enactment = yes
+					bpm_ig_is_labor = yes
+				}
+			}
+			AND = { 
+				any_interest_group = {
+					bpm_ig_neutral_enactment = yes
+					OR = { 
+						bpm_ig_is_reformist_socialist = yes
+						bpm_ig_is_radical_liberal = yes
+					}
+				}
+				any_interest_group = {
+					bpm_ig_approves_enactment = yes
+					OR = { 
+						bpm_ig_is_reformist_socialist = yes
+						bpm_ig_is_radical_liberal = yes
+					}
+				}
+			}
+			AND = { 
+				any_interest_group = {
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_radical_right = yes
+				}
+				any_interest_group = {
+					bpm_ig_approves_enactment = yes
+					bpm_ig_is_radical_right = yes
+				}
+			}
+			AND = { 
+				any_interest_group = {
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_liberal_conservative = yes
+				}
+				any_interest_group = {
+					bpm_ig_approves_enactment = yes
+					bpm_ig_is_liberal_conservative = yes
+				}
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		if = { 
+			limit = { 
+				AND = { 
+					random_interest_group = {
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+							bpm_ig_is_liberal = yes
+						}
+					}
+					random_interest_group = {
+						bpm_ig_approves_enactment = yes
+						bpm_ig_is_liberal = yes
+					}
+				}
+			}
+			random_interest_group = {
+				limit = {
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_liberal = yes
+				}
+				save_scope_as = defectors_ig_scope
+			}
+			random_interest_group = {
+				limit = {
+					bpm_ig_approves_enactment = yes
+					bpm_ig_is_liberal = yes
+				}
+				save_scope_as = defectors_support_ig_scope
+			}
+		}
+		else_if = { 
+			limit = { 
+				AND = { 
+					random_interest_group = {
+						bpm_ig_neutral_enactment = yes
+						bpm_ig_is_labor = yes
+					}
+					random_interest_group = {
+						bpm_ig_approves_enactment = yes
+						bpm_ig_is_labor = yes
+					}
+				}
+			}
+			random_interest_group = {
+				limit = {
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_labor = yes
+				}
+				save_scope_as = defectors_ig_scope
+			}
+			random_interest_group = {
+				limit = {
+					bpm_ig_approves_enactment = yes
+					bpm_ig_is_labor = yes
+				}
+				save_scope_as = defectors_support_ig_scope
+			}
+		}
+		else_if = { 
+			limit = { 
+				AND = { 
+					random_interest_group = {
+						bpm_ig_neutral_enactment = yes
+						OR = { 
+							bpm_ig_is_reformist_socialist = yes
+							bpm_ig_is_radical_liberal = yes
+						}
+					}
+					random_interest_group = {
+						bpm_ig_approves_enactment = yes
+						OR = { 
+							bpm_ig_is_reformist_socialist = yes
+							bpm_ig_is_radical_liberal = yes
+						}
+					}
+				}
+			}
+			random_interest_group = {
+				limit = {
+					bpm_ig_neutral_enactment = yes
+					OR = { 
+							bpm_ig_is_reformist_socialist = yes
+							bpm_ig_is_radical_liberal = yes
+						}
+				}
+				save_scope_as = defectors_ig_scope
+			}
+			random_interest_group = {
+				limit = {
+					bpm_ig_approves_enactment = yes
+					OR = { 
+							bpm_ig_is_reformist_socialist = yes
+							bpm_ig_is_radical_liberal = yes
+						}
+				}
+				save_scope_as = defectors_support_ig_scope
+			}
+		}
+		else_if = { 
+			limit = { 
+				AND = { 
+					random_interest_group = {
+						bpm_ig_neutral_enactment = yes
+						bpm_ig_is_radical_right = yes
+					}
+					random_interest_group = {
+						bpm_ig_approves_enactment = yes
+						bpm_ig_is_radical_right = yes
+					}
+				}
+			}
+			random_interest_group = {
+				limit = {
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_radical_right = yes
+				}
+				save_scope_as = defectors_ig_scope
+			}
+			random_interest_group = {
+				limit = {
+					bpm_ig_approves_enactment = yes
+					bpm_ig_is_radical_right = yes
+				}
+				save_scope_as = defectors_support_ig_scope
+			}
+		}
+		else = { 
+			limit = { 
+				AND = { 
+					random_interest_group = {
+						bpm_ig_neutral_enactment = yes
+						bpm_ig_is_liberal_conservative = yes
+					}
+					random_interest_group = {
+						bpm_ig_approves_enactment = yes
+						bpm_ig_is_liberal_conservative = yes
+					}
+				}
+			}
+			random_interest_group = {
+				limit = {
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_liberal_conservative = yes
+				}
+				save_scope_as = defectors_ig_scope
+			}
+			random_interest_group = {
+				limit = {
+					bpm_ig_approves_enactment = yes
+					bpm_ig_is_liberal_conservative = yes
+				}
+				save_scope_as = defectors_support_ig_scope
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.10.a 						# Focus attention on passing the law
+        default_option = yes
+
+		if = { 
+			limit = { is_player = yes }
+			scope:defectors_ig_scope = {
+				bpm_ig_increase_law_enactment_approval_small= yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = pro_law_factionalism_minor
+			}
+		}
+		scope:defectors_ig_scope = {
+			add_modifier = {
+				name = member_flight
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = generic_laws.10.b 						# Focus on harming the neutral IG, drawing members to IG in support of law
+		if = { 
+			limit = { is_player = yes }
+			scope:defectors_ig_scope = {
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = pro_law_factionalism_minor
+			}
+		}
+		scope:defectors_ig_scope = {
+			add_modifier = {
+				name = member_exodus
+				months = normal_modifier_time
+			}
+		}
+		scope:defectors_support_ig_scope = {
+			add_modifier = {
+				name = member_influx
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+# Stall Event
+# Dissenters break ranks
+generic_laws.11 = {
+	type = country_event
+	placement = root
+	title = generic_laws.11.t
+	desc = generic_laws.11.d
+	flavor = generic_laws.11.f
+
+	category = enactment
+
+	event_image = {
+		video = "africa_leader_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		enacting_any_law = yes
+		any_interest_group = {
+			bpm_ig_approves_enactment = yes
+		}
+	}
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_approves_enactment = yes
+			}
+			save_scope_as = dissenters_ig_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = generic_laws.11.a 							# Grr, splitters!
+        default_option = yes
+
+		if = { 
+			limit = { is_player = yes }
+			scope:dissenters_ig_scope = { 
+				bpm_ig_decrease_law_enactment_approval_big = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+			name = political_discord
+			}
+		}
+		scope:dissenters_ig_scope = {
+			add_modifier = {
+				name = party_fragmentation	
+				months = normal_modifier_time
+			}
+		}										
+	}
+	option = {
+		name = generic_laws.11.b 							# Hand out bribes to convince some to stay
+
+		if = { 
+			limit = { is_player = yes }
+			scope:dissenters_ig_scope = { 
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+			name = political_discord_minor
+			}
+		}
+		scope:dissenters_ig_scope = {
+			add_modifier = {
+				name = party_fragmentation_minor
+				months = normal_modifier_time
+			}
+		}
+		add_modifier = {
+			name = greasing_palms
+			multiplier = money_amount_multiplier_small
+			months = short_modifier_time
+		}
+	}
+	option = {
+		name = generic_laws.11.c 							# Let them write the bill
+		trigger = {
+			enactment_setback_count < 2
+		}
+		highlighted_option = yes
+		add_enactment_setback = 1
+		add_enactment_modifier = {
+			name = modifier_half_written_bill
+		}
+		scope:dissenters_ig_scope = {
+			add_modifier = {
+				name = party_fragmentation_minor
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+# debate event
+# underhanded tactics
+generic_laws.12 = {
+	type = country_event
+	placement = root
+	title = generic_laws.12.t
+	desc = generic_laws.12.d
+	flavor = generic_laws.12.f
+
+	category = enactment
+
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		enacting_any_law = yes
+		any_interest_group = {
+			bpm_ig_disapproves_enactment = yes
+		}
+		any_interest_group = {
+			bpm_ig_approves_enactment = yes
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_disapproves_enactment = yes
+			}
+			save_scope_as = underhanded_ig_scope
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_approves_enactment = yes
+			}
+			save_scope_as = underhanded_instigator_ig_scope
+			leader = {
+				save_scope_as = underhanded_instigator_leader_scope
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+	
+	option = {
+		name = generic_laws.12.a 							# agree to the proposal. decrease enactment time, but anger opposing IGs
+        default_option = yes
+
+		add_enactment_modifier = {
+			name = underhanded_tactics	
+		}
+		scope:underhanded_ig_scope = {
+			add_modifier = {
+				name = dishonest_methods
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = generic_laws.12.b 							# reject the proposal, slightly increase enactment time
+
+		add_enactment_modifier = {
+			name = by_the_book	
+		}
+	}
+}

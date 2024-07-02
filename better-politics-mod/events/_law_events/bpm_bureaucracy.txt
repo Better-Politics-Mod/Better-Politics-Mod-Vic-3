@@ -1,0 +1,291 @@
+﻿namespace = bureaucracy
+
+# Stall Event - Red Tape
+bureaucracy.1 = {
+	type = country_event
+
+	title = bureaucracy.1.t
+	desc = bureaucracy.1.d
+	flavor = bureaucracy.1.f
+
+	category = enactment
+
+	event_image = {
+		video = "africa_leader_arguing"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		OR = {
+			is_enacting_law = law_type:law_hereditary_bureaucrats
+			is_enacting_law = law_type:law_appointed_bureaucrats
+			is_enacting_law = law_type:law_elected_bureaucrats
+		}
+		NOR = {
+			has_modifier = red_tape_reduced
+			has_modifier = red_tape
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		if = {
+			limit = {
+				has_law = law_type:law_hereditary_bureaucrats
+			}
+			ig:ig_landowners = {
+				save_scope_as = bureaucrat_class
+			}
+		}
+		else_if = {
+			limit = {
+				has_law = law_type:law_appointed_bureaucrats
+			}
+			ig:ig_petty_bourgeoisie = {
+				save_scope_as = bureaucrat_class
+			}
+		}
+		else ={
+			ig:ig_intelligentsia = {
+				save_scope_as = bureaucrat_class
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # promise job retention
+		name = bureaucracy.1.a
+		default_option = yes
+		# lose 10% success chance
+		add_enactment_modifier = {
+			name = red_tape_reduced
+		}
+		# 10% polstr
+		scope:bureaucrat_class = {
+			add_modifier = {
+				name = red_tape_jobs
+				months = normal_modifier_time
+			}
+		}
+		bpm_add_political_stability_small = yes
+	}
+	option = { # get back to work
+		name = bureaucracy.1.b
+		trigger = {
+			NOT = { has_law = law_type:law_secret_police }
+		}
+		# lose 15% success chance and bureaucracy mult
+		add_enactment_modifier = {
+			name = red_tape
+		}
+	}
+	option = { # secret police will keep them in line
+		name = bureaucracy.1.c
+		trigger = {
+			has_law = law_type:law_secret_police
+		}
+		# lose 10% success chance
+		add_enactment_modifier = {
+			name = red_tape_reduced
+		}
+	}
+	option = { # hire new bureaucrats
+		name = bureaucracy.1.e
+		trigger = {
+			enactment_setback_count < 2
+		}
+		highlighted_option = yes
+		add_enactment_setback = 1
+		add_enactment_modifier = {
+			name = modifier_training_bureaucrat_replacements
+		}
+		bpm_remove_political_stability_small = yes
+	}
+}
+
+# Advance event - Meritocracy
+bureaucracy.2 = {
+	type = country_event
+
+	title = bureaucracy.2.t
+	desc = bureaucracy.2.d
+	flavor = bureaucracy.2.f
+
+	category = enactment
+
+	event_image = {
+		video = "africa_leader_arguing"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		has_law = law_type:law_hereditary_bureaucrats
+		OR = {
+			is_enacting_law = law_type:law_appointed_bureaucrats
+			is_enacting_law = law_type:law_elected_bureaucrats
+		}
+		NOT = { has_modifier = meritocracy }
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		if = {
+			limit = {
+				is_enacting_law = law_type:law_appointed_bureaucrats
+			}
+			ig:ig_petty_bourgeoisie = {
+				save_scope_as = meritocracy_ig
+			}
+		}
+		else_if = {
+			limit = {
+				is_enacting_law = law_type:law_elected_bureaucrats
+			}
+			ig:ig_intelligentsia = {
+				save_scope_as = meritocracy_ig
+			}
+		}
+		ig:ig_landowners = {
+			save_scope_as = bureaucrat_class
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # use this to pass the law
+		name = bureaucracy.2.a
+		default_option = yes
+		# enactment success
+		add_enactment_modifier = {
+			name = meritocracy
+			multiplier = 2
+		}
+		ruler = {
+			bpm_ig_increase_law_enactment_approval_medium = yes
+		}
+	}
+	option = { # use this to disempower landowners
+		name = bureaucracy.2.b
+		# less polstr
+		scope:bureaucrat_class = {
+			add_modifier = {
+				name = meritocracy_ig
+				months = short_modifier_time
+				multiplier = -1
+			}
+		}
+		# enactment success
+		add_enactment_modifier = {
+			name = meritocracy
+		}
+		ruler = {
+			bpm_ig_increase_law_enactment_approval_small = yes
+		}
+	}
+	option = { # use this to empower new bureaucrat class
+		name = bureaucracy.2.c
+		# less polstr
+		scope:meritocracy_ig = {
+			add_modifier = {
+				name = meritocracy_ig
+				months = short_modifier_time
+			}
+		}
+		# enactment success
+		add_enactment_modifier = {
+			name = meritocracy
+		}
+		ruler = {
+			bpm_ig_increase_law_enactment_approval_small = yes
+		}
+	}
+}
+
+# Debate event - The Bureaucratic Struggle
+bureaucracy.3 = {
+	type = country_event
+
+	title = bureaucracy.3.t
+	desc = bureaucracy.3.d
+	flavor = bureaucracy.3.f
+
+	category = enactment
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		OR = {
+			is_enacting_law = law_type:law_appointed_bureaucrats
+			is_enacting_law = law_type:law_elected_bureaucrats
+			is_enacting_law = law_type:law_hereditary_bureaucrats
+		}
+		NOR = {
+			has_modifier = good_and_fast
+			has_modifier = good_and_cheap
+			has_modifier = cheap_and_fast
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # good and fast
+		name = bureaucracy.3.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = good_and_fast
+		}
+	}
+	option = { # good and cheap
+		name = bureaucracy.3.b
+		add_enactment_modifier = {
+			name = good_and_cheap
+		}
+	}
+	option = { # cheap and fast
+		name = bureaucracy.3.c
+		add_enactment_modifier = {
+			name = cheap_and_fast
+		}
+	}
+}

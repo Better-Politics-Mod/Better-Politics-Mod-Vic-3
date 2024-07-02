@@ -1,0 +1,130 @@
+﻿je_bpm_rising_sun = {
+    icon = "gfx/interface/icons/event_icons/japan.dds"
+	
+	group = je_group_historical_content
+
+    complete = {
+		OR = {
+            c:KOR = {
+				is_subject_of = c:JAP
+			}
+            custom_tooltip = {
+                text = bpm_owns_kor_tt
+                c:JAP = {
+                    owns_entire_state_region = STATE_SEOUL
+                    owns_entire_state_region = STATE_BUSAN
+                    owns_entire_state_region = STATE_YANGHO
+                    owns_entire_state_region = STATE_SARIWON
+                    owns_entire_state_region = STATE_PYONGYANG
+                }
+            }
+        }
+        c:JAP = {
+            owns_entire_state_region = STATE_FORMOSA
+            is_country_type = recognized
+        }
+        any_country = {
+			naval_power_projection < root.naval_power_projection
+            country_rank >= rank_value:great_power
+		}
+	}
+
+    on_complete = {
+		trigger_event = {
+			id = bpm_japan.1
+            days = 120
+		}
+	}
+
+	weight = 10000
+    should_be_pinned_by_default = yes
+}
+
+je_bpm_taisho_democracy = {
+    icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	group = je_group_historical_content
+    
+    immediate = {
+        set_variable = {
+			name = bpm_taisho_var
+			value = 0
+		}
+        ig:ig_radicals = {
+			bpm_remove_all_gov_ideologies = yes
+			add_ideology = ideology_gov_moderate_monarchist
+		}
+		ig:ig_liberals = {
+			bpm_remove_all_gov_ideologies = yes
+			add_ideology = ideology_gov_moderate_monarchist
+		}
+    }
+
+    on_monthly_pulse = {
+		effect = {
+			change_variable = {
+				name = bpm_taisho_var
+				add = 1
+			}
+		}
+	}
+
+    complete = {
+        exists = var:bpm_taisho_var
+        OR = {
+            has_law = law_type:law_census_voting
+            has_law = law_type:law_universal_suffrage
+        }
+        institution_investment_level = {
+			institution = institution_suffrage
+		    value >= 2
+		}
+        NOT = { has_law = law_type:law_outlawed_dissent }
+        NOT = { has_law = law_type:law_censorship }
+        
+		has_insurrectionary_interest_groups = no
+		is_at_war = no
+        bpm_taisho_var < 100
+	}
+
+    on_complete = {
+        set_variable = bpm_imperial_democracy
+        trigger_event = { id = bpm_japan.2 }
+    }
+
+    fail = {
+        custom_tooltip = {
+            text = bpm_taisho_fail_tt
+            scope:journal_entry = {
+			    is_goal_complete = yes
+		    }
+        }
+    }
+
+    on_fail = {
+        ig:ig_armed_forces = {
+            add_modifier = {
+                name = bpm_cemented_oligarchy
+            }
+        }
+        ig:ig_industrialists = {
+            add_modifier = {
+                name = bpm_cemented_oligarchy
+            }
+            bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_oligarch
+        }
+    }
+
+    current_value = {
+		value = root.var:bpm_taisho_var
+	}
+
+    goal_add_value = {
+		value = 300
+	}
+
+	progressbar = yes
+
+    should_be_pinned_by_default = yes
+}

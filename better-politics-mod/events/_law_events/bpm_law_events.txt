@@ -1,0 +1,286 @@
+﻿namespace = law_events
+
+# Debate event
+law_events.1 = { #conscientious objectors
+	type = country_event
+	placement = root
+
+	title = law_events.1.t
+	desc = law_events.1.d
+	flavor = law_events.1.f
+
+	category = enactment
+
+	event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		is_enacting_law = law_type:law_mass_conscription
+		NOT = { has_variable = conscientious_objection }
+		any_interest_group = {
+			bpm_ig_approves_enactment = yes
+		}
+		any_interest_group = {
+			bpm_ig_disapproves_enactment = yes
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		set_variable = {
+			name = conscientious_objection
+			days = 1825 # five years
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_approves_enactment = yes
+			}
+			save_scope_as = pro_conscription_ig
+		}
+		random_interest_group = {
+			limit = {
+				bpm_ig_disapproves_enactment = yes
+			}
+			save_scope_as = anti_conscription_ig
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # allow objectors to sit out
+		name = law_events.1.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = objectors_conscription_law
+		}
+		scope:pro_conscription_ig = {
+			add_modifier = {
+				name = modifier_conscientious_objection_denied
+				months = normal_modifier_time
+			}
+		}
+		scope:anti_conscription_ig = {
+			add_modifier = {
+				name = modifier_conscientious_objection_approved
+				months = normal_modifier_time
+			}
+		}
+		if = {
+			limit = { is_player = yes }
+			scope:anti_conscription_ig = {
+				bpm_ig_increase_law_enactment_approval_big = yes
+			}
+		}
+		add_modifier = {
+			name = modifier_conscription_rate_lowered
+			months = long_modifier_time
+		}
+	}
+
+	option = {  # everyone must fight
+		name = law_events.1.b
+		add_enactment_modifier = {
+			name = objectors_conscription_bad_law
+		}
+		scope:pro_conscription_ig = {
+			add_modifier = {
+				name = modifier_conscientious_objection_rejected_good
+				months = normal_modifier_time
+			}
+		}
+		scope:anti_conscription_ig = {
+			add_modifier = {
+				name = modifier_conscientious_objection_rejected
+				months = normal_modifier_time
+			}
+		}
+	}
+}
+
+law_events.5 = { #Landowners in state request you turn a blind eye to their working conditions
+	type = country_event
+	placement = root
+
+	title = law_events.5.t
+	desc = law_events.5.d
+	flavor = law_events.5.f
+
+	category = enactment
+
+	event_image = {
+		video = "southamerica_child_labor"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_industry.dds"
+
+	duration = 3
+
+	trigger = {
+		ig:ig_landowners = {
+			is_marginal = no
+		}
+		OR = {
+			is_enacting_law = law_type:law_regulatory_bodies
+			is_enacting_law = law_type:law_worker_protections
+			is_enacting_law = law_type:law_token_time_regulations
+			is_enacting_law = law_type:law_limited_work_hours
+		}
+		NOT = { has_variable = mineowners_request }
+		any_scope_state = {
+			OR = {
+				has_building = building_coal_mine
+				has_building = building_iron_mine
+				has_building = building_lead_mine
+				has_building = building_sulfur_mine
+			}
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				OR = {
+					has_building = building_coal_mine
+					has_building = building_iron_mine
+					has_building = building_lead_mine
+					has_building = building_sulfur_mine
+				}
+			}
+			save_scope_as = state_with_mine
+		}
+
+		set_variable = {
+			name = mineowners_request
+			days = 1825 # five years
+		}
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOR = { 
+			currently_enacting_law = scope:current_law_scope 
+		}
+	}
+
+	option = {
+		name = law_events.5.a
+		ig:ig_landowners = {
+			add_modifier = {
+					name = modifier_mine_regulations_not_enforced
+					months = normal_modifier_time
+			}
+		}
+
+		scope:state_with_mine = {
+			add_modifier = {
+					name = modifier_mine_regulations_not_enforced_state
+					months = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = law_events.5.b
+		default_option = yes
+		ig:ig_landowners = {
+			add_modifier = {
+					name = modifier_mine_regulations_enforced
+					months = normal_modifier_time
+			}
+		}
+
+	}
+
+}
+
+
+law_events.6 = { #Intelligentsia disapprove of religious schools
+	type = country_event
+	placement = root
+
+	title = law_events.6.t
+	desc = law_events.6.d
+	flavor = law_events.6.f
+
+	category = enactment
+
+	event_image = {
+		video = "africa_leader_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	duration = 3
+
+	trigger = {
+		is_enacting_law = law_type:law_religious_schools
+		NOT = { has_variable = intelligentsia_disapprove_religious_schools }
+		any_interest_group = {
+			bpm_ig_disapproves_enactment = yes
+		}
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = { bpm_ig_disapproves_enactment = yes }
+			save_scope_as = intelligentsia_ig
+		}
+		set_variable = {
+			name = intelligentsia_disapprove_religious_schools
+			months = normal_modifier_time
+		}
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #they have a point
+		name = law_events.6.a
+		add_enactment_modifier = { #law takes more time to pass
+			name = religious_schools_bad_modifier
+		}
+		scope:intelligentsia_ig = {
+			add_modifier = {
+				name = modifier_religious_schools_abolished_intelligentsia
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #ignore them
+		default_option = yes
+		name = law_events.6.b
+		add_enactment_modifier = { #you get some success thing
+			name = religious_schools_good_modifier
+		}
+		scope:intelligentsia_ig = {
+			add_modifier = {
+				name = modifier_ignored_intelligentsia_request
+				months = normal_modifier_time
+			}
+		}
+	}
+}

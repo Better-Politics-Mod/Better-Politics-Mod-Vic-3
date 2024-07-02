@@ -22,12 +22,18 @@ bpm_topple_government.1 = {
     option = { 
 		name = bpm_topple_government.1.a
 		default_option = yes
-		var:bpm_toppled_party = {
-			add_momentum = -2
-			add_modifier = {
-				name = bpm_government_toppled_loses_support
-				months = short_modifier_time # 2.5 years 
-				is_decaying = yes
+		show_as_tooltip = {
+			# we show the main party only 
+			var:bpm_toppled_party = {
+				if = {
+					limit = {
+						owner = { has_variable = weak_government_topple }
+					}
+					add_momentum = -1.5 # less momentum loss than a complete topple
+				}
+				else = {
+					add_momentum = -2
+				}
 			}
 		}
 		hidden_effect = {
@@ -35,9 +41,41 @@ bpm_topple_government.1 = {
 				name = bpm_repeatable_law_law_repeatable_politics_topple_government_cooldown
 				years = 2
 			}
-		}
+			save_scope_as = target_country
+			every_active_party = {
+				save_scope_as = target_party
+				if = {
+					limit = {
+						scope:target_country = {
+							is_target_in_variable_list = {
+								name = bpm_list_party_is_target_of_topple_government
+								target = scope:target_party
+							}
+						}
+					}
+					if = {
+						limit = {
+							owner = { has_variable = weak_government_topple }
+						}
+						add_momentum = -0.5 # less momentum loss than a complete topple
+					}
+					else = {
+						add_momentum = -0.75
+					}
+					every_member = {
+						add_modifier = {
+							name = bpm_government_toppled_loses_support
+							months = short_modifier_time # 2.5 years 
+							is_decaying = yes
+						}
+					}
+				}
 
+			}
+		}
 		remove_variable = bpm_toppled_party
+		remove_variable = bpm_player_dislikes_enacting_law
+		clear_variable_list = bpm_list_party_is_target_of_topple_government
 	}
 }
 
@@ -63,9 +101,95 @@ bpm_topple_government.2 = {
 	option = {
 		name = bpm_topple_government.2.a
 		default_option = yes
+		set_variable = {
+			name = bpm_player_dislikes_enacting_law
+		}
+		start_enactment = law_type:law_repeatable_politics_topple_government
+		add_modifier = {
+			name = bpm_opposition_motion_cannot_enact_law 
+		}		
+
+		custom_tooltip = {
+			text = bpm_oppose_opposition_motion_tt
+		}
+	}
+
+	option = {
+		name = bpm_topple_government.2.b
 		start_enactment = law_type:law_repeatable_politics_topple_government
 		add_modifier = {
 			name = bpm_opposition_motion_cannot_enact_law 
 		}
+
+		custom_tooltip = {
+			text = bpm_support_opposition_motion_tt
+		}
+	}
+}
+
+# weak government topple
+bpm_topple_government.3 = { 
+	type = country_event
+	placement = root
+
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/europenorthamerica/political_extremism"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = bpm_topple_government.3.t
+	desc = bpm_topple_government.3.d
+	flavor = bpm_topple_government.3.f
+	duration = 1
+    
+    event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+    option = { 
+		name = bpm_topple_government.3.a
+		default_option = yes
+		add_enactment_phase = 3
+		hidden_effect = {
+			set_variable = weak_government_topple
+		}
+	}
+}
+
+# party caves to topple government
+bpm_topple_government.4 = { 
+	type = country_event
+	placement = root
+
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/europenorthamerica/political_extremism"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = bpm_topple_government.4.t
+	desc = bpm_topple_government.4.d
+	flavor = bpm_topple_government.4.f
+	duration = 1
+    
+    event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+    option = { 
+		name = bpm_topple_government.4.a
+		default_option = yes
+
+		var:bpm_caved_party = {
+			every_member = {
+				add_modifier = {
+					name = bpm_party_caved_to_topple_government
+					months = short_modifier_time
+					is_decaying = yes
+				}
+			}
+		}
+		remove_variable = bpm_caved_party
+		add_enactment_phase = 1
+		
 	}
 }

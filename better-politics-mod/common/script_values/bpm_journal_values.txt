@@ -860,362 +860,396 @@ bpm_je_general_strike_quadratic_trade_union_support = {
 bpm_je_general_strike_power = {
 	value = 0
 
-	add = {
-		desc = "BPM_VALUE_RANDOM"
-		if = {
-			limit = { has_variable = bpm_je_general_strike_trigger_random }
-		}
-		value = var:bpm_je_general_strike_trigger_random
-	}
-
-	# Population too agrarian
-	add = {
-		desc = "BPM_VALUE_FROM_PEASANT_POPULATION"
-		if = {
-			limit = {
-				has_variable = bpm_peasant_population_yandev_var
-			}
-			subtract = var:bpm_peasant_population_yandev_var
-			multiply = 2
-		}
-	}
-
-	# No Labor Confederations
-	add = {
-		desc = "BPM_VALUE_FROM_NO_TECH_ANARCHISM"
-		if = {
-			limit = { NOT = { has_technology_researched = anarchism } } 
-			subtract = 25
-		}
-	}
-
-	if = {
-		limit = { NOT = { has_law = law_type:law_syndicalism } }
-		# Syndicalist agitators & Syndicalism progress
-		add = {
-			desc = "BPM_VALUE_FROM_SYNDICALISM_DEVELOPMENT"
-			if = {
-				limit = { has_variable = bpm_je_syndicalism } 
-				add = var:bpm_je_syndicalism
-				multiply = 0.1
-			}
-		}
-		add = {
-			desc = "BPM_VALUE_FROM_SYNDICALIST_CHARACTERS"
-			every_scope_character = {
-				limit = {
-					OR = {
-						has_ideology = ideology:ideology_syndicalist
-						has_ideology = ideology:ideology_anarchist_syndicalist
-					}
-					OR = {
-						has_role = politician
-						has_role = agitator
-					}
-				}
-				add = popularity
-				min = 0
-			}
-			multiply = 0.1
-			max = 10
-		}
-		# add = {
-		# 	desc = "BPM_VALUE_FROM_SYNDICALISM_LEGITIMIZED"
-		# 	if = {
-		# 		limit = { has_global_variable = bpm_syndicalism_legitimized } 
-		# 		add = 20
-		# 	}
-		# }
-	}
-
-	# Socialist/TU IG Popularity (& anger potentially)
-	add = {
-		desc = "BPM_VALUE_FROM_SOCIALISTS_APPROVAL_POPULARITY"
-		every_interest_group = {
-			limit = {
-				bpm_ig_is_socialist = yes
-				ig_approval < 5
-			}
-			add = {
-				value = bpm_je_general_strike_quadratic_trade_union_support
-				# Scale by population
-				multiply = interest_group_population_percentage
-				multiply = 100
-			}
-		}
-		max = 20 # Cap at 20% of population (all socialists)
-		min = 0
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_TRADE_UNIONS_APPROVAL_POPULARITY"
-		if = {
-			limit = {
-				ig:ig_trade_unions = {
-					ig_approval < 5
-				}
-			}
-			ig:ig_trade_unions ?= {
-				add = bpm_je_general_strike_quadratic_trade_union_support
-				# Scale by population
-				multiply = interest_group_population_percentage
-				multiply = 100
-				max = 10 # Cap at 10% of population
-				min = 0
-			}
-		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_TRADE_UNIONS_APPROVAL_CLOUT"
-		if = {
-			limit = {
-				ig:ig_trade_unions = {
-					ig_approval < 5
-				}
-			}
-			ig:ig_trade_unions ?= {
-				add = bpm_je_general_strike_quadratic_trade_union_support
-				# Scale by population
-				multiply = ig_clout
-				multiply = 100
-				max = 10 # Cap at 10% of clout
-				min = 0
-			}
-		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_POPULAR_ANGRY_TRADE_UNIONS"
-		if = {
-			limit = {
-				ig:ig_trade_unions = {
-					bpm_ig_is_popular = yes
-					ig_approval <= angry
-				}
-			}
-			add = 20
-		}
-	}
-
-	# Radicals vs Loyalists
-	add = {
-		desc = "BPM_VALUE_FROM_RADICALS"
-		add = radical_fraction
-		multiply = 80
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_LOYALISTS"
-		subtract = loyalist_fraction
-		multiply = 40
-	}
-
-	# War
-	if = {
-		limit = { is_at_war = yes }
-		if = {
-			limit = {
-				any_scope_war = {
-					has_war_support = {
-						target = root
-						value > 66
-					}
-				}
-			}
-			add = {
-				value = 0
-				desc = "BPM_VALUE_FROM_WAR_HIGH_SUPPORT"
-			}
-		} else_if = {
-			limit = {
-				any_scope_war = {
-					has_war_support = {
-						target = root
-						value > 33
-					}
-				}
-			}
-			add = {
-				value = 10
-				desc = "BPM_VALUE_FROM_WAR_MEDIUM_SUPPORT"
-			}
-		} else_if = {
-			limit = {
-				any_scope_war = {
-					has_war_support = {
-						target = root
-						value > 0
-					}
-				}
-			}
-			add = {
-				value = 20
-				desc = "BPM_VALUE_FROM_WAR_LOW_SUPPORT"
-			}
-		} else = {
-			add = {
-				value = 30
-				desc = "BPM_VALUE_FROM_WAR_VERY_LOW_SUPPORT"
-			}
-		}
-	}
-
-	# Progress of progressive Revolution (Liberal or Socialist)
-	if = {
-		limit = { NOT = { has_law = law_type:law_council_republic } }
-		add = {
-			desc = "BPM_VALUE_FROM_ONGOING_LIBERAL_REVOLUTION"
-			if = {
-				limit = { liberal_revolution_ongoing = yes socialist_revolution_ongoing = no }
-				every_civil_war = {
-					limit = { is_civil_war_type = revolution }
-					add = civil_war_progress
-					multiply = 75
-				}
-			}
-		}
-	}
-	add = {
-		desc = "BPM_VALUE_FROM_ONGOING_SOCIALIST_REVOLUTION"
-		if = {
-			limit = { socialist_revolution_ongoing = yes }
-			every_civil_war ={
-				limit = { is_civil_war_type = revolution }
-				add = civil_war_progress
-				multiply = 100
-			}
-		}
-	}
-
-	# Labor laws (Doesn't affect active strike)	
 	if = {
 		limit = {
-			always = no
+			is_at_war = no
+			NOT = {
+				any_interest_group = {
+					bpm_ig_is_labor = yes
+					interest_group_supports_political_movement = yes
+				}
+			}
 			NOT = { has_journal_entry = je_bpm_general_strike_ongoing }
 		}
-		# Labor time laws
+		subtract = {
+			desc = "BPM_VALUE_FROM_NO_GOAL"
+			value = 100
+		}
+	}
+	else = {
 		if = {
-			limit = { has_law = law_type:law_token_time_regulations }
+			limit = {
+				is_at_war = no
+				NOT = {
+					any_interest_group = {
+						bpm_ig_is_labor = yes
+						interest_group_supports_political_movement = yes
+					}
+				}
+				has_journal_entry = je_bpm_general_strike_ongoing
+			}
 			subtract = {
-				desc = "[GetLawType('law_token_time_regulations').GetName] [concept_investment_level]"
-				value = institution:institution_workplace_safety.investment
-				multiply = 1
+				desc = "BPM_VALUE_FROM_NO_GOAL"
+				value = 100
 			}
 		}
-		else_if = {
-			limit = { has_law = law_type:law_limited_work_hours }
-			subtract = {
-				desc = "[GetLawType('law_limited_work_hours').GetName] [concept_investment_level]"
-				value = institution:institution_workplace_safety.investment
-				multiply = 2
+		add = {
+			desc = "BPM_VALUE_RANDOM"
+			if = {
+				limit = { has_variable = bpm_je_general_strike_trigger_random }
 			}
+			value = var:bpm_je_general_strike_trigger_random
 		}
-		else_if = {
-			limit = { has_law = law_type:law_protected_leisure }
-			subtract = {
-				desc = "[GetLawType('law_protected_leisure').GetName] [concept_investment_level]"
-				value = institution:institution_workplace_safety.investment
-				multiply = 4
-			}
-		}
-		# Labor laws
-		if = {
-			limit = { has_law = law_type:law_regulatory_bodies }
-			subtract = {
-				desc = "[GetLawType('law_regulatory_bodies').GetName] [concept_investment_level]"
-				value = institution:institution_workplace_safety.investment
-				multiply = 1
-			}
-		}
-		else_if = {
-			limit = { has_law = law_type:law_worker_protections }
-			subtract = {
-				desc = "[GetLawType('law_worker_protections').GetName] [concept_investment_level]"
-				value = institution:institution_workplace_safety.investment
+
+		# Population too agrarian
+		add = {
+			desc = "BPM_VALUE_FROM_PEASANT_POPULATION"
+			if = {
+				limit = {
+					has_variable = bpm_peasant_population_yandev_var
+				}
+				subtract = var:bpm_peasant_population_yandev_var
 				multiply = 2
 			}
 		}
 
+		# No Labor Confederations
+		add = {
+			desc = "BPM_VALUE_FROM_NO_TECH_ANARCHISM"
+			if = {
+				limit = { NOT = { has_technology_researched = anarchism } } 
+				subtract = 25
+			}
+		}
+
 		if = {
-			limit = { has_law = law_type:law_local_police }
-			subtract = {
-				desc = "BPM_VALUE_FROM_INSTITUTION_LOCAL_POLICE"
-				value = institution:institution_police.investment
+			limit = { NOT = { has_law = law_type:law_syndicalism } }
+			# Syndicalist agitators & Syndicalism progress
+			add = {
+				desc = "BPM_VALUE_FROM_SYNDICALISM_DEVELOPMENT"
+				if = {
+					limit = { has_variable = bpm_je_syndicalism } 
+					add = var:bpm_je_syndicalism
+					multiply = 0.1
+				}
+			}
+			add = {
+				desc = "BPM_VALUE_FROM_SYNDICALIST_CHARACTERS"
+				every_scope_character = {
+					limit = {
+						OR = {
+							has_ideology = ideology:ideology_syndicalist
+							has_ideology = ideology:ideology_anarchist_syndicalist
+						}
+						OR = {
+							has_role = politician
+							has_role = agitator
+						}
+					}
+					add = popularity
+					min = 0
+				}
 				multiply = 0.1
+				max = 10
 			}
+			# add = {
+			# 	desc = "BPM_VALUE_FROM_SYNDICALISM_LEGITIMIZED"
+			# 	if = {
+			# 		limit = { has_global_variable = bpm_syndicalism_legitimized } 
+			# 		add = 20
+			# 	}
+			# }
 		}
-		else_if = {
-			limit = { has_law = law_type:law_dedicated_police }
-			subtract = {
-				desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_POLICE"
-				value = institution:institution_police.investment
-				multiply = 0.2
-			}
-		}
-		else_if = {
-			limit = { has_law = law_type:law_militarized_police }
-			subtract = {
-				desc = "BPM_VALUE_FROM_INSTITUTION_MILITARIZED_POLICE"
-				value = institution:institution_police.investment
-				multiply = 0.5
-			}
-		}
-		# Home affairs
-		if = {
-			limit = { has_law = law_type:law_national_guard }
-			subtract = {
-				desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_GUARD"
-				value = institution:institution_home_affairs.investment
-				multiply = 0.2
-			}
-		}
-		else_if = {
-			limit = { has_law = law_type:law_secret_police }
-			subtract = {
-				desc = "BPM_VALUE_FROM_INSTITUTION_SECRET_POLICE"
-				value = institution:institution_home_affairs.investment
-				multiply = 0.2
-			}
-		}
-		# Union Laws
-		if = {
-			limit = { has_law = law_type:law_state_controlled_labor_unions }
-			subtract = {
-				desc = "BPM_VALUE_FROM_LAW_STATE_CONTROLLED_LABOR_UNIONS"
+
+		# Socialist/TU IG Popularity (& anger potentially)
+		add = {
+			desc = "BPM_VALUE_FROM_SOCIALISTS_APPROVAL_POPULARITY"
+			every_interest_group = {
+				limit = {
+					bpm_ig_is_socialist = yes
+					ig_approval < 5
+				}
 				add = {
-					value = -20
+					value = bpm_je_general_strike_quadratic_trade_union_support
+					# Scale by population
+					multiply = interest_group_population_percentage
+					multiply = 100
+				}
+			}
+			max = 20 # Cap at 20% of population (all socialists)
+			min = 0
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_TRADE_UNIONS_APPROVAL_POPULARITY"
+			if = {
+				limit = {
+					ig:ig_trade_unions = {
+						ig_approval < 5
+					}
+				}
+				ig:ig_trade_unions ?= {
+					add = bpm_je_general_strike_quadratic_trade_union_support
+					# Scale by population
+					multiply = interest_group_population_percentage
+					multiply = 100
+					max = 10 # Cap at 10% of population
+					min = 0
 				}
 			}
 		}
-		else_if = {
-			limit = { has_law = law_type:law_limited_labor_unions }
-			subtract = {
-				desc = "BPM_VALUE_FROM_LAW_LIMITED_LABOR_UNIONS"
+		add = {
+			desc = "BPM_VALUE_FROM_TRADE_UNIONS_APPROVAL_CLOUT"
+			if = {
+				limit = {
+					ig:ig_trade_unions = {
+						ig_approval < 5
+					}
+				}
+				ig:ig_trade_unions ?= {
+					add = bpm_je_general_strike_quadratic_trade_union_support
+					# Scale by population
+					multiply = ig_clout
+					multiply = 100
+					max = 10 # Cap at 10% of clout
+					min = 0
+				}
+			}
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_POPULAR_ANGRY_TRADE_UNIONS"
+			if = {
+				limit = {
+					ig:ig_trade_unions = {
+						bpm_ig_is_popular = yes
+						ig_approval <= angry
+					}
+				}
+				add = 20
+			}
+		}
+
+		# Radicals vs Loyalists
+		add = {
+			desc = "BPM_VALUE_FROM_RADICALS"
+			add = radical_fraction
+			multiply = 80
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_LOYALISTS"
+			subtract = loyalist_fraction
+			multiply = 40
+		}
+
+		# War
+		if = {
+			limit = { is_at_war = yes }
+			if = {
+				limit = {
+					any_scope_war = {
+						has_war_support = {
+							target = root
+							value > 66
+						}
+					}
+				}
 				add = {
-					value = -10
+					value = 0
+					desc = "BPM_VALUE_FROM_WAR_HIGH_SUPPORT"
+				}
+			} else_if = {
+				limit = {
+					any_scope_war = {
+						has_war_support = {
+							target = root
+							value > 33
+						}
+					}
+				}
+				add = {
+					value = 10
+					desc = "BPM_VALUE_FROM_WAR_MEDIUM_SUPPORT"
+				}
+			} else_if = {
+				limit = {
+					any_scope_war = {
+						has_war_support = {
+							target = root
+							value > 0
+						}
+					}
+				}
+				add = {
+					value = 20
+					desc = "BPM_VALUE_FROM_WAR_LOW_SUPPORT"
+				}
+			} else = {
+				add = {
+					value = 30
+					desc = "BPM_VALUE_FROM_WAR_VERY_LOW_SUPPORT"
 				}
 			}
 		}
 
-	}
+		# Progress of progressive Revolution (Liberal or Socialist)
+		if = {
+			limit = { NOT = { has_law = law_type:law_council_republic } }
+			add = {
+				desc = "BPM_VALUE_FROM_ONGOING_LIBERAL_REVOLUTION"
+				if = {
+					limit = { liberal_revolution_ongoing = yes socialist_revolution_ongoing = no }
+					every_civil_war = {
+						limit = { is_civil_war_type = revolution }
+						add = civil_war_progress
+						multiply = 75
+					}
+				}
+			}
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_ONGOING_SOCIALIST_REVOLUTION"
+			if = {
+				limit = { socialist_revolution_ongoing = yes }
+				every_civil_war ={
+					limit = { is_civil_war_type = revolution }
+					add = civil_war_progress
+					multiply = 100
+				}
+			}
+		}
 
-	# Rev/RefSocs in government (in non-CRs)
-	if = {
-		limit = { ig:ig_revolutionist_socialists ?= { is_in_government = yes } }
-		subtract = {
-			desc = "BPM_VALUE_REVOLUTIONIST_SOCIALISTS_IN_GOVERNMENT"
-			value = 20
+		# Labor laws (Doesn't affect active strike)	
+		if = {
+			limit = {
+				always = no
+				NOT = { has_journal_entry = je_bpm_general_strike_ongoing }
+			}
+			# Labor time laws
+			if = {
+				limit = { has_law = law_type:law_token_time_regulations }
+				subtract = {
+					desc = "[GetLawType('law_token_time_regulations').GetName] [concept_investment_level]"
+					value = institution:institution_workplace_safety.investment
+					multiply = 1
+				}
+			}
+			else_if = {
+				limit = { has_law = law_type:law_limited_work_hours }
+				subtract = {
+					desc = "[GetLawType('law_limited_work_hours').GetName] [concept_investment_level]"
+					value = institution:institution_workplace_safety.investment
+					multiply = 2
+				}
+			}
+			else_if = {
+				limit = { has_law = law_type:law_protected_leisure }
+				subtract = {
+					desc = "[GetLawType('law_protected_leisure').GetName] [concept_investment_level]"
+					value = institution:institution_workplace_safety.investment
+					multiply = 4
+				}
+			}
+			# Labor laws
+			if = {
+				limit = { has_law = law_type:law_regulatory_bodies }
+				subtract = {
+					desc = "[GetLawType('law_regulatory_bodies').GetName] [concept_investment_level]"
+					value = institution:institution_workplace_safety.investment
+					multiply = 1
+				}
+			}
+			else_if = {
+				limit = { has_law = law_type:law_worker_protections }
+				subtract = {
+					desc = "[GetLawType('law_worker_protections').GetName] [concept_investment_level]"
+					value = institution:institution_workplace_safety.investment
+					multiply = 2
+				}
+			}
+
+			if = {
+				limit = { has_law = law_type:law_local_police }
+				subtract = {
+					desc = "BPM_VALUE_FROM_INSTITUTION_LOCAL_POLICE"
+					value = institution:institution_police.investment
+					multiply = 0.1
+				}
+			}
+			else_if = {
+				limit = { has_law = law_type:law_dedicated_police }
+				subtract = {
+					desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_POLICE"
+					value = institution:institution_police.investment
+					multiply = 0.2
+				}
+			}
+			else_if = {
+				limit = { has_law = law_type:law_militarized_police }
+				subtract = {
+					desc = "BPM_VALUE_FROM_INSTITUTION_MILITARIZED_POLICE"
+					value = institution:institution_police.investment
+					multiply = 0.5
+				}
+			}
+			# Home affairs
+			if = {
+				limit = { has_law = law_type:law_national_guard }
+				subtract = {
+					desc = "BPM_VALUE_FROM_INSTITUTION_NATIONAL_GUARD"
+					value = institution:institution_home_affairs.investment
+					multiply = 0.2
+				}
+			}
+			else_if = {
+				limit = { has_law = law_type:law_secret_police }
+				subtract = {
+					desc = "BPM_VALUE_FROM_INSTITUTION_SECRET_POLICE"
+					value = institution:institution_home_affairs.investment
+					multiply = 0.2
+				}
+			}
+			# Union Laws
+			if = {
+				limit = { has_law = law_type:law_state_controlled_labor_unions }
+				subtract = {
+					desc = "BPM_VALUE_FROM_LAW_STATE_CONTROLLED_LABOR_UNIONS"
+					add = {
+						value = -20
+					}
+				}
+			}
+			else_if = {
+				limit = { has_law = law_type:law_limited_labor_unions }
+				subtract = {
+					desc = "BPM_VALUE_FROM_LAW_LIMITED_LABOR_UNIONS"
+					add = {
+						value = -10
+					}
+				}
+			}
+
 		}
-	}
-	else_if = {
-		limit = { ig:ig_socialists ?= { is_in_government = yes } }
-		subtract = {
-			desc = "BPM_VALUE_SOCIALISTS_IN_GOVERNMENT"
-			value = 15
+
+		# Rev/RefSocs in government (in non-CRs)
+		if = {
+			limit = { ig:ig_revolutionist_socialists ?= { is_in_government = yes } }
+			subtract = {
+				desc = "BPM_VALUE_REVOLUTIONIST_SOCIALISTS_IN_GOVERNMENT"
+				value = 20
+			}
 		}
-	}
-	else_if = {
-		limit = { ig:ig_reformist_socialists ?= { is_in_government = yes } }
-		subtract = {
-			desc = "BPM_VALUE_REFORMIST_SOCIALISTS_IN_GOVERNMENT"
-			value = 10
+		else_if = {
+			limit = { ig:ig_socialists ?= { is_in_government = yes } }
+			subtract = {
+				desc = "BPM_VALUE_SOCIALISTS_IN_GOVERNMENT"
+				value = 15
+			}
+		}
+		else_if = {
+			limit = { ig:ig_reformist_socialists ?= { is_in_government = yes } }
+			subtract = {
+				desc = "BPM_VALUE_REFORMIST_SOCIALISTS_IN_GOVERNMENT"
+				value = 10
+			}
 		}
 	}
 
@@ -1230,24 +1264,6 @@ bpm_je_general_strike_power = {
 
 	multiply = {
 		value = bpm_je_general_strike_multiplier
-	}
-
-	if = {
-		limit = {
-			NOR = {
-				is_at_war = yes
-				any_interest_group = {
-					limit = {
-						bpm_ig_is_labor = yes
-					}
-					interest_group_supports_political_movement = yes
-				}
-			}
-		}
-		subtract = {
-			desc = "BPM_VALUE_FROM_NO_GOAL"
-			value = 100
-		}
 	}
 
 	if = {
@@ -1270,8 +1286,8 @@ bpm_je_general_strike_exhaustion_rate = {
 			add = {
 				value = var:bpm_je_general_strike_exhaustion
 				multiply = -0.01
-				max = -1
 			}
+			max = -4
 		} else = {
 			add = 6
 		}

@@ -1,0 +1,371 @@
+namespace = bpm_topple_government
+####################################################################################################################################################
+# There are 3 ends to this event chain:
+# 1. The government is toppled.
+# 2. The government fails to be toppled in the legislature.
+# In Presidential Republics, 
+# 3. The president is replaced before the government is toppled.
+
+# 1) 
+# There are 2 ways to reach this end:
+# 1.1) The opposition successfully topples the government normally, the law is enacted and the government is toppled. (LAW->1)
+# 1.2) The government caves to the opposition, the law is enacted and the government is toppled. (ON_ACTION->3->1)
+
+# 2)
+# There is only 1 way to reach this end:
+# 2.1) The law enactment ends. (ON_ACTION->6)
+
+# 3)
+# There is only 1 way to reach this end:
+# 3.1) The president is replaced. (ON_ACTION->5)
+
+
+# There is only one entry point to this event chain:
+# 1) The opposition attempts to topple the government. (ON_ACTION->2)
+
+
+# There are also a few events that are optional:
+# 1) The government coalition shrink. (ON_ACTION->4)
+####################################################################################################################################################
+
+
+# Success end
+bpm_topple_government.1 = { 
+	type = country_event
+	placement = root
+
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/europenorthamerica/political_extremism"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = bpm_topple_government.1.t
+	desc = bpm_topple_government.1.d
+	flavor = bpm_topple_government.1.f
+	duration = 2
+    
+    event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	immediate = {
+		var:bpm_ig_trying_to_topple_government = {
+			save_scope_as = bpm_topple_initiator_ig
+		}
+	}
+
+    option = { 
+		name = bpm_topple_government.1.a
+		default_option = yes
+		show_as_tooltip = {
+			# we show the main party only 
+			var:bpm_toppled_party = {
+				if = {
+					limit = {
+						owner = { has_variable = weak_government_topple }
+					}
+					add_momentum = momentum_medium_decrease # less momentum loss than a complete topple
+				}
+				else = {
+					add_momentum = momentum_large_decrease
+				}
+			}
+		}
+		if = {
+			limit = {
+				var:bpm_impeachment_target ?= ruler
+			}
+			custom_tooltip = {
+				text = bpm_impeachment_target_removed_tt
+				var:bpm_impeachment_target = {
+					kill_character = {
+						hidden = yes
+					}
+				}
+			}
+		}
+		hidden_effect = {
+			set_variable = {
+				name = bpm_repeatable_law_law_repeatable_politics_topple_government_cooldown
+				years = 2
+			}
+			save_scope_as = target_country
+			every_active_party = {
+				save_scope_as = target_party
+				if = {
+					limit = {
+						scope:target_country = {
+							is_target_in_variable_list = {
+								name = bpm_list_party_is_target_of_topple_government
+								target = scope:target_party
+							}
+						}
+					}
+					if = {
+						limit = {
+							owner = { has_variable = weak_government_topple }
+						}
+						add_momentum = momentum_medium_decrease # less momentum loss than a complete topple
+					}
+					else = {
+						add_momentum = momentum_large_decrease
+					}
+					every_member = {
+						add_modifier = {
+							name = bpm_government_toppled_loses_support
+							months = short_modifier_time # 2.5 years 
+							is_decaying = yes
+						}
+					}
+				}
+
+			}
+		}
+		bpm_clear_government_toppling = yes
+	}
+}
+
+bpm_topple_government.2 = {
+	type = country_event
+	placement = root
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/europenorthamerica/political_extremism"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = {
+		first_valid = {
+			triggered_desc = {
+				desc = bpm_topple_government.2.t1
+				trigger = {
+					has_law = law_type:law_presidential_republic
+				}
+			}
+			triggered_desc = {
+				desc = bpm_topple_government.2.t2
+			}
+		}
+	}
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = bpm_topple_government.2.d1
+				trigger = {
+					has_law = law_type:law_presidential_republic
+				}
+			}
+			triggered_desc = {
+				desc = bpm_topple_government.2.d2
+			}
+		}
+	}
+	flavor = bpm_topple_government.2.f
+	duration = 2
+
+	event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	immediate = {
+		var:bpm_ig_trying_to_topple_government = {
+			save_scope_as = bpm_topple_initiator_ig
+		}
+		bpm_select_target_parties_for_topple_motion = yes
+		start_enactment = law_type:law_repeatable_politics_topple_government
+
+		if = {
+			limit = {
+				has_law = law_type:law_presidential_republic
+			}
+			ruler = {
+				save_scope_as = bpm_impeachment_target
+			}
+		}
+
+		var:bpm_toppled_party = {
+			save_scope_as = bpm_topple_target_party
+		}
+	}
+
+	# The opposition attempts to topple the government
+	option = {
+		name = bpm_topple_government.2.a
+		default_option = yes
+		set_variable = {
+			name = bpm_player_dislikes_enacting_law
+		}
+		set_variable = {
+			name = bpm_currently_toppling_government
+		}
+		add_modifier = {
+			name = bpm_opposition_motion_cannot_enact_law 
+		}		
+
+		custom_tooltip = {
+			text = bpm_oppose_opposition_motion_tt
+		}
+	}
+
+	option = {
+		name = bpm_topple_government.2.b
+		
+		set_variable = {
+			name = bpm_currently_toppling_government
+		}
+		add_modifier = {
+			name = bpm_opposition_motion_cannot_enact_law 
+		}
+
+		custom_tooltip = {
+			text = bpm_support_opposition_motion_tt
+		}
+	}
+}
+
+# Weak government topple (->1)
+bpm_topple_government.3 = { 
+	type = country_event
+	placement = root
+
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/europenorthamerica/political_extremism"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = bpm_topple_government.3.t
+	desc = bpm_topple_government.3.d
+	flavor = bpm_topple_government.3.f
+	duration = 1
+    
+    event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+    option = { 
+		name = bpm_topple_government.3.a
+		default_option = yes
+		add_enactment_phase = 3
+		hidden_effect = {
+			set_variable = weak_government_topple
+		}
+	}
+}
+
+# Party caves to topple government
+bpm_topple_government.4 = { 
+	type = country_event
+	placement = root
+
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/europenorthamerica/political_extremism"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = bpm_topple_government.4.t
+	desc = bpm_topple_government.4.d
+	flavor = bpm_topple_government.4.f
+	duration = 1
+    
+    event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+    option = { 
+		name = bpm_topple_government.4.a
+		default_option = yes
+
+		var:bpm_caved_party = {
+			every_member = {
+				add_modifier = {
+					name = bpm_party_caved_to_topple_government
+					months = short_modifier_time
+					is_decaying = yes
+				}
+			}
+		}
+		remove_variable = bpm_caved_party
+		add_enactment_phase = 1
+		
+	}
+}
+
+# The president has been replaced (END)
+bpm_topple_government.5 = {
+	type = country_event
+	placement = root
+
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/europenorthamerica/political_extremism"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = bpm_topple_government.5.t
+	desc = bpm_topple_government.5.d
+	flavor = bpm_topple_government.5.f
+	duration = 1
+    
+    event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	option = { 
+		name = bpm_topple_government.5.a
+		default_option = yes
+
+		var:bpm_toppled_party = {
+			every_member = {
+				add_modifier = {
+					name = bpm_party_caved_to_topple_government
+					months = short_modifier_time
+					is_decaying = yes
+				}
+			}
+		}
+		remove_variable = bpm_impeachment_target
+		bpm_clear_government_toppling = yes
+		
+	}
+}
+
+# The toppling failed in legislature (END)
+bpm_topple_government.6 = {
+	type = country_event
+	placement = root
+
+    on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/europenorthamerica/political_extremism"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = bpm_topple_government.6.t
+	desc = bpm_topple_government.6.d
+	flavor = bpm_topple_government.6.f
+	duration = 1
+    
+    event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}		
+	
+	cancellation_trigger = {
+		NOT = { has_variable = bpm_currently_toppling_government }
+	}
+
+	option = { 
+		name = bpm_topple_government.6.a
+		default_option = yes
+
+		var:bpm_toppled_party = {
+			every_member = {
+				add_modifier = {
+					name = bpm_party_succesfully_prevented_topple_government
+					months = short_modifier_time
+					is_decaying = yes
+				}
+			}
+		}
+		remove_variable = bpm_impeachment_target
+		bpm_clear_government_toppling = yes
+		
+	}
+}

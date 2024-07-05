@@ -173,10 +173,11 @@ bpm_clear_upgradeable_country_modifier = {
 }
 
 bpm_select_target_parties_for_topple_motion = {
-		# Select the ruling party to be toppled
-		# In a Presidential Republic, this is only president's party
-		# In other systems that is all the parties in the government
+	# Select the ruling party to be toppled
+	# In a Presidential Republic, this is only president's party
+	# In other systems that is all the parties in the government
 	if = {
+		save_scope_as = target_country_scope
 		limit = {
 			NOT = {
 				has_law = law_type:law_presidential_republic
@@ -191,7 +192,8 @@ bpm_select_target_parties_for_topple_motion = {
 			}
 			
 			save_scope_as = government_party_target
-			owner = { 
+
+			scope:target_country_scope = { 
 				add_to_variable_list = {
 					name = bpm_list_party_is_target_of_topple_government
 					target = scope:government_party_target
@@ -206,12 +208,12 @@ bpm_select_target_parties_for_topple_motion = {
 					bpm_is_strongest_ig_in_government = yes
 				}
 			}
-			save_scope_as = current_ruling_party
+			save_scope_as = ruling_party_scope
 		}
 
 		set_variable = {
 			name = bpm_toppled_party
-			target = scope:current_ruling_party
+			value = scope:ruling_party_scope
 		}
 	}
 	else_if = {
@@ -228,10 +230,43 @@ bpm_select_target_parties_for_topple_motion = {
 			value = scope:ruler_party_scope
 		}
 
+		set_variable = {
+			name = bpm_impeachment_target
+			value = ruler
+		}
+
 		add_to_variable_list = {
 			name = bpm_list_party_is_target_of_topple_government
 			target = scope:ruler_party_scope
 		}
 	}
 
+}
+
+bpm_clear_government_toppling = {
+	remove_variable = bpm_toppled_party
+	remove_variable = bpm_player_dislikes_enacting_law
+	remove_variable = bpm_impeachment_target
+	remove_variable = bpm_currently_toppling_government
+	remove_variable = bpm_ig_trying_to_topple_government
+	remove_modifier = bpm_opposition_motion_cannot_enact_law
+	clear_variable_list = bpm_list_party_is_target_of_topple_government
+
+	if = {
+		limit = {
+			is_enacting_law = law_type:law_repeatable_politics_topple_government
+		}
+		cancel_enactment = yes
+		if = {
+			limit = {
+				has_variable = bpm_enacting_law_before_impeachment
+				has_variable = bpm_enactment_phases_before_impeachment
+			}
+			start_enactment = var:bpm_enacting_law_before_impeachment
+			add_enactment_phase = var:bpm_enactment_phases_before_impeachment
+			remove_variable = bpm_enacting_law_before_impeachment
+			remove_variable = bpm_enactment_phases_before_impeachment
+		}
+	}
+	
 }

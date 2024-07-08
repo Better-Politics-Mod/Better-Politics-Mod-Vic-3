@@ -4,6 +4,12 @@
 	}
 }
 
+on_political_movement_formed = {
+	on_actions = {
+		on_bpm_political_movement_formed
+	}
+}
+
 on_yearly_pulse_country = {
 	on_actions = {
 		on_bpm_yearly_pulse_country
@@ -253,9 +259,10 @@ on_bpm_monthly_pulse_country = {
 		italian_springtime.3
 		peoples_springtime.6
 		bpm_france.3
+		bpm_clear_stubborness_utils.3
 	}
 	random_events = {
-		5 = 0
+		chance_of_no_event = 80
 		1 = coup.6
 	}
 
@@ -349,6 +356,34 @@ on_bpm_law_activated = {
 	}
 	effect = {
 		owner = { bpm_institution_workaround_effect = yes }
+
+		if = {
+			limit = {
+				game_date > 1836.1.1
+				owner = { is_revolutionary = no }
+			}
+			if = {
+				limit = {
+					OR = {
+						this.type = law_type:law_presidential_republic
+						this.type = law_type:law_parliamentary_republic
+					}
+				}
+				trigger_event = bpm_send_notification.1
+			}
+			else_if = {
+				limit = {
+					this.type = law_type:law_council_republic
+				}
+				trigger_event = bpm_send_notification.2
+			}
+			else_if = {
+				limit = {
+					this.type = law_type:law_monarchy
+				}
+				trigger_event = bpm_send_notification.3
+			}
+		}
 	}
 	events = {
 		peoples_springtime.15
@@ -598,6 +633,34 @@ on_bpm_revolution_start = {
 				}
 			}
 		}
+
+		if = {
+			limit = {
+				has_law = law_type:law_monarchy
+				scope:target ?= {
+					NOT = { has_law = law_type:law_monarchy }
+				}
+			}
+			set_variable = bpm_active_anti_monarchist_revolution
+		}
+		if = {
+			limit = {
+				NOT = { has_law = law_type:law_monarchy }
+				scope:target ?= {
+					has_law = law_type:law_monarchy
+				}
+			}
+			set_variable = bpm_active_monarchist_revolution
+		}
+		if = {
+			limit = {
+				NOT = { has_law = law_type:law_council_republic }
+				scope:target ?= {
+					has_law = law_type:law_council_republic
+				}
+			}
+			set_variable = bpm_active_socialist_revolution
+		}
 	}
 }
 
@@ -730,6 +793,31 @@ on_bpm_civil_war_won = {
 			}
 			trigger_event = { id = peoples_springtime.101 days = 60 popup = yes }
 		}
+
+		if = {
+			limit = {
+				bpm_country_is_bourgeois_republic = yes
+				has_variable = bpm_active_anti_monarchist_revolution
+			}
+			trigger_event = bpm_send_notification.1
+			remove_variable = bpm_active_anti_monarchist_revolution
+		}
+		else_if = {
+			limit = {
+				has_law = law_type:law_council_republic
+				has_variable = bpm_active_socialist_revolution	
+			}
+			trigger_event = bpm_send_notification.2
+			remove_variable = bpm_active_socialist_revolution
+		}
+		else_if = {
+			limit = {
+				has_law = law_type:law_monarchy
+				has_variable = bpm_active_monarchist_revolution
+			}
+			trigger_event = bpm_send_notification.3
+			remove_variable = bpm_active_monarchist_revolution
+		}
 	}
 }
 
@@ -837,6 +925,21 @@ on_bpm_brazil_first_election = {
 				c:BRZ ?= this
 			}
 			trigger_event = { id = 1834_additional_act.1 popup = yes }
+		}
+	}
+}
+
+on_bpm_political_movement_formed = {
+	effect = {
+		if = {
+			limit = {
+				desired_law ?= {
+					bpm_is_repeatable_law = yes
+				}
+			}
+			add_modifier = {
+				name = bpm_repeatable_movements_not_allowed
+			}
 		}
 	}
 }

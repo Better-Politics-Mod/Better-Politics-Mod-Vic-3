@@ -372,32 +372,6 @@ liberal_party = {
 		}
 		if = {
 			limit = {
-				leader = { has_variable = liberal_party_leader }
-				OR = { 
-					has_variable = bpm_2nd_party_system 
-					NOT = { this = c:USA }
-				}
-			}
-			add = {
-				value = 100
-				desc = "bpm_historical_leader"
-			}
-		}
-		if = {
-			limit = {
-				leader = { has_variable = anti_liberal_party_leader }
-				OR = { 
-					has_variable = bpm_2nd_party_system 
-					NOT = { this = c:USA }
-				}
-			}
-			add = {
-				value = -100
-				desc = "bpm_historical_leader"
-			}
-		}
-		if = {
-			limit = {
 				var:bpm_current_party ?= {
 					is_party_type = liberal_party
 					has_party_member = prev
@@ -430,110 +404,6 @@ liberal_party = {
 					multiply = 3
 				}
 				desc = "bpm_from_moderatism"
-			}
-		}
-		if = {
-			limit = {
-				owner = { 
-					this = c:USA 
-					has_variable = bpm_2nd_party_system
-				}
-			}
-			if = {
-				limit = { 
-					OR = {
-						is_interest_group_type = ig_armed_forces
-						is_interest_group_type = ig_industrialists
-						is_interest_group_type = ig_radicals
-					}
-				}
-				add = {
-					value = 25
-					desc = "bpm_second_party_system"
-				}
-			}
-		}
-		if = {
-			limit = {
-				owner = { 
-					this = c:USA
-					OR = {
-						has_variable = bpm_divided_south
-						has_variable = bpm_whig_south
-					}
-					has_variable = bpm_2nd_party_system
-					bpm_country_has_unfree_labor = yes
-				}
-			}
-			if = {
-				limit = {
-					is_interest_group_type = ig_landowners 
-				}
-				add = {
-					value = 25
-					desc = "bpm_second_party_system"
-				}
-			}
-		}
-		if = {
-			limit = {
-				owner = { 
-					this = c:USA 
-					has_variable = bpm_2nd_party_system
-					bpm_country_has_unfree_labor = yes
-				}
-			}
-			if = {
-				limit = { 
-					is_interest_group_type = ig_conservatives 
-				}
-				add = {
-					value = 50
-					desc = "bpm_second_party_system"
-				}
-			}
-		}
-		if = {
-			limit = {
-				owner = { 
-					this = c:USA 
-					NOT = { has_variable = bpm_2nd_party_system }
-					NOT = { has_global_variable = american_civil_war }
-					bpm_country_has_unfree_labor = yes
-				}
-			}
-			if = {
-				limit = { 
-					OR = {
-						is_interest_group_type = ig_socialists
-						is_interest_group_type = ig_agrarian_populists
-						is_interest_group_type = ig_armed_forces
-						is_interest_group_type = ig_industrialists
-						is_interest_group_type = ig_radicals
-					}
-				}
-				add = {
-					value = 25
-					desc = "bpm_second_party_system"
-				}
-			}
-		}
-		if = {
-			limit = {
-				owner = { 
-					this = c:USA 
-					has_variable = bpm_whig_south
-					has_variable = bpm_2nd_party_system
-				}
-			}
-			if = {
-				limit = {
-					is_interest_group_type = ig_reactionaries
-				}
-				add = {
-					value = 75
-					desc = "bpm_second_party_system"
-				}
 			}
 		}
 		if = {
@@ -1137,6 +1007,123 @@ liberal_party = {
 				value = -30
 				desc = "bpm_strongly_anti_electoralist"
 			}
-		}	
+		}
+
+		# ===========================================================================
+		# Hardcoded party affiliation
+		# ===========================================================================
+		# Generic
+		if = {
+			limit = { NOT = { owner = c:USA } }
+			if = {
+				limit = { leader = { has_variable = liberal_party_leader } }
+				add = {
+					value = 100
+					desc = "bpm_historical_leader"
+				}
+			}
+			else_if = {
+				limit = { leader = { has_variable = anti_liberal_party_leader } }
+				add = {
+					value = -100
+					desc = "bpm_historical_leader"
+				}
+			}
+		}
+		# USA
+		else_if = {
+			limit = { owner = c:USA }
+			# Second Party System
+			if = {
+				limit = { owner = { has_variable = bpm_2nd_party_system } }
+				if = {
+					limit = { leader = { has_variable = liberal_party_leader } }
+					add = {
+						value = 100
+						desc = "bpm_historical_leader"
+					}
+				}
+				else_if = {
+					limit = { leader = { has_variable = anti_liberal_party_leader } }
+					add = {
+						value = -100
+						desc = "bpm_historical_leader"
+					}
+				}
+				if = {
+					limit = { 
+						OR = {
+							is_interest_group_type = ig_armed_forces
+							is_interest_group_type = ig_industrialists
+							is_interest_group_type = ig_radicals
+						}
+					}
+					add = {
+						value = 25
+						desc = "bpm_second_party_system"
+					}
+				}
+				if = { # Only if slavery is active
+					limit = { owner = { bpm_country_has_unfree_labor = yes } }
+					if = {
+						limit = { is_interest_group_type = ig_conservatives }
+						add = {
+							value = 50
+							desc = "bpm_second_party_system"
+						}
+					}
+					else_if = { # Landowners are Whigs only if Democrats haven't won them over
+						limit = {
+							is_interest_group_type = ig_landowners
+							owner = { 
+								OR = {
+									has_variable = bpm_divided_south
+									has_variable = bpm_whig_south
+								}
+							}
+						}
+						add = {
+							value = 25
+							desc = "bpm_second_party_system"
+						}
+					}
+					else_if = { # Reactionaries are Whigs if Whigs have won them over
+						limit = {
+							is_interest_group_type = ig_reactionaries
+							owner = { has_variable = bpm_whig_south }
+						}
+						add = {
+							value = 75
+							desc = "bpm_second_party_system"
+						}
+					}			
+				}
+			}
+			# Third Party System, before Civil War/Abolition
+			else_if = {
+				limit = {
+					owner = { 
+						NOT = { has_variable = bpm_2nd_party_system }
+						NOT = { has_global_variable = american_civil_war }
+						bpm_country_has_unfree_labor = yes
+					}
+				}
+				if = {
+					limit = { 
+						OR = {
+							is_interest_group_type = ig_socialists
+							is_interest_group_type = ig_agrarian_populists
+							is_interest_group_type = ig_armed_forces
+							is_interest_group_type = ig_industrialists
+							is_interest_group_type = ig_radicals
+						}
+					}
+					add = {
+						value = 25
+						desc = "bpm_second_party_system"
+					}
+				}
+			}
+		}
 	}
 }

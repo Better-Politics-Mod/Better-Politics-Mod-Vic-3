@@ -265,6 +265,7 @@ on_bpm_monthly_pulse_country = {
 		peoples_springtime.6
 		bpm_france.3
 		bpm_clear_stubbornness_utils.3
+		bpm_colony_events.2
 	}
 	random_events = {
 		chance_of_no_event = 80
@@ -272,12 +273,35 @@ on_bpm_monthly_pulse_country = {
 	}
 
 	effect = {
+		if = {
+			limit = {
+				modifier:country_bpm_change_primary_culture_to_overlord = yes
+				NOT = { has_variable = bpm_colony_primary_culture_set_to_overlord }
+			}
+			trigger_event = { id = bpm_colony_events.1 days = 1 }
+		}
+		if = {
+			limit = {
+				modifier:country_bpm_change_primary_culture_to_overlord = yes
+				has_variable = bpm_current_overlord
+				NOT = { var:bpm_current_overlord = top_overlord }
+			}
+			trigger_event = { id = bpm_colony_events.1 days = 1 }
+		}
+		if = {
+			limit = {
+				modifier:country_bpm_change_primary_culture_to_overlord = no
+				has_variable = bpm_colony_primary_culture_set_to_overlord
+			}
+			bpm_colony_reset_primary_culture = yes
+		}
 		owner = { 
 			bpm_update_ai_cheats = yes
 			bpm_update_political_stability = yes
 			bpm_update_igs_current_party = yes
 			bpm_institution_workaround_effect = yes
 			bpm_auto_research = yes
+
 			if = {
 				limit = { is_player = yes }
 				bpm_rename_igs = yes
@@ -373,9 +397,41 @@ on_bpm_monthly_pulse_country = {
 	}
 }
 
+bpm_on_actions_colonial_check = {
+	effect = {
+		if = {
+			limit = {
+				NOT = { owner = { has_law = law_type:law_colonial_admin } }
+				owner = { has_variable = bpm_on_col_adm }
+			}
+			if = {
+				limit = {
+					is_subject = yes
+					is_subject_type = subject_type_puppet
+				}
+				change_subject_type = subject_type_dominion
+			}
+			remove_variable = bpm_on_col_adm
+			every_interest_group = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_landowners
+						is_interest_group_type = ig_industrialists
+						is_interest_group_type = ig_armed_forces
+					}
+				}
+				bpm_remove_all_dop_ideologies = yes
+				add_ideology = ideology_dop_placeholder
+				bpm_reorder_ideologies = yes
+			}
+		}
+	}
+}
+
 on_bpm_law_activated = {
 	on_actions = {
 		bpm_on_actions_stubbornness
+		bpm_on_actions_colonial_check
 	}
 	effect = {
 		owner = { bpm_institution_workaround_effect = yes }

@@ -1,0 +1,317 @@
+﻿ ### For je_populist_unrest
+
+ populist_unrest_progress_bar = {
+	name = "populist_unrest_progress_bar"
+	desc = "populist_unrest_progress_bar_desc"
+
+	default = yes
+
+	monthly_progress = {
+		if = {
+			limit = {
+				owner = {
+					any_scope_state = {
+						is_incorporated = yes
+						turmoil >= 0.10
+					}
+				}
+			}
+			add = {
+				desc = "populism_progress_from_radicals_tt"
+				owner = {
+					every_scope_state = {
+						limit = {
+							is_incorporated = yes
+							turmoil >= 0.10
+						}
+						add = this.turmoil
+					}
+				}
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					any_scope_state = {
+						is_incorporated = yes
+						loyalty >= 0.10
+					}
+				}
+			}
+			subtract = {
+				desc = "populism_progress_from_loyalists_tt"
+				owner = {
+					every_scope_state = {
+						limit = {
+							is_incorporated = yes
+							loyalty >= 0.10
+						}
+						add = this.loyalty
+					}
+				}
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					any_scope_state = {
+						is_incorporated = yes
+						state_unemployment_rate > 0
+					}
+				}
+			}
+			subtract = {
+				desc = "populism_progress_from_unemployment_tt"
+				owner = {
+					every_scope_state = {
+						limit = {
+							is_incorporated = yes
+							state_unemployment_rate > 0
+						}
+						add = this.state_unemployment_rate
+					}
+				}
+			}
+		}
+		add = {
+			desc = "populism_progress_from_pb_tt"
+			if = {
+				limit = {
+					owner = {
+						ig:ig_national_liberals = {
+							is_marginal = yes
+						}
+					}
+				}
+				value = -10
+			}
+			else_if = {
+				limit = {
+					owner = {
+						ig:ig_national_liberals = {
+							is_powerful = yes
+						}
+					}
+				}
+				value = 3
+			}
+			else = {
+				value = 0
+			}
+		}
+		if = {
+			limit = {
+				exists = owner.var:populism_progress_from_laws
+				NOT = {  
+					owner.var:populism_progress_from_laws = 0
+				}
+			}
+			add = {
+				desc = "populism_progress_from_laws_tt"
+				value = owner.var:populism_progress_from_laws
+			}
+		}
+		if = {
+			limit = {
+				exists = owner.var:populism_progress_var_add
+				NOT = {  
+					owner.var:populism_progress_var_add = 0
+				}
+			}
+			add = {
+				desc = "populism_progress_from_events_tt"
+				value = owner.var:populism_progress_var_add
+			}
+		}
+	}
+
+	start_value = 10
+	min_value = 0
+	max_value = 100
+
+ }
+
+ ### For je_matter_of_slavery
+
+ matter_of_slavery_progress_bar = {
+	name = "matter_of_slavery_progress_bar"
+	desc = "matter_of_slavery_progress_bar_desc"
+
+	default_green = yes
+
+	monthly_progress = {
+		if = {
+			limit = {
+				NOT = {
+					any_political_movement = {
+						is_political_movement_type = movement_to_preserve
+						OR = {
+							this.desired_law = law_type:law_legacy_slavery
+							this.desired_law = law_type:law_debt_slavery
+							this.desired_law = law_type:law_slave_trade
+						}
+					}
+				}
+			}
+			 # Towards Slaveowner Domination
+			if = {
+				limit = {
+					ig:ig_landowners = {
+						is_in_government = yes
+					}
+				}
+				subtract = {
+					desc = "slavery_progress_from_landowners_in_gov_tt"
+					value = 1
+				}
+			}
+			if = {
+				limit = {
+					ig:ig_landowners = {
+						is_powerful = yes
+					}
+				}
+				subtract = {
+					desc = "slavery_progress_from_landowners_powerful_tt"
+					value = 1
+				}
+			}
+			if = {
+				limit = {
+					has_modifier = brz_regency
+				}
+				subtract = {
+					desc = "slavery_progress_from_regency_tt"
+					value = 1
+				}
+			}
+			if = {
+				limit = {
+					ruler = {
+						OR = {
+							interest_group = {
+								is_interest_group_type = ig_landowners
+							}
+							has_ideology = ideology:ideology_slaver
+						}
+					}
+				}
+				subtract = {
+					desc = "slavery_progress_from_slaver_ruler_tt"
+					value = 1
+				}
+			}
+			if = {
+				limit = {
+					any_scope_character = {
+						filter = {
+							OR = {
+								has_role = admiral
+								has_role = general
+							}
+						}
+						OR = {
+							has_ideology = ideology:ideology_slaver
+							interest_group = {
+								is_interest_group_type = ig_landowners
+							}
+						}
+						percent >= 0.5
+					}
+				}
+				subtract = {
+					desc = "slavery_progress_from_slavers_tt"
+					value = 1
+				}
+			}
+			# Away from slaveowner Domination
+			if = {
+				limit = {
+					has_variable = var_slave_trade_suppression_var
+				}
+				add = {
+					desc = "slavery_progress_from_suppression_tt"
+					value = 1
+				}
+			}
+			if = {
+				limit = {
+					ig:ig_landowners = {
+						is_marginal = yes
+					}
+				}
+				add = {
+					desc = "slavery_progress_from_marginal_landowners_tt"
+					value = 1
+				}
+			}
+			if = {
+				limit = {
+					has_law = law_type:law_slave_trade
+					any_interest_group = {
+						is_in_government = yes
+						law_stance = {
+							law = law_type:law_slave_trade
+							value <= disapprove
+						}
+					}
+				}
+				add = {
+					desc = "from IG against Slave Trade In Goverment"
+					value = 1
+				}
+			}
+			if = {
+				limit = {
+					has_law = law_type:law_legacy_slavery
+					any_interest_group = {
+						is_in_government = yes
+						law_stance = {
+							law = law_type:law_legacy_slavery
+							value <= disapprove
+						}
+					}
+				}
+				add = {
+					desc = "from IG against Slavery In Goverment"
+					value = 1
+				}
+			}
+			if = {
+				limit = {
+					NOT = { 
+						has_law = law_type:law_slave_trade
+					}
+				}
+				add = {
+					desc = "slavery_progress_from_abolished_slave_trade_tt"
+					value = 1
+				}
+			}
+			if = {
+				limit = {
+					NOT = { 
+						has_modifier = brz_regency 
+					}
+				}
+				add = {
+					desc = "slavery_progress_from_ended_regency_tt"
+					value = 1
+				}
+			}
+			if = {
+				limit = {
+					has_variable = isabel_confirmed_heir_var
+				}
+				add = {
+					desc = "slavery_progress_from_isabel_tt"
+					value = 1
+				}
+			}
+		}
+	}
+
+	start_value = 180
+	min_value = 0
+	max_value = 360
+ }

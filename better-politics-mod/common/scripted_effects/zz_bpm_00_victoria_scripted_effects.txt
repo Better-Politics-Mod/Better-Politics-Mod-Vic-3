@@ -134,21 +134,19 @@ calculate_national_identity_progress = {
 				has_ideology = ideology:ideology_cit_liberal_nationalist
 				has_ideology = ideology:ideology_cit_nationalist
 				has_ideology = ideology:ideology_cit_multiethnic_nationalist
-				has_ideology = ideology:ideology_cit_segregationist
-				has_ideology = ideology:ideology_cit_ethnonationalist
-				has_ideology = ideology:ideology_cit_traditional_culture
+				has_ideology = ideology:ideology_mil_patriotic
+				has_ideology = ideology:ideology_jingoist
 			}
 		}
 		ROOT = {
-			set_variable = { name = ig_weight value = prev.ig_clout } 
-			change_variable = { name = ig_weight divide = 5 }
+			set_variable = { name = ig_weight value = prev.ig_clout }
 		}
 		if = {
 			limit = {
 				is_in_government = yes
 			}
 			ROOT = {
-				change_variable = { name = ig_weight multiply = 1.5 }
+				change_variable = { name = ig_weight multiply = 3 }
 			}
 		}
 		ROOT = {
@@ -224,32 +222,178 @@ calculate_national_identity_progress = {
 		}
 	}
 
-	#Promote National Values
-	set_variable = { name = national_identity_progress_from_law value = 0 }
-	if = {
-		limit = { has_modifier = bpm_repeatable_law_promote_patriotic_values_result }
-		change_variable = { name = national_identity_progress_from_law add = 0.5 }
-	}
-	
-
 	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_igs }
 	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_wars }
 	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_universities }
 	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_prestige }
 	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_homelands }
-	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_from_law }
 	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_var_add }
+}
+
+calculate_brazil_slavery_progress = {
+	set_variable = { name = brz_slavery_next value = 0 }
+	if = {
+		limit = {
+			NOT = {
+				any_political_movement = {
+					is_political_movement_type = movement_to_preserve
+					OR = {
+						this.desired_law = law_type:law_legacy_slavery
+						this.desired_law = law_type:law_debt_slavery
+						this.desired_law = law_type:law_slave_trade
+					}
+				}
+			}
+		}
+		 # Towards Slaveowner Domination
+		if = {
+			limit = {
+				ig:ig_landowners = {
+					is_in_government = yes
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = -1
+			}
+		}
+		if = {
+			limit = {
+				ig:ig_landowners = {
+					is_powerful = yes
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = -1
+			}
+		}
+		if = {
+			limit = {
+				has_modifier = brz_regency
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = -1
+			}
+		}
+		if = {
+			limit = {
+				ruler = {
+					OR = {
+						interest_group = {
+							is_interest_group_type = ig_landowners
+						}
+						has_ideology = ideology:ideology_slaver
+					}
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = -1
+			}
+		}
+		if = {
+			limit = {
+				any_scope_character = {
+					filter = {
+						OR = {
+							has_role = admiral
+							has_role = general
+						}
+					}
+					OR = {
+						has_ideology = ideology:ideology_slaver
+						interest_group = {
+							is_interest_group_type = ig_landowners
+						}
+					}
+					percent >= 0.5
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = -1
+			}
+		}
+		# Away from slaveowner Domination
+		if = {
+			limit = {
+				has_variable = var_slave_trade_suppression_var
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				ig:ig_landowners = {
+					is_marginal = yes
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				any_interest_group = {
+					is_in_government = yes
+					law_stance = {
+						law = law_type:law_slave_trade
+						value <= disapprove
+					}
+				}
+				#ig:ig_intelligentsia = {
+				#	is_in_government = yes
+				#}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				NOT = { 
+					has_law = law_type:law_slave_trade
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				NOT = { 
+					has_modifier = brz_regency 
+				}
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				has_variable = isabel_confirmed_heir_var
+			}
+			change_variable = {
+				name = brz_slavery_next
+				add = 1
+			}
+		}
+	}
 }
 
 calculate_caudillo_progress = {
 	set_variable = { name = caudillo_next value = 0 }
 	if = {
 		limit = {
-			any_interest_group = {
-				OR = {
-					has_ideology = ideology:ideology_mil_institutional_militarist
-					has_ideology = ideology:ideology_dop_autocrat
-				}
+			ig:ig_armed_forces = {
 				is_powerful = yes
 			}
 		}
@@ -260,11 +404,7 @@ calculate_caudillo_progress = {
 	}
 	if = {
 		limit = {
-			any_interest_group = {
-				OR = {
-					has_ideology = ideology:ideology_mil_institutional_militarist
-					has_ideology = ideology:ideology_dop_autocrat
-				}
+			ig:ig_armed_forces = {
 				is_in_government = yes
 			}
 		}
@@ -289,11 +429,7 @@ calculate_caudillo_progress = {
 	}
 	if = {
 		limit = {
-			any_interest_group = {
-				OR = {
-					has_ideology = ideology:ideology_mil_institutional_militarist
-					has_ideology = ideology:ideology_dop_autocrat
-				}
+			ig:ig_armed_forces = {
 				is_marginal = yes
 			}
 		}
@@ -304,11 +440,7 @@ calculate_caudillo_progress = {
 	}
 	if = {
 		limit = {
-			any_interest_group = {
-				OR = {
-					has_ideology = ideology:ideology_mil_institutional_militarist
-					has_ideology = ideology:ideology_dop_autocrat
-				}
+			ig:ig_armed_forces = {
 				is_in_government = no
 			}
 		}

@@ -12,36 +12,10 @@ bpm_ig_law_support_total_value = {
 	if = {
 		limit = { owner = { enacting_any_law = yes } }
 		if = {
-			limit = {
-				is_insurrectionary = yes
-				# Trigger this if the revolutionary movement is not supporting the law
-				NOT = {
-					owner = {
-						any_political_movement = {
-							is_revolutionary_movement = yes
-							desired_law = prev.currently_enacting_law.type
-						}
-					}
-				}
-			}
+			limit = { is_insurrectionary = yes }
 			add = {
 				value = -999
 				desc = "bpm_ig_law_support_from_insurrectionary"
-			}
-		}
-
-		if = {
-			limit = { 
-				var:bpm_ig_enacting_law_change_steps > 0
-				owner = {
-					has_journal_entry = je_government_petition
-					has_variable = desired_law_var
-					var:desired_law_var.type = currently_enacting_law.type
-				}
-			}
-			add = {
-				value = 20
-				desc = "bpm_ig_law_support_from_petition"
 			}
 		}
 
@@ -54,15 +28,6 @@ bpm_ig_law_support_total_value = {
 			add = {
 				value = 20
 				desc = "bpm_ig_law_support_from_movement"
-			}
-		}
-		else_if = {
-			limit = {
-				owner = { has_variable = bpm_law_enactment_desired_by_revolution }
-			}
-			add = {
-				desc = "bpm_ig_law_support_from_insurrection_threat"
-				value = 10
 			}
 		}
 
@@ -178,6 +143,7 @@ bpm_law_enactment_ruler_effect_on_ig = {
 					has_variable = bpm_ig_enacting_law_change_steps
 				}
 			}
+			ig_approval >= 0
 		}
 		add = {
 			if = {
@@ -205,12 +171,6 @@ bpm_law_enactment_ruler_effect_on_ig = {
 			}
 			else = {
 				multiply = 0
-			}
-			multiply = {
-				value = ig_approval
-				divide = 5
-				min = 0
-				max = 1
 			}
 			desc = "bpm_ig_law_support_from_ruler"
 		}
@@ -316,17 +276,19 @@ bpm_law_enactment_ruler_approval = {
 	# Movement: 10
 	if = {
 		limit = { has_political_movement = currently_enacting_law.type }
-		add = {
-			value = 10
-			desc = "bpm_ruler_law_support_from_movement"
-		}
 		if = {
 			limit = {
-				has_variable = bpm_law_enactment_desired_by_revolution
+				any_political_movement = {
+					desired_law = prev.currently_enacting_law.type
+					any_supporting_interest_group = { is_insurrectionary = yes }
+				}
 			}
+			add = { value = 20 desc = "bpm_ruler_law_support_from_insurrection" }
+		}
+		else = {
 			add = {
-				desc = "bpm_ruler_law_support_from_insurrection"
-				value = 15
+				value = 10
+				desc = "bpm_ruler_law_support_from_movement"
 			}
 		}
 	}
@@ -345,52 +307,33 @@ bpm_law_enactment_ruler_approval = {
 		}
 	}
 	if = {
-		# Only applies to non-republics OR countries with no voting
-		limit = {
-			OR = {
-				bpm_country_is_republic = no
-				bpm_country_laws_no_voting = yes
-			}
-		}
-		if = {
-			limit = { ruler.age <= 12 }
-			add = {
-				value = 32
-				desc = "bpm_ruler_law_support_from_young"
-			}
-		}
-		else_if = {
-			limit = { ruler.age <= 16 }
-			add = {
-				value = 32
-				subtract = {
-					value = ruler.age
-					subtract = 12
-					multiply = 8
-				}
-				desc = "bpm_ruler_law_support_from_young"
-			}
-		}
-		else_if = {
-			limit = { ruler.age >= 66 }
-			add = {
-				value = ruler.age
-				subtract = 66
-				multiply = 2
-				max = 40
-				min = 0
-				desc = "bpm_ruler_law_support_from_old"
-			}
+		limit = { ruler.age <= 12 }
+		add = {
+			value = 32
+			desc = "bpm_ruler_law_support_from_young"
 		}
 	}
-
-	ruler ?= {
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			add = { 
-				value = var:bpm_law_enactment_approval_from_events
-				desc = "bpm_law_enactment_approval_from_events_desc"
-			}	
+	else_if = {
+		limit = { ruler.age <= 16 }
+		add = {
+			value = 32
+			subtract = {
+				value = ruler.age
+				subtract = 12
+				multiply = 8
+			}
+			desc = "bpm_ruler_law_support_from_young"
+		}
+	}
+	else_if = {
+		limit = { ruler.age >= 66 }
+		add = {
+			value = ruler.age
+			subtract = 66
+			multiply = 2
+			max = 40
+			min = 0
+			desc = "bpm_ruler_law_support_from_old"
 		}
 	}
 }
@@ -502,20 +445,6 @@ bpm_law_enactment_sway_modifiers_value = {
 			value = bpm_law_sway_construction_racket_effect_value
 			desc = "bpm_law_sway_construction_racket_used"
 		}
-	}
-	if = {
-		limit = { has_variable = bpm_law_sway_promise_used }
-		add = {
-			value = bpm_law_sway_promise_effect_value
-			desc = "bpm_law_sway_promise_used"
-		}
-	}
-	if = {
-		limit = { has_variable = bpm_law_enactment_approval_from_events }
-		add = { 
-			value = var:bpm_law_enactment_approval_from_events
-			desc = "bpm_law_enactment_approval_from_events_desc"
-		}	
 	}
 }
 

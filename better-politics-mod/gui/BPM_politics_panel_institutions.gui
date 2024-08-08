@@ -1,0 +1,958 @@
+types politics_panel_types
+{
+	type institution_icon = widget {
+		size = { 60 60 }
+		
+		icon = {
+			size = { 100% 100% }
+			texture = "gfx/interface/icons/institution_icons/institution_icon_bg.dds"
+		}
+		icon = {
+			size = { 100% 100% }
+			texture = "[Institution.GetIcon]"
+		}
+	}
+	
+	type politics_panel_institutions_content = vbox {
+		datacontext = "[GetPlayer]"
+		margin = { 10 10 }
+		layoutpolicy_horizontal = growing
+		layoutpolicy_vertical = growing
+		spacing = 8
+
+		### INFO TOP
+		hbox = {
+			datacontext = "[GetPlayer]"
+			layoutpolicy_horizontal = growing
+			margin = { 25 15 }
+
+			using = main_bg
+			
+			hbox = {
+				layoutpolicy_horizontal = growing
+				margin = { 15 10 }
+				spacing = 5
+				
+				background = {
+					using = entry_bg_simple
+				}
+				
+				textbox = {
+					layoutpolicy_horizontal = expanding
+					size = { 0 40 }
+					text = "INVESTMENT_TITLE"
+					align = nobaseline
+					elide = right
+				}
+				
+				hbox = {
+					spacing = 10
+					
+					icon = {
+						texture = "gfx/interface/politics_view/institution_level_icon.dds"
+						size = { 40 40 }
+					}
+					textbox = {
+						text = "[Country.GetInstitutionInvestment|v0]"
+						tooltip = "[Country.GetInstitutionInvestmentDesc]"
+						using = fontsize_xxl
+						align = nobaseline
+						elide = right
+						autoresize = yes
+					}
+				}
+			}
+			
+			widget = { 
+				size = { 10 10 }
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = growing
+				margin = { 15 10 }
+				spacing = 5
+				
+				background = {
+					using = entry_bg_simple
+				}
+				
+				textbox = {
+					layoutpolicy_horizontal = expanding
+					size = { 0 40 }
+					text = "COST_PER_INVESTMENT_TITLE"
+					align = nobaseline
+					elide = right
+				}
+
+				textbox = {
+					raw_text = "#v @bur![Country.GetInstitutionInvestmentBureaucracyFactor|0+]#!"
+					tooltip = "[Country.GetInstitutionInvestmentBureaucracyFactorDesc]"
+					using = fontsize_xxl
+					align = nobaseline
+					elide = right
+					autoresize = yes
+				}
+			}
+			
+			widget = {
+				size = { 30 45 }
+				icon = {
+					texture = "gfx/interface/politics_view/summary_arrow.dds"
+					size = { 20 45 }
+					parentanchor = center
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = growing
+				margin = { 15 10 }
+				spacing = 5
+				
+				background = {
+					using = entry_bg_simple
+				}
+				
+				textbox = {
+					layoutpolicy_horizontal = expanding
+					size = { 0 40 }
+					text = "WEEKLY_COSTS_TITLE"
+					align = nobaseline
+					elide = right
+				}
+
+				textbox = {
+					raw_text = "@bur!#v [Multiply_CFixedPoint(Country.GetInstitutionInvestmentBureaucracyCost,'(CFixedPoint)-1')|0+]#!"
+					tooltip = "[Country.GetInstitutionInvestmentBureaucracyCostDesc]"
+					using = fontsize_mega
+					align = nobaseline
+					elide = right
+					autoresize = yes
+				}
+			}
+		}
+
+		### INSTITUTION LIST RIGHT
+		vbox = {
+			layoutpolicy_vertical = preferred
+			layoutpolicy_horizontal = growing
+			visible = "[Not(Country.MakeScope.Var('bpm_cabinet_char_select').IsSet)]"
+
+			vbox = {
+				name = "institution_box"
+				datamodel = "[AccessPlayer.AccessInstitutions]"
+				visible = "[Not(IsDataModelEmpty(AccessPlayer.AccessInstitutions))]"
+				layoutpolicy_horizontal = growing
+				spacing = 5
+
+				item = {
+					vbox = {
+						name = institution_item
+						layoutpolicy_horizontal = growing
+						
+						using = entry_bg_fancy
+						
+						background = {
+							texture = "[Institution.GetBackground]"
+							fittype = centercrop
+							margin_top = -42
+							margin_bottom = -5
+							margin_right = -150
+							margin_left = 70
+							
+							modify_texture = {
+								texture = "gfx/interface/illustrations/institutions/institution_image_mask.dds"
+								spriteType = Corneredstretched
+								spriteborder = { 150 0 }
+								spriteborder_bottom = 50
+								spriteborder_right = 50
+								blend_mode = alphamultiply
+								texture_density = 2
+							}
+						}
+									
+						default_header_clean = {
+							blockoverride "header_mask" {
+								using = frame_small_mask_top
+							}
+							blockoverride "size" {
+								layoutpolicy_horizontal = growing
+								size = { 0 42 }
+							}
+							
+							blockoverride "textbox" {
+								hbox = {
+									margin = { 20 0 }
+									
+									textbox = {
+										layoutpolicy_horizontal = growing
+										size = { 0 30 }
+										raw_text = "[Institution.GetNameNoFormatting]#!"
+										default_format = "#title"
+										using = fontsize_large
+										align = nobaseline
+										elide = right
+									}
+									textbox = {
+										autoresize = yes
+										text = "INSTITUTION_CURRENT_LEVEL"
+										using = fontsize_large
+										align = right|nobaseline
+										elide = right
+										margin_right = 5
+									}
+									icon = {
+										texture = "gfx/interface/politics_view/institution_level_icon.dds"
+										size = { 25 25 }
+									}
+								}
+							}
+						}
+						
+						hbox = {
+							layoutpolicy_horizontal = growing
+							spacing = 10
+							margin = { 5 0 }
+							margin_right = 15
+
+							institution_icon = {
+								size = { 105 105 }
+								
+								using = tooltip_es
+								tooltipwidget = {
+									FancyTooltip_Institution = {}
+								}
+							}
+
+							container = {
+
+								visible = "[And(Institution.GetCountry.MakeScope.Var('bpm_has_cabinet').IsSet, Not(EqualTo_string(Institution.GetCustom('bpm_institution_type'), 'bpm_is_institution_unknown')))]"
+								# visible = "[EqualTo_string(Institution.GetNameNoFormatting, GetInstitutionType('institution_schools').GetNameNoFormatting)]"
+								widget = {
+									size = { 105 91 }
+									visible = "[Institution.GetCountry.MakeScope.Var(Institution.GetCustom('bpm_institution_type')).GetCharacter.IsValid]"
+									character_portrait_base_head = {
+										datacontext = "[Institution.GetCountry.MakeScope.Var(Institution.GetCustom('bpm_institution_type')).GetCharacter]"
+										using = tooltip_above
+										blockoverride "show_hat" {}
+										parentanchor = top|left
+										blockoverride "highlight" {}
+										blockoverride "rank_icon" {}
+
+										blockoverride "portrait_size" {
+											size = { 96 96 }
+										}
+										blockoverride "icon_size" {
+											size = { 0 0 }
+										}
+										tooltip = "[Institution.GetCustom('bpm_institution_type')]"
+										size = {91 91}
+									}
+
+									icon = {
+										datacontext = "[Institution.GetCountry.MakeScope.Var(Institution.GetCustom('bpm_institution_type')).GetCharacter.GetIdeology]"
+										texture = "[Ideology.GetTexture]"
+										tooltipwidget = {
+											FancyTooltip_Ideology = {}
+										}
+										size = { 40 40 }
+										parentanchor = bottom|right
+									}
+								}
+
+								widget = {
+									size = { 105 91 }
+									visible = "[Not(Institution.GetCountry.MakeScope.Var(Institution.GetCustom('bpm_institution_type')).GetCharacter.IsValid)]"
+
+									add_character_button = {
+										name = "recruit_cabinet_minister"
+										size = { 96 96 }
+										parentanchor = center
+
+										blockoverride "tooltip" {
+											tooltip = "TODO"
+										}
+
+										blockoverride "onclick" {
+											onclick = "[GetScriptedGui('bpm_CAB_toggle_char_select').Execute(GuiScope.SetRoot(Institution.MakeScope).End)]"
+										}
+									}
+								}
+							}
+
+							textbox = {
+								text = "[Institution.GetModifierDesc]"
+								align = left|nobaseline
+								elide = right
+								
+								autoresize = yes
+								# have to have this size here to avoid the text pushing out other stuff ( it is adapted for lowest resolution )
+								# https://beta.paradoxplaza.com/browse/PSGE-1949
+								minimumsize = { 400 -1 }
+								maximumsize = { 400 -1 }
+								multiline = yes
+								margin = { 0 10 }
+							}
+							
+
+
+
+							# empty growing widget since there is no other widget growing.
+							widget = {
+								layoutpolicy_horizontal = growing
+								layoutpolicy_vertical = growing
+							}
+							
+							# LEVEL BAR
+							container = {
+								minimumsize = { -1 110 }
+								
+								#current progress / cancel
+								widget = {
+								
+									flowcontainer = {
+										resizeparent = yes
+										visible = "[IsValid( Institution.StopSizeChange )]"
+										parentanchor = vcenter
+										direction = vertical
+										spacing = 0
+										margin = { 0 10 }
+										
+										alpha = 0
+										position = { 100 0 }
+										
+										state = {
+											name = _show
+											duration = 0.3
+											alpha = 1
+											position_x = 0
+											using = Animation_Curve_Default
+										}
+										state = {
+											name = _hide
+											duration = 0.3
+											alpha = 0
+											position_x = 100
+											using = Animation_Curve_Default
+										}
+										
+										textbox = {
+											text = "INSTITUTION_LEVEL_CHANGE"
+											align = center|nobaseline
+											elide = right
+											parentanchor = hcenter
+											using = fontsize_large
+											
+											autoresize = yes
+											minimumsize = { 270 -1 }
+											maximumsize = { 270 -1 }
+											multiline = yes
+										}
+										textbox = {
+											text = "[Institution.GetTimeToReachTargetLevelDesc]"
+											align = center|nobaseline
+											elide = right
+											parentanchor = hcenter
+											
+											autoresize = yes
+											minimumsize = { 270 -1 }
+											maximumsize = { 270 -1 }
+											multiline = yes
+											
+											margin_bottom = 5
+										}
+										
+										button = {
+											using = default_button_action
+											size = { 200 35 }
+											text = "CANCEL"
+											parentanchor = hcenter
+											using = close_button_sound
+											
+											onclick = "[Execute( Institution.StopSizeChange )]"
+										}
+									}
+								}
+								
+								#bar
+								container = {
+									parentanchor = vcenter
+									position = { 200 0 }
+									
+									#track
+									flowcontainer = {
+										parentanchor = vcenter
+										datamodel = "[Institution.AccessInvestmentLevels]"
+										
+										item = {
+											widget = {
+												size = { 120 100 }
+												
+												# dotted line
+												container = {
+													visible = "[And(Not(InstitutionInvestmentLevel.IsIncreasingToThisLevel), Not(InstitutionInvestmentLevel.IsDecreasingToThisLevel))]"
+													parentanchor = center
+													
+													icon = {
+														visible = "[GreaterThan_int32(InstitutionInvestmentLevel.GetLevel, '(int32)1')]"
+														using = track_line
+														size = { 54 4 }
+														alpha = 0.75
+													}
+												}
+												
+												# progress (increasing)
+												default_progressbar_horizontal = {
+													visible = "[InstitutionInvestmentLevel.IsIncreasing]"
+													position = { 2 0 }
+													parentanchor = center
+													
+													blockoverride "values" {
+														min = 0
+														max = 1
+														value = "[FixedPointToFloat(Institution.GetGrowthProgress)]"
+													}
+													
+													alpha = 0
+													size = { 52 0 }
+													
+													state = {
+														name = _show
+														next = show_2
+														alpha = 1
+														size = { 52 22 }
+														duration = 0.2
+														using = Animation_Curve_Default
+													}
+													state = {
+														name = show_2
+														size = { 52 18 }
+														duration = 0.2
+														using = Animation_Curve_Default
+													}
+													
+													state = {
+														name = _hide
+														duration = 0.5
+														alpha = 0
+														size = { 52 0 }
+														using = Animation_Curve_Default
+													}
+												}
+												
+												# progress (decreasing)
+												bad_progressbar_horizontal = {
+													visible = "[InstitutionInvestmentLevel.IsDecreasing]"
+													position = { -2 0 }
+													parentanchor = center
+													
+													blockoverride "values" {
+														min = 0
+														max = 1
+														value = "[FixedPointToFloat(Institution.GetShrinkProgress)]"
+													}
+													
+													alpha = 0
+													size = { 52 0 }
+													
+													state = {
+														name = _show
+														next = show_2
+														alpha = 1
+														size = { 52 22 }
+														duration = 0.2
+														using = Animation_Curve_Default
+													}
+													state = {
+														name = show_2
+														size = { 52 18 }
+														duration = 0.2
+														using = Animation_Curve_Default
+													}
+													
+													state = {
+														name = _hide
+														duration = 0.5
+														alpha = 0
+														size = { 52 0 }
+														using = Animation_Curve_Default
+													}
+												}
+												
+												# arrows (currently increasing this level)
+												widget = {
+													visible = "[InstitutionInvestmentLevel.IsIncreasingToThisLevel]"
+													using = default_fade_in_out
+													size = { 56 14 }
+													position = { 1 0 }
+													parentanchor = center
+													scissor = yes
+													alpha = 0.75
+													
+													icon = {
+														texture = "gfx/interface/backgrounds/track_line_arrow.dds"
+														size = { 54 100% }
+														
+														state = {
+															trigger_on_create = yes
+															name = 1
+															next = 2
+															duration = 0
+															position_x = 0
+														}
+														state = {
+															name = 2
+															next = 1
+															duration = 4
+															position_x = 54
+														}
+													}
+													icon = {
+														texture = "gfx/interface/backgrounds/track_line_arrow.dds"
+														size = { 54 100% }
+														
+														state = {
+															trigger_on_create = yes
+															name = 1
+															next = 2
+															duration = 0
+															position_x = -54
+														}
+														state = {
+															name = 2
+															next = 1
+															duration = 4
+															position_x = 0
+														}
+													}
+												}
+												
+												# arrows (currently decreasing this level)
+												widget = {
+													visible = "[InstitutionInvestmentLevel.IsDecreasingToThisLevel]"
+													using = default_fade_in_out
+													size = { 56 14 }
+													position = { -1 0 }
+													parentanchor = center
+													scissor = yes
+													alpha = 0.75
+													
+													icon = {
+														texture = "gfx/interface/backgrounds/track_line_arrow.dds"
+														mirror = horizontal
+														size = { 54 100% }
+														
+														state = {
+															trigger_on_create = yes
+															name = 1
+															next = 2
+															duration = 0
+															position_x = 0
+														}
+														state = {
+															name = 2
+															next = 1
+															duration = 4
+															position_x = -54
+														}
+													}
+													icon = {
+														texture = "gfx/interface/backgrounds/track_line_arrow.dds"
+														mirror = horizontal
+														size = { 54 100% }
+														
+														state = {
+															trigger_on_create = yes
+															name = 1
+															next = 2
+															duration = 0
+															position_x = 54
+														}
+														state = {
+															name = 2
+															next = 1
+															duration = 4
+															position_x = 0
+														}
+													}
+												}
+											}
+										}
+									}
+									
+									#icons
+									flowcontainer = {
+										position = { 60 0 }
+										parentanchor = vcenter
+										datamodel = "[Institution.AccessInvestmentLevels]"
+
+										item = {
+											widget = {
+												size = { 120 100 }
+								
+												container = {
+													visible = "[LessThanOrEqualTo_int32(InstitutionInvestmentLevel.GetLevel, Institution.GetMaxLevel)]"
+													parentanchor = center
+													alpha = 0
+													
+													state = {
+														name = _show
+														duration = 0.5
+														alpha = 1
+														using = Animation_Curve_Default
+													}
+													
+													state = {
+														name = _hide
+														duration = 0.5
+														alpha = 0
+														using = Animation_Curve_Default
+													}		
+												
+													# button to change to this level
+													button_icon_round_big_action = {
+														visible = "[And(Not(InstitutionInvestmentLevel.IsTargetLevel),Not(EqualTo_int32(InstitutionInvestmentLevel.GetLevel, Institution.GetInvestmentLevel)))]"
+														size = { 60 60 }
+														using = default_fade_in_out
+														parentanchor = center
+														using = confirm_button_sound
+														
+														blockoverride "icon" {
+															texture = "[Institution.GetIcon]"
+														}
+														blockoverride "icon_size" {
+															size = { 50 50 }
+														}
+														
+														enabled = "[IsValid( Institution.StartChangingLevelTo( InstitutionInvestmentLevel.GetLevel ) )]"
+														onclick = "[Execute( Institution.StartChangingLevelTo( InstitutionInvestmentLevel.GetLevel ) )]"
+														tooltip = "[Institution.GetChangeLevelDesc( InstitutionInvestmentLevel.GetLevel )]"
+														using = tooltip_nw
+														
+														state = {
+															name = _show
+															duration = 0.5
+															alpha = 1
+															scale = 1
+															using = Animation_Curve_Default
+														}
+														
+														state = {
+															name = _hide
+															duration = 0.5
+															alpha = 0
+															scale = 0
+															using = Animation_Curve_Default
+														}
+													}
+
+													# current level
+													widget = {
+														size = { 100 100 }
+														visible = "[EqualTo_int32(InstitutionInvestmentLevel.GetLevel, Institution.GetInvestmentLevel)]"
+														tooltip = "[Institution.GetChangeLevelDesc( InstitutionInvestmentLevel.GetLevel )]"
+														using = tooltip_nw
+														
+														state = {
+															name = _show
+															on_start = "[PdxGuiWidget.FindChild('bg').InterruptThenTriggerAnimation('hide','show')]"
+															on_start = "[PdxGuiWidget.FindChild('icon').InterruptThenTriggerAnimation('hide','show')]"
+															on_start = "[PdxGuiWidget.FindChild('glow').InterruptThenTriggerAnimation('hide','show')]"
+															on_start = "[PdxGuiWidget.FindChild('icon').InterruptThenTriggerAnimation('shimmer_hide','shimmer_show')]"
+														}
+														state = {
+															name = _hide
+															on_start = "[PdxGuiWidget.FindChild('bg').InterruptThenTriggerAnimation('show','hide')]"
+															on_start = "[PdxGuiWidget.FindChild('icon').InterruptThenTriggerAnimation('show','hide')]"
+															on_start = "[PdxGuiWidget.FindChild('glow').InterruptThenTriggerAnimation('show','hide')]"
+															on_start = "[PdxGuiWidget.FindChild('icon').InterruptThenTriggerAnimation('shimmer_show','shimmer_hide')]"
+														}
+														
+														icon = {
+															name = bg
+															size = { 90 105 }
+															texture = "gfx/interface/politics_view/institution_current_level.dds"
+															parentanchor = center
+															
+															state = {
+																name = show
+																duration = 0.5
+																alpha = 1
+																scale = 1
+																using = Animation_Curve_Default
+															}
+															
+															state = {
+																name = hide
+																duration = 0.5
+																alpha = 0
+																scale = 0
+																using = Animation_Curve_Default
+															}
+														}
+														
+														icon = {
+															name = glow
+															using = rotate_glow_animation_02
+															size = { 100% 100% }
+															parentanchor = center
+															alpha = 0
+															scale = 0
+															
+															state = {
+																name = show
+																next = show2
+																duration = 0.7
+																alpha = 1
+																scale = 3
+															}
+															
+															state = {
+																name = show2
+																duration = 1.5
+																alpha = 0
+																scale = 1.5
+																using = Animation_Curve_EaseOut
+															}
+															
+															state = {
+																name = hide
+																alpha = 0
+																scale = 0
+															}
+														}
+														
+														icon = {
+															name = icon
+															size = { 80 80 }
+															texture = "[Institution.GetIcon]"
+															parentanchor = center
+															
+															state = {
+																name = show
+																next = show2
+																alpha = 0
+																scale = 0
+															}
+															
+															state = {
+																name = show2
+																next = show3
+																duration = 0.4
+																alpha = 1
+																scale = 1.2
+																using = Animation_Curve_Default
+															}
+															
+															state = {
+																name = show3
+																duration = 0.2
+																scale = 1
+																using = Animation_Curve_Default
+															}
+															
+															state = {
+																name = hide
+																duration = 0.5
+																alpha = 0
+																scale = 0
+																using = Animation_Curve_Default
+															}
+															
+															#shimmer
+															modify_texture = {
+																name = "glow"
+																texture = "gfx/interface/animation/shimmer.dds"
+																blend_mode = colordodge
+																translate_uv = { 1 1 }
+															}
+
+															state = {
+																name = shimmer_show
+																delay = 0.5
+																duration = 2
+																using = Animation_Curve_Default
+
+																modify_texture = {
+																	name = "glow"
+																	translate_uv = { -1 -1 }
+																}
+															}
+
+															
+															state = {
+																name = shimmer_hide
+																duration = 0
+
+																modify_texture = {
+																	name = "glow"
+																	translate_uv = { 1 1 }
+																}
+															}
+														}
+													}
+												}
+												
+												# max / capped level
+												icon = {
+													visible = "[GreaterThan_int32(InstitutionInvestmentLevel.GetLevel, Institution.GetMaxLevel)]"
+													size = { 60 60 }
+													using = circle_bg_simple_dark
+													parentanchor = center
+													tooltip = "[Institution.GetChangeLevelDesc( InstitutionInvestmentLevel.GetLevel )]"
+													using = tooltip_nw
+													
+													icon = {
+														size = { 40 40 }
+														texture = "gfx/interface/politics_view/institution_max_cap.dds"
+														parentanchor = center
+													}
+												}	
+												
+												# currently increasing or decreasing towards this level
+												widget = {
+													visible = "[InstitutionInvestmentLevel.IsTargetLevel]"
+													size = { 100% 100% }
+													parentanchor = center
+													
+													state = {
+														name = _show
+														on_start = "[PdxGuiWidget.FindChild('glow').InterruptThenTriggerAnimation('hide','show')]"
+														on_start = "[PdxGuiWidget.FindChild('selection').InterruptThenTriggerAnimation('hide','show')]"
+													}
+													state = {
+														name = _hide
+														on_start = "[PdxGuiWidget.FindChild('glow').InterruptThenTriggerAnimation('show','hide')]"
+														on_start = "[PdxGuiWidget.FindChild('selection').InterruptThenTriggerAnimation('show','hide')]"
+													}
+													
+													icon = {
+														size = { 60 60 }
+														using = circle_bg_simple
+														parentanchor = center
+														tooltip = "[Institution.GetChangeLevelDesc( InstitutionInvestmentLevel.GetLevel )]"
+														using = tooltip_nw
+													}
+														
+													icon = {
+														texture = "[Institution.GetIcon]"
+														size = { 50 50 }
+														parentanchor = center
+													}
+													icon = {
+														name = glow
+														using = rotate_glow_animation_02
+														size = { 100% 100% }
+														parentanchor = center
+														alpha = 0.4
+														scale = 1.3
+														
+														state = {
+															name = show
+															next = show_2
+															alpha = 1
+															scale = 1.3
+														}
+														state = {
+															name = show_2
+															next = show_3
+															alpha = 1
+															scale = 1.8
+															duration = 0.3
+															using = Animation_Curve_Default
+														}
+														state = {
+															name = show_3
+															alpha = 0.4
+															scale = 1.3
+															duration = 0.7
+															using = Animation_Curve_Default
+														}
+														
+														state = {
+															name = hide
+															duration = 0.5
+															alpha = 0
+															using = Animation_Curve_Default
+														}
+													}
+													icon = {
+														name = selection
+														using = highlighted_circle_selection_small
+														size = { 64 64 }
+														
+														alpha = 0
+														scale = 1.5
+														
+														state = {
+															name = show
+															duration = 0.35
+															alpha = 1
+															scale = 1
+															using = Animation_Curve_Default
+														}
+														
+														state = {
+															name = hide
+															duration = 0.5
+															alpha = 0
+															scale = 1.5
+															using = Animation_Curve_Default
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+        vbox = {
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = expanding
+            using = default_fade_in_out
+
+            visible = "[Country.MakeScope.Var('bpm_cabinet_char_select').IsSet]"
+
+            vbox = {
+                layoutpolicy_horizontal = expanding
+                spacing = 10
+                margin = { 20 10 }
+
+                datamodel = "[GetPlayer.MakeScope.GetList('bpm_CAB_char_select_pool')]"
+
+                item = {
+                    cabinet_pool = {}
+                }
+            }
+
+            empty_state_dynamic_width = {
+                #layoutpolicy_vertical = expanding
+                size = { 0 100 }
+                visible = "[IsDataModelEmpty(GetExilePool.GetExiles)]"
+                text = "NO_EXILED_AGITATORS"
+            }
+
+            expand = {}
+        }
+
+		textbox = {
+			visible = "[IsDataModelEmpty(AccessPlayer.AccessInstitutions)]"
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			align = hcenter|nobaseline
+			text = "INSTITUTION_EMPTY_STATE"
+			autoresize = yes
+			using = fontsize_xxl
+		}
+		
+		widget = {
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = expanding
+		}
+	}
+}

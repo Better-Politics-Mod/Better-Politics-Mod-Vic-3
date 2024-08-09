@@ -1,202 +1,21 @@
-bpm_add_character_to_cabinet = {
-    if = {
-        limit = {
-            owner = { 
-                has_variable = bpm_cabinet_char_select
-            }
-        }
-        set_variable = {
-            name = bpm_cabinet_minister
-            value = owner.var:bpm_cabinet_char_select
-        }
-        save_scope_value_as = {
-            name = addrem
-            value = yes
-        }
-        bpm_addrem_cabinet = yes
-    }
+bpm_remove_institution_modifiers_schools = {
+   remove_modifier = bpm_schools_agpops_modifier
+   remove_modifier = bpm_schools_anarchists_modifier
+   remove_modifier = bpm_schools_cons_modifier
+   remove_modifier = bpm_schools_fash_modifier
+   remove_modifier = bpm_schools_libs_modifier
+   remove_modifier = bpm_schools_putsch_modifier
+   remove_modifier = bpm_schools_lefts_modifier
+   remove_modifier = bpm_schools_commies_modifier
+   remove_modifier = bpm_schools_military_modifier
+   remove_modifier = bpm_schools_pb_modifier
+   remove_modifier = bpm_schools_devout_modifier
+   remove_modifier = bpm_schools_capis_modifier
+   remove_modifier = bpm_schools_intel_modifier
+   remove_modifier = bpm_schools_ruries_modifier
+   remove_modifier = bpm_schools_unions_modifier
 }
 
-bpm_remove_character_from_cabinet = {
-    if = {
-        limit = {
-            has_variable = bpm_cabinet_minister
-        }
-
-        save_scope_value_as = {
-            name = addrem
-            value = no
-        }
-        bpm_addrem_cabinet = yes
-
-        remove_variable = bpm_cabinet_minister
-
-    }
-}
-
-# --CABGENSCRIPT--
-bpm_addrem_cabinet = {
-    var:bpm_cabinet_minister ?= {
-        if = {
-            limit = {
-                type = owner.institution:institution_schools.type
-            }
-            owner = { 
-                if = {
-                    limit = {
-                        scope:addrem = yes
-                    }
-                    set_variable = {
-                        name = bpm_is_institution_schools
-                        value = scope:actor
-                    }
-                }
-                else = {
-                    remove_variable = bpm_is_institution_schools
-                }
-            }
-        }
-        else_if = {
-            limit = {
-                type = owner.institution:institution_centralization.type
-            }
-            owner = { 
-                if = {
-                    limit = {
-                        scope:addrem = yes
-                    }
-                    set_variable = {
-                        name = bpm_is_institution_centralization
-                        value = scope:actor
-                    }
-                }
-                else = {
-                    remove_variable = bpm_is_institution_centralization
-                }
-            }
-        }
-        else_if = {
-            limit = {
-                type = owner.institution:institution_police.type
-            }
-            owner = { 
-                if = {
-                    limit = {
-                        scope:addrem = yes
-                    }
-                    set_variable = {
-                        name = bpm_is_institution_police
-                        value = scope:actor
-                    }
-                }
-            }
-            else = {
-                remove_variable = bpm_is_institution_police
-            }
-        }
-        owner = {
-            bpm_reload_institution_modifiers = yes
-        }
-    }
-    
-}
-
-bpm_fix_cabinet_pool = {
-    while = {
-        count = 5
-        every_in_list = {
-            variable = bpm_CAB_char_select_pool
-            limit = {
-                is_character_alive = no
-            }
-            save_scope_as = actor
-            remove_list_variable = {
-                name = bpm_CAB_char_select_pool
-                target = scope:actor
-            }
-        }
-    }
-}
-
-bpm_pick_cabinet_minister = {
-    random_interest_group = {
-        limit = {
-            bpm_ig_enabled = yes
-            is_marginal = no
-        }
-        weight = {
-            base = 1
-            modifier = {
-                trigger = {
-                    is_in_government = yes
-                }
-                add = 10
-            }
-        }
-        save_scope_as = ranig
-    }
-
-    if = {
-        limit = {
-            NOT = { has_variable_list = bpm_CAB_char_select_pool }
-        }
-        add_to_variable_list = {
-            name = bpm_CAB_char_select_pool
-            target = scope:ranig.leader
-        }
-    }
-    else_if = {
-        limit = {
-            exists = scope:ranig
-        }
-        if = {
-            limit = {
-                NOT = { is_target_in_variable_list = { name = bpm_CAB_char_select_pool target = scope:ranig.leader } }
-            }
-            add_to_variable_list = {
-                name = bpm_CAB_char_select_pool
-                target = scope:ranig.leader
-            }
-        }
-        else = {
-            create_character = {
-                interest_group = scope:ranig
-                age = 18
-                on_created = {
-                    place_character_in_void = 10000
-                }
-                save_scope_as = ranchar
-            }
-            add_to_variable_list = {
-                name = bpm_CAB_char_select_pool
-                target = scope:ranchar
-            }
-        }
-    }
-}
-
-# --CABGENSCRIPT--
-# -- DO NOT TOUCH WITHOUT CONSULTING THE AUTHOR --
-# -- OR IF YOU KNOW WHAT YOU'RE DOING --
-bpm_reload_institution_modifiers = {
-
-    # Go through the character's IG and find the appropriate modifier
-    #if = {
-    #    limit = {
-    #        var:bpm_is_institution_schools.interest_group = {
-    #            is_interest_group_type = ig_ruralk_folk
-    #        }
-    #    }
-    #    add_modifier = {
-    #        name = bpm_CAB_institution_schools_rural_folk_modifier
-    #        multiplier = investment
-    #   }
-    #}
-    every_interest_group = {
-        remove_modifier = bpm_schools_attraction_modifier
-    }
-    bpm_reload_institution_modifiers_schools = yes
-}
 
 bpm_reload_institution_modifiers_schools = {
     institution:institution_schools = {
@@ -451,29 +270,203 @@ bpm_reload_institution_modifiers_schools = {
         var:bpm_is_institution_schools.interest_group = {
             add_modifier = {
                 name = bpm_schools_attraction_modifier
-                multiplier = owner.institution:institution_schools.investment
+                multiplier = institution:institution_schools.investment
             }
         }
 
     }
 }
 
-bpm_remove_institution_modifiers_schools = {
-    remove_modifier = bpm_schools_fallback_modifier
-    remove_modifier = bpm_schools_agpops_modifier
-    remove_modifier = bpm_schools_anarchists_modifier
-    remove_modifier = bpm_schools_cons_modifier
-    remove_modifier = bpm_schools_fash_modifier
-    remove_modifier = bpm_schools_libs_modifier
-    remove_modifier = bpm_schools_putsch_modifier
-    remove_modifier = bpm_schools_lefts_modifier
-    remove_modifier = bpm_schools_commies_modifier
-    remove_modifier = bpm_schools_military_modifier
-    remove_modifier = bpm_schools_pb_modifier
-    remove_modifier = bpm_schools_devout_modifier
-    remove_modifier = bpm_schools_capis_modifier
-    remove_modifier = bpm_schools_intel_modifier
-    remove_modifier = bpm_schools_ruries_modifier
-    remove_modifier = bpm_schools_unions_modifier
- }
- 
+bpm_schools_fallback_modifier_desc: "[GetStaticModifier('bpm_schools_fallback_modifier').GetDesc]"
+bpm_schools_agpops_modifier_desc: "[GetStaticModifier('bpm_schools_agpops_modifier').GetDesc]"
+bpm_schools_anarchists_modifier_desc: "[GetStaticModifier('bpm_schools_anarchists_modifier').GetDesc]"
+bpm_schools_cons_modifier_desc: "[GetStaticModifier('bpm_schools_cons_modifier').GetDesc]"
+bpm_schools_fash_modifier_desc: "[GetStaticModifier('bpm_schools_fash_modifier').GetDesc]"
+bpm_schools_libs_modifier_desc: "[GetStaticModifier('bpm_schools_libs_modifier').GetDesc]"
+bpm_schools_putsch_modifier_desc: "[GetStaticModifier('bpm_schools_putsch_modifier').GetDesc]"
+bpm_schools_lefts_modifier_desc: "[GetStaticModifier('bpm_schools_lefts_modifier').GetDesc]"
+bpm_schools_commies_modifier_desc: "[GetStaticModifier('bpm_schools_commies_modifier').GetDesc]"
+bpm_schools_military_modifier_desc: "[GetStaticModifier('bpm_schools_military_modifier').GetDesc]"
+bpm_schools_pb_modifier_desc: "[GetStaticModifier('bpm_schools_pb_modifier').GetDesc]"
+bpm_schools_devout_modifier_desc: "[GetStaticModifier('bpm_schools_devout_modifier').GetDesc]"
+bpm_schools_capis_modifier_desc: "[GetStaticModifier('bpm_schools_capis_modifier').GetDesc]"
+bpm_schools_intel_modifier_desc: "[GetStaticModifier('bpm_schools_intel_modifier').GetDesc]"
+bpm_schools_ruries_modifier_desc: "[GetStaticModifier('bpm_schools_ruries_modifier').GetDesc]"
+bpm_schools_unions_modifier_desc: "[GetStaticModifier('bpm_schools_unions_modifier').GetDesc]"
+bpm_schools_attraction_modifier_desc: "[GetStaticModifier('bpm_schools_attraction_modifier').GetDesc]"
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_agrarian_populists
+              }
+           }
+        }
+        localization_key = bpm_schools_agpops_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_anarchists
+              }
+           }
+        }
+        localization_key = bpm_schools_anarchists_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_conservatives
+                     is_interest_group_type = ig_reactionaries
+              }
+           }
+        }
+        localization_key = bpm_schools_cons_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_fascists
+              }
+           }
+        }
+        localization_key = bpm_schools_fash_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_liberals
+                     is_interest_group_type = ig_market_liberals
+                     is_interest_group_type = ig_national_liberals
+              }
+           }
+        }
+        localization_key = bpm_schools_libs_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_radicals
+                     is_interest_group_type = ig_reformist_socialists
+              }
+           }
+        }
+        localization_key = bpm_schools_lefts_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_revolutionist_socialists
+                     is_interest_group_type = ig_socialists
+              }
+           }
+        }
+        localization_key = bpm_schools_commies_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_armed_forces
+              }
+           }
+        }
+        localization_key = bpm_schools_military_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_petty_bourgeoisie
+              }
+           }
+        }
+        localization_key = bpm_schools_pb_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_devout
+              }
+           }
+        }
+        localization_key = bpm_schools_devout_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_industrialists
+                     is_interest_group_type = ig_landowners
+              }
+           }
+        }
+        localization_key = bpm_schools_capis_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_intelligentsia
+              }
+           }
+        }
+        localization_key = bpm_schools_intel_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_rural_folk
+              }
+           }
+        }
+        localization_key = bpm_schools_ruries_modifier_desc
+}
+
+text = {
+    trigger = {
+        interest_group = {
+            OR = {
+                     is_interest_group_type = ig_trade_unions
+              }
+           }
+        }
+        localization_key = bpm_schools_unions_modifier_desc
+}
+
+bpm_schools_agpops_modifier:0 "Minister of Education"
+bpm_schools_anarchists_modifier:0 "Minister of Education"
+bpm_schools_cons_modifier:0 "Minister of Education"
+bpm_schools_fash_modifier:0 "Minister of Education"
+bpm_schools_libs_modifier:0 "Minister of Education"
+bpm_schools_putsch_modifier:0 "Minister of Education"
+bpm_schools_lefts_modifier:0 "Minister of Education"
+bpm_schools_commies_modifier:0 "Minister of Education"
+bpm_schools_military_modifier:0 "Minister of Education"
+bpm_schools_pb_modifier:0 "Minister of Education"
+bpm_schools_devout_modifier:0 "Minister of Education"
+bpm_schools_capis_modifier:0 "Minister of Education"
+bpm_schools_intel_modifier:0 "Minister of Education"
+bpm_schools_ruries_modifier:0 "Minister of Education"
+bpm_schools_unions_modifier:0 "Minister of Education"

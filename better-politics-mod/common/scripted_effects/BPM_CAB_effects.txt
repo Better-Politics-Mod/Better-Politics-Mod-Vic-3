@@ -36,7 +36,7 @@ bpm_remove_character_from_cabinet = {
 
 # --CABGENSCRIPT--
 bpm_addrem_cabinet = {
-    var:bpm_cabinet_minister = {
+    var:bpm_cabinet_minister ?= {
         if = {
             limit = {
                 type = owner.institution:institution_schools.type
@@ -94,14 +94,35 @@ bpm_addrem_cabinet = {
                 remove_variable = bpm_is_institution_police
             }
         }
+        owner = {
+            bpm_reload_institution_modifiers = yes
+        }
     }
-    bpm_reload_institution_modifiers = yes
+    
+}
+
+bpm_fix_cabinet_pool = {
+    while = {
+        count = 5
+        every_in_list = {
+            variable = bpm_CAB_char_select_pool
+            limit = {
+                is_character_alive = no
+            }
+            save_scope_as = actor
+            remove_list_variable = {
+                name = bpm_CAB_char_select_pool
+                target = scope:actor
+            }
+        }
+    }
 }
 
 bpm_pick_cabinet_minister = {
     random_interest_group = {
         limit = {
             bpm_ig_enabled = yes
+            is_marginal = no
         }
         weight = {
             base = 1
@@ -124,7 +145,10 @@ bpm_pick_cabinet_minister = {
             target = scope:ranig.leader
         }
     }
-    else = {
+    else_if = {
+        limit = {
+            exists = scope:ranig
+        }
         if = {
             limit = {
                 NOT = { is_target_in_variable_list = { name = bpm_CAB_char_select_pool target = scope:ranig.leader } }
@@ -137,7 +161,10 @@ bpm_pick_cabinet_minister = {
         else = {
             create_character = {
                 interest_group = scope:ranig
-                female = yes
+                age = 18
+                on_created = {
+                    place_character_in_void = 10000
+                }
                 save_scope_as = ranchar
             }
             add_to_variable_list = {
@@ -150,23 +177,37 @@ bpm_pick_cabinet_minister = {
 
 # --CABGENSCRIPT--
 bpm_reload_institution_modifiers = {
-    bpm_remove_institution_modifiers = yes
+
+    # Go through the character's IG and find the appropriate modifier
+    #if = {
+    #    limit = {
+    #        var:bpm_is_institution_schools.interest_group = {
+    #            is_interest_group_type = ig_ruralk_folk
+    #        }
+    #    }
+    #    add_modifier = {
+    #        name = bpm_CAB_institution_schools_rural_folk_modifier
+    #        multiplier = investment
+    #   }
+    #}
+    institution:institution_schools = {
+        bpm_remove_institution_modifiers = yes
+    }
     if = {
         limit = {
-            has_variable = bpm_is_institution_schools
+            var:bpm_is_institution_schools = {
+                OR = {
+                    is_character_alive = No
+                    NOT = { exists = interest_group } 
+                }
+            }
         }
-        # Go through the character's IG and find the appropriate modifier
-        #if = {
-        #    limit = {
-        #        var:bpm_is_institution_schools.interest_group = {
-        #            is_interest_group_type = ig_ruralk_folk
-        #        }
-        #    }
-        #    add_modifier = {
-        #        name = bpm_CAB_institution_schools_rural_folk_modifier
-        #        multiplier = investment
-        #   }
-        #}
+        remove_variable = bpm_is_institution_schools
+    }
+    if = {
+        limit = {
+            owner = { has_variable = bpm_is_institution_schools }
+        }
         institution:institution_schools = {
             add_modifier = {
                 name = bpm_schools_fallback_modifier
@@ -179,6 +220,6 @@ bpm_reload_institution_modifiers = {
 
 bpm_remove_institution_modifiers = {
 
-    remove_modifier = bpm_test_school_mod
+    remove_modifier = bpm_schools_fallback_modifier
 
 }

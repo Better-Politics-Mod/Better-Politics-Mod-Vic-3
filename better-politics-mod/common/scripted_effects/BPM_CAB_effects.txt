@@ -1,47 +1,184 @@
 bpm_add_character_to_cabinet = {
-    
     if = {
         limit = {
             owner = { 
                 has_variable = bpm_cabinet_char_select
             }
-            
         }
-        set_variable = bpm_cabinet_minister
-        owner.var:bpm_cabinet_char_select = {
-            if = {
-                limit = {
-                    type = owner.institution:institution_schools.type
-                }
-                owner = { 
+        set_variable = {
+            name = bpm_cabinet_minister
+            value = owner.var:bpm_cabinet_char_select
+        }
+        save_scope_value_as = {
+            name = addrem
+            value = yes
+        }
+        bpm_addrem_cabinet = yes
+    }
+}
+
+bpm_remove_character_from_cabinet = {
+    if = {
+        limit = {
+            has_variable = bpm_cabinet_minister
+        }
+
+        save_scope_value_as = {
+            name = addrem
+            value = no
+        }
+        bpm_addrem_cabinet = yes
+
+        remove_variable = bpm_cabinet_minister
+
+    }
+}
+
+# --CABGENSCRIPT--
+bpm_addrem_cabinet = {
+    var:bpm_cabinet_minister = {
+        if = {
+            limit = {
+                type = owner.institution:institution_schools.type
+            }
+            owner = { 
+                if = {
+                    limit = {
+                        scope:addrem = yes
+                    }
                     set_variable = {
                         name = bpm_is_institution_schools
                         value = scope:actor
                     }
                 }
-            }
-            else_if = {
-                limit = {
-                    type = owner.institution:institution_centralization.type
+                else = {
+                    remove_variable = bpm_is_institution_schools
                 }
-                owner = { 
+            }
+        }
+        else_if = {
+            limit = {
+                type = owner.institution:institution_centralization.type
+            }
+            owner = { 
+                if = {
+                    limit = {
+                        scope:addrem = yes
+                    }
                     set_variable = {
                         name = bpm_is_institution_centralization
                         value = scope:actor
                     }
                 }
-            }
-            else_if = {
-                limit = {
-                    type = owner.institution:institution_police.type
+                else = {
+                    remove_variable = bpm_is_institution_centralization
                 }
-                owner = { 
+            }
+        }
+        else_if = {
+            limit = {
+                type = owner.institution:institution_police.type
+            }
+            owner = { 
+                if = {
+                    limit = {
+                        scope:addrem = yes
+                    }
                     set_variable = {
                         name = bpm_is_institution_police
                         value = scope:actor
                     }
                 }
             }
+            else = {
+                remove_variable = bpm_is_institution_police
+            }
         }
     }
+    bpm_reload_institution_modifiers = yes
+}
+
+bpm_pick_cabinet_minister = {
+    random_interest_group = {
+        limit = {
+            bpm_ig_enabled = yes
+        }
+        weight = {
+            base = 1
+            modifier = {
+                trigger = {
+                    is_in_government = yes
+                }
+                add = 10
+            }
+        }
+        save_scope_as = ranig
+    }
+
+    if = {
+        limit = {
+            NOT = { has_variable_list = bpm_CAB_char_select_pool }
+        }
+        add_to_variable_list = {
+            name = bpm_CAB_char_select_pool
+            target = scope:ranig.leader
+        }
+    }
+    else = {
+        if = {
+            limit = {
+                NOT = { is_target_in_variable_list = { name = bpm_CAB_char_select_pool target = scope:ranig.leader } }
+            }
+            add_to_variable_list = {
+                name = bpm_CAB_char_select_pool
+                target = scope:ranig.leader
+            }
+        }
+        else = {
+            create_character = {
+                interest_group = scope:ranig
+                female = yes
+                save_scope_as = ranchar
+            }
+            add_to_variable_list = {
+                name = bpm_CAB_char_select_pool
+                target = scope:ranchar
+            }
+        }
+    }
+}
+
+# --CABGENSCRIPT--
+bpm_reload_institution_modifiers = {
+    bpm_remove_institution_modifiers = yes
+    if = {
+        limit = {
+            has_variable = bpm_is_institution_schools
+        }
+        # Go through the character's IG and find the appropriate modifier
+        #if = {
+        #    limit = {
+        #        var:bpm_is_institution_schools.interest_group = {
+        #            is_interest_group_type = ig_ruralk_folk
+        #        }
+        #    }
+        #    add_modifier = {
+        #        name = bpm_CAB_institution_schools_rural_folk_modifier
+        #        multiplier = investment
+        #   }
+        #}
+        institution:institution_schools = {
+            add_modifier = {
+                name = bpm_schools_fallback_modifier
+                multiplier = investment
+            }
+        }
+    }
+}
+
+
+bpm_remove_institution_modifiers = {
+
+    remove_modifier = bpm_test_school_mod
+
 }

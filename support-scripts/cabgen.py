@@ -109,34 +109,32 @@ bpm_reload_institution_modifiers_XXX = {
         limit = {
             has_variable = bpm_is_institution_XXX
         }
+        var:bpm_is_institution_schools.interest_group = {
 """.replace('XXX', nm)
     for mod, igs in modtoig.items():
         add_fstr += """
         if = {
             limit = {
         """
-        add_fstr += "       var:bpm_is_institution_schools.interest_group = {\n"
-        add_fstr += "                   OR = {\n"
+        add_fstr += "        OR = {\n"
         for ig in igs:
-            add_fstr += f"                      is_interest_group_type = ig_{ig}\n"
-        add_fstr += "                   }\n"
+            add_fstr += f"                   is_interest_group_type = ig_{ig}\n"
         add_fstr += "                }\n"
         add_fstr += "            }\n"
-        add_fstr += "            institution:institution_XXX = {\n".replace('XXX', nm)
-        add_fstr += "          add_modifier = {\n" + f"                name = bpm_{nm}_{mod}_modifier\n" + f"                multiplier = investment\n"+"            }\n"
+        add_fstr += "            owner.institution:institution_XXX = {\n".replace('XXX', nm)
+        add_fstr += "               add_modifier = {\n" + f"                name = bpm_{nm}_{mod}_modifier\n" + f"                  multiplier = owner.institution:institution_{nm}.investment\n"+"            }\n"
+        add_fstr += "           }\n"
         add_fstr += "       }\n"
-        add_fstr += "    }\n"
     add_fstr += """
-        var:bpm_is_institution_schools.interest_group = {
-            add_modifier = {
-                name = bpm_schools_attraction_modifier
-                multiplier = institution:institution_schools.investment
+                add_modifier = {
+                    name = bpm_XXX_attraction_modifier
+                    multiplier = institution:institution_XXX.investment
+                }
             }
-        }
-"""
+""".replace('XXX', nm)
     add_fstr += """
+        }
     }
-}
 """
     return add_fstr
 

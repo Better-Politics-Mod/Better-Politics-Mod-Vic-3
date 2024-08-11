@@ -1,4 +1,4 @@
-INSTITUTIONS = ["colonial_affairs", "social_security", "workplace_safety", "health_system", "home_affairs", "suffrage", "culture"]
+INSTITUTIONS = ["schools", "police", , "colonial_affairs", "social_security", "workplace_safety", "health_system", "home_affairs", "centralization", "suffrage", "culture"]
 
 
 def gen_cabgenbase_cusfstr(insts):
@@ -40,5 +40,20 @@ else_if = {
 }""".replace('XXX', inst)
     return fstr
 
+
+def gen_cabgenbase_ult(insts):
+    fstr = ""
+    for inst in insts:
+        fstr += """
+    if = {
+        limit = {
+            var:bpm_is_institution_XXX ?= {
+                bpm_is_antagonistic = yes
+            }
+        }
+        add = 1
+    }
+""".replace('XXX', inst)
+    return fstr
 with open('output2.txt', 'w') as f:
-    f.write('\n'.join([gen_cabgenbase_cusfstr(INSTITUTIONS), gen_cabgenbase_addfstr(INSTITUTIONS)]))
+    f.write('\n'.join([gen_cabgenbase_cusfstr(INSTITUTIONS), gen_cabgenbase_addfstr(INSTITUTIONS), gen_cabgenbase_ult(INSTITUTIONS)]))

@@ -1,5 +1,8 @@
-INSTITUTIONS = ["colonial_affairs", "social_security", "workplace_safety", "schools", "police", "health_system", "home_affairs", "centralization", "suffrage", "culture"]
-result = r"\n"
+import json
+with open('./support-scripts/cabinet/institutions.json', 'r') as f:
+    INSTITUTIONS = json.load(f)
+    result = r"\n"
+    
 for inst in INSTITUTIONS:
     v = input(f"Value for {inst}>>")
     if v != "0":

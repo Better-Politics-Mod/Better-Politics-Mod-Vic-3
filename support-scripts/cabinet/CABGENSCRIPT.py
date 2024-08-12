@@ -20,7 +20,7 @@ def get_data():
 
     igtomod = {}
     
-    with open('support-scripts/output.json', 'r', encoding='utf-8') as f:
+    with open('./support-scripts/cabinet/modifiers.json', 'r', encoding='utf-8') as f:
         allmodtoig = json.load(f)
 
     if allmodtoig.get(modifying_institution_name, None) is not None:
@@ -56,12 +56,12 @@ def main():
     locs_fstr = gen_locs_fstr(nm, mods)
     custlocs_fstr = gen_custlocs_fstr(nm, mods, modtoig)
 
-    with open('support-scripts/output.txt', 'w', encoding='utf-8') as f:
+    with open('./support-scripts/cabinet/output.txt', 'w', encoding='utf-8') as f:
         f.write('\n'.join([remove_fstr, add_fstr, locs_fstr, custlocs_fstr, giga_fstr]))
-    with open('support-scripts/output.json', 'r', encoding='utf-8') as f:
+    with open('./support-scripts/cabinet/modifiers.json', 'r', encoding='utf-8') as f:
         allmodtoig = json.load(f)
     allmodtoig[nm] = modtoig
-    with open('support-scripts/output.json', 'w', encoding='utf-8') as f:
+    with open('./support-scripts/cabinet/modifiers.json', 'w', encoding='utf-8') as f:
         json.dump(allmodtoig, f, indent=4)
 
 def gen_locs_fstr(nm, dynamic_modifiers):
@@ -112,25 +112,38 @@ bpm_reload_institution_modifiers_XXX = {
         var:bpm_is_institution_schools.interest_group = {
 """.replace('XXX', nm)
     for mod, igs in modtoig.items():
-        add_fstr += """
-        if = {
-            limit = {
-        """
-        add_fstr += "        OR = {\n"
-        for ig in igs:
-            add_fstr += f"                   is_interest_group_type = ig_{ig}\n"
-        add_fstr += "                }\n"
-        add_fstr += "            }\n"
-        add_fstr += "            owner.institution:institution_XXX = {\n".replace('XXX', nm)
-        add_fstr += "               add_modifier = {\n" + f"                name = bpm_{nm}_{mod}_modifier\n" + f"                  multiplier = owner.institution:institution_{nm}.investment\n"+"            }\n"
-        add_fstr += "           }\n"
-        add_fstr += "       }\n"
+        if len(igs) == 1:
+            add_fstr += "           bpm_reload_modifier_inst_singlet = {"
+            add_fstr +=f"""
+                IG1 = {igs[0]}
+                INST = {nm}
+                MOD = {mod}
+"""
+        if len(igs) == 2:
+            add_fstr += "           bpm_reload_modifier_inst_doublet = {"
+            add_fstr +=f"""
+                IG1 = {igs[0]}
+                IG2 = {igs[1]}
+                INST = {nm}
+                MOD = {mod}
+"""
+        if len(igs) == 3:
+            add_fstr += "           bpm_reload_modifier_inst_triplet = {"
+            add_fstr +=f"""
+                IG1 = {igs[0]}
+                IG2 = {igs[1]}
+                IG3 = {igs[2]}
+                INST = {nm}
+                MOD = {mod}
+"""
+        add_fstr += '           }\n'
+
     add_fstr += """
-                add_modifier = {
-                    name = bpm_XXX_attraction_modifier
-                    multiplier = institution:institution_XXX.investment
-                }
+            add_modifier = {
+                name = bpm_XXX_attraction_modifier
+                multiplier = institution:institution_XXX.investment
             }
+        }
 """.replace('XXX', nm)
     add_fstr += """
         }

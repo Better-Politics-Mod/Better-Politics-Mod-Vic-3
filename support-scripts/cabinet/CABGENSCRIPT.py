@@ -11,6 +11,7 @@ def get_data():
     with open('better-politics-mod/common/static_modifiers/BPM_CAB_modifiers.txt', 'r', encoding='utf-8') as f:
         t = f.read()
 
+
     modifying_institution_name = input("Modifying institution>> ")
 
     pat = re.compile(f"bpm_{modifying_institution_name}_(.*?)_modifier")
@@ -51,7 +52,9 @@ def main():
 
     remove_modifiers = map(lambda x: f"remove_modifier = bpm_{nm}_{x}_modifier", dynamic_modifiers)
     remove_fstr = f"bpm_remove_institution_modifiers_{nm}" + " = {\n" + '\n'.join(map(lambda x: f"   {x}", remove_modifiers)) + "\n}\n"
-    giga_fstr = '\n'.join(map(lambda x: f"bpm_{nm}_{x}_modifier:0 \"Minister of Colonial Affairs\"", dynamic_modifiers))
+    nameofministry = input("Name of ministry>> ")
+
+    giga_fstr = '\n'.join(map(lambda x: f"bpm_{nm}_{x}_modifier:0 \"{nameofministry}\"", dynamic_modifiers))
     add_fstr = gen_add_fstr(modtoig, dynamic_modifiers, nm)
     locs_fstr = gen_locs_fstr(nm, mods)
     custlocs_fstr = gen_custlocs_fstr(nm, mods, modtoig)

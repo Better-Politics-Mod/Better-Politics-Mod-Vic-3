@@ -51,7 +51,7 @@ def main():
 
     remove_modifiers = map(lambda x: f"remove_modifier = bpm_{nm}_{x}_modifier", dynamic_modifiers)
     remove_fstr = f"bpm_remove_institution_modifiers_{nm}" + " = {\n" + '\n'.join(map(lambda x: f"   {x}", remove_modifiers)) + "\n}\n"
-    giga_fstr = '\n'.join(map(lambda x: f"bpm_{nm}_{x}_modifier:0 \"Minister of Education\"", dynamic_modifiers))
+    giga_fstr = '\n'.join(map(lambda x: f"bpm_{nm}_{x}_modifier:0 \"Minister of Colonial Affairs\"", dynamic_modifiers))
     add_fstr = gen_add_fstr(modtoig, dynamic_modifiers, nm)
     locs_fstr = gen_locs_fstr(nm, mods)
     custlocs_fstr = gen_custlocs_fstr(nm, mods, modtoig)
@@ -109,15 +109,16 @@ bpm_reload_institution_modifiers_XXX = {
         limit = {
             has_variable = bpm_is_institution_XXX
         }
-        var:bpm_is_institution_schools.interest_group = {
+        var:bpm_is_institution_XXX.interest_group = {
 """.replace('XXX', nm)
     for mod, igs in modtoig.items():
+        if mod == "": continue
         if len(igs) == 1:
             add_fstr += "           bpm_reload_modifier_inst_singlet = {"
             add_fstr +=f"""
                 IG1 = {igs[0]}
                 INST = {nm}
-                MOD = {mod}
+                MOD = bpm_{nm}_{mod}_modifier
 """
         if len(igs) == 2:
             add_fstr += "           bpm_reload_modifier_inst_doublet = {"
@@ -125,7 +126,7 @@ bpm_reload_institution_modifiers_XXX = {
                 IG1 = {igs[0]}
                 IG2 = {igs[1]}
                 INST = {nm}
-                MOD = {mod}
+                MOD = bpm_{nm}_{mod}_modifier
 """
         if len(igs) == 3:
             add_fstr += "           bpm_reload_modifier_inst_triplet = {"
@@ -134,7 +135,7 @@ bpm_reload_institution_modifiers_XXX = {
                 IG2 = {igs[1]}
                 IG3 = {igs[2]}
                 INST = {nm}
-                MOD = {mod}
+                MOD = bpm_{nm}_{mod}_modifier
 """
         add_fstr += '           }\n'
 
@@ -145,9 +146,8 @@ bpm_reload_institution_modifiers_XXX = {
             }
         }
 """.replace('XXX', nm)
-    add_fstr += """
-        }
-    }
+    add_fstr += """    }
+}
 """
     return add_fstr
 

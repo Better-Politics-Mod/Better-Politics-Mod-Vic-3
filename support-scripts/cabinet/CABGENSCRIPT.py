@@ -73,6 +73,10 @@ def gen_locs_fstr(nm, dynamic_modifiers):
 
 def gen_custlocs_fstr(nm, dynamic_modifiers, modtoig):
     custlocs_fstr = "bpm_is_institution_XXX_modifier = {".replace('XXX', nm)
+    custlocs_fstr += """
+    type = character
+    random_valid = no
+"""
     for mod in dynamic_modifiers:
         if modtoig.get(mod, None) is None:
             continue

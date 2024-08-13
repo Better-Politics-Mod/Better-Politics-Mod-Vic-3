@@ -60,7 +60,7 @@ def main():
     custlocs_fstr = gen_custlocs_fstr(nm, mods, modtoig)
 
     with open('./support-scripts/cabinet/output.txt', 'w', encoding='utf-8') as f:
-        f.write('\n'.join([remove_fstr, add_fstr, locs_fstr, custlocs_fstr, giga_fstr]))
+        f.write('\n'.join([remove_fstr, add_fstr, custlocs_fstr, locs_fstr, giga_fstr]))
     with open('./support-scripts/cabinet/modifiers.json', 'r', encoding='utf-8') as f:
         allmodtoig = json.load(f)
     allmodtoig[nm] = modtoig
@@ -72,23 +72,24 @@ def gen_locs_fstr(nm, dynamic_modifiers):
 
 
 def gen_custlocs_fstr(nm, dynamic_modifiers, modtoig):
-    custlocs_fstr = ""
+    custlocs_fstr = "bpm_is_institution_XXX_modifier = {".replace('XXX', nm)
     for mod in dynamic_modifiers:
         if modtoig.get(mod, None) is None:
             continue
         custlocs_fstr += """
-text = {
-    trigger = {
-        interest_group = {
-            OR = {
+    text = {
+        trigger = {
+            interest_group = {
+                OR = {
 """
         for ig in modtoig.get(mod, []):
-            custlocs_fstr += f"                     is_interest_group_type = ig_{ig}\n"
-        custlocs_fstr += "              }\n"
-        custlocs_fstr += "           }\n"
+            custlocs_fstr += f"                    is_interest_group_type = ig_{ig}\n"
+        custlocs_fstr += "                }\n"
+        custlocs_fstr += "            }\n"
         custlocs_fstr += "        }\n"
         custlocs_fstr += f"        localization_key = bpm_{nm}_{mod}_modifier_desc\n"
-        custlocs_fstr += "}\n"
+        custlocs_fstr += "    }\n"
+    custlocs_fstr += "}\n"
     return custlocs_fstr
 
 def gen_add_fstr(modtoig, dynamic_modifiers, nm):

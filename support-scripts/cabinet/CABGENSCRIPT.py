@@ -99,7 +99,7 @@ def gen_custlocs_fstr(nm, dynamic_modifiers, modtoig):
 def gen_add_fstr(modtoig, dynamic_modifiers, nm):
     add_fstr = """
 bpm_reload_institution_modifiers_XXX = {
-    institution:institution_XXX = {
+    institution:institution_XXX ?= {
         bpm_remove_institution_modifiers_XXX = yes
     }
     if = {

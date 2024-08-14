@@ -127,6 +127,7 @@ bpm_reload_institution_modifiers_XXX = {
                 IG1 = {igs[0]}
                 INST = {nm}
                 MOD = bpm_{nm}_{mod}_modifier
+            {'}'}
 """
         if len(igs) == 2:
             add_fstr += "           bpm_reload_modifier_inst_doublet = {"
@@ -135,6 +136,7 @@ bpm_reload_institution_modifiers_XXX = {
                 IG2 = {igs[1]}
                 INST = {nm}
                 MOD = bpm_{nm}_{mod}_modifier
+            {'}'}
 """
         if len(igs) == 3:
             add_fstr += "           bpm_reload_modifier_inst_triplet = {"
@@ -144,8 +146,19 @@ bpm_reload_institution_modifiers_XXX = {
                 IG3 = {igs[2]}
                 INST = {nm}
                 MOD = bpm_{nm}_{mod}_modifier
+            {'}'}
 """
-        add_fstr += '           }\n'
+        if len(igs) == 4:
+            add_fstr += "           bpm_reload_modifier_inst_quartet = {"
+            add_fstr +=f"""
+                IG1 = {igs[0]}
+                IG2 = {igs[1]}
+                IG3 = {igs[2]}
+                IG4 = {igs[3]}
+                INST = {nm}
+                MOD = bpm_{nm}_{mod}_modifier
+            {'}'}
+"""
 
     add_fstr += """
             add_modifier = {

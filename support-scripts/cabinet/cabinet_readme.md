@@ -7,7 +7,7 @@
     - The Modifier can be the same for multiple IGs (ex. bpm_schools_liberals_modifier for libs, marlibs and natlibs)
     - Modifiers that are for INGs should have +1 rigidity and modifiers for IDG -1 rigidity.
     - If the table says NTRL, create a modifier with either +1 rigidity for INGs and -1 rigidity for IDGs and nothing else. (Maybe call it neutralidg or neutraling for consistency?)
-    - Add a modifier named bpm_{INSTITUTION}_attraction_modifier as with the other IGs
+    - Add a modifier named bpm_{INSTITUTION}_attraction_modifier
 
 - Run py support-scripts/cabinet/cabgenscript.py, this will modify the file support-scripts/cabinet/output.txt
     - When the script asks for the name of the institution it should be its code name, like social_security of schools

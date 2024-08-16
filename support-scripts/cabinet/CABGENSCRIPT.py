@@ -163,7 +163,7 @@ bpm_reload_institution_modifiers_XXX = {
     add_fstr += """
             add_modifier = {
                 name = bpm_XXX_attraction_modifier
-                multiplier = institution:institution_XXX.investment
+                multiplier = owner.institution:institution_XXX.investment
             }
         }
 """.replace('XXX', nm)

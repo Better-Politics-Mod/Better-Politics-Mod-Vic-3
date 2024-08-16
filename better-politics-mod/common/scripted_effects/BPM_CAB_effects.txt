@@ -10,111 +10,50 @@ bpm_fix_cabinet_pool = {
             }
             save_scope_as = actor
         }
-        remove_list_variable = {
-            name = bpm_CAB_char_select_pool
-            target = scope:actor
+        if = {
+            limit = {
+                exists = scope:actor
+            }
+            remove_list_variable = {
+                name = bpm_CAB_char_select_pool
+                target = scope:actor
+            }
         }
     }
 }
 
 bpm_pick_cabinet_minister = {
-    random_interest_group = {
+    every_interest_group = {
         limit = {
             bpm_ig_enabled = yes
             is_marginal = no
         }
-        weight = {
-            base = 1
-            modifier = {
-                trigger = {
-                    is_in_government = yes
-                }
-                add = 3
-            }
-            modifier = {
-                trigger = {
-                    ig_clout > 0.1
-                }
-                add = 3
-            }
-            modifier = {
-                trigger = {
-                    ig_clout > 0.15
-                }
-                add = 3
-            }
-            modifier = {
-                trigger = {
-                    ig_clout > 0.2
-                }
-                add = 3
-            }
-            modifier = {
-                trigger = {
-                    ig_clout > 0.25
-                }
-                add = 3
-            }
-            modifier = {
-                trigger = {
-                    ig_clout > 0.3
-                }
-                add = 3
-            }
-            modifier = {
-                trigger = {
-                    owner = { has_law = law_type:law_monarchy }
-                    is_interest_group_type = ig_landowners
-                }
-                add = 3
-            }
-            modifier = {
-                trigger = {
-                    owner = { has_law = law_type:law_elected_bureaucrats }
-                    bpm_ig_is_ideological = yes
-                }
-                add = 15
-            }
-            modifier = {
-                trigger = {
-                    owner = { has_law = law_type:law_autocracy }
-                    is_interest_group_type = owner.ruler.interest_group.type
-                }
-                add = 15
-            }
-            modifier = {
-                trigger = {
-                    owner = { has_law = law_type:law_oligarchy }
-                    is_interest_group_type = owner.ruler.interest_group.type
-                }
-                add = 10
-            }
-            modifier = {
-                trigger = {
-                    owner = { has_law = law_type:law_techocracy }
-                    is_interest_group_type = ig_intelligentsia
-                }
-                add = 20
-            }
-            modifier = {
-                trigger = {
-                    NOT = { bpm_ig_is_radical_opposition = yes }
-                }
-                add = 5
-            }
-            modifier = {
-                trigger = {
-                    NOT = { bpm_ig_is_very_radical_opposition = yes }
-                    }
-                }
-                add = 10
-            }
+        set_variable = {
+            name = bpm_cabinet_interest_group_luck_factor
+            value = { 0 10 }
+        }
+    }
+    ordered_interest_group = {
+        limit = {
+            bpm_ig_enabled = yes
+            is_marginal = no
+        }
+        min = 0
+        max = 1
+
+        order_by = bpm_cabinet_character_pool_ig_weight
+        
         save_scope_as = ranig
     }
 
     if = {
         limit = {
             NOT = { has_variable_list = bpm_CAB_char_select_pool }
+            scope:ranig.leader ?= {
+                NOT = {
+                    has_variable = bpm_cabinet_minister
+                }
+            }
         }
         add_to_variable_list = {
             name = bpm_CAB_char_select_pool
@@ -128,6 +67,11 @@ bpm_pick_cabinet_minister = {
         if = {
             limit = {
                 NOT = { is_target_in_variable_list = { name = bpm_CAB_char_select_pool target = scope:ranig.leader } }
+                scope:ranig.leader ?= {
+                    NOT = {
+                        has_variable = bpm_cabinet_minister
+                    }
+                }
             }
             add_to_variable_list = {
                 name = bpm_CAB_char_select_pool

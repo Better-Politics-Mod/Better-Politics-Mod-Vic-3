@@ -248,13 +248,13 @@
 
 					### IG BUTTON
 					widget = {
-						size = { 80 60 }
+						size = { 90 60 }
 						ig_button = {
 							block "ig_button_size" {
 								size = { 60 60 }
 							}
 							using = tooltip_ws
-							parentanchor = right|vcenter
+							parentanchor = hcenter|vcenter
 							blockoverride "in_government_icon" {}
 						}
 						icon = {
@@ -782,6 +782,105 @@
 		}
 	}
 
+	type politics_panel_synergy = hbox {
+		layoutpolicy_horizontal = expanding
+		vbox = {
+			minimumsize = { 80 -1 }
+		}
+		vbox = {
+			margin = { 5 0 }
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+			spacing = 5
+			
+			expand = {}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 10
+				tooltip = "bpm_cab_synergy_tt"
+
+				block "text" {
+					textbox = {
+						autoresize = yes
+						text = "SYNERGYTXT"
+						align = left|nobaseline
+						elide = right
+					}
+				}
+			}
+
+			gold_progressbar_horizontal = {
+				name = "bpm_synergy_progressbar"
+				layoutpolicy_horizontal = expanding
+				size = { 15 15 }
+				tooltip = "bpm_cab_synergy_tt"
+				blockoverride "values" {
+					value = "[GetPlayer.MakeScope.ScriptValue('bpm_cab_synergy_value')]"
+					min = 0
+					max = 100
+				}
+			}
+
+			expand = {}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 10
+				tooltip = "bpm_antagonism_tt"
+
+				block "text" {
+					textbox = {
+						autoresize = yes
+						text = "BPMANTAGVAR"
+						align = left|nobaseline
+						elide = right
+					}
+				}
+			}
+
+			bad_progressbar_horizontal = {
+				name = "bpm_antagonism_progressbar"
+				layoutpolicy_horizontal = expanding
+				size = { 15 15 }
+				tooltip = "bpm_antagonism_tt"
+				blockoverride "values" {
+					value = "[GetPlayer.MakeScope.ScriptValue('bpm_antagonism_cached')]"
+					min = 0
+					max = 100
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = growing
+				button = {
+					using = default_button
+					size = { 120 25 }
+					raw_text = "Fill Cabinet"
+					using = fontsize_min
+					tooltip = "bpm_shuffle_cabinet_tt"
+					onclick = "[GetScriptedGui('bpm_cabinet_fill_gui').Execute(GuiScope.SetRoot(Country.MakeScope).End)]"
+				}		
+				
+				button = {
+					using = default_button
+					size = { 120 25 }
+					raw_text = "Cabinet Shuffle"
+					using = fontsize_min
+					tooltip = "bpm_shuffle_cabinet_tt"
+					enabled = "[GetScriptedGui('bpm_cabinet_shuffle_gui').IsValid(GuiScope.SetRoot(Country.MakeScope).End)]"
+					onclick = "[GetScriptedGui('bpm_cabinet_shuffle_gui').Execute(GuiScope.SetRoot(Country.MakeScope).End)]"
+				}		
+			}
+		}
+
+		vbox = {
+			minimumsize = { 80 -1 }
+		}
+		
+	}
+
+
 	type active_law = vbox {
 		layoutpolicy_horizontal = preferred
 		layoutpolicy_vertical = expanding
@@ -912,6 +1011,166 @@
 				}
 			}
 		}
+	}
+
+	type cabinet_pool = hbox {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = preferred
+		margin = { 10 10 }
+		spacing = 5
+
+		using = entry_bg_fancy_solid_bg
+		datacontext = "[Scope.GetCharacter]"
+		datacontext = "[Scope.GetCharacter.GetCountry.MakeScope.Var('bpm_cabinet_char_select').GetInstitution]"
+
+		background = {
+			using = fade_right_entry_fancy_header_colored
+			color = "[Character.GetInterestGroup.GetColor]"
+		}
+
+		character_portrait_large = {
+			using = tooltip_below
+			blockoverride "show_hat" {}
+			blockoverride "highlight" {}
+			
+			### IG ICON
+			character_ig_button = {
+				blockoverride "interestgroup_datacontext" {
+					datacontext = "[Character.AccessInterestGroup]"
+				}
+				parentanchor = bottom|left
+				size = { 38 38 }
+				position = { 2 0 }
+				blockoverride "in_government_icon" {}
+			}
+			
+			### IDEOLOGY
+			icon = {
+				parentanchor = bottom|right
+				size = { 38 38 }
+				position = { -2 0 }
+				datacontext = "[Character.GetIdeology]"
+				texture = "[Ideology.GetTexture]"
+				tooltipwidget = {
+					FancyTooltip_Ideology = {}
+				}
+			}
+		}
+
+		vbox = {
+			layoutpolicy_vertical = expanding
+			spacing = 5
+			minimumsize = { 400 -1 }
+			maximumsize = { 400 -1 }
+
+			textbox = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				align = left|nobaseline
+				elide = right
+				using = fontsize_xl
+				text = "[Character.GetFullName]"
+			}
+
+			divider_clean = {
+				blockoverride "size" {
+					layoutpolicy_horizontal = expanding
+					size = { 0 1 }
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				textbox = {
+					autoresize = yes
+					minimumsize = { 0 20 }
+					align = left|nobaseline
+					text = "CHARACTER_POPULARITY_LABEL"
+					elide = right
+				}
+
+				expand = {}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				dynamicgridbox = {
+					layoutpolicy_vertical = preferred
+					datamodel = "[Character.AccessTraits]"
+					datamodel_wrap = 3
+					flipdirection = yes
+
+					item = {
+						character_trait_with_label = {}
+					}
+				}
+
+				expand = {}
+			}
+		}
+		
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+
+			expand = {}
+
+			hbox = {
+				textbox = {
+					text = "WILLADDMODIFIER"
+					
+					autoresize = yes
+					# have to have this size here to avoid the text pushing out other stuff ( it is adapted for lowest resolution )
+					# https://beta.paradoxplaza.com/browse/PSGE-1949
+					minimumsize = { 400 -1 }
+					maximumsize = { 400 -1 }
+					multiline = yes
+					fontsize_min = 22
+				}
+				textbox = {
+					text = "PREDICTSYNERGY"
+					
+					autoresize = yes
+					# have to have this size here to avoid the text pushing out other stuff ( it is adapted for lowest resolution )
+					# https://beta.paradoxplaza.com/browse/PSGE-1949
+					minimumsize = { 400 -1 }
+					maximumsize = { 400 -1 }
+					multiline = yes
+					fontsize_min = 22
+				}
+			}
+			
+
+		}
+
+
+
+
+		vbox = {
+			layoutpolicy_vertical = preferred
+			layoutpolicy_horizontal = expanding
+
+			expand = {}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+
+				expand = {}
+
+				button = {
+					using = default_button_action
+					size = { 150 40 }
+					text = "APPOINT"
+					datacontext = "[Character.GetInteraction('bpm_add_to_cabinet')]"
+					tooltip = "CHARACTER_INTERACTION_TOOLTIP"
+					enabled = "[CharacterInteraction.IsCommandValid(Character.Self)]"
+					onclick = "[CharacterInteraction.ExecuteCommand(Character.Self)]"
+					onclick = "[GetScriptedGui('bpm_CAB_toggle_char_select_off').Execute(GuiScope.SetRoot(Country.MakeScope).End)]"
+					clicksound = "event:/SFX/DLC/1.3_ip1/UI/character_invite"
+				}
+			}
+		}
+
 	}
 
 	type laws_list = vbox {

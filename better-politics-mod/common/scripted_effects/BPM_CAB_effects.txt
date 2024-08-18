@@ -1,0 +1,191 @@
+
+
+bpm_fix_cabinet_pool = {
+    while = {
+        count = 5
+        every_in_list = {
+            variable = bpm_CAB_char_select_pool
+            limit = {
+                is_character_alive = no
+            }
+            save_scope_as = actor
+            remove_list_variable = {
+                name = bpm_CAB_char_select_pool
+                target = scope:actor
+            }
+        }
+    }
+}
+
+bpm_pick_cabinet_minister = {
+    random_interest_group = {
+        limit = {
+            bpm_ig_enabled = yes
+            is_marginal = no
+        }
+        weight = {
+            base = 1
+            modifier = {
+                trigger = {
+                    is_in_government = yes
+                }
+                add = 6
+            }
+            modifier = {
+                trigger = {
+                    ig_clout > 0.1
+                }
+                add = 4
+            }
+            modifier = {
+                trigger = {
+                    ig_clout > 0.2
+                }
+                add = 4
+            }
+            modifier = {
+                trigger = {
+                    ig_clout > 0.3
+                }
+                add = 4
+            }
+            modifier = {
+                trigger = {
+                    owner = { has_law = law_type:law_monarchy }
+                    is_interest_group_type = ig_landowners
+                }
+                add = 4
+            }
+            modifier = {
+                trigger = {
+                    OR = {
+                        bpm_ig_is_radical_opposition = yes
+                        bpm_ig_is_very_radical_opposition = yes
+                    }
+                }
+                multiply = 0
+            }
+        }
+        save_scope_as = ranig
+    }
+
+    if = {
+        limit = {
+            NOT = { has_variable_list = bpm_CAB_char_select_pool }
+        }
+        add_to_variable_list = {
+            name = bpm_CAB_char_select_pool
+            target = scope:ranig.leader
+        }
+    }
+    else_if = {
+        limit = {
+            exists = scope:ranig
+        }
+        if = {
+            limit = {
+                NOT = { is_target_in_variable_list = { name = bpm_CAB_char_select_pool target = scope:ranig.leader } }
+            }
+            add_to_variable_list = {
+                name = bpm_CAB_char_select_pool
+                target = scope:ranig.leader
+            }
+        }
+        else = {
+            create_character = {
+                interest_group = scope:ranig
+                age = 18
+                on_created = {
+                    place_character_in_void = 10000
+                }
+                save_scope_as = ranchar
+            }
+            add_to_variable_list = {
+                name = bpm_CAB_char_select_pool
+                target = scope:ranchar
+            }
+        }
+    }
+}
+
+bpm_choose_hog = {
+    if = {
+        limit = {
+            OR = {
+                has_law = law_type:law_monarchy
+                has_law = law_type:law_council_republic
+            }
+            
+        }
+        random_interest_group = {
+            limit = {
+                bpm_is_strongest_ig_in_government = yes
+                bpm_ig_enabled = yes
+            }
+            save_scope_as = ranig
+        }
+
+        set_variable = {
+            name = bpm_headofgov
+            value = scope:ranig.leader
+        }
+    }
+    else = {
+
+        set_variable = {
+            name = bpm_headofgov
+            value = ruler
+        }
+    }
+    bpm_reload_institution_modifiers_hog = yes
+}
+
+bpm_fill_cabinet_pool = {
+    if = {
+        limit = {
+            # only the player has a cabinet pool
+            # the AI should use bpm_cab_fill_positions
+            is_player = yes
+        }
+        bpm_pick_cabinet_minister = yes
+        while = {
+            limit  = {
+                variable_list_size = {
+                    name = bpm_CAB_char_select_pool
+                    value <= 9
+                }
+            }
+            bpm_pick_cabinet_minister = yes
+            bpm_fix_cabinet_pool = yes
+        }
+    }
+
+}
+
+bpm_initialize_cabinet = {
+    bpm_fill_cabinet_pool = yes
+
+    set_variable = bpm_has_cabinet
+
+    if = {
+        limit = {
+            is_player = no
+        }
+        bpm_cab_fill_positions = yes
+    }
+
+
+    set_variable = {
+        name = bpm_cached_antagonism
+        value = 0
+    }
+    set_variable = {
+        name = bpm_cached_antagonism_raw
+        value = 0
+    }
+    set_variable = {
+        name = bpm_cab_synergy
+        value = 1
+    }
+    bpm_choose_hog = yes
+}

@@ -1,0 +1,448 @@
+﻿namespace = conscription_laws
+
+conscription_laws.1 = { #Rural folk worried about lack of workers
+	type = country_event
+	placement = ROOT
+	
+	title = conscription_laws.1.t
+	desc = conscription_laws.1.d
+	flavor = conscription_laws.1.f
+
+	category = enactment
+	
+	event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		has_law = law_type:law_professional_army
+		OR = {
+			is_enacting_law = law_type:law_peasant_levies
+			is_enacting_law = law_type:law_mass_conscription
+		}	
+		NOT = {
+			has_modifier = conscription_starting
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		ig:ig_rural_folk = {
+			save_scope_as = rural_folk_conscription
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # high chance, upset rural folk
+		name = conscription_laws.1.a
+		default_option = yes
+		add_modifier = {
+			name = keep_marching_on
+			months = normal_modifier_time
+		}
+		if ={ 
+			limit = {is_player = yes}
+			random_interest_group ={ 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_agrarian = no
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+			random_interest_group ={ 
+				limit = { 
+					bpm_ig_disapproves_enactment = yes
+					bpm_ig_is_agrarian = no
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = conscription_starting
+				multiplier = 2
+			}
+		}
+	}
+
+	option = { #lower success chance, keep it safe
+		name = conscription_laws.1.b
+		if ={ 
+			limit = {is_player = yes}
+			random_interest_group ={ 
+				limit = { 
+					bpm_ig_disapproves_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = conscription_starting
+			}
+		}
+	}
+}
+
+conscription_laws.2 = { #regular vs irregular troops
+	type = country_event
+	placement = ROOT
+	
+	title = conscription_laws.2.t
+	desc = conscription_laws.2.d
+	flavor = conscription_laws.2.f
+
+	category = enactment
+	
+	event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		has_law = law_type:law_professional_army
+		OR = {
+			is_enacting_law = law_type:law_peasant_levies
+			is_enacting_law = law_type:law_mass_conscription
+		}	
+		NOT = {
+			has_modifier = conscription_debate
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		ig:ig_armed_forces = {
+			save_scope_as = armed_forces_conscription
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #upset soldiers but faster enactment
+		name = conscription_laws.2.a
+		default_option = yes
+		scope:armed_forces_conscription = {
+			add_modifier = {
+				name = more_soldiers
+				months = normal_modifier_time
+			}
+		}
+		if ={ 
+			limit ={ is_player = yes}
+			random_list = { 
+				2 = { 
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_disapproves_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_big = yes
+					}
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_big = yes
+					}
+				}
+				3 = { 
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_disapproves_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				2 = {
+					add_enactment_modifier = {
+						name = conscription_debate
+						multiplier = 3
+					}
+				}
+				3 = {
+					add_enactment_modifier = {
+						name = conscription_debate
+						multiplier = 2
+					}
+				}
+			}
+		}
+	}
+
+	option = { #upset armed forces but get loyalist soldiers
+		name = conscription_laws.2.b
+		add_modifier = {
+			name = listen_to_the_troops
+			months = normal_modifier_time
+		}
+		add_loyalists = {
+			pop_type = soldiers
+			value = 0.1
+		}
+		add_loyalists = {
+			pop_type = officers
+			value = 0.1
+		}
+		if ={ 
+			limit ={ is_player = yes}
+			random_list = { 
+				1 = { #this was +50% in vanilla, so its quite strong!
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_big = yes
+					}
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_big = yes
+					}
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_disapproves_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_big = yes
+					}
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_disapproves_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_big = yes
+					}
+				}
+				4 = { 
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+				}
+			}
+		}
+		else ={ 
+			random_list = {
+				1 = {
+					add_enactment_modifier = {
+						name = conscription_debate
+						multiplier = 5
+					}
+				}
+				4 = {
+					add_enactment_modifier = {
+						name = conscription_debate
+						multiplier = 1
+					}
+				}
+			}
+		}
+	}
+}
+
+conscription_laws.3 = { #Government is unprepared for conscription
+	type = country_event
+	placement = ROOT
+	
+	title = conscription_laws.3.t
+	desc = conscription_laws.3.d
+	flavor = conscription_laws.3.f
+
+	category = enactment
+	
+	event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		has_law = law_type:law_professional_army
+		OR = {
+			is_enacting_law = law_type:law_peasant_levies
+			is_enacting_law = law_type:law_mass_conscription
+		}	
+		NOT = { has_modifier = no_slowing_down }
+		NOT = { has_modifier = conscription_stalled }
+		any_interest_group = {
+			is_marginal = no
+			OR = {
+				law_stance = {
+					law = law_type:law_peasant_levies
+					value < neutral
+				}
+				law_stance = {
+					law = law_type:law_mass_conscription
+					value < neutral
+				}
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				is_marginal = no
+				OR = {
+					law_stance = {
+						law = law_type:law_peasant_levies
+						value < neutral
+					}
+					law_stance = {
+						law = law_type:law_mass_conscription
+						value < neutral
+					}
+				}
+			}
+			save_scope_as = anti_conscription_ig
+			leader = {
+				save_scope_as = anti_conscription_advocate
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #invest to get low of no chance of failure
+		name = conscription_laws.3.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = no_slowing_down
+		}
+		if ={ 
+			limit ={ is_player = yes}
+			random_list ={ 
+				1 ={ 
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+				}
+				4 ={ 
+
+				}
+			}
+		}
+		else ={ 
+			random_list = {
+				1 = {
+					add_enactment_modifier = {
+						name = conscription_stalled
+						multiplier = 1
+					}
+				}
+				4 = {	
+				}
+			}
+		}
+	}
+
+	option = { #do nothing
+		name = conscription_laws.3.b
+		if ={ 
+			limit ={ is_player = yes}
+			random_list ={ 
+				3 = { 
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_approves_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+				}
+				1 = { 
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+							bpm_ig_is_ideological = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+							bpm_ig_is_institutional = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_small = yes
+					}
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_approves_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				3 = {
+					add_enactment_modifier = {
+						name = conscription_stalled
+						multiplier = 2
+					}
+				}
+				1 = {	
+					add_enactment_modifier = {
+						name = conscription_stalled
+						multiplier = 3
+					}
+				}
+			}
+		}
+	}
+}

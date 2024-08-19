@@ -1,0 +1,218 @@
+﻿# For on_actions launched by the code itself.
+
+# Root = Country
+on_revolution_start = { on_actions = { 
+	USCWF_IG_ideology_on_action
+	usfp_fix_monarchy_revolt 
+} }
+on_secession_start = { on_actions = { 
+	USCWF_IG_ideology_on_action
+	usfp_fix_monarchy_revolt  
+} }
+on_country_released_as_own_subject = { on_actions = { USCWF_IG_ideology_on_action } }
+on_country_released_as_overlord_subject = { on_actions = { USCWF_IG_ideology_on_action } }
+on_country_released_as_independent = { on_actions = { USCWF_IG_ideology_on_action } }
+
+USCWF_IG_ideology_on_action = {
+	effect = {
+		scope:target ?= { USCWF_WERE_ALL_LIVING_IN_AMERIKA_effect = yes }
+	}
+}
+
+usfp_fix_monarchy_revolt = {
+	effect = { scope:target ?= { 
+		if = {
+			limit = {
+				OR = {
+					usfp_country_is_american = yes
+					country_has_primary_culture = cu:afro_american
+				}
+				OR = {
+					has_law = law_type:law_monarchy
+					has_law = law_type:law_theocracy
+				}
+			 }
+			 activate_law = law_type:law_presidential_republic
+		}
+	}
+	}
+}
+
+on_election_campaign_end = {
+	on_actions = {
+		USCWF_precedent_on_action #Doodlez Precedent
+		# USCWF_jefferson_davis_on_action
+	}
+}
+
+
+USCWF_precedent_on_action = {
+	effect = {
+		if = {
+			limit = {
+				c:USA ?= this
+				has_law = law_type:law_presidential_republic
+			}
+			trigger_event = { id = USCWF.4 days = 1 }
+		}
+	}
+}
+
+# USCWF_jefferson_davis_on_action = {
+# 	effect = {
+# 		if = {
+# 			limit = {
+# 				c:USA ?= this
+# 				game_date < 1861.1.1
+# 				game_date > 1860.1.1
+# 			}
+# 			create_character = {
+# 				template = ecchi_usa_jefferson_davis_character_template
+# 				on_created = { set_variable = memento_mori_immunity }
+# 			}
+# 		}
+# 	}
+# }
+
+on_revolution_checkpoint_reached = {
+	on_actions = {
+		USCWF_opportunist_CSA_on_action
+	}
+}
+
+USCWF_opportunist_CSA_on_action = {
+	effect = {
+		if = {
+			limit = {
+				c:USA ?= this
+				OR = {
+					has_revolution_over_law_type = law_type:law_slave_trade
+					has_revolution_over_law_type = law_type:law_legacy_slavery
+					has_revolution_over_law_type = law_type:law_debt_slavery
+				}
+				any_civil_war = {
+					is_civil_war_type = revolution
+					civil_war_progress >= 0.75
+				}
+				ig:ig_landowners = {
+					is_insurrectionary = no
+				}
+			}
+			ig:ig_landowners = {
+				remove_ruling_interest_group = yes
+				join_revolution = yes
+			}
+		}
+		#if = {
+		#	limit = {
+		#		c:USA ?= this
+		#		has_revolution_over_law_type = law_type:law_slavery_banned
+		#		any_civil_war = {
+		#			is_civil_war_type = revolution
+		#			civil_war_progress >= 0.75
+		#		}
+		#	}
+		#	activate_law = law_type:law_slavery_banned
+		#}
+	}
+}
+
+on_revolution_start = {
+	on_actions = {
+		USCWF_opportunist_FSA_on_action
+	}
+}
+
+USCWF_opportunist_FSA_on_action = {
+	effect = {
+		if = {
+			limit = {
+				c:USA ?= this
+				OR = {
+					has_revolution_over_law_type = law_type:law_slavery_banned
+					AND = {
+						has_revolution_over_law_type = law_type:law_legacy_slavery
+						OR = {
+							is_enacting_law = law_type:law_slave_trade
+							is_enacting_law = law_type:law_debt_slavery
+							has_law = law_type:law_slave_trade
+							has_law = law_type:law_debt_slavery
+						}
+					}
+				}
+			}
+			ig:ig_landowners = {
+				add_ruling_interest_group = yes
+			}
+		}
+	}
+}
+
+# Root = owner Country of the Law
+on_law_enactment_started = {
+	on_actions = {
+		USCWF_CSA_betrayed_on_action
+	}
+}
+
+USCWF_CSA_betrayed_on_action = {
+	effect = {
+		if = {
+			limit = {
+				c:USA ?= this
+				is_enacting_law = law_type:law_slavery_banned
+				any_interest_group = {
+					has_modifier = ig_slavers_happy
+				}
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						has_ideology = ideology:ideology_pro_slavery
+						leader = { has_ideology = ideology:ideology_slaver }
+					}
+				}
+				remove_modifier = ig_slavers_happy
+				add_modifier = {
+					name = ig_slavers_mad
+					months = very_long_modifier_time
+					multiplier = 6
+				}
+			}
+		}
+	}
+}
+
+# Root = attacker or defender country
+# scope:enemy_country = enemy of root
+# scope:battle = battle
+# scope:attacker = attacking commander
+# scope:defender = defending commander
+# scope:state = location state
+on_battle_lost = {
+	on_actions = {
+		USCWF_fierce_defiance_on_action
+	}
+}
+
+USCWF_fierce_defiance_on_action = {
+	effect = {
+		if = {
+			limit = {
+				c:CSA ?= this
+				OR = {
+					has_journal_entry = je_acw_war
+					scope:enemy_country = {
+						has_journal_entry = je_acw_war
+					}
+				}
+				s:STATE_MISSISSIPPI.region_state:CSA = {
+					controller = c:CSA
+				}
+			}
+			every_scope_war = {
+				add_war_war_support = { target = ROOT value = 25 }
+			}
+		}
+	}
+}

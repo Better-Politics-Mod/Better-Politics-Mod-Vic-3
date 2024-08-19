@@ -1,0 +1,263 @@
+﻿namespace = manifest_destiny
+
+# Completed Mexico JE
+manifest_destiny.1 = {
+	type = country_event
+	placement = ROOT
+
+	event_image = {
+		video = "africa_construction_colony"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	
+	title = manifest_destiny.1.t
+	desc = manifest_destiny.1.d
+	flavor = manifest_destiny.1.f
+	
+	duration = 3
+	
+	trigger = {
+	}
+	
+	option = {
+		name = manifest_destiny.1.a
+		default_option = yes
+		s:STATE_CALIFORNIA = { 
+			add_homeland = cu:yankee
+		}
+		s:STATE_NEVADA = { 
+			add_homeland = cu:yankee
+		}
+		s:STATE_UTAH = { 
+			add_homeland = cu:yankee
+		}
+		s:STATE_ARIZONA = { 
+			add_homeland = cu:dixie
+		}
+		s:STATE_NEW_MEXICO = { 
+			add_homeland = cu:dixie
+		}
+	}
+}
+
+# Completed Natives JE
+manifest_destiny.2 = {
+	type = country_event
+	placement = ROOT
+
+	event_image = {
+		video = "europenorthamerica_native_american"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_map.dds"
+	
+	title = manifest_destiny.2.t
+	desc = manifest_destiny.2.d
+	flavor = manifest_destiny.2.f
+	
+	duration = 3
+	
+	trigger = {
+	}
+	
+	option = {
+		name = manifest_destiny.1.a
+		default_option = yes
+		if = {
+			limit = {
+				exists = c:SEQ
+				c:SEQ = { 
+					is_subject_of = ROOT 
+					is_player = no
+				}
+			}
+			annex = c:SEQ
+		}
+		s:STATE_OKLAHOMA = { 
+			add_homeland = cu:dixie
+		}
+		s:STATE_MONTANA = { 
+			add_homeland = cu:yankee
+		}
+		s:STATE_WYOMING = { 
+			add_homeland = cu:yankee
+		}
+		s:STATE_COLORADO = { 
+			add_homeland = cu:yankee
+		}
+		s:STATE_NORTH_DAKOTA = { 
+			add_homeland = cu:yankee
+		}
+		s:STATE_SOUTH_DAKOTA = { 
+			add_homeland = cu:yankee
+		}
+		s:STATE_NEBRASKA = { 
+			add_homeland = cu:yankee 
+		}
+		s:STATE_KANSAS = { 
+			add_homeland = cu:yankee 
+		}
+	}
+}
+
+# Bison Hunting
+manifest_destiny.3 = {
+	type = country_event
+	placement = scope:bison_state
+	
+	title = manifest_destiny.3.t
+	desc = manifest_destiny.3.d
+	flavor = manifest_destiny.3.f
+	
+	event_image = {
+		video = "europenorthamerica_native_american"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+	
+	duration = 3
+	
+	trigger = {
+		NOT = { has_variable = bison_hunting_var }
+		institution_investment_level = {
+			institution = institution_colonial_affairs
+			value >= 2
+		}
+		any_scope_state = {
+			usfp_american_west_zone = yes
+			state_region = {
+				any_scope_state = {
+					owner = {
+						is_country_type = decentralized
+					}
+				}
+			}
+			NOR = {
+				has_modifier = commercial_bison_hunting
+				has_modifier = military_bison_hunting
+			}
+		}
+	}
+
+	immediate = {
+		set_variable = {
+			name = bison_hunting_var
+			months = short_modifier_time
+		}
+		random_scope_state = {
+			limit = {
+				usfp_american_west_zone = yes
+				state_region = {
+					any_scope_state = {
+						owner = {
+							is_country_type = decentralized
+						}
+					}
+				}
+				NOR = {
+					has_modifier = commercial_bison_hunting
+					has_modifier = military_bison_hunting
+				}
+			}
+			save_scope_as = bison_state
+			state_region = {
+				random_scope_state = {
+					limit = {
+						owner = {
+							is_country_type = decentralized
+						}
+					}
+					save_scope_as = native_american_state
+					owner = {
+						save_scope_as = native_american_country
+					}
+				}
+			}
+		}
+	}
+
+	option = { # Promote private hunting
+		name = manifest_destiny.3.a
+		default_option = yes
+		trigger = {
+			scope:bison_state = {
+				any_scope_building = {
+					is_building_type = building_livestock_ranch
+				}
+			}
+		}
+		scope:bison_state = {
+			add_modifier = { # ranch throughput and colony speed
+				name = commercial_bison_hunting
+				months = normal_modifier_time
+			}
+		}
+		scope:native_american_state = {
+			add_modifier = {
+				name = bison_hunting_subsistence
+				months = normal_modifier_time
+			}
+		}
+		scope:native_american_country = {
+			change_tension = {
+				country = ROOT
+				value = 15
+			}
+		}
+	}
+
+	option = { # have the army slaughter bison
+		name = manifest_destiny.3.b
+		scope:bison_state = {
+			add_modifier = { # more colonization speed but no throughput
+				name = military_bison_hunting
+				months = normal_modifier_time
+			}
+		}
+		scope:native_american_state = {
+			add_modifier = {
+				name = bison_hunting_subsistence
+				months = normal_modifier_time
+				multiplier = 2
+			}
+		}
+		scope:native_american_country = {
+			change_tension = {
+				country = ROOT
+				value = 30
+			}
+		}
+	}
+
+	option = {
+		name = manifest_destiny.3.c
+		if = {
+			limit = {
+				scope:bison_state = {
+					any_scope_pop = {
+						is_pop_type = farmers
+					}
+				}
+			}
+			scope:bison_state = {
+				add_radicals_in_state = {
+					pop_type = farmers
+					value = large_radicals
+				}
+			}
+		}
+		scope:native_american_country = {
+			change_tension = {
+				country = ROOT
+				value = -30
+			}
+		}
+	}
+}

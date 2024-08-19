@@ -1,0 +1,502 @@
+﻿on_monthly_pulse_country = {
+	on_actions = {
+		usfp_monthly_pulse
+		usfp_arctic_isolation
+	}
+}
+
+usfp_monthly_pulse = {
+	events = {
+		usfp_usa.1 #Seneca Falls Conference
+		usfp_usa.4 #Opening of Ellis Island
+		usfp_usa.6 #Great Chicago Fire
+		usfp_usa.16 #Election chaos (ALL democracies, not just the US)
+		usfp_usa.22 #American Centennial
+	}
+	random_events = {
+		200 = 0
+		100 = usfp_usa.7 #Thomas Nast spawn event
+		100 = usfp_usa.8 #Thomas Nast weighs in on Election
+		50 = usfp_usa.10 #Henry George, Progress & Poverty
+		50 = usfp_usa.12 #American Hippo Bill
+		10 = usfp_usa.13 #Wild Hippos
+		100 = usfp_usa.15 #Hidden event to kill off the Great Triumvirate
+		1 = usfp_usa.18 #Garfield-style Assassination
+		1000 = usfp_usa.20 #Reset Parliamentary Republic to Presidential
+
+		##Labor events
+		100 = usfp_usa_labor.1 #founding of the IWW
+		100 = usfp_usa_labor.2 #Haymarket Affair
+		100 = usfp_usa_labor.3 #Knights of Labor
+		50 = usfp_usa_labor.4 #Great Railroad Strike
+		100 = usfp_usa_labor.5 #AFL
+		50 = usfp_usa_labor.6 #Looking Backwards
+
+		##Disasters
+		1 = usfp_usa.2 #Atlantic Hurricane
+		3 = usfp_usa.3 #Major Tornado
+		2 = usfp_usa.5 #Wildfire 
+
+		#Mormon events
+		20 = usfp_mormon.1 #Missouri Mormon War
+		20 = usfp_mormon.2 #Killing of Joseph Smith
+		100 = usfp_mormon.3 #Mormon Exodus
+		50 = usfp_mormon.9 #Twin Relics of Barbarism
+		50 = usfp_mormon.10 #LDS ends polygamy
+		50 = usfp_mormon.11 #Utah War instigation
+		1 = usfp_mormon.14 #Mormon assassinates president
+	}
+}
+
+#this tries to prevent native uprisings in the far north where the impassable terrain would cause problems
+usfp_arctic_isolation = {
+	effect = {
+		if = {
+			limit = {
+				OR = {
+					s:STATE_ALASKA = {
+						root_has_state_here = yes
+					}
+					s:STATE_YUKON_TERRITORY = {
+						root_has_state_here = yes
+					}
+					s:STATE_NORTHWEST_TERRITORIES = {
+						root_has_state_here = yes
+					}
+					s:STATE_NUNAVUT = {
+						root_has_state_here = yes
+					}
+					s:STATE_QUEBEC = {
+						root_has_state_here = yes
+					}
+				} 
+			}
+			every_scope_state = {
+				limit = {
+					OR = {
+						state_region = s:STATE_ALASKA
+						state_region = s:STATE_YUKON_TERRITORY
+						state_region = s:STATE_NORTHWEST_TERRITORIES
+						state_region = s:STATE_NUNAVUT
+						state_region = s:STATE_QUEBEC
+					}
+				}
+				every_neighbouring_state = {
+					limit = {
+						owner = {
+							is_country_type = decentralized
+							OR = {
+								country_has_primary_culture = cu:athabaskan
+								country_has_primary_culture = cu:inuit
+							}
+						}
+						OR = {
+							state_region = s:STATE_ALASKA
+							state_region = s:STATE_YUKON_TERRITORY
+							state_region = s:STATE_NORTHWEST_TERRITORIES
+							state_region = s:STATE_NUNAVUT
+							state_region = s:STATE_QUEBEC
+						}
+					}
+					owner = {
+						set_tension = {
+							country = root
+							value = 0
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+on_election_campaign_start = {
+	on_actions = {
+		usfp_acw_election_agitators
+		usfp_us_first_election_railroad
+		usfp_break_precedent
+	}
+}
+
+usfp_break_precedent = {
+	events = {
+		usfp_usa.19
+	}
+}
+
+#Chance to spawn a new Slaver, Abolitonist, or RadAbolitionist agitator every election
+usfp_acw_election_agitators = {
+	effect = {
+		if = {
+			limit = {
+				c:USA ?= this
+				has_journal_entry = je_acw_countdown
+			}
+			random_list = {
+				50 = {}
+				30 = {
+					create_character = {
+						culture = cu:dixie
+						interest_group = ig_landowners
+						female = no
+						is_agitator = yes
+						ideology = ideology_slaver
+						trait_generation = {
+							usfp_acw_agitators_traits = yes
+						}
+						on_created = { 
+							set_variable = { name = temp_event_target_in_use years = 8 }
+							set_variable = { name = usfp_acw_agitator }  
+						}
+					}
+				}
+				15 = {
+					create_character = {
+						culture = cu:yankee
+						interest_group = ig_intelligentsia
+						female = no
+						is_agitator = yes
+						ideology = ideology_abolitionist
+						trait_generation = {
+							usfp_acw_agitators_traits = yes
+						}
+						on_created = { 
+							set_variable = { name = temp_event_target_in_use years = 8 }
+							set_variable = { name = usfp_acw_agitator } 
+						}
+					}
+				}
+				5 = {
+					create_character = {
+						culture = cu:yankee
+						interest_group = ig_intelligentsia
+						female = no
+						is_agitator = yes
+						ideology = ideology_usfp_abolitionist_radical
+						trait_generation = {
+							usfp_acw_agitators_traits = yes
+						}
+						on_created = { 
+							set_variable = { name = temp_event_target_in_use years = 8 }
+							set_variable = { name = usfp_acw_agitator } 
+						}
+					}
+				}
+			}
+			#You banned slavery? fuck you
+			if = {
+				limit = {
+					OR = {
+						is_enacting_law = law_type:law_slavery_banned
+						has_law = law_type:law_slavery_banned
+					}
+				 }
+				 create_character = {
+					culture = cu:dixie
+					interest_group = ig_landowners
+					female = no
+					is_agitator = yes
+					ideology = ideology_slaver
+					trait_generation = {
+						usfp_acw_agitators_traits = yes
+					}
+					on_created = { 
+						set_variable = { name = temp_event_target_in_use years = 8 }
+						set_variable = { name = usfp_acw_agitator }  
+					}
+				}
+				random_political_movement = {
+				limit = { desired_law = law_type:law_slave_trade }
+					add_modifier = {
+						name = modifier_uncommitted_government
+						months = very_long_modifier_time
+					}
+					add_modifier = {
+						name = modifier_movement_state_paramilitarism
+						months = very_long_modifier_time
+					}
+				}
+			}
+		}
+	}
+}
+
+#Add momentum to the Democrats as soft historical railroading
+usfp_us_first_election_railroad = {
+	effect = {
+		if = {
+			limit = { 
+				c:USA ?= this
+				NOT = {
+					has_variable = had_first_election
+				}
+			}
+			trigger_event = {
+				id = usfp_usa.14
+				days = 1
+			}
+		}
+	}
+}
+
+#Gag Rule enforcement, to allow for Political Movements to still exist
+on_law_enactment_started = {
+	on_actions = {
+		usfp_gag_rule_on_action
+	}
+}
+
+usfp_gag_rule_on_action = {
+	effect = {
+		if = {
+			limit = { 
+				has_journal_entry = je_usfp_a_house_divided_gag_rule
+				OR = {
+					is_enacting_law = law_type:law_slave_trade
+					is_enacting_law = law_type:law_slavery_banned
+					is_enacting_law = law_type:law_debt_slavery
+					is_enacting_law = law_type:law_legacy_slavery
+				}
+			}
+			trigger_event = {
+				id = usfp_a_house_divided.2
+				days = 1
+			}
+		}
+	}
+}
+
+on_new_ruler = {
+	on_actions = {
+		usfp_elected_abolitionist
+		usfp_new_president 
+	}
+}
+
+usfp_elected_abolitionist = {
+	effect = {
+		if = {
+			limit = {
+				owner = {
+					c:USA ?= this
+				}
+					OR = {
+						has_ideology = ideology:ideology_abolitionist
+						has_ideology = ideology:ideology_usfp_abolitionist_radical
+						has_ideology = ideology:ideology_usfp_social_gospel_leader
+					}
+			}
+			owner = {
+				trigger_event = { 
+					id = usfp_a_house_divided.3
+					popup = yes
+				}
+			}
+		}
+	}
+}
+
+usfp_new_president = {
+	effect = {
+		owner = {
+			trigger_event = usfp_usa.21
+		}
+	}
+}
+
+#Constitutional Challenge event
+on_law_checkpoint_success = {
+	on_actions = {
+		usfp_law_events
+	}
+}
+
+usfp_law_events = {
+	events = {
+		usfp_usa.9 #Constitutional Challenge
+		usfp_a_house_divided.14 #Missouri/1850 Compromise Violation
+	}
+}
+
+on_capitulation = {
+	on_actions = {
+		usfp_mexico_defeats_usa
+	}
+}
+
+usfp_mexico_defeats_usa = {
+	effect = {
+		if = {
+			limit = {
+				exists = c:USA
+				exists = c:MEX
+				this = c:USA
+				has_journal_entry = usfp_manifest_destiny_main
+				has_truce_with = c:MEX
+				NOT = {
+					has_variable = destiny_manifested_mexico_defeat
+				}
+			 }
+			 set_variable = destiny_manifested_mexico_defeat
+			 usfp_manifest_less_destiny_effect = yes
+			 usfp_manifest_less_destiny_effect = yes
+			 usfp_manifest_less_destiny_effect = yes
+			 c:MEX = {
+				save_scope_as = mexico_scope
+			 }
+			 post_notification = usfp_manifest_less_destiny_mexico
+		}
+	}
+}
+
+on_civil_war_won = {
+	on_actions = {
+		usfp_fsa_annex
+	}
+}
+
+usfp_fsa_annex = {
+	effect = {
+		if = {
+			limit = {
+				has_variable = fsa_annex_var
+			 }
+			 trigger_event = acw_je_events.2
+		}
+	}
+}
+
+on_diplomatic_play_started = {
+	on_actions = {
+		usfp_mexico_attacks_usa
+	}
+}
+
+usfp_mexico_attacks_usa = {
+	effect = {
+		if = {
+			limit = { 
+				exists = c:MEX
+				scope:initiator = c:MEX
+				exists = c:USA
+				scope:target = c:USA
+				c:USA = {
+					NOT = {
+						has_variable = destiny_manifested_mexican_aggression
+					}
+					has_journal_entry = usfp_manifest_destiny_main
+				}
+			}
+			c:USA = {
+				usfp_manifest_more_destiny_effect = yes
+				set_variable = destiny_manifested_mexican_aggression
+				c:MEX = {
+					save_scope_as = mexico_scope
+				}
+				post_notification = usfp_manifest_more_destiny_mexico
+			}
+		}
+	}
+}
+
+on_wargoal_enforced = {
+	on_actions = {
+		usfp_utah_war
+		usfp_sonora_defeat
+	}
+}
+
+usfp_utah_war = {
+	effect = {
+		if = {
+			limit = { 
+				c:USA ?= root
+				NOT = {
+					exists = c:DES
+				}
+				s:STATE_UTAH = {
+					any_scope_state = {
+						owner = root
+					}
+				}
+				has_global_variable = utah_war
+				NOR = {
+					has_variable = utah_war_amnesty
+					has_variable = lds_fate
+				}
+			}
+			trigger_event = {
+				id = usfp_mormon.13
+				popup = yes
+			}
+		}
+	}
+}
+
+usfp_sonora_defeat = {
+	effect = {
+		if = {
+			limit = { 
+				c:MEX ?= root
+				has_global_variable = had_walker_sonora
+				NOT = {
+					has_variable = walker_sonora_defeated
+				}
+				exists = c:USA
+				# NOT = {
+				# 	exists = c:SON
+				# }
+				owns_entire_state_region = STATE_SONORA
+				owns_entire_state_region = STATE_BAJA_CALIFORNIA
+			}
+			c:USA = {
+				trigger_event = {
+					id = usfp_filibuster.3
+					days = 7
+				}
+			}
+			c:MEX = {
+				set_variable = walker_sonora_defeated
+			}
+		}
+	}
+}
+
+on_law_enactment_pass = {
+	on_actions = {
+		usfp_remove_party_system
+	}
+}
+
+usfp_remove_party_system = {
+	effect = {
+		if = {
+			limit = {
+				has_modifier = usfp_second_party_system_modifier
+				NOT = {
+					has_law = law_type:law_presidential_republic
+				}
+			 }
+			remove_modifier = usfp_second_party_system_modifier
+		}
+		if = {
+			limit = {
+				has_modifier = usfp_third_party_system_modifier
+				NOT = {
+					has_law = law_type:law_presidential_republic
+				}
+			 }
+			remove_modifier = usfp_third_party_system_modifier
+		}
+		if = {
+			limit = {
+				has_modifier = usfp_fourth_party_system_modifier
+				NOT = {
+					has_law = law_type:law_presidential_republic
+				}
+			 }
+			remove_modifier = usfp_fourth_party_system_modifier
+		}
+	}
+}

@@ -1,0 +1,1465 @@
+﻿namespace = usfp_acw
+###### Hail, Columbia! by CaelReader ######
+#Nast supports ACW
+usfp_acw.1 = {
+	type = country_event
+	placement = root
+
+	title = usfp_acw.1.t
+	desc = usfp_acw.1.d
+	flavor = usfp_acw.1.f
+	dlc = dlc_usfp
+
+	gui_window = event_window_1char_tabloid
+	left_icon = scope:nast_scope
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 3
+	cooldown = {
+		years = 30
+	}
+
+	trigger = {
+		#trigger by ACW JE
+		any_scope_character = {
+			has_variable = nast_var
+			has_role = agitator
+		}
+		NOT = {
+			has_variable = nast_acw
+		}
+		has_global_variable = american_civil_war
+		is_at_war = yes
+		exists = c:CSA
+		has_war_with = c:CSA
+		in_election_campaign = yes
+	}
+
+	immediate = {
+		random_scope_character = {
+			limit = {
+				has_variable = nast_var
+			}
+			save_scope_as = nast_scope
+		}
+		set_variable = nast_acw
+		random_diplomatic_play = {
+			limit = {
+				any_scope_play_involved = {
+					OR = {
+						c:USA = this
+						c:CSA = this
+					}
+				}
+			}
+			save_scope_as = acw_scope
+		}
+		c:CSA = {
+			save_scope_as = csa_scope
+		}
+		usfp_find_republican_party_effect = yes
+		ordered_interest_group = {
+			limit = {
+				party = scope:republican_party_scope
+			}
+			order_by = ig_clout
+			save_scope_as = republican_party_leading_ig
+		}
+		scope:republican_party_leading_ig = {
+			leader = {
+				save_scope_as = nast_support_scope
+			}
+		}
+	}
+
+	option = {
+		name = usfp_acw.1.a
+		default_option = yes
+		scope:republican_party_scope = {
+			add_momentum = momentum_medium
+		}
+		scope:acw_scope = {
+			war = {
+				add_war_war_support = {
+					target = ROOT
+					value = 50
+				}
+			}
+		}
+	}
+}
+
+#Trent Affair
+usfp_acw.2 = {
+	type = country_event
+	placement = root
+
+	title = usfp_acw.2.t
+	desc = usfp_acw.2.d
+	flavor = usfp_acw.2.f
+	dlc = dlc_usfp
+	event_image = {
+		video = "unspecific_naval_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	duration = 3
+
+	trigger = {
+		NOT = {
+			has_variable = trent_affair
+		}
+		exists = c:CSA
+		# c:CSA = {
+		# 	has_diplomatic_pact = {
+		# 		who = c:GBR
+		# 		type = increase_relations
+		# 	}
+		# }
+		c:GBR = {
+			NOR = {
+				is_diplomatic_play_participant_with = c:USA
+				is_diplomatic_play_participant_with = c:CSA
+			}
+		}
+	}
+
+	immediate = {
+		set_variable = trent_affair
+		c:CSA = {
+			save_scope_as = csa_scope
+		}
+		c:GBR = {
+			save_scope_as = britain_scope
+		}
+	}
+
+	#release the envoys
+	option = {
+		name = usfp_acw.2.a
+		default_option = yes
+	}
+	#no!
+	option = {
+		name = usfp_acw.2.b
+		change_relations = {
+			country = c:GBR
+			value = -20
+		}
+		c:CSA = {
+			add_modifier = {
+				name = usfp_diplomats_intercepted 
+				years = 2
+			}
+			# remove_diplomatic_pact = {
+			# 	country = c:GBR
+			# 	type = increase_relations
+			# }
+		}
+	}
+}
+
+#West Virginia breaks for the Union
+usfp_acw.3 = {
+	type = country_event
+	placement = scope:west_virginia_scope
+
+	title = usfp_acw.3.t
+	desc = usfp_acw.3.d
+	flavor = usfp_acw.3.f
+	dlc = dlc_usfp
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	duration = 1
+
+	trigger = {
+		exists = c:CSA
+		NOR = {
+			owns_entire_state_region = STATE_WEST_VIRGINIA
+			has_variable = west_virginia_statehood
+		}
+	}
+
+	immediate = {
+		s:STATE_WEST_VIRGINIA.region_state:CSA = {
+			set_state_owner = c:USA
+			save_scope_as = west_virginia_scope
+		}
+		s:STATE_VIRGINIA.region_state:CSA = {
+			save_scope_as = virginia_scope
+		}
+		set_variable = west_virginia_statehood
+	}
+
+	#welcome to the union
+	option = {
+		name = usfp_acw.3.a
+		scope:west_virginia_scope = {
+			add_loyalists_in_state = {
+				value = small_radicals
+				culture = cu:yankee
+			}
+		}
+	}
+}
+
+#Ironclad innovation
+usfp_acw.4 = {
+	type = country_event
+	placement = scope:new_york_scope
+
+	title = usfp_acw.4.t
+	desc = usfp_acw.4.d
+	flavor = usfp_acw.4.f
+	dlc = dlc_usfp
+	event_image = {
+		video = "votp_gunboat_diplomacy"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	duration = 3
+
+	trigger = {
+		NOT = {
+			has_variable = had_ironclad_innovation
+		}
+		has_technology_researched = paddle_steamer
+		NOT = {
+			has_technology_researched = ironclad_tech
+		}
+		owns_entire_state_region = STATE_NEW_YORK
+		is_at_war = yes
+	}
+
+	immediate = {
+		set_variable = had_ironclad_innovation
+		s:STATE_NEW_YORK.region_state:USA = {
+			save_scope_as = new_york_scope
+		}
+	}
+
+	#fund it!
+	option = {
+		name = usfp_acw.4.a
+		default_option = yes
+		add_technology_progress = {
+			technology = ironclad_tech
+			progress = 3500
+		}
+		custom_tooltip = {
+			text = usfp_acw.4.a.tt
+			create_military_formation = {
+				type = fleet
+				hq_region = sr:region_new_england
+				name = USS_Monitor
+				combat_unit = {
+					type = unit_type:combat_unit_type_ironclad
+					state_region = s:STATE_NEW_YORK
+					count = 1
+				}
+			}
+		}
+		add_treasury = -275000
+	}
+	#too much of a gamble
+	option = {
+		name = usfp_acw.4.b
+		add_technology_progress = {
+			technology = ironclad_tech
+			progress = 1000
+		}
+	}
+}
+
+#Indians declare for the Confederacy
+usfp_acw.5 = {
+	type = country_event
+	placement = root
+
+	title = usfp_acw.5.t
+	desc = usfp_acw.5.d
+	flavor = usfp_acw.5.f
+	dlc = dlc_usfp
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	duration = 3
+
+	trigger = {
+		OR = {
+			AND = {
+				exists = c:CSW
+				c:CSW = {
+					is_subject_of = root
+				}
+			}
+			AND = {
+				exists = c:CHE
+				c:CHE = {
+					is_subject_of = root
+				}
+			}
+		}
+		exists = c:CSA
+	}
+
+	immediate = {
+		c:CSA = {
+			save_scope_as = csa_scope
+		}
+		if = {
+			limit = {
+				exists = c:CHE
+				c:CHE = {
+					is_subject_of = root
+				}
+			 }
+			 c:CHE = {
+				make_independent = yes
+				random_diplomatic_play = {
+					limit = {
+						any_scope_play_involved = {
+							this = scope:csa_scope
+						}
+						any_scope_play_involved = {
+							this = c:USA
+						}
+					}
+					add_initiator_backers = {
+						c:CHE
+					}
+					add_war_goal = {
+						holder = c:USA
+						type = annex_country
+						target_country = c:CHE
+					}
+				}
+				change_relations = {
+					country = c:CSA
+					value = 50
+				}
+				change_relations = {
+					country = c:USA
+					value = -50
+				}
+			 }
+		}
+		if = {
+			limit = {
+				exists = c:CSW
+				c:CSW = {
+					is_subject_of = root
+				}
+			 }
+			 c:CSW = {
+				make_independent = yes
+				random_diplomatic_play = {
+					limit = {
+						any_scope_play_involved = {
+							this = scope:csa_scope
+						}
+						any_scope_play_involved = {
+							this = c:USA
+						}
+					}
+					add_initiator_backers = {
+						c:CSW
+					}
+					add_war_goal = {
+						holder = c:USA
+						type = annex_country
+						target_country = c:CSW
+					}
+				}
+				change_relations = {
+					country = c:CSA
+					value = 50
+				}
+				change_relations = {
+					country = c:USA
+					value = -50
+				}
+			 }
+		}
+	}
+
+	#damn!
+	option = {
+		name = usfp_acw.5.a
+		default_option = yes
+		show_as_tooltip = {
+			if = {
+				limit = {
+					exists = c:CHE
+				 }
+				 c:CHE = {
+					make_independent = yes
+					random_diplomatic_play = {
+						limit = {
+							any_scope_play_involved = {
+								this = scope:csa_scope
+							}
+							any_scope_play_involved = {
+								this = c:USA
+							}
+						}
+						add_initiator_backers = {
+							c:CHE
+						}
+						add_war_goal = {
+							holder = c:USA
+							type = annex_country
+							target_country = c:CHE
+						}
+					}
+					change_relations = {
+						country = c:CSA
+						value = 50
+					}
+				 }
+			}
+			if = {
+				limit = {
+					exists = c:CSW
+				 }
+				 c:CSW = {
+					make_independent = yes
+					random_diplomatic_play = {
+						limit = {
+							any_scope_play_involved = {
+								this = scope:csa_scope
+							}
+							any_scope_play_involved = {
+								this = c:USA
+							}
+						}
+						add_initiator_backers = {
+							c:CSW
+						}
+						add_war_goal = {
+							holder = c:USA
+							type = annex_country
+							target_country = c:CSW
+						}
+					}
+					change_relations = {
+						country = c:CSA
+						value = 50
+					}
+				 }
+			}
+		}
+	}
+}
+
+#March to the Sea
+usfp_acw.6 = {
+	type = country_event
+	placement = scope:georgia_scope
+
+	title = usfp_acw.6.t
+	desc = usfp_acw.6.d
+	flavor = usfp_acw.6.f
+	dlc = dlc_usfp
+	event_image = {
+		video = "unspecific_fire"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	duration = 1
+
+	trigger = {
+		exists = c:CSA
+		NOT = {
+			has_variable = marched_to_the_sea
+		}
+		any_scope_character = {
+			OR = {
+				has_trait = cruel
+				has_trait = wrathful
+				has_trait = pillager
+			}
+		}
+		s:STATE_GEORGIA.region_state:CSA = {
+			controller = c:USA
+		}
+	}
+
+	immediate = {
+		set_variable = marched_to_the_sea
+		s:STATE_GEORGIA.region_state:CSA = {
+			save_scope_as = georgia_scope
+		}
+	}
+
+	#They shouldnt have rebelled
+	option = {
+		name = usfp_acw.6.a
+		default_option = yes
+		scope:georgia_scope = {
+			state_region = {
+				add_devastation = 25
+			}
+			add_radicals_in_state = {
+				value = 0.02
+				culture = cu:dixie
+			}
+		}
+	}
+
+	#We need restraint!
+	option = {
+		name = usfp_acw.6.b
+		scope:georgia_scope = {
+			state_region = {
+				add_devastation = 20
+			}
+			add_radicals_in_state = {
+				value = 0.01
+				culture = cu:dixie
+			}
+		}
+		ig:ig_armed_forces = {
+			add_modifier = {
+				name = usfp_restrained_looting
+				years = 2
+			}
+		}
+	}
+
+}
+
+#Draft Riot
+usfp_acw.7 = {
+	type = country_event
+	placement = scope:new_york_scope
+
+	title = usfp_acw.7.t
+	desc = usfp_acw.7.d
+	flavor = usfp_acw.7.f
+	dlc = dlc_usfp
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	trigger = {
+		owns_entire_state_region = STATE_NEW_YORK
+		NOT = {
+			has_variable = had_draft_week
+		}
+		s:STATE_NEW_YORK.region_state:USA = {
+			any_scope_pop = {
+				culture = cu:irish
+			}
+			any_scope_pop = {
+				culture = cu:afro_american
+			}
+		}
+	}
+
+	immediate = {
+		s:STATE_NEW_YORK.region_state:USA = {
+			save_scope_as = new_york_scope
+		}
+		set_variable = had_draft_week
+		cu:irish = {
+			save_scope_as = irish_culture
+		}
+		cu:afro_american = {
+			save_scope_as = afro_american_culture
+		}
+	}
+
+	#deploy military!
+	option = {
+		name = usfp_acw.7.a
+		default_option = yes
+		scope:new_york_scope = {
+			state_region = {
+				add_devastation = 5
+			}
+			add_culture_standard_of_living_modifier = {
+				culture = cu:irish
+				multiplier = -2
+				years = 5
+			}
+			add_culture_standard_of_living_modifier = {
+				culture = cu:afro_american
+				multiplier = -2
+				years = 5
+			}
+			add_radicals_in_state = {
+				value = 0.05
+				culture = cu:irish
+			}
+			add_radicals_in_state = {
+				value = 0.05
+				culture = cu:afro_american
+			}
+		}
+	}
+
+	#negotiate draft exemptions
+	option = {
+		name = usfp_acw.7.b
+		scope:new_york_scope = {
+			state_region = {
+				add_devastation = 2
+			}
+			add_culture_standard_of_living_modifier = {
+				culture = cu:irish
+				multiplier = -1
+				years = 5
+			}
+			add_culture_standard_of_living_modifier = {
+				culture = cu:afro_american
+				multiplier = -2
+				years = 5
+			}
+			add_radicals_in_state = {
+				value = 0.02
+				culture = cu:irish
+			}
+			add_radicals_in_state = {
+				value = 0.05
+				culture = cu:afro_american
+			}
+		}
+		add_modifier = {
+			name = usfp_draft_exemptions
+			years = 4
+		}
+	}
+}
+
+#FSA chooses war goal
+usfp_acw.8 = {
+	type = country_event
+	placement = root
+
+	title = usfp_acw.8.t
+	desc = usfp_acw.8.d
+	flavor = usfp_acw.8.f
+	dlc = dlc_usfp
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/waving_flag_fsa.dds"
+
+	duration = 3
+
+	trigger = {
+		#triggered by event
+	}
+
+	#Remain a secession
+	option = {
+		name = usfp_acw.8.a
+		ai_chance = {
+			base = 30
+		}
+	}
+	#Go for Annex
+	option = {
+		name = usfp_acw.8.b
+		default_option = yes
+		random_diplomatic_play = {
+			limit = {
+				exists = scope:fsa_scope
+				any_scope_play_involved = {
+					this = scope:fsa_scope
+				}
+			}
+			remove_war_goal = {
+				who = initiator
+				war_goal = revoke_all_claims
+			}
+			add_war_goal = {
+				holder = initiator
+				type = annex_country
+				target_country = target				
+				primary_demand = yes
+			}			
+		}
+		set_variable = fsa_annex_var
+		ai_chance = {
+			base = 70
+		}
+	}
+}
+
+#The Union Forever? ACW Defeat
+usfp_acw.9 = {
+	type = country_event
+	placement = root
+
+	title = usfp_acw.9.t
+	desc = usfp_acw.9.d
+	flavor = usfp_acw.9.f
+	dlc = dlc_usfp
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/waving_flag_usa_distress.dds"
+
+	duration = 3
+
+	trigger = {
+		#triggered by JE
+	}
+
+	immediate = {
+		if = {
+			limit = { 
+				exists = c:FSA
+			}
+			c:FSA = {
+				save_scope_as = acw_secession_country
+			}
+		} else_if = {
+			limit = {
+				exists = c:CSA
+			 }
+			 c:CSA = {
+				save_scope_as = acw_secession_country
+			 }
+			 usfp_planters_to_landowners_effect = yes
+		}
+		create_political_lobby = {
+			type = lobby_anti_country
+			target = scope:acw_secession_country
+			add_interest_group = ig:ig_armed_forces
+			add_interest_group = ig:ig_intelligentsia
+		}
+		ig:ig_landowners = {
+			usfp_planters_to_landowners_effect = yes	
+		}
+	}
+
+	#Regain claims
+	option = {
+		name = usfp_acw.9.a
+		default_option = yes
+		scope:acw_secession_country = {
+			every_scope_state = {
+				state_region = {
+					add_claim = root
+				}
+			}
+		}
+		change_relations = {
+			country = scope:acw_secession_country
+			value = -100
+		}
+		add_modifier = {
+			name = usfp_secession_legimitized
+			is_decaying = yes
+			years = 50
+		}
+		create_diplomatic_pact = {
+			country = scope:acw_secession_country
+			type = rivalry
+		}
+		ruler = {
+			add_modifier = {
+				name = usfp_lost_civil_war
+				years = 10
+			}
+		}
+		ai_chance = {
+			base = 50
+		}
+	}
+	#Become Authoritarian
+	option = {
+		name = usfp_acw.9.b
+		ruler = {
+			set_ideology = ideology:ideology_authoritarian
+			add_modifier = {
+				name = usfp_lost_civil_war
+				multiplier = 0.5
+				years = 10
+			}
+		}
+		add_modifier = {
+			name = usfp_secession_legimitized
+			is_decaying = yes
+			years = 50
+		}
+		ai_chance = {
+			base = 10
+		}
+	}
+
+}
+#Post-ACW Armed Forces Boost
+usfp_acw.10 = {
+	type = country_event
+	placement = root
+
+	title = usfp_acw.10.t
+	desc = usfp_acw.10.d
+	flavor = usfp_acw.10.f
+	dlc = dlc_usfp
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	duration = 3
+
+	trigger = {
+		#triggered by JE
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				any_scope_general = {
+					has_template = usa_general_grant
+				}
+			 }
+			 random_scope_general = {
+				limit = {
+					has_template = usa_general_grant
+					}
+					save_scope_as = general_grant_scope
+				}
+		}
+		ig:ig_armed_forces = {
+			ordered_scope_general = {
+				limit = {
+					is_ruler = no
+					NOR = {
+						has_role = politician
+						has_template = usa_general_grant
+					}
+				}
+				order_by = commander_rank
+				save_scope_as = civil_war_general
+			}
+		}
+	}
+
+	#We salute our heroes!
+	option = {
+		name = usfp_acw.10.a
+		ig:ig_armed_forces = {
+			add_modifier = {
+				name = usfp_post_civil_war_army
+				years = 10
+				is_decaying = yes
+			}
+		}
+		add_loyalists = {
+			value = medium_radicals
+			pop_type = soldiers
+		}
+		add_loyalists = {
+			value = large_radicals
+			pop_type = officers
+		}
+	}
+	#General takes the lead!
+	option = {
+		name = usfp_acw.10.b
+		default_option = yes
+		trigger = {
+			exists = scope:civil_war_general
+		}
+		scope:civil_war_general = {
+			if = {
+				limit = { 
+					commander_rank < 5
+				}
+				add_commander_rank = 1
+			}
+			add_modifier = {
+				name = usfp_civil_war_hero
+			}
+			set_as_interest_group_leader = yes
+		}
+		ig:ig_armed_forces = {
+			add_modifier = {
+				name = usfp_post_civil_war_army
+				years = 10
+				is_decaying = yes
+			}
+		}
+		add_loyalists = {
+			value = medium_radicals
+			pop_type = soldiers
+		}
+		add_loyalists = {
+			value = large_radicals
+			pop_type = officers
+		}
+	}
+	#Grant takes the lead!
+	option = {
+		name = usfp_acw.10.c
+		trigger = {
+			any_scope_general = {
+				has_template = usa_general_grant
+				is_ruler = no
+				NOT = {
+					has_role = politician
+				}
+			}
+		}
+		scope:general_grant_scope = {
+			if = {
+				limit = { 
+					commander_rank < 5
+				}
+				add_commander_rank = 1
+			}
+			add_modifier = {
+				name = usfp_civil_war_hero
+			}
+			set_as_interest_group_leader = yes
+		}
+		ig:ig_armed_forces = {
+			add_modifier = {
+				name = usfp_post_civil_war_army
+				years = 10
+				is_decaying = yes
+			}
+		}
+		add_loyalists = {
+			value = medium_radicals
+			pop_type = soldiers
+		}
+		add_loyalists = {
+			value = large_radicals
+			pop_type = officers
+		}
+	}
+}
+
+#Rio Grande breaks away
+# usfp_acw.11 = {
+# 	type = country_event
+# 	placement = scope:rio_grande_state_scope
+
+# 	title = usfp_acw.11.t
+# 	desc = usfp_acw.11.d
+# 	flavor = usfp_acw.11.f
+# 	dlc = dlc_usfp
+# 	event_image = {
+# 		video = "votp_barricade"
+# 	}
+
+# 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+# 	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+# 	duration = 3
+
+# 	trigger = {
+# 		s:STATE_RIO_GRANDE = {
+# 			OR = {
+# 				root_has_state_here = yes
+# 				any_scope_state = {
+# 					exists = c:CSA
+# 					owner = c:CSA
+# 				}
+# 			}
+# 		}
+# 		NOT = {
+# 			has_variable = had_rio_grande_breakaway
+# 		}
+# 		NOT = {
+# 			c:MEX ?= {
+# 				is_subject_of = c:USA
+# 			}
+# 		}
+# 		NOT = {
+# 			owns_entire_state_region = STATE_MEXICO
+# 		}
+# 	}
+
+# 	immediate = {
+# 		c:MEX = {
+# 			save_scope_as = mexican_scope
+# 		}
+# 		s:STATE_RIO_GRANDE = {
+# 			random_scope_state = {
+# 				limit = {
+# 					OR = {
+# 						AND = {
+# 							exists = c:CSA
+# 							owner = c:CSA
+# 						}
+# 						owner = root
+# 					}
+# 				}
+# 				save_scope_as = rio_grande_state_scope
+# 			}
+# 		}
+# 		set_variable = had_rio_grande_breakaway
+# 		create_country = {
+# 			tag = RIO
+# 			state = scope:rio_grande_state_scope
+# 			origin = c:MEX
+# 			on_created = {
+# 				add_loyalists = {
+# 					value = large_radicals
+# 					culture = cu:mexican
+# 				}
+# 				add_radicals = {
+# 					value = very_large_radicals
+# 					culture = cu:dixie
+# 				}
+# 				if = {
+# 					limit = { 
+# 						exists = c:MEX
+# 					}
+# 					every_scope_state = {
+# 						state_region = {
+# 							add_claim = c:MEX
+# 						}
+# 					}
+# 				}
+# 			}
+# 		}
+# 		c:RIO = {
+# 			save_scope_as = rio_grande_scope
+# 		}
+# 		create_diplomatic_play = {
+# 			type = dp_secession
+# 			target_country = c:RIO
+# 		}
+# 		if = {
+# 			limit = { 
+# 				s:STATE_CHIHUAHUA = {
+# 					OR = {
+# 						root_has_state_here = yes
+# 						any_scope_state = {
+# 							exists = c:CSA
+# 							owner = c:CSA
+# 						}
+# 					}
+# 				}
+# 			}
+# 			s:STATE_CHIHUAHUA = {
+# 				random_scope_state = {
+# 					limit = {
+# 						OR = {
+# 							AND = {
+# 								exists = c:CSA
+# 								owner = c:CSA
+# 							}
+# 							owner = root
+# 						}
+# 					}
+# 					set_state_owner = c:RIO
+# 				}
+# 			}
+# 		}
+# 		if = {
+# 			limit = { 
+# 				s:STATE_DURANGO = {
+# 					OR = {
+# 						root_has_state_here = yes
+# 						any_scope_state = {
+# 							exists = c:CSA
+# 							owner = c:CSA
+# 						}
+# 					}
+# 				}
+# 			}
+# 			s:STATE_DURANGO = {
+# 				random_scope_state = {
+# 					limit = {
+# 						OR = {
+# 							AND = {
+# 								exists = c:CSA
+# 								owner = c:CSA
+# 							}
+# 							owner = root
+# 						}
+# 					}
+# 					set_state_owner = c:RIO
+# 				}
+# 			}
+# 		}
+# 		if = {
+# 			limit = { 
+# 				exists = c:CSA
+# 			}
+# 			c:CSA = {
+# 				trigger_event = {
+# 					id = usfp_acw.12
+# 				}
+# 			}
+# 		}
+# 	}
+
+# 	#we must accept this
+# 	option = {
+# 		name = usfp_acw.11.a
+# 		default_option = yes
+# 		add_loyalists = {
+# 			value = small_radicals
+# 			culture = cu:mexican
+# 		}
+# 		create_truce = {
+# 			country = c:RIO
+# 			months = 60
+# 		}
+# 		ai_chance = {
+# 			base = 10
+# 		}
+# 	}
+# 	#get them later
+# 	option = {
+# 		name = usfp_acw.11.b
+# 		add_radicals = {
+# 			value = small_radicals
+# 			culture = cu:mexican
+# 		}
+# 		c:RIO = {
+# 			every_scope_state = {
+# 				state_region = {
+# 					add_claim = root
+# 				}
+# 			}
+# 		}
+# 		create_truce = {
+# 			country = c:RIO
+# 			months = 60
+# 		}
+# 		change_relations = {
+# 			country = c:RIO
+# 			value = -30
+# 		}
+# 		ai_chance = {
+# 			base = 40
+# 		}
+# 	}
+# 	#attack!
+# 	option = {
+# 		name = usfp_acw.11.c
+# 		add_radicals = {
+# 			value = small_radicals
+# 			culture = cu:mexican
+# 		}
+# 		c:RIO = {
+# 			every_scope_state = {
+# 				state_region = {
+# 					add_claim = root
+# 				}
+# 			}
+# 		}
+# 		change_relations = {
+# 			country = c:RIO
+# 			value = -50
+# 		}
+# 		ai_chance = {
+# 			base = 50
+# 		}
+# 	}
+# }
+# #CSA: Rio Grande breaks away!
+# usfp_acw.12 = {
+# 	type = country_event
+# 	placement = scope:rio_grande_state_scope
+
+# 	title = usfp_acw.11.t
+# 	desc = usfp_acw.11.d
+# 	flavor = usfp_acw.11.f
+# 	dlc = dlc_usfp
+# 	event_image = {
+# 		video = "votp_barricade"
+# 	}
+
+# 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+# 	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+# 	duration = 3
+
+# 	#we must accept this
+# 	option = {
+# 		name = usfp_acw.11.a
+# 		default_option = yes
+# 		add_loyalists = {
+# 			value = small_radicals
+# 			culture = cu:mexican
+# 		}
+# 		create_truce = {
+# 			country = c:RIO
+# 			months = 60
+# 		}
+# 		ai_chance = {
+# 			base = 10
+# 		}
+# 	}
+# 	#get them later
+# 	option = {
+# 		name = usfp_acw.11.b
+# 		add_radicals = {
+# 			value = small_radicals
+# 			culture = cu:mexican
+# 		}
+# 		c:RIO = {
+# 			every_scope_state = {
+# 				state_region = {
+# 					add_claim = root
+# 				}
+# 			}
+# 		}
+# 		create_truce = {
+# 			country = c:RIO
+# 			months = 60
+# 		}
+# 		change_relations = {
+# 			country = c:RIO
+# 			value = -30
+# 		}
+# 		ai_chance = {
+# 			base = 20
+# 		}
+# 	}
+# 	#attack!
+# 	option = {
+# 		name = usfp_acw.11.c
+# 		add_radicals = {
+# 			value = small_radicals
+# 			culture = cu:mexican
+# 		}
+# 		c:RIO = {
+# 			every_scope_state = {
+# 				state_region = {
+# 					add_claim = root
+# 				}
+# 			}
+# 		}
+# 		change_relations = {
+# 			country = c:RIO
+# 			value = -50
+# 		}
+# 		create_diplomatic_play = {
+# 			type = dp_annex_war
+# 			target_country = c:RIO
+# 			add_war_goal = {
+# 				holder = c:RIO
+# 				type = revoke_all_claims
+# 				target_country = root
+# 			}
+# 		}
+# 		ai_chance = {
+# 			base = 50
+# 		}
+# 	}
+# }
+#Mexico revolt (subject)
+# usfp_acw.13 = {
+# 	type = country_event
+# 	placement = scope:mexico_scope.capital
+
+# 	title = usfp_acw.13.t
+# 	desc = usfp_acw.13.d
+# 	flavor = usfp_acw.13.f
+# 	dlc = dlc_usfp
+# 	event_image = {
+# 		video = "votp_barricade"
+# 	}
+
+# 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+# 	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+# 	duration = 3
+
+# 	trigger = {
+# 		NOT = {
+# 			has_variable = had_mexican_rebellion
+# 		}
+# 		c:MEX ?= {
+# 			is_subject_of = root
+# 		}
+# 	}
+
+# 	immediate = {
+# 		set_variable = had_mexican_rebellion
+# 		remove_diplomatic_pact = {
+# 			country = c:MEX
+# 			type = dominion
+# 		}
+# 		remove_diplomatic_pact = {
+# 			country = c:MEX
+# 			type = puppet
+# 		}
+# 		create_diplomatic_pact = {
+# 			country = c:MEX
+# 			type = protectorate
+# 		}
+# 		c:MEX = {
+# 			save_scope_as = mexico_scope
+# 			add_loyalists = {
+# 				value = medium_radicals
+# 				culture = cu:mexican
+# 			}
+# 			add_radicals = {
+# 				value = large_radicals
+# 				culture = cu:dixie
+# 			}
+# 		}
+# 		every_scope_state = {
+# 			limit = {
+# 				region = sr:region_mexico
+# 			}
+# 			state_region = {
+# 				add_claim = c:MEX
+# 			}
+# 		}
+# 		every_diplomatic_play = {
+# 			limit = {
+# 				initiator = c:USA
+# 			}
+# 			remove_initiator_backers = {
+# 				c:MEX
+# 			}
+# 		}
+# 		every_diplomatic_play = {
+# 			limit = {
+# 				target = c:USA
+# 			}
+# 			remove_target_backers = {
+# 				c:MEX
+# 			}
+# 		}
+# 		c:MEX = {
+# 			create_diplomatic_play = {
+# 				type = dp_independence
+# 				target_country = root
+# 			}
+# 		}
+# 	}
+
+# 	#fine
+# 	option = {
+# 		name = usfp_acw.13.a
+# 		default_option = yes
+# 		c:MEX = {
+# 			make_independent = yes
+# 		}
+# 		create_truce = {
+# 			country = c:MEX
+# 			months = 60
+# 		}
+# 		every_diplomatic_play = {
+# 			limit = {
+# 				initiator = c:USA
+# 			}
+# 			remove_initiator_backers = {
+# 				c:MEX
+# 			}
+# 		}
+# 		every_diplomatic_play = {
+# 			limit = {
+# 				target = c:USA
+# 			}
+# 			remove_target_backers = {
+# 				c:MEX
+# 			}
+# 		}
+# 		ai_chance = {
+# 			base = 100
+# 		}
+# 	}
+# 	#no!
+# 	option = {
+# 		name = usfp_acw.13.b
+# 		ai_chance = {
+# 			base = 10
+# 			modifier = {
+# 				trigger = {
+# 					ruler = {
+# 						usfp_manifest_destiny_pro_expansion_trigger = yes
+# 					}
+# 				}
+# 				add = 1000
+# 			}
+# 		}
+# 		every_diplomatic_play = {
+# 			limit = {
+# 				initiator = c:USA
+# 			}
+# 			remove_initiator_backers = {
+# 				c:MEX
+# 			}
+# 		}
+# 		every_diplomatic_play = {
+# 			limit = {
+# 				target = c:USA
+# 			}
+# 			remove_target_backers = {
+# 				c:MEX
+# 			}
+# 		}
+# 		if = {
+# 			limit = { 
+# 				exists = c:CSA
+# 			}
+# 			every_diplomatic_play = {
+# 				limit = {
+# 					initiator = c:CSA
+# 				}
+# 				remove_initiator_backers = {
+# 					c:MEX
+# 				}
+				
+# 			}
+# 			every_diplomatic_play = {
+# 				limit = {
+# 					target = c:CSA
+# 				}
+# 				remove_target_backers = {
+# 					c:MEX
+# 				}
+# 			}
+# 		}
+# 	}
+# }

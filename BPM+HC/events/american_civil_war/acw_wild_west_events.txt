@@ -1,0 +1,270 @@
+﻿namespace = wild_west
+
+# Bank Robberies
+# String of bank robberies in (devastated or frontier state)
+wild_west.1 = {
+	type = country_event
+	event_image = {
+		video = "unspecific_vandalized_storefront"
+	}
+	placement = scope:bank_robbery_state
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = wild_west.1.t
+	desc = wild_west.1.d
+	flavor = wild_west.1.f
+
+	duration = 3
+
+	trigger = {
+		NOT = { has_modifier = bank_robberies }
+		any_scope_state = {
+			any_scope_pop = {
+				OR = {	
+					has_pop_culture = dixie
+					has_pop_culture = yankee
+				}
+			}
+			state_population < 100000
+			has_building = building_urban_center
+			usfp_american_west_zone = yes
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				any_scope_pop = {
+					OR = {	
+						has_pop_culture = dixie
+						has_pop_culture = yankee
+					}
+				}
+				state_population < 100000
+				has_building = building_urban_center
+				usfp_american_west_zone = yes
+			}
+			save_scope_as = bank_robbery_state
+			
+		}
+	}
+
+	option = { # local sheriffs must deal with it
+		name = wild_west.1.a
+		default_option = yes
+		add_modifier = {
+			name = bank_robberies
+			months = normal_modifier_time
+			multiplier = 2
+		}
+		scope:bank_robbery_state = {
+			state_region = {
+				add_devastation = 20
+			}
+		}
+	}
+	option = { # hire the pinkertons
+		name = wild_west.1.b
+		add_modifier = {
+			name = bank_robberies
+			months = normal_modifier_time
+		}
+		scope:bank_robbery_state = {
+			add_radicals_in_state = {
+				value = large_radicals
+				pop_type = laborers
+			}
+		}
+	}
+	option = { # send the national guard
+		name = wild_west.1.c
+		highlighted_option = yes
+		trigger = {
+			OR = {
+				has_law = law_type:law_national_guard
+				institution_investment_level = {
+					institution = institution_police
+					value >= 3
+				}
+			}
+		}
+		add_modifier = {
+			name = bank_robberies
+			months = normal_modifier_time
+		}
+	}
+}
+
+# Raids on the Iron Horse
+wild_west.2 = {
+	type = country_event
+	placement = scope:raided_railroad
+	event_image = {
+		video = "unspecific_trains"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = wild_west.2.t
+	desc = wild_west.2.d
+	flavor = wild_west.2.f
+
+	duration = 3
+
+	trigger = {
+		any_scope_state = {
+			is_incorporated = no
+			has_building = building_railway
+			any_scope_pop = { culture = { has_discrimination_trait = indigenous_american_heritage } }
+			NOT = {
+				has_modifier = iron_horse_raids
+			}
+			usfp_american_west_zone = yes
+		}
+	}
+	
+	immediate = {
+		random_scope_state = {
+			limit = {
+				is_incorporated = no
+				has_building = building_railway
+				any_scope_pop = { 
+					culture = { has_discrimination_trait = indigenous_american_heritage }
+				}
+				usfp_american_west_zone = yes
+			}
+			random_scope_pop = { 
+				limit = {
+					culture = { has_discrimination_trait = indigenous_american_heritage } 
+				}
+				culture = {	save_scope_as = native_people_infringed }
+			}
+			save_scope_as = raided_railroad
+		}
+	}
+	
+	option = { # Send in the army!
+		name = wild_west.2.a
+		default_option = yes
+		
+		add_modifier = { 
+			name = frontier_military_aid
+			multiplier = money_amount_multiplier_very_small
+			months = short_modifier_time
+		}
+		scope:raided_railroad = {
+			state_region = {
+				add_devastation = 15
+			}
+			add_modifier = {
+				name = iron_horse_raids
+				months = normal_modifier_time
+			}
+			add_radicals_in_state = {
+				value = 0.25
+				culture = scope:native_people_infringed.culture
+			}
+		}
+	}
+	
+	option = { # We can't spare anything to help
+		name = wild_west.2.b
+		
+		scope:raided_railroad = {
+			state_region = {
+				add_devastation = 30
+			}
+			add_modifier = {
+				name = iron_horse_raids
+				months = normal_modifier_time
+				multiplier = 2
+			}
+			add_radicals_in_state = { # They're still angry, but they're also not facing the army
+				value = 0.15
+				culture = scope:native_people_infringed.culture
+			}
+		}
+	}
+	
+	option = { # Let's talk with leaders and make a deal
+		name = wild_west.2.c
+		
+		trigger = {
+			has_law = law_type:law_multicultural
+		}
+		
+		scope:raided_railroad = {
+			add_loyalists_in_state = {
+				value = 0.5
+				culture = scope:native_people_infringed.culture
+			}
+		}
+	}
+}
+
+# Gunfight at the Corral
+wild_west.3 = {
+	type = country_event
+	event_image = {
+		video = "europenorthamerica_springtime_of_nations"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	title = wild_west.3.t
+	desc = wild_west.3.d
+	flavor = wild_west.3.f
+	placement = scope:OK_corral_state
+
+	duration = 3
+
+	trigger = {
+		NOT = {
+			has_modifier = backing_the_law
+		}
+		any_scope_state = {
+			is_incorporated = no
+			usfp_american_west_zone = yes
+		}
+	}
+	
+	
+	immediate = {
+		random_scope_state = {
+			limit = {
+				is_incorporated = no
+				usfp_american_west_zone = yes
+			}
+			save_scope_as = OK_corral_state
+		}
+	}
+	
+	option = { # The Lawmen are The Law
+		name = wild_west.3.a
+		default_option = yes
+		
+		add_modifier = {
+			name = backing_the_law
+			months = short_modifier_time
+		}
+		scope:OK_corral_state = { # Locals hate the marshals
+			add_radicals_in_state = {
+				value = medium_radicals
+			}
+		}
+	}
+	
+	option = { # Recall the marshals
+		name = wild_west.3.b
+		scope:OK_corral_state.state_region = { # Lawlessness reigns
+			add_devastation = 25
+		}
+	}
+}

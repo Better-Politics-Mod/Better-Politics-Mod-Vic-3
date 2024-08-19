@@ -1,0 +1,503 @@
+﻿###### Hail, Columbia! by CaelReader ######
+#USFP JE replacement for vanilla ACW leadup journals
+
+
+#Slave Power: the strangehold of the Southern Planters
+# je_usfp_a_house_divided_slave_power = {
+# 	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+# 	group = je_group_historical_content
+
+# 	modifiers_while_active = {
+# 		usfp_slave_power_modifier
+# 	}
+
+# 	should_be_pinned_by_default = yes
+
+# 	fail = {
+# 		scope:journal_entry = {
+# 			is_goal_complete = yes
+# 		}
+# 		ig:ig_landowners = {
+# 			AND = {
+# 				is_in_government = no
+# 				is_powerful = no
+# 				is_being_bolstered = no
+# 			}
+# 		}
+# 	}
+
+# 	immediate = {
+# 		set_variable = {
+# 			name = slave_power_var
+# 			value = 0
+# 		}
+# 		ig:ig_landowners = {
+# 			save_scope_as = landowners_ig
+# 		}
+# 		ideology:ideology_abolitionist = {
+# 			save_scope_as = abolitionist_scope
+# 		}
+# 	}
+
+# 	on_monthly_pulse = {
+# 		effect = {
+# 			if = {
+# 				limit = {
+# 					ig:ig_landowners = {
+# 						AND = {
+# 							is_in_government = no
+# 							is_powerful = no
+# 							is_being_bolstered = no
+# 						}
+# 					}
+# 				}
+# 				change_variable = {
+# 					name = slave_power_var
+# 					add = 1
+# 				}
+# 			}
+# 		}
+# 	}
+# 	current_value = {
+# 		value = root.var:slave_power_var
+# 	}
+
+# 	goal_add_value = {
+# 		value = 60
+# 	}
+
+# 	invalid = {
+# 		NOT = {
+# 			has_journal_entry = je_acw_countdown
+# 		}
+# 	}
+# }
+
+#Missouri Compromise
+je_usfp_a_house_divided_missouri_compromise = {
+	icon = "gfx/interface/icons/generic_icons/truce.dds"
+
+	group = je_group_historical_content
+
+	should_be_pinned_by_default = yes
+
+	modifiers_while_active = {
+		usfp_missouri_compromise_modifier
+	}
+
+	immediate = {
+		s:STATE_MISSOURI.region_state:USA = {
+			save_scope_as = missouri_scope
+		}
+	}
+
+	fail = {
+		OR = {
+			NOT = {
+				root = {
+					owns_entire_state_region = STATE_MISSOURI
+				}
+			}
+			has_law = law_type:law_slavery_banned
+			has_law = law_type:law_slave_trade
+			custom_tooltip = {
+				text = usfp_missouri_compromise_broken
+				has_variable = missouri_compromise_broken_var
+			}
+			
+		}
+
+	}
+
+	on_fail = {
+		if = {
+			limit = { 
+				has_modifier = usfp_missouri_compromise_decaying
+			}
+			remove_modifier = usfp_missouri_compromise_decaying
+		}
+	}
+
+	invalid = {
+		NOT = {
+			has_journal_entry = je_acw_countdown
+		}
+	}
+
+	on_invalid = {
+		if = {
+			limit = { 
+				has_modifier = usfp_missouri_compromise_decaying
+			}
+			remove_modifier = usfp_missouri_compromise_decaying
+		}
+	}
+}
+
+#Gag Rule: separate JE to be transparent with failure conditions
+je_usfp_a_house_divided_gag_rule = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	group = je_group_historical_content
+
+	should_be_pinned_by_default = yes
+
+	modifiers_while_active = {
+		usfp_gag_rule_modifier
+	}
+
+	scripted_button = usfp_end_gag_rule_button
+	scripted_button = usfp_break_gag_rule_button
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = { 
+				desc = je_usfp_a_house_divided_gag_rule_status
+			}
+		}
+	}
+
+	fail = {
+		ig:ig_landowners = {
+			is_in_government = no
+		}
+		government_legitimacy >= 51
+	}
+
+	invalid = {
+		OR = {
+			NOT = {
+				has_journal_entry = je_acw_countdown
+			}
+			has_variable = removed_gag_rule
+		}
+	}
+}
+
+#Bleeding Kansas: after the Missouri Compromise is broken
+je_usfp_a_house_divided_bleeding_kansas = {
+	icon = "gfx/interface/icons/generic_icons/secession_culture_ongoing.dds"
+
+	group = je_group_historical_content
+
+	should_be_pinned_by_default = yes
+
+	scripted_button = usfp_support_free_kansas_button
+	scripted_button = usfp_support_slave_kansas_button
+	scripted_button = usfp_enforce_kansas_constitution_button
+
+	immediate = {
+		set_variable = {
+			name = bleeding_kansas_var
+			value = 50
+		}
+		s:STATE_KANSAS.region_state:USA = {
+			save_scope_as = kansas_scope
+		}
+		cu:dixie = {
+			save_scope_as = dixie_culture
+		}
+		cu:yankee = {
+			save_scope_as = yankee_culture
+		}
+		usfp_calculate_bleeding_kansas_progress = yes
+		ideology:ideology_abolitionist = {
+			save_scope_as = abolitionist_scope
+		}
+		ideology:ideology_slaver = {
+			save_scope_as = slaver_scope
+		}
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			usfp_calculate_bleeding_kansas_progress = yes
+		}
+	}
+
+
+	on_monthly_pulse = {
+		effect = {
+			usfp_calculate_bleeding_kansas_progress = yes
+			change_variable = {
+				name = bleeding_kansas_var
+				add = var:bleeding_kansas_var_next
+			}
+		}
+		random_events = {
+			200 = 0
+			100 = historical_agitators.5 # John Brown spawn
+			20 = acw_events.6 # The Caning of Charles Sumner
+			100 = usfp_bleeding_kansas.1 #New England Emigrant Aid Society
+			20 = usfp_bleeding_kansas.2 #Border Ruffians
+			20 = usfp_bleeding_kansas.3 #Ballot Violence
+			20 = usfp_bleeding_kansas.4 #Sacking of Lawrence
+			20 = usfp_bleeding_kansas.5 #Proslavery Men Massacred
+			20 = usfp_bleeding_kansas.6 #Harper's Ferry (historical)
+			1 = usfp_bleeding_kansas.7 #Harper's Ferry (successful)
+			20 = usfp_bleeding_kansas.8 #Competing Constitutions
+		}
+	}
+
+	timeout = 2190
+
+	on_timeout = {
+		if = {
+			limit = {
+				var:bleeding_kansas_var < 45
+			}
+			#Slave Kansas
+			trigger_event = {
+				id = usfp_bleeding_kansas.10
+				popup = yes
+			}
+		} else = {
+			#Free Kansas
+			trigger_event = {
+				id = usfp_bleeding_kansas.9
+				popup = yes
+			}
+		}
+	}
+
+	complete = {
+		OR = {
+			custom_tooltip = {
+				text = bleeding_kansas_0_progress
+				var:bleeding_kansas_var <= 0 
+			}
+			custom_tooltip = {
+				text = bleeding_kansas_100_progress
+				var:bleeding_kansas_var >= 100
+			}
+			custom_tooltip = {
+				text = acw_will_happen_tt
+				has_global_variable = american_civil_war
+			}
+		}
+	}
+
+	on_complete = {
+		if = {
+			limit = {
+				var:bleeding_kansas_var < 45
+			}
+			#Slave Kansas
+			trigger_event = {
+				id = usfp_bleeding_kansas.10
+				popup = yes
+			}
+		} else = {
+			#Free Kansas
+			trigger_event = {
+				id = usfp_bleeding_kansas.9
+				popup = yes
+			}
+		}
+	}
+
+	invalid = {
+		NOT = {
+			any_scope_state = {
+				state_region = s:STATE_KANSAS
+			}
+		}
+		NOT = {
+			has_law = law_type:law_legacy_slavery
+		}
+	}
+	on_invalid = {
+		hidden_effect = {
+			usfp_cleanup_bleeding_kansas_variables = yes
+		}
+	}
+
+	current_value = {
+		if = {
+			limit = {
+				scope:journal_entry = {
+					goal_value = 0
+				}
+			}
+			value = 0
+		}
+		else = {
+			value = root.var:bleeding_kansas_var
+		}
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	progressbar = yes
+}
+
+# #The Border States: track and influence the loyalty of the border states in the leadup
+# je_usfp_a_house_divided_border_states = {
+# 	icon = "gfx/interface/icons/generic_icons/secession_culture_ongoing.dds"
+
+# 	group = je_group_historical_content
+
+# 	should_be_pinned_by_default = yes
+
+# 	#variables track likelyhood of state joining the CSA
+# 	#below -1: secessionist
+# 	#-1, 0, or 1: divided
+# 	#above 1: loyal
+# 	immediate = {
+# 		#Border States
+# 		s:STATE_MISSOURI = {
+# 			random_scope_state = {
+# 				limit = {
+# 					OR = {
+# 						owner = c:USA
+# 						owner = c:CSA
+# 					}
+# 				}
+# 				set_variable = {
+# 					name = usfp_acw_state_loyalty
+# 					value = 0
+# 				}
+# 				save_scope_as = missouri_scope
+# 			}
+# 		}
+# 		#Kansas is handled seperately via Bleeding Kansas JE
+# 		s:STATE_KENTUCKY = {
+# 			random_scope_state = {
+# 				limit = {
+# 					OR = {
+# 						owner = c:USA
+# 						owner = c:CSA
+# 					}
+# 				}
+# 				set_variable = {
+# 					name = usfp_acw_state_loyalty
+# 					value = 2
+# 				}
+# 				save_scope_as = kentucky_scope
+# 			}
+# 		}
+# 		s:STATE_DELAWARE = {
+# 			random_scope_state = {
+# 				limit = {
+# 					OR = {
+# 						owner = c:USA
+# 						owner = c:CSA
+# 					}
+# 				}
+# 				set_variable = {
+# 					name = usfp_acw_state_loyalty
+# 					value = 3
+# 				}
+# 				save_scope_as = delaware_scope
+# 			}
+# 		}
+# 		s:STATE_MARYLAND = {
+# 			random_scope_state = {
+# 				limit = {
+# 					OR = {
+# 						owner = c:USA
+# 						owner = c:CSA
+# 					}
+# 				}
+# 				set_variable = {
+# 					name = usfp_acw_state_loyalty
+# 					value = 0
+# 				}
+# 				save_scope_as = maryland_scope
+# 			}
+# 		}
+# 		##Upper South
+# 		s:STATE_VIRGINIA = {
+# 			random_scope_state = {
+# 				limit = {
+# 					OR = {
+# 						owner = c:USA
+# 						owner = c:CSA
+# 					}
+# 				}
+# 				set_variable = {
+# 					name = usfp_acw_state_loyalty
+# 					value = -3
+# 				}
+# 				save_scope_as = virginia_scope
+# 			}
+# 		}
+# 		s:STATE_NORTH_CAROLINA = {
+# 			random_scope_state = {
+# 				limit = {
+# 					OR = {
+# 						owner = c:USA
+# 						owner = c:CSA
+# 					}
+# 				}
+# 				set_variable = {
+# 					name = usfp_acw_state_loyalty
+# 					value = -4
+# 				}
+# 				save_scope_as = north_carolina_scope
+# 			}
+# 		}
+# 		s:STATE_TENNESSEE = {
+# 			random_scope_state = {
+# 				limit = {
+# 					OR = {
+# 						owner = c:USA
+# 						owner = c:CSA
+# 					}
+# 				}
+# 				set_variable = {
+# 					name = usfp_acw_state_loyalty
+# 					value = -4
+# 				}
+# 				save_scope_as = tennessee_scope
+# 			}
+# 		}
+# 		s:STATE_ARKANSAS = {
+# 			random_scope_state = {
+# 				limit = {
+# 					OR = {
+# 						owner = c:USA
+# 						owner = c:CSA
+# 					}
+# 				}
+# 				set_variable = {
+# 					name = usfp_acw_state_loyalty
+# 					value = -4
+# 				}
+# 				save_scope_as = arkansas_scope
+# 			}
+# 		}
+# 		# set_variable = { name = border_states_kentucky_loyalty value = 2 }
+# 		# set_variable = { name = border_states_delaware_loyalty value = 3 }
+# 		# set_variable = { name = border_states_maryland_loyalty value = 3 }
+# 		# #Upper South
+# 		# set_variable = { name = border_states_virginia_loyalty value = -3 }
+# 		# set_variable = { name = border_states_arkansas_loyalty value = -4 }
+# 		# set_variable = { name = border_states_northcarolina_loyalty value = -4 }
+# 		# set_variable = { name = border_states_tennessee_loyalty value = -4 }
+# 		# s:STATE_MISSOURI.region_state:USA = {save_scope_as = missouri_scope}
+# 		# s:STATE_KANSAS.region_state:USA = {save_scope_as = kansas_scope}
+# 		# s:STATE_KENTUCKY.region_state:USA = {save_scope_as = kentucky_scope}
+# 		# s:STATE_DELAWARE.region_state:USA = {save_scope_as = delaware_scope}
+# 		# s:STATE_MARYLAND.region_state:USA = {save_scope_as = maryland_scope}
+# 		# s:STATE_VIRGINIA.region_state:USA = {save_scope_as = virginia_scope}
+# 		# s:STATE_NORTH_CAROLINA.region_state:USA = {save_scope_as = northcarolina_scope}
+# 		# s:STATE_TENNESSEE.region_state:USA = {save_scope_as = tennessee_scope}
+# 		# s:STATE_ARKANSAS.region_state:USA = {save_scope_as = arkansas_scope}
+# 	}
+
+# 	scripted_button = usfp_border_state_missouri_button
+# 	scripted_button = usfp_border_state_kansas_button
+# 	scripted_button = usfp_border_state_kentucky_button
+# 	scripted_button = usfp_border_state_delaware_button
+# 	scripted_button = usfp_border_state_maryland_button
+# 	scripted_button = usfp_border_state_virginia_button
+# 	scripted_button = usfp_border_state_arkansas_button
+# 	scripted_button = usfp_border_state_northcarolina_button
+# 	scripted_button = usfp_border_state_tennessee_button
+
+
+# }

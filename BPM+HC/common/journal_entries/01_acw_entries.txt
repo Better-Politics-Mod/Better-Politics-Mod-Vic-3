@@ -1,0 +1,671 @@
+﻿#USFP: repurposed into A House Divided: Main JE
+je_acw_countdown = {
+	icon = "gfx/interface/icons/event_icons/abolition_slave.dds"
+
+	group = je_group_historical_content
+
+	should_be_pinned_by_default = yes
+
+	immediate = {
+		set_variable = {
+			name = acw_progress_var
+			value = 0
+		}
+		ideology:ideology_abolitionist = {
+			save_scope_as = abolitionist_scope
+		}
+		ideology:ideology_slaver = {
+			save_scope_as = slaver_scope
+		}
+		ig:ig_landowners = {
+			save_scope_as = landowners_scope
+		}
+	}
+
+	current_value = {
+		value = root.var:acw_progress_var
+	}
+
+
+	complete = {
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+		has_law = law_type:law_slavery_banned
+		any_revolution_ongoing = no
+		government_legitimacy > 20
+	}
+
+	on_complete = {
+		trigger_event = {
+			id = usfp_a_house_divided.12
+		}
+		set_variable = je_acw_countdown_complete
+	}
+
+	modifiers_while_active = {
+		usfp_a_house_divided_modifier
+		usfp_slave_power_modifier
+	}
+	fail = {
+		OR = {
+			has_revolution_over_law_type = law_type:law_slavery_banned
+			has_revolution_over_law_type = law_type:law_slave_trade
+			has_revolution_over_law_type = law_type:law_legacy_slavery
+			has_revolution_over_law_type = law_type:law_debt_slavery
+		}		
+	
+		OR = {
+			# CSA
+			custom_tooltip = {
+				text = acw_landowner_revolt
+				any_country = {
+					is_revolutionary = yes
+					country_definition = root.country_definition
+					ig:ig_landowners = {
+						is_in_government = yes
+					}					
+				}
+			}
+			# FSA
+			custom_tooltip = {
+				text = acw_antislaver_revolt
+				ig:ig_landowners = {
+					is_in_government = yes
+				}
+				NOT = { has_law = law_type:law_slavery_banned }
+				NOT = { is_enacting_law = law_type:law_slavery_banned }
+				any_country = {
+					is_revolutionary = yes
+					country_definition = root.country_definition
+				}
+			}
+		}
+	}
+
+	on_fail = {
+		if = {
+			limit = {
+				any_country = {
+					is_revolutionary = yes
+					country_definition = root.country_definition
+					ig:ig_landowners = {
+						is_in_government = yes
+					}				
+				}
+			}
+			set_variable = csa_will_spawn_var
+		}
+		custom_tooltip = {
+			text = acw_will_happen_tt
+			trigger_event = { 
+				id = acw_je_events.1
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					has_law = law_type:law_slavery_banned
+					any_revolution_ongoing = no
+					government_legitimacy > 20
+				}
+				change_variable = {
+					name = acw_progress_var
+					add = 1
+				}
+			}
+			else_if = {
+				limit = {
+					var:acw_progress_var > 0
+				}
+				change_variable = {
+					name = acw_progress_var
+					subtract = 1
+				}
+			}
+		}
+		random_events = {
+			# American Civil War buildup
+			300 = 0
+			10 = acw_events.1 # The Abolitionist's Martyrdom
+			100 = usfp_a_house_divided.4 #Twelve Years a Slave
+			100 = usfp_a_house_divided.5 # Uncle Tom's Cabin
+			50 = usfp_a_house_divided.6 # The Impending Crisis of the South
+			50 = usfp_a_house_divided.13 #Slavery expands west
+			300 = usfp_a_house_divided.15 #collapse of the Second Party System
+			200 = usfp_a_house_divided.16 #Dred Scott decision
+
+		}
+		events = {
+			acw_events.3 # The Wilmot Proviso
+			usfp_a_house_divided.1 #Gag Rule implemented
+			usfp_a_house_divided.7 #California Statehood
+			usfp_a_house_divided.9 #Texas slavery
+			usfp_a_house_divided.10 #Kansas-Nebraska Act
+			usfp_a_house_divided.11 #Bleeding Kansas
+			usfp_a_house_divided.17 #Lincoln spawn event
+			usfp_a_house_divided.18 #Secessionist Conventions Canceled
+		}
+	}
+
+	goal_add_value = {
+		value = 120
+	}
+
+	is_progressing = {
+		has_law = law_type:law_slavery_banned
+	}
+
+	weight = 100
+}
+
+je_acw_war = {
+	icon = "gfx/interface/icons/event_icons/waving_flag_usa_distress.dds"
+
+	group = je_group_historical_content
+
+	scripted_button = usfp_emancipation_proclamation_button
+
+
+	modifiers_while_active = {
+		usfp_war_caucus_modifier
+	}
+	
+	immediate = {
+		usfp_manifest_less_destiny_effect = yes
+		if = {
+			limit = { 
+				has_modifier = usfp_1850_compromise_decaying
+			}
+			remove_modifier = usfp_1850_compromise_decaying
+		}
+		if = {
+			limit = { 
+				has_modifier = usfp_second_party_system_modifier
+			}
+			trigger_event = {
+				id = usfp_a_house_divided.15
+			}
+		}
+		if = {
+			limit = {
+				has_modifier = usfp_fugitive_slave_law
+			 }
+			 remove_modifier = usfp_fugitive_slave_law
+		}
+		# if Sonora exists, they declare for the Confederacy
+			if = {
+				limit = { 
+					exists = c:SON
+					exists = c:CSA
+					c:SON = {
+						is_ai = yes
+						OR = {
+							is_subject_of = c:USA
+							is_subject = no
+						}
+					}
+				}
+				c:SON = {
+					make_independent = yes
+					every_diplomatic_play = {
+						limit = {
+							initiator = c:USA
+						}
+						remove_initiator_backers = {
+							c:SON
+						}
+					}
+					every_diplomatic_play = {
+						limit = {
+							target = c:USA
+						}
+						remove_target_backers = {
+							c:SON
+						}
+					}
+					random_diplomatic_play = {
+						limit = {
+							any_scope_play_involved = {
+								this = c:CSA
+							}
+							any_scope_play_involved = {
+								this = c:USA
+							}
+						}
+						add_initiator_backers = {
+							c:SON
+						}
+						add_war_goal = {
+							holder = c:USA
+							type = annex_country
+							target_country = c:SON
+						}
+					}
+				}
+			}
+		if = {
+			limit = { 
+				c:MEX ?= {
+					is_subject_of = root
+				}
+			}
+			change_relations = {
+				country = c:MEX
+				value = -100
+			}
+		}
+		every_scope_state = {
+			limit = {
+				region = sr:region_mexico
+			}
+			add_radicals_in_state = {
+				value = very_large_radicals
+				culture = cu:mexican
+			}
+		}
+	}
+
+	complete = {
+		custom_tooltip = {
+			text = acw_war_tt_complete
+			scope:target = { is_country_alive = no }
+		}
+	}
+
+	on_complete = {
+		trigger_event = { id = acw_je_events.2 }
+		if = {
+			limit = { 
+				has_variable = csa_will_spawn_var
+			}
+			ruler = {
+				set_variable = abraham_lincoln
+			}
+		}
+		hidden_effect = {
+			remove_modifier = usfp_acw_union_modifier
+		}
+		hidden_effect = {
+			usfp_cleanup_a_house_divided_variables = yes
+		}
+		usfp_cleanup_acw_agitators = yes
+		hidden_effect = {
+			trigger_event = {
+				id = usfp_acw.10
+				months = 1
+			}
+		}
+	}
+
+	fail = {
+		exists = scope:target
+		NOR = {
+			has_war_with = scope:target
+			is_diplomatic_play_enemy_of = scope:target
+		}
+	}
+
+	on_fail = {
+		trigger_event = usfp_acw.9
+		usfp_manifest_less_destiny_effect = yes
+		hidden_effect = {
+			remove_modifier = usfp_acw_union_modifier
+		}
+		hidden_effect = {
+			usfp_cleanup_a_house_divided_variables = yes
+		}
+		usfp_cleanup_acw_agitators = yes
+	}
+
+	on_monthly_pulse = {
+		random_events = {
+			100 = 0
+			25 = usfp_acw.1 #A Traitor's Peace
+			100 = usfp_acw.2 #Trent Affair
+			25 = usfp_acw.4 #Ironclads
+			25 = usfp_acw.7 #Draft Riot
+		}
+		events = {
+			usfp_acw.3 #West Virginian secession
+			usfp_acw.5 #Indians declare for Confederacy
+			# acw_je_events.4 #Emancipation Proclamation
+			usfp_acw.6 #March to the Sea
+			# usfp_acw.11 #Rio Grande breaks away 
+			# usfp_acw.13 #Mexican revolt (subject)
+		}
+	}
+
+	should_be_pinned_by_default = yes
+	
+	can_revolution_inherit = no
+
+	# acw_events.7 fires for the FSA or CSA, but requires the je_acw_war journal to be active
+	# acw_events.8 fires for the USA, FSA or CSA, but requires the je_acw_war journal to be active
+}
+
+#USFP: overhauled into just dealing with CSA aftermath
+je_acw_reconstruction = {
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = { 
+				trigger = {
+					var:reconstruction_var > 16
+				}
+				desc = je_acw_reconstruction_status_radical
+			}
+			triggered_desc = { 
+				trigger = {
+					var:reconstruction_var <= 16
+					var:reconstruction_var > 5
+				}
+				desc = je_acw_reconstruction_status_mixed
+			}
+			triggered_desc = {
+				trigger = {
+					always = yes
+				}
+				desc = je_acw_reconstruction_status_failure
+			}
+		}
+	}
+	icon = "gfx/interface/icons/invention_icons/egalitarianism.dds"
+
+	group = je_group_historical_content
+
+	#clean up election-spawned agitators
+	immediate = {
+		usfp_cleanup_acw_agitators = yes
+		set_variable = {
+			name = reconstruction_var
+			value = 5
+		}
+		cu:afro_american = {
+			save_scope_as = afro_american_culture
+		}
+		cu:dixie = {
+			save_scope_as = dixie_culture
+		}
+		cu:yankee = {
+			save_scope_as = yankee_culture
+		}
+		set_variable = {
+			name = reconstruction_slow
+			years = 10
+		}
+	}
+
+	# complete = {
+	# 	scope:journal_entry = {
+	# 		is_goal_complete = yes
+	# 	}
+	# }
+
+	scripted_button = usfp_reconstruction_enforce_rights_button
+	scripted_button = usfp_reconstruction_confederate_amnesty_button
+	scripted_button = usfp_reconstruction_cointelpro_freedmen_button
+	scripted_button = usfp_reconstruction_cointelpro_slaver_button 
+
+	on_monthly_pulse = {
+		random_events = {
+			180 = 0
+			20 = acw_followup_events.4 # Forty Acres and a Mule
+			20 = acw_followup_events.5 # Supremacist Violence
+			20 = acw_followup_events.6 # Black Codes
+			20 = acw_followup_events.7 # Paramilitaries
+			20 = acw_followup_events.8 # Carpetbaggers
+			100 = usfp_reconstruction.1 #Freedmens Bureau
+			20 = usfp_reconstruction.2 #Ku Klux Klan
+			20 = usfp_reconstruction.3 #Black Legislature
+			20 = usfp_reconstruction.4 #The Lost Cause
+			20 = usfp_reconstruction.5 #Confederados
+			100 = usfp_reconstruction.11 #Election held hostage
+			20 = usfp_reconstruction.12 #PB backlash to Radical Reconstruction
+			20 = usfp_reconstruction.13 #Electoral backlash to Reconstruction
+			5 = usfp_reconstruction.14 #Radical Reconstruction assassination
+		}
+	}
+
+	on_timeout = {
+		# trigger_event = { id = acw_je_events.3 }
+		usfp_reconstruction_conclusion_effect = yes
+	}
+
+	current_value = {
+		if = {
+			limit = {
+				scope:journal_entry = {
+					goal_value = 0
+				}
+			}
+			value = 0
+		}
+		else = {
+			value = root.var:reconstruction_var
+		}
+	}
+
+	invalid = {
+		OR = {
+			custom_tooltip = {
+				text = made_devils_bargain
+				has_variable = reconstruction_ended_early
+			}
+			NOT = {
+				has_law = law_type:law_slavery_banned
+			}
+		}
+	}
+
+	goal_add_value = {
+		add = 20
+	}
+
+
+	progressbar = yes
+
+	timeout = 4380
+
+	should_be_pinned_by_default = yes
+}
+
+# je_acw_reincorporate = {
+# 	icon = "gfx/interface/icons/generic_icons/secession_culture_ongoing.dds"
+
+# 	group = je_group_historical_content
+
+# 	complete = {
+# 		NOT = {
+# 			any_scope_state = {
+# 				has_modifier = unreconstructed_state
+# 				is_incorporated = no
+# 			}
+# 		}
+# 		NOT = {
+# 			any_scope_state = {
+# 				state_region = {
+# 					is_homeland = cu:dixie
+# 				}
+# 				loyalist_fraction = {
+# 					value < 0.2
+# 					culture = cu:dixie
+# 				}
+# 			}
+# 		}
+# 	}
+
+# 	on_complete = {
+# 		custom_tooltip = {
+# 			text = dont_lose_dixie_culture
+# 			set_variable = acw_keep_dixie
+# 		}
+# 		custom_tooltip = {
+# 			text = reconstruction_progress
+# 			change_variable = {
+# 				name = reconstruction_var
+# 				add = 1
+# 			}
+# 		}
+# 	}
+
+# 	on_monthly_pulse = {
+# 		random_events = {
+# 			180 = 0
+# 			20 = acw_followup_events.6
+# 			20 = acw_followup_events.7
+# 			20 = acw_followup_events.8
+# 		}
+# 	}
+
+# 	invalid = {
+# 		NOT = {
+# 			any_scope_state = {
+# 				state_region = {
+# 					is_homeland = cu:dixie
+# 				}
+# 			}
+# 		}
+# 	}
+
+# 	timeout = 4380
+# }
+
+# je_acw_equality = {
+# 	icon = "gfx/interface/icons/invention_icons/international_diplomacy.dds"
+
+# 	group = je_group_historical_content
+
+# 	complete = {
+# 		custom_tooltip = {
+# 			text = acw_african_american_culture_complete_tt
+# 			cu:afro_american = {
+# 				NOT = { culture_is_discriminated_in = ROOT }
+# 			}
+# 		}
+# 	}
+
+# 	on_complete = {
+# 		custom_tooltip = {
+# 			text = acw_african_american_culture
+# 			set_variable = acw_gain_african_american
+# 		}
+# 		custom_tooltip = {
+# 			text = reconstruction_progress
+# 			change_variable = {
+# 				name = reconstruction_var
+# 				add = 1
+# 			}
+# 		}
+# 	}
+
+# 	on_monthly_pulse = {
+# 		random_events = {
+# 			180 = 0
+# 			20 = acw_followup_events.4 # Forty Acres and a Mule
+# 			20 = acw_followup_events.5 # Supremacist Violence
+# 			20 = acw_followup_events.6 # Redeemers
+# 		}
+# 	}
+
+# 	timeout = 4380
+
+# 	invalid = {
+# 		NOT = {
+# 			any_scope_state = {
+# 				state_region = {
+# 					is_homeland = cu:afro_american
+# 				}
+# 			}
+# 		}
+# 	}
+# }
+
+je_acw_wild_wild_west = {
+	icon = "gfx/interface/icons/war_goals/take_colony.dds"
+
+	group = je_group_historical_content
+
+	complete = {
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+		NOT = {
+			any_scope_state = {
+				usfp_american_west_zone = yes
+				devastation > 0.1
+				turmoil > 0.1
+			}
+		}
+	}
+
+	on_complete = {
+		custom_tooltip = {
+			text = acw_no_outlaw_crisis
+		}
+		# custom_tooltip = {
+		# 	text = reconstruction_progress
+		# 	change_variable = {
+		# 		name = reconstruction_var
+		# 		add = 1
+		# 	}
+		# }
+	}
+
+	on_monthly_pulse = {
+		random_events = {
+			100 = 0
+			10 = crime_events.1 # train robbery
+			10 = wild_west.1 # bank robberies
+			10 = wild_west.2 # Raids on the Iron Horse
+			10 = wild_west.3 # Gunfight at the Corral
+			10 = manifest_destiny.3 #Bison Hunting
+		}
+		effect = {
+			if = {
+				limit = {
+					NOT = {
+						any_scope_state = {
+							# state_region = {
+							# 	OR = {
+							# 		is_homeland = cu:dixie
+							# 		is_homeland = cu:yankee
+							# 	}
+							# }
+							usfp_american_west_zone = yes
+							devastation > 0.1
+							turmoil > 0.1
+						}
+					}
+				}
+				change_variable = {
+					name = je_acw_wild_west_var
+					add = 1
+				}
+			}
+		}
+	}
+
+	invalid = {
+		NOT = {
+			any_scope_state = {
+				usfp_american_west_zone = yes
+			}
+		}
+	}
+
+	current_value = {
+		value = var:je_acw_wild_west_var
+	}
+	
+	goal_add_value = {
+		add = 60
+	}
+
+	progressbar = yes
+
+	timeout = 4380
+}

@@ -1,0 +1,401 @@
+﻿namespace = usfp_filibuster
+
+#William Walker attacks Sonora
+usfp_filibuster.1 = {
+	type = country_event
+	placement = scope:baja_scope
+
+	event_image = {
+		video = "africa_construction_colony"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	
+	title = usfp_filibuster.1.t
+	desc = usfp_filibuster.1.d
+	flavor = usfp_filibuster.1.f
+	dlc = dlc_usfp
+	duration = 3
+
+	trigger = {
+		game_date > 1853.1.1
+		game_date < 1865.1.1 
+		var:manifest_destiny_var > 3
+		NOT = {
+			exists = c:SON
+		}
+		NOT = {
+			has_global_variable = had_walker_sonora
+		}
+		exists = c:MEX
+		c:MEX = {
+			owns_entire_state_region = STATE_BAJA_CALIFORNIA
+			owns_entire_state_region = STATE_SONORA
+		}
+		s:STATE_CALIFORNIA = {
+			root_has_state_here = yes
+			region_state:USA = {
+				any_neighbouring_state = {
+					state_region = s:STATE_BAJA_CALIFORNIA
+				}
+			}
+		}
+		is_at_war = no
+	}
+
+	immediate = {
+		set_global_variable = had_walker_sonora
+		s:STATE_SONORA.region_state:MEX = {
+			save_scope_as = sonora_state_scope
+		}
+		c:MEX = {
+			save_scope_as = mexico_scope
+			trigger_event = {
+				id = usfp_filibuster.2
+				popup = yes
+			}
+			create_country = {
+				tag = SON
+				state = s:STATE_BAJA_CALIFORNIA.region_state:MEX
+				origin = c:MEX
+				on_created = {
+					save_scope_as = sonora_scope
+					s:STATE_SONORA = {
+						add_claim = c:SON
+					}
+					create_character = {
+						template = usfp_usa_william_walker
+						ruler = yes
+						is_general = yes
+					}
+					activate_law = law_type:law_autocracy
+					set_country_type = unrecognized
+				}
+			}
+			c:SON = {
+				create_diplomatic_play = {
+					type = dp_return_state
+					target_state = scope:sonora_state_scope
+					target_country = c:MEX
+				}
+				create_military_formation = {
+					type = army
+					hq_region = sr:region_pacific_coast
+					name = "Walker's Expedition"
+					combat_unit = {
+						type = unit_type:combat_unit_type_irregular_infantry
+						state_region = s:STATE_BAJA_CALIFORNIA
+						count = 1
+					}
+				}
+				capital = {
+					create_pop = {
+						culture = dixie
+						size = 300 #LMAO
+						pop_type = soldiers
+					}
+				}
+				save_scope_as = sonora_scope
+				ruler = {
+					save_scope_as = william_walker_scope
+				}
+				add_modifier = {
+					name = usfp_filibusters_modifier
+					years = 4
+				}
+			}
+		}
+		s:STATE_BAJA_CALIFORNIA.region_state:SON = {
+			save_scope_as = baja_scope
+		}
+	}
+
+	#bad!
+	option = {
+		name = usfp_filibuster.1.a
+		default_option = yes
+		change_relations = {
+			country = c:SON
+			value = -20
+		}
+	}
+	#hmmm
+	option = {
+		name = usfp_filibuster.1.b
+		change_relations = {
+			country = c:MEX
+			value = -10
+		}
+	}
+	#support!
+	option = {
+		name = usfp_filibuster.1.c
+		highlighted_option = yes
+		usfp_manifest_more_destiny_effect = yes
+		trigger = {
+			OR = {
+				custom_tooltip = {
+					text = enough_manifest_destiny
+					var:manifest_destiny_var > 5
+				}
+				ruler = {
+					usfp_manifest_destiny_pro_expansion_trigger = yes
+				}
+			}
+		}
+		change_relations = {
+			country = c:SON
+			value = 50
+		}
+		create_diplomatic_pact = {
+			country = c:SON
+			type = protectorate
+		}
+		change_relations = {
+			country = c:MEX
+			value = -50
+		}
+		create_incident = {
+			country = c:MEX
+			value = 10
+		}
+		random_diplomatic_play = {
+			limit = {
+				initiator_is = c:SON
+				target_is = c:MEX
+			}
+			add_initiator_backers = {
+				root
+			}
+		}
+		hidden_effect = {
+			c:SON = {
+				set_country_type = colonial
+			}
+		}
+		set_variable = supported_sonora
+	}
+}
+#MEX - William Walker in Sonora
+usfp_filibuster.2 = {
+	type = country_event
+	placement = scope:baja_scope
+
+	event_image = {
+		video = "africa_construction_colony"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	
+	title = usfp_filibuster.2.t
+	desc = usfp_filibuster.2.d
+	flavor = usfp_filibuster.2.f
+	dlc = dlc_usfp
+	duration = 3
+
+	immediate = {
+		c:USA = {
+			save_scope_as = usa_scope
+		}
+	}
+
+	#to arms!
+	option = {
+		name = usfp_filibuster.2.a
+		default_option = yes
+		ai_chance = {
+			base = 1000
+		}
+		change_relations = {
+			country = c:SON
+			value = -100
+		}
+		s:STATE_BAJA_CALIFORNIA = {
+			add_claim = root
+		}
+		random_diplomatic_play = {
+			limit = {
+				initiator_is = c:SON
+				target_is = c:MEX
+			}
+			add_war_goal = {
+				holder = root
+				type = return_state
+				target_state = s:STATE_BAJA_CALIFORNIA.region_state:SON
+				primary_demand = yes
+			}
+		}
+	}
+}
+#Sonora defeated
+usfp_filibuster.3 = {
+	type = country_event
+	placement = scope:california_scope
+
+	event_image = {
+		video = "votp_hostile_court"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	
+	title = usfp_filibuster.3.t
+	desc = usfp_filibuster.3.d
+	flavor = usfp_filibuster.3.f
+	dlc = dlc_usfp
+	duration = 3
+
+	immediate = {
+		s:STATE_CALIFORNIA.region_state:USA = {
+			save_scope_as = california_scope
+		}
+	}
+
+	#okay
+	option = {
+		name = usfp_filibuster.3.a
+		default_option = yes
+		scope:california_scope = {
+			add_loyalists_in_state = {
+				value = small_radicals
+				culture = cu:yankee
+			}
+		}
+		custom_tooltip = {
+			text = usfp_filibuster.3.a.t
+		}
+		ai_chance = {
+			base = 100
+		}
+	}
+	#lock him up!!
+	option = {
+		name = usfp_filibuster.3.b
+		usfp_manifest_less_destiny_high_effect = yes
+		scope:california_scope = {
+			add_radicals_in_state = {
+				value = small_radicals
+				culture = cu:yankee
+			}
+		}
+		set_global_variable = walker_imprisoned
+		trigger = {
+			ruler = {
+				usfp_manifest_destiny_pro_expansion_trigger = no
+			}
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					leader = {
+						usfp_manifest_destiny_pro_expansion_trigger = yes
+					}
+					is_interest_group_type = ig_landowners
+				}
+			}
+			add_modifier = {
+				name = usfp_rejected_filibustering
+				years = 2
+			}
+		}
+		ai_chance = {
+			base = 100
+		}
+	}
+
+}
+#Sonora successful?!
+usfp_filibuster.4 = {
+	type = country_event
+	placement = scope:sonora_scope.capital
+
+	event_image = {
+		video = "ep1_transfer_of_authority"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	
+	title = usfp_filibuster.4.t
+	desc = usfp_filibuster.4.d
+	flavor = usfp_filibuster.4.f
+	dlc = dlc_usfp
+	duration = 3
+
+	immediate = {
+		c:SON = {
+			save_scope_as = sonora_scope
+			ruler = {
+				save_scope_as = william_walker_scope
+			}
+		}
+	}
+
+	#annex
+	option = {
+		name = usfp_filibuster.4.a
+		default_option = yes
+		annex = c:SON
+		s:STATE_SONORA = {
+			add_claim = c:MEX
+		}
+		ai_chance = {
+			base = 100
+		}
+	}
+	#puppet
+	option = {
+		name = usfp_filibuster.4.b
+		create_diplomatic_pact = {
+			country = c:SON
+			type = puppet
+		}
+		s:STATE_SONORA = {
+			add_claim = c:MEX
+		}
+		ai_chance = {
+			base = 5
+		}
+	}
+	#disavow
+	option = {
+		name = usfp_filibuster.4.c
+		trigger = {
+			NOT = {
+				has_variable = supported_sonora
+			}
+		}
+		change_relations = {
+			country = c:SON
+			value = -20
+		}
+		s:STATE_SONORA = {
+			add_claim = c:MEX
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					leader = {
+						usfp_manifest_destiny_pro_expansion_trigger = yes
+					}
+					is_interest_group_type = ig_landowners
+				}
+			}
+			add_modifier = {
+				name = usfp_rejected_filibustering
+				years = 2
+			}
+		}
+		ai_chance = {
+			base = 0
+		}
+	}
+}
+#Narciso López's attack on Cuba
+#Narciso López's attack on Cuba (CUB)

@@ -1,0 +1,529 @@
+﻿#Western Purchase - Adapted from NFM
+
+usfp_western_purchase_button = {
+	name = "usfp_western_purchase_button"
+	desc = "usfp_western_purchase_button_desc"
+
+	visible = {
+		exists = c:MEX
+		c:MEX = {
+			any_scope_state = {
+				OR = {
+					state_region = s:STATE_CALIFORNIA
+					state_region = s:STATE_ARIZONA
+					state_region = s:STATE_UTAH
+					state_region = s:STATE_NEW_MEXICO
+					state_region = s:STATE_NEVADA
+					state_region = s:STATE_COLORADO
+				}
+				
+			}
+		}
+		has_variable = manifest_destiny_var
+		NOT = {
+			has_claim = s:STATE_CALIFORNIA
+		}
+		any_neighbouring_state = {
+			owner = c:MEX
+		}
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = enough_manifest_destiny
+			var:manifest_destiny_var > 2
+		}
+		custom_tooltip = {
+			text = usa_western_purchase_var
+			NOT = {
+				has_variable = usa_western_purchase_var
+			}
+		}
+
+		in_default = no
+		taking_loans = no
+		is_diplomatic_play_committed_participant = no
+ 		is_at_war = no
+		c:MEX = {
+			is_diplomatic_play_committed_participant = no
+			is_at_war = no
+		} 
+	}
+
+	effect = {
+		custom_tooltip = {
+			text = mexican_payment_cost
+		}
+		set_variable = {
+			name = usa_western_purchase_var
+			years = 3
+		}
+		c:MEX = {
+			trigger_event = {
+				id = usfp_manifest_destiny.3
+				days = 7
+			}
+		}
+	}
+
+	ai_chance = {
+		base = 0	
+		modifier = {
+			trigger = {
+				s:STATE_OREGON = {
+					root_has_state_here = yes
+				}
+			}
+			add = 100
+		}	
+		modifier = {
+			trigger = { gold_reserves > 250000 }
+			add = 10
+		}
+		modifier = {
+			trigger = { gold_reserves > 500000 }
+			add = 50
+		}
+		modifier = {
+			trigger = { gold_reserves > 1000000 }
+			add = 1000
+		}					
+		modifier = {
+			trigger = { 
+				gold_reserves > 0
+				weekly_net_fixed_income > 50000
+			}
+			add = 10
+		}
+		modifier = {
+			trigger = {
+				OR = {
+					is_diplomatic_play_committed_participant = yes
+					is_at_war = yes
+				}
+			}
+			add = -1000
+		}
+		modifier = {
+			trigger = { 
+				ruler = {
+					usfp_manifest_destiny_pro_expansion_trigger = yes
+				}
+			}
+			add = 1000
+		}
+		modifier = {
+			trigger = { 
+				ruler = {
+					usfp_manifest_destiny_anti_expansion_trigger = yes
+				}
+			}
+			add = -1000
+		}
+	}
+}
+
+usfp_promote_manifest_destiny_button = {
+
+	name = "usfp_promote_manifest_destiny_button"
+	desc = "usfp_promote_manifest_destiny_button_desc"
+
+	visible = {
+		NOT = {
+			has_variable = promoted_manifest_destiny_var
+		}
+		has_variable = manifest_destiny_var
+		var:manifest_destiny_var < 6
+	}
+
+	possible = {
+		ruler = {
+			usfp_manifest_destiny_anti_expansion_trigger = no
+		}
+	}
+
+	effect = {
+		set_variable = promoted_manifest_destiny_var
+		usfp_manifest_more_destiny_effect = yes
+		add_radicals = {
+			value = medium_radicals
+			interest_group = ig:ig_industrialists
+		}
+		add_radicals = {
+			value = medium_radicals
+			interest_group = ig:ig_petty_bourgeoisie
+		}
+		add_modifier = {
+			name = usfp_vanishing_indian_modifier
+			years = 10
+		}
+	}
+
+	ai_chance = {
+		base = 0
+	}
+}
+
+usfp_suppress_manifest_destiny_button = {
+
+	name = "usfp_suppress_manifest_destiny_button"
+	desc = "usfp_suppress_manifest_destiny_button_desc"
+
+	visible = {
+		NOT = {
+			has_variable = suppressed_manifest_destiny_var
+		}
+		has_variable = manifest_destiny_var
+		var:manifest_destiny_var > 2
+	}
+
+	possible = {
+		ruler = {
+			usfp_manifest_destiny_pro_expansion_trigger = no
+		}
+	}
+
+	effect = {
+		set_variable = suppressed_manifest_destiny_var
+		usfp_manifest_less_destiny_effect = yes
+		add_radicals = {
+			value = medium_radicals
+			interest_group = ig:ig_rural_folk
+		}
+		add_radicals = {
+			value = medium_radicals
+			interest_group = ig:ig_landowners
+		}
+	}
+
+	ai_chance = {
+		base = 0
+	}
+}
+
+usfp_homestead_act_button = {
+	name = "usfp_homestead_act_button"
+	desc = "usfp_homestead_act_button_desc"
+
+	visible = {
+		any_scope_state = {
+			usfp_american_west_zone = yes
+			# is_incorporated = yes
+			NOT = {
+				has_modifier = usfp_homestead_act_modifier
+			}
+		}
+		has_variable = manifest_destiny_var
+		game_date < 1910.1.1
+	}
+
+	possible = {
+		has_law = law_type:law_homesteading
+		custom_tooltip = {
+			text = enough_manifest_destiny
+			var:manifest_destiny_var > 2
+		}
+		any_scope_state = {
+			# count > 3
+			usfp_american_west_zone = yes
+			NOT = {
+				has_modifier = usfp_homestead_act_modifier
+			}
+			free_arable_land >= 40
+			OR = {
+				free_arable_land >= 100
+				is_split_state = no
+			}
+		}
+		ig:ig_landowners = {
+				is_in_government = no
+		}
+	}
+
+	effect = {
+		if = {
+			limit = {
+				NOT = {
+					has_modifier = usfp_homestead_administration
+				}
+			 }
+			 add_modifier = {
+				name = usfp_homestead_administration
+				years = 5
+			 }
+		}
+		every_scope_state = {
+			limit = {
+				usfp_american_west_zone = yes
+				NOT = {
+					has_modifier = usfp_homestead_act_modifier
+				}
+				free_arable_land >= 40
+				OR = {
+					free_arable_land >= 100
+					is_split_state = no
+				}
+			}
+			add_modifier = {
+				name = usfp_homestead_act_modifier
+				years = 50
+			}
+		}
+	}
+
+	ai_chance = {
+		base = 1000
+	}
+
+}
+
+usfp_cuban_purchase_button = {
+	name = "usfp_cuban_purchase_button"
+	desc = "usfp_cuban_purchase_button_desc"
+
+	visible = {
+		has_variable = ostend_manifesto
+		NOR = {
+			has_variable = offered_for_cuba
+			owns_entire_state_region = STATE_CUBA
+			has_claim = s:STATE_CUBA
+		}
+		has_variable = manifest_destiny_var
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = enough_manifest_destiny
+			var:manifest_destiny_var >= 5
+		}
+		in_default = no
+		taking_loans = no
+		is_diplomatic_play_committed_participant = no
+ 		is_at_war = no
+		NOT = {
+			owns_entire_state_region = STATE_CUBA
+		}
+		NOT = {
+			any_subject_or_below = {
+				owns_entire_state_region = STATE_CUBA
+			}
+		}
+		OR = {
+			NOT = {
+				exists = c:CUB
+			}
+			c:CUB = {
+				is_subject = yes
+			}
+		}
+	}
+
+	effect = {
+		set_variable = offered_for_cuba
+		s:STATE_CUBA = {
+			random_scope_state = {
+				limit = {
+					NOT = {
+						owner = c:USA
+					}
+					is_incorporated = yes
+					is_treaty_port = no
+				}
+				owner = {
+					if = {
+						limit = { 
+							is_subject = yes
+						}
+						overlord = {
+							save_scope_as = cuba_owner_scope
+						}
+					}
+					else = {
+						save_scope_as = cuba_owner_scope
+					}
+				}
+			}
+			save_scope_as = cuba_scope
+		}
+		scope:cuba_owner_scope = {
+			trigger_event = {
+				id = usfp_manifest_destiny.15
+				days = 7
+			}
+		}
+	}
+
+	ai_chance = {
+		base = 5
+		modifier = {
+			trigger = {
+				ruler = {
+					usfp_manifest_destiny_pro_expansion_trigger = yes
+				}
+			}
+			add = 100
+		}
+	}
+
+}
+
+usfp_claim_canada_button = {
+	name = "usfp_claim_canada_button"
+	desc = "usfp_claim_canada_button_desc"
+
+	visible = {
+		has_variable = manifest_destiny_var
+		var:manifest_destiny_var >= 10
+		NOT = {
+			has_variable = claimed_canada
+		}
+	}
+
+	possible = {
+		ruler = {
+			usfp_manifest_destiny_pro_expansion_trigger = yes
+		}
+		OR = {
+			AND = {
+				c:GBR ?= {
+					any_subject_or_below = {
+						country_is_in_north_america = yes
+					}
+					relations:root <= relations_threshold:poor
+				}
+			}
+			AND = {
+				c:CAN ?= {
+					is_subject = no
+					relations:root <= relations_threshold:poor
+				}
+			}
+		}
+		is_diplomatic_play_committed_participant = no
+		is_at_war = no
+	}
+
+	effect = {
+		set_variable = claimed_canada
+		s:STATE_YUKON_TERRITORY = {
+			add_claim = root
+		}
+		s:STATE_BRITISH_COLUMBIA = {
+			add_claim = root
+		}
+		s:STATE_SASKATCHEWAN = {
+			add_claim = root
+		}
+		s:STATE_NORTHWEST_TERRITORIES = {
+			add_claim = root
+		}
+		s:STATE_NUNAVUT = {
+			add_claim = root
+		}
+		s:STATE_MANITOBA = {
+			add_claim = root
+		}
+		s:STATE_ONTARIO = {
+			add_claim = root
+		}
+		s:STATE_QUEBEC = {
+			add_claim = root
+		}
+		s:STATE_NEW_BRUNSWICK = {
+			add_claim = root
+		}
+		s:STATE_NEWFOUNDLAND = {
+			add_claim = root
+		}
+		s:STATE_ALBERTA = {
+			add_claim = root
+		}
+		s:STATE_ONTARIO = {
+			random_scope_state = {
+				limit = {
+					owner = {
+						NOT = {
+							is_country_type = decentralized
+						}
+					}
+				}
+				root = {
+					create_incident = {
+						country = prev.owner
+						value = 30
+					}
+				}
+			}
+		}
+	}
+	ai_chance = {
+		base = 5
+		modifier = {
+			trigger = {
+				ruler = {
+					usfp_manifest_destiny_pro_expansion_trigger = yes
+				}
+			}
+			add = 100
+		}
+	}
+}
+
+usfp_secure_trail_button = {
+	name = "usfp_secure_trail_button"
+	desc = "usfp_secure_trail_button_desc"
+
+	visible = {
+		game_date > 1850.1.1
+		has_global_variable = oregon_trail_mapped
+		NOT = {
+			has_variable = horse_creek_treaty
+		}
+		s:STATE_OREGON = {
+			any_scope_state = {
+				owner = {
+					NOT = {
+						is_country_type = decentralized
+					}
+				}
+			}
+		}
+		s:STATE_KANSAS = {
+			any_scope_state = {
+				owner = root
+			}
+		}
+		has_claim = s:STATE_WYOMING
+		has_claim = s:STATE_NEBRASKA
+		NOT = {
+			exists = c:TIS
+		}
+		NOT = {
+			owns_entire_state_region = STATE_WYOMING
+		}
+	}
+
+	possible = {
+		NOT = {
+			has_law = law_type:law_no_colonial_affairs
+		}
+		is_at_war = no
+		influence >= 50
+	}
+
+	effect = {
+		set_variable = horse_creek_treaty
+		add_modifier = {
+			name = usfp_frontier_agents_modifier
+			years = 1
+		}
+		trigger_event = {
+			id = usfp_manifest_destiny.21
+			years = 1
+		}
+	}
+
+	ai_chance = {
+		base = 1000
+	}
+}

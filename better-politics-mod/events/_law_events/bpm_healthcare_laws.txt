@@ -1,0 +1,711 @@
+﻿namespace = healthcare_laws
+
+healthcare_laws.1 = { #famers want healthcare due to accidents
+	type = country_event
+	placement = scope:farming_accidents_state
+	
+	title = healthcare_laws.1.t
+	desc = healthcare_laws.1.d
+	flavor = healthcare_laws.1.f
+
+	category = enactment
+	
+	event_image = {
+		video = "europenorthamerica_russian_serfs"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+	
+	trigger = {
+		has_law = law_type:law_no_health_system
+		or = {
+			is_enacting_law = law_type:law_charitable_health_system
+			is_enacting_law = law_type:law_private_health_insurance
+			is_enacting_law = law_type:law_public_health_insurance
+		}
+		NOT = {
+			has_modifier = farming_accident_chance
+		}
+		any_scope_state = {
+			any_scope_building = {
+				OR = {
+					is_building_type = building_rye_farm
+					is_building_type = building_wheat_farm
+					is_building_type = building_rice_farm
+					is_building_type = building_maize_farm
+					is_building_type = building_millet_farm
+				}
+				NOT = {
+					has_active_production_method = pm_tools_disabled 
+				}
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = healthcare_system
+		}
+		random_scope_state = {
+			limit = {
+				any_scope_building = {
+					OR = {
+						is_building_type = building_rye_farm
+						is_building_type = building_wheat_farm
+						is_building_type = building_rice_farm
+						is_building_type = building_maize_farm
+						is_building_type = building_millet_farm
+					}
+					NOT = {
+						has_active_production_method = pm_tools_disabled 
+					}	
+				}
+			}	
+			save_scope_as = farming_accidents_state
+		}
+	}
+
+	option = { # no mortality increase, lower chance success
+		name = healthcare_laws.1.a
+		default_option = yes
+		if ={ 
+			limit ={ 
+				is_player = yes
+			}
+			random_interest_group ={ 
+				limit ={ 
+					is_marginal = no
+					OR ={ 
+						bpm_ig_is_rural_institutional = yes
+						is_interest_group_type = ig_agrarian_populists
+					}
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = farming_accident_chance
+			}
+		}
+	}
+
+	option = { #mortality increase, higher chance success
+		name = healthcare_laws.1.b
+		scope:farming_accidents_state = {
+			add_modifier = {
+				name = farming_accidents_mort
+				months = normal_modifier_time
+			}
+		}
+		if ={ 
+			limit = { 
+				is_player = yes
+			}
+			every_interest_group ={ 
+				limit ={ 
+					bpm_ig_is_urban_institutional = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = farming_accident_chance
+				multiplier = 4
+			}
+		}
+	}
+
+	option = { #highest mortality, higher chance success
+		name = healthcare_laws.1.c
+		trigger = {
+			is_enacting_law = law_type:law_private_health_insurance
+		}
+		scope:farming_accidents_state = {
+			add_modifier = {
+				name = farming_accidents_mort
+				months = normal_modifier_time
+				multiplier = 3
+			}
+		}
+		if ={ 
+			limit = { 
+				is_player = yes
+			}
+			every_interest_group ={ 
+				limit ={ 
+					OR ={ 
+						bpm_ig_is_urban_institutional = yes
+						bpm_ig_is_upper_institutional = yes
+					}
+					NOT ={ bpm_ig_is_labor = yes }
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = farming_accident_chance
+				multiplier = 5
+			}
+		}
+	}
+}
+
+healthcare_laws.2 = { #who should be paying for this?
+	type = country_event
+	placement = ROOT
+	
+	title = healthcare_laws.2.t
+	desc = healthcare_laws.2.d
+	flavor = healthcare_laws.2.f
+
+	category = enactment
+	
+	event_image = {
+		video = "africa_leader_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+	
+	trigger = {
+		has_law = law_type:law_no_health_system
+		or = {
+			is_enacting_law = law_type:law_charitable_health_system
+			is_enacting_law = law_type:law_public_health_insurance
+		}
+		NOT = {
+			has_modifier = taxing_health
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = healthcare_system
+		}
+	}
+
+	option = {
+		name = healthcare_laws.2.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = health_tax
+			multiplier = money_amount_multiplier_small
+		}
+		add_enactment_modifier = {
+			name = industrialist_tax
+		}
+		if ={ 
+			limit ={ 
+				is_player = yes
+			}
+			every_interest_group ={ 
+				limit ={ 
+					or ={ 
+						bpm_ig_is_radical_left = yes
+						is_interest_group_type = ig_trade_unions
+					}
+				}
+				bpm_ig_increase_law_enactment_approval_small = yes
+			}
+			ig:ig_industrialists ={ 
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = taxing_health
+				multiplier = 2
+			}
+		}
+	}
+
+	option = {
+		name = healthcare_laws.2.b
+		if ={ 
+			limit ={ 
+				is_player = yes
+			}
+			every_interest_group ={ 
+				limit ={ 
+					or ={ 
+						bpm_ig_is_radical_left = yes
+						bpm_ig_is_urban_institutional = yes
+					}
+				}
+				bpm_ig_increase_law_enactment_approval_small = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = taxing_health
+				multiplier = 3
+			}
+		}
+		add_enactment_modifier = {
+			name = government_health_tax
+			multiplier = money_amount_multiplier_small
+		}
+	}
+
+	option = { 
+		name = healthcare_laws.2.c
+		if ={ 
+			limit ={ 
+				is_player = yes
+			}
+			random_interest_group ={ 
+				limit ={ 
+					or ={ 
+						bpm_ig_is_radical_left = yes
+						bpm_ig_is_urban_institutional = yes
+					}
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = taxing_health
+			}
+		}
+	}
+}
+
+healthcare_laws.3 = { #sickness in the government
+	type = country_event
+	placement = ROOT
+	
+	title = healthcare_laws.3.t
+	desc = healthcare_laws.3.d
+	flavor = healthcare_laws.3.f
+
+	category = enactment
+	
+	event_image = {
+		video = "unspecific_sick_in_hospital"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+	
+	trigger = {
+		always = no
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = healthcare_system
+		}
+	}
+
+	option = { #leave it be
+		name = healthcare_laws.3.a
+		default_option = yes
+		random_list = {
+			2= {
+				add_enactment_modifier = {
+					name = government_in_bed
+					multiplier = 3
+				}
+			}
+			5 = {
+				add_enactment_modifier = {
+					name = government_in_bed
+					multiplier = 2
+				}
+			}
+		}
+	}
+
+	option = { #try to push it anyways
+		name = healthcare_laws.3.b
+		add_enactment_modifier = {
+			name = government_in_bed
+		}
+		add_enactment_modifier = {
+			name = forced_legitimacy
+		}
+	}
+}
+
+healthcare_laws.4 = { #not enough health care
+	type = country_event
+	placement = ROOT
+	
+	title = healthcare_laws.4.t
+	desc = healthcare_laws.4.d
+	flavor = healthcare_laws.4.f
+
+	category = enactment
+	
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+	
+	trigger = {
+		or = {
+			has_law = law_type:law_charitable_health_system
+			has_law = law_type:law_private_health_insurance
+		}
+		is_enacting_law = law_type:law_public_health_insurance
+		NOT = {
+			has_modifier = more_healthcare
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = healthcare_system
+		}
+	}
+
+
+	option = { #Try and free up some bureaucracy
+		name = healthcare_laws.4.a
+		default_option = yes
+		if ={ 
+			limit ={ 
+				is_player = yes
+			}
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_small = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = more_healthcare
+			}
+		}
+	}
+
+	option = { #focus on the law
+		name = healthcare_laws.4.b
+		if ={ 
+			limit ={ 
+				is_player = yes
+			}
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = more_healthcare
+				multiplier = 2
+			}
+		}
+		add_modifier = {
+			name = bpm_unhealth_bureaucracy
+			months = normal_modifier_time
+		}
+	}
+}
+
+healthcare_laws.5 = { 
+	type = country_event
+	placement = ROOT
+	
+	title = healthcare_laws.5.t
+	desc = healthcare_laws.5.d
+	flavor = healthcare_laws.5.f
+
+	category = enactment
+	
+	event_image = {
+		video = "africa_leader_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+	
+	trigger = {
+		has_law = law_type:law_private_health_insurance
+		OR ={ 
+			is_enacting_law = law_type:law_public_health_insurance
+			is_enacting_law = law_type:law_charitable_health_system
+		}
+		NOT = {
+			has_modifier = opening_up_healthcare
+		}
+		any_interest_group = {
+			is_marginal = no
+			law_stance = {
+				law = law_type:law_public_health_insurance
+				value < neutral
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = opening_up_healthcare
+		}
+		random_interest_group = {
+			limit = {
+				OR ={ 
+					has_ideology = ideology:ideology_wel_no_welfare
+					has_ideology = ideology:ideology_wel_secular_anti_welfare
+					bpm_ig_is_market_liberal = yes
+				}
+			}
+			save_scope_as = anti_public_healthcare_ig
+			leader = {
+				save_scope_as = anti_public_healthcare_advocate
+			}
+		}
+	}
+
+	option = { 
+		name = healthcare_laws.5.a
+		default_option = yes
+		ai_chance = {
+			base = 50
+			modifier = {
+				trigger = {
+					scope:anti_public_healthcare_ig = {
+						ig_approval < -5
+					}
+				}
+				add = -25
+			}
+		}
+		scope:anti_public_healthcare_ig = {
+			add_modifier = {
+				name = healthcare_debate_ig_ignored
+				months = normal_modifier_time
+			}
+		}
+		if ={ 
+			limit ={ 
+				is_player = yes
+			}
+			random_list ={ 
+				9 = { 
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_small = yes
+					}
+				}
+				1 ={ 
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_neutral_enactment = yes
+							bpm_ig_is_middle_institutional = yes
+						}
+						bpm_ig_increase_law_enactment_approval_small = yes
+					}
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_neutral_enactment = yes
+							bpm_ig_is_lower_institutional = yes
+						}
+						bpm_ig_increase_law_enactment_approval_small = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				9 = {
+					add_enactment_modifier = {
+						name = opening_up_healthcare
+						multiplier = 2
+					}
+				}
+				1 = {
+					add_enactment_modifier = {
+						name = opening_up_healthcare
+						multiplier = 4
+					}
+				}
+			}
+		}
+	}
+
+	option = { 
+		name = healthcare_laws.5.b
+		ai_chance = {
+			base = 50
+		}
+		scope:anti_public_healthcare_ig = {
+			add_modifier = {
+				name = healthcare_debate_ig_heard
+				months = normal_modifier_time
+			}
+		}
+		if ={ 
+			limit ={ 
+				is_player = yes
+			}
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_is_middle_institutional = yes
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = opening_up_healthcare
+				multiplier = -1
+			}
+		}
+	}
+}
+
+healthcare_laws.6 = { #Healthcare too expensive
+	type = country_event
+	placement = ROOT
+	
+	title = healthcare_laws.6.t
+	desc = healthcare_laws.6.d
+	flavor = healthcare_laws.6.f
+
+	category = enactment
+	
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+	
+	trigger = {
+		has_law = law_type:law_private_health_insurance
+		or ={ 
+			is_enacting_law = law_type:law_public_health_insurance
+			is_enacting_law = law_type:law_charitable_health_system
+		}
+		NOT = {
+			has_modifier = right_to_care
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = healthcare_system
+		}
+	}
+
+
+	option = { #take the time needed
+		name = healthcare_laws.6.a
+		default_option = yes
+		if ={ 
+			limit ={ 
+				is_player = yes
+			}
+			random_list ={ 
+				1 = {
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_is_middle_institutional = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_small = yes
+					}
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_is_right_wing = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+				}
+				3 = { 
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_is_middle_institutional = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_small = yes
+					}
+				}
+			}
+		}
+		else ={ 
+			random_list = {
+				1 = {
+					add_enactment_modifier = {
+						name = right_to_care
+						multiplier = 3
+					}
+				}
+				3 = {
+					add_enactment_modifier = {
+						name = right_to_care
+						multiplier = 2
+					}
+				}
+			}
+		}
+	}
+
+	option = { #spend to reduce
+		name = healthcare_laws.6.b
+		add_modifier = {
+			name = bpm_healthcare_rights
+			months = normal_modifier_time
+		}
+		if ={ 
+			limit ={ 
+				is_player = yes
+			}
+			random_list ={ 
+				1 = {
+					random_interest_group ={ 
+						limit = { 
+							bpm_ig_is_middle_institutional = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_small = yes
+					}
+				}
+				4 = { 
+
+				}
+			}
+		}
+		else ={ 
+			random_list = {
+				1 = {
+					add_enactment_modifier = {
+						name = right_to_care
+					}
+				}
+				4 = {
+
+				}
+			}
+		}
+	}
+}

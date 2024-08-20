@@ -165,6 +165,7 @@ bpm_reload_institution_modifiers_XXX = {
                 name = bpm_XXX_attraction_modifier
                 multiplier = owner.institution:institution_XXX.investment
             }
+            add_modifier = bpm_number_of_cabinet_picks
         }
 """.replace('XXX', nm)
     add_fstr += """    }

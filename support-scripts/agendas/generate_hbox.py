@@ -1,5 +1,6 @@
 def main():
     final_text = """
+# Find the `AGENDAS HBOX COPY HERE` comment and replace the HBOX there
 hbox = {
 """
     with open('support-scripts/agendas/data.pairs', 'r') as f:

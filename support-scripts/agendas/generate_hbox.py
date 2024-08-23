@@ -46,7 +46,7 @@ def generate_text_for_slot(pairs, config, slot, v):
             using = tooltip_above
             size = { 27 27 }
         }
-""".replace('XXX', slot).replace('YYY', pair[0]).replace('ZZZ', pair[1])
+""".replace('XXX', slot).replace('YYY', pair[0]).replace('ZZZ', pair[1].replace('bpm_iga_', ''))
     text += "    }"
     if v:
         text += """

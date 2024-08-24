@@ -1,6 +1,6 @@
 # How to register a new institution
 
-Look up every place that has the `# --Cabinet Register Institution` comment
+Look up every place that has the `# --Cabinet Register Institution (number)` comment (ignore those where it's not a number)
 
 # How to setup an already registered institution
 

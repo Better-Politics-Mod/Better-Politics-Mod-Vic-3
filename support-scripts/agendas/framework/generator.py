@@ -2,42 +2,49 @@ from agendas.framework.Agenda import Agenda, EffectRecurrence, Category
 from agendas.framework.PdxObject import PdxObject
 
 # generate effects
-# generate picker
+# generate picker (the picker will also call the on_add effect if applicable)
 # generate script value consts
 
 def generate_effects(categories: list[Category]):
+    a = generate_effect_for_tick(categories, EffectRecurrence.AGENDA_TICK)
+    b = generate_effect_for_tick(categories, EffectRecurrence.MONTHLY)
+    return {
+        "scripted_effects": [a[1], b[1]],
+        "on_actions": [a[0], b[0]]
+    }
+
+def generate_effect_for_tick(categories: list[Category], tick: EffectRecurrence):
     agendas = [ agenda for category in categories for agenda in category.agendas ]
-    # we want to create a scripted effect for each agenda
-    # We start with EffectRecurrence.AGENDA_TICK, then EffectRecurrence.MONTHLY, then EffectRecurrence.ON_ADDED
     scripted_effects = {}
     caller_list = []
     for agenda in agendas:
-        scripted_effects[agenda.scripted_effect_name(EffectRecurrence.AGENDA_TICK)] = agenda.scripted_effect(EffectRecurrence.AGENDA_TICK)
-        #print(agenda.scripted_effect(EffectRecurrence.AGENDA_TICK))
-        caller_list.append(
-            {
-                "if": [
-                    {
-                        "limit": {
-                            "bpm_has_agenda": agenda.id
+        if agenda.has_tick_effect(tick):
+            scripted_effects[agenda.scripted_effect_name(tick)] = agenda.scripted_effect(tick)
+            #print(agenda.scripted_effect(EffectRecurrence.AGENDA_TICK))
+            caller_list.append(
+                {
+                    "if": [
+                        {
+                            "limit": {
+                                "bpm_has_agenda": agenda.id
+                            }
+                        },
+                        {
+                            agenda.scripted_effect_name(tick): True
                         }
-                    },
-                    {
-                        agenda.scripted_effect_name(EffectRecurrence.AGENDA_TICK): True
-                    }
-                ],
-            }
-        )
+                    ],
+                }
+            )
     raw_on_action = [
         { 
-            "on_yearly_pulse_country": {
+            tick.get_pulse(): {
                 "on_actions": [
-                    "on_bpm_agenda_tick"
+                    f"on_bpm_{tick}_tick"
                 ]
             }
         },
-        { "on_bpm_agenda_tick": caller_list }
+        { f"on_bpm_{tick}_tick": caller_list }
     ]
 
-    print(PdxObject(raw_on_action))
-    print(PdxObject(scripted_effects))
+    return ( PdxObject(raw_on_action), PdxObject(scripted_effects) ) 
+

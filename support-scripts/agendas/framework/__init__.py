@@ -8,4 +8,4 @@ def main():
     institutional_exploitation.add_effect({"set_country_flag": "bpm_institutional_exploitation"}, EffectRecurrence.AGENDA_TICK)
     ideological_grifting.add_effect({"set_country_flag": "bpm_ideological_grifting"}, EffectRecurrence.AGENDA_TICK)
     exploitation = Category("exploitation", [institutional_exploitation, ideological_grifting])
-    generate_effects([exploitation])
+    print(generate_effects([exploitation])["on_actions"][0])

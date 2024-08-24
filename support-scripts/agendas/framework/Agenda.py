@@ -9,11 +9,17 @@ class EffectRecurrence(enum.Enum):
 
     def __str__(self):
         if self == EffectRecurrence.AGENDA_TICK:
-            return "agenda_tick"
+            return "agenda"
         elif self == EffectRecurrence.MONTHLY:
             return "monthly"
         elif self == EffectRecurrence.ON_ADDED:
             return "on_added"
+        
+    def get_pulse(self):
+        if self == EffectRecurrence.AGENDA_TICK:
+            return "on_yearly_pulse_country"
+        elif self == EffectRecurrence.MONTHLY:
+            return "on_monthly_pulse_country"
 
 
 class Agenda:
@@ -37,6 +43,9 @@ class Agenda:
     def scripted_effect(self, recurrence: EffectRecurrence):
         #print(self.effects)
         return self.effects[recurrence]
+    
+    def has_tick_effect(self, recurrence: EffectRecurrence):
+        return recurrence in self.effects
     
     def scripted_effect_name(self, recurrence: EffectRecurrence):
         return f"bpm_iga_{self.name}_{recurrence}_effect"

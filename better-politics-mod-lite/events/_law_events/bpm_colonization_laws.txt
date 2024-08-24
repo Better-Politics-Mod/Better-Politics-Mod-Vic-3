@@ -1,0 +1,490 @@
+﻿namespace = colonization
+
+# ALL Event - decolonization
+colonization.1 = {
+	type = country_event
+
+	title = colonization.1.t
+	desc = colonization.1.d
+	flavor = colonization.1.f
+
+	category = enactment
+
+	event_image = {
+		video = "africa_city_center"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_map.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		is_enacting_law = law_type:law_no_colonial_affairs
+		any_country = {
+			is_subject_of = ROOT
+			is_country_type = colonial
+		}
+		NOR = {
+			has_modifier = decolonization
+			has_modifier = refused_to_release_colony
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_country = {
+			limit = {
+				is_subject_of = ROOT
+				is_country_type = colonial
+			}
+			save_scope_as = colony_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # free the colony
+		name = colonization.1.a
+		if ={ 
+			limit ={ is_player = yes }
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_approves_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = bpm_decolonization
+			}
+		}
+		scope:colony_scope = {
+			make_independent = yes
+			change_relations = {
+				country = ROOT
+				value = 30
+			}
+		}
+	}
+	option = { # do not free the colony
+		name = colonization.1.b
+		default_option = yes
+		if ={ 
+			limit ={ is_player = yes }
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_approves_enactment = yes
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_neutral_enactment = yes
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = refused_to_release_colony
+			}
+		}
+		scope:colony_scope = {
+			change_relations = {
+				country = ROOT
+				value = -30
+			}
+		}
+	}
+}
+
+# Stall event - Outsourcing - movement to preserve, people concerned about jobs being outsourced to colonies
+colonization.2 = {
+	type = country_event
+
+	title = colonization.2.t
+	desc = colonization.2.d
+	flavor = colonization.2.f
+
+	category = enactment
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_map.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		has_law = law_type:law_no_colonial_affairs
+		OR = {
+			is_enacting_law = law_type:law_colonial_exploitation
+			is_enacting_law = law_type:law_colonial_resettlement
+		}
+		any_political_movement = {
+			is_political_movement_type = movement_to_preserve
+		}
+		NOT = {
+			has_modifier = slow_colonies
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_political_movement = {
+			limit = {
+				is_political_movement_type = movement_to_preserve
+			}
+			save_scope_as = outsourcing_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # try to alleviate their concerns
+		name = colonization.2.a
+		default_option = yes
+		# colonies will grow slower and lose enactment time
+		add_modifier = {
+			name = slow_colonies
+			months = normal_modifier_time
+		}
+		add_enactment_modifier = {
+			name = fear_of_outsourcing_alleviated
+		}
+	}
+	option = { 
+		name = colonization.2.b
+		# grow the movement
+		scope:outsourcing_scope = {
+			add_modifier = {
+				name = outsourcing_anger
+				months = long_modifier_time
+			}
+		}
+	}
+}
+
+# Advance event - country wants to join the world stage
+# prestige or advancement
+colonization.3 = {
+	type = country_event
+
+	title = colonization.3.t
+	desc = colonization.3.d
+	flavor = colonization.3.f
+
+	category = enactment
+
+	event_image = {
+		video = "africa_construction_colony"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_map.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		has_law = law_type:law_no_colonial_affairs
+		OR = {
+			is_enacting_law = law_type:law_colonial_exploitation
+			is_enacting_law = law_type:law_colonial_resettlement
+		}
+		NOT = { has_modifier = colonial_enthusiasm }
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # chance
+		name = colonization.3.a
+		default_option = yes
+		if ={ 
+			limit ={ is_player = yes}
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_disapproves_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = colonial_enthusiasm
+				multiplier = 2
+			}
+		}
+	}
+	option = { # prestige and time less chance
+		name = colonization.3.b
+		add_modifier = {
+			name = our_place_on_the_world_stage
+			months = short_modifier_time
+		}
+		if ={ 
+			limit ={ is_player = yes}
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_disapproves_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = colonial_enthusiasm
+			}
+		}
+
+	}
+	option = { # colonial enthusiasm less chance
+		name = colonization.3.c
+		add_modifier = {
+			name = colonial_enthusiasm_settlers
+			months = short_modifier_time
+		}
+		if ={ 
+			limit ={ is_player = yes}
+			random_interest_group ={ 
+				limit ={ 
+					bpm_ig_disapproves_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = colonial_enthusiasm
+			}
+		}
+	}
+}
+
+
+# Debate event - the ethics of exploitation
+colonization.4 = {
+	type = country_event
+
+	title = colonization.4.t
+	desc = colonization.4.d
+	flavor = colonization.4.f
+
+	category = enactment
+
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_map.dds"
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		OR = {
+			is_enacting_law = law_type:law_colonial_exploitation
+			is_enacting_law = law_type:law_colonial_resettlement
+			is_enacting_law = law_type:law_no_colonial_affairs
+			is_enacting_law = law_type:law_frontier_colonization
+		}
+		NOT = {
+			has_modifier = colonial_ethical_conviction
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # strongly support your side
+		name = colonization.4.a
+		default_option = yes
+		if ={ 
+			limit ={ is_player = yes }
+			random_list = {
+				1 = {
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_disapproves_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+				}
+				2 = {
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_disapproves_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_small = yes
+					}
+				}
+				2 = {
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+				}
+			}
+		}
+		else ={ 
+			random_list = {
+				1 = {
+					add_enactment_modifier = {
+						name = colonial_ethical_conviction
+					}
+				}
+				2 = {
+					add_enactment_modifier = {
+						name = colonial_ethical_conviction
+						multiplier = 2
+					}
+				}
+				2 = {
+					add_enactment_modifier = {
+						name = colonial_ethical_conviction
+						multiplier = -1
+					}
+				}
+			}
+		}
+		# if there's a movement to preserve, it gets angrier
+		if = {
+			limit = {
+				any_political_movement = {
+					is_political_movement_type = movement_to_preserve
+				}
+			}
+			add_enactment_modifier = {
+				name = ethically_condemned
+			}
+		}
+	}
+	option = { # make concessions to opposing side
+		name = colonization.4.b
+		if ={ 
+			limit ={ is_player = yes }
+			random_list = {
+				2 = {
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_disapproves_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+				}
+				1 = {
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_disapproves_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_small = yes
+					}
+				}
+				1 = {
+					random_interest_group ={ 
+						limit ={ 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+				}
+			}
+		}
+		else ={ 
+			random_list = {
+				2 = {
+					add_enactment_modifier = {
+						name = colonial_ethical_conviction
+					}
+				}
+				1 = {
+					add_enactment_modifier = {
+						name = colonial_ethical_conviction
+						multiplier = 2
+					}
+				}
+				1 = {
+					add_enactment_modifier = {
+						name = colonial_ethical_conviction
+						multiplier = -1
+					}
+				}
+			}
+		}
+		# if there's a movement to preserve, it grows
+		if = {
+			limit = {
+				any_political_movement = {
+					is_political_movement_type = movement_to_preserve
+				}
+			}
+			add_enactment_modifier = {
+				name = ethical_concessions
+			}
+		}
+	}
+}

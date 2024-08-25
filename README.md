@@ -1,6 +1,6 @@
-# Better Politics Mod
+# Better Politics Mod Minus
 
- A mod for the strategy game Victoria 3 that expands political mechanics, introducing more interest groups and interest group splits.
+ A fork of a mod for the strategy game Victoria 3 that originally expands political mechanics, introducing more interest groups and interest group splits. This fork aims remove the ability for rulers to veto laws
  
 ## Installation
  We prefer you use the version on the Steam Workshop. If however you need to install from Github:

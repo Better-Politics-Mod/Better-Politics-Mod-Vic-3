@@ -5,30 +5,11 @@
 	index = 7
 
 	ideologies = {
-		add_ideology = ideology_sta_progressive_state
-		add_ideology = ideology_mil_antimilitarist
-		add_ideology = ideology_wel_expanded_public_welfare
-		add_ideology = ideology_dop_unionist
-		# Vanilla ideologies
-		add_ideology = ideology_proletarian
-		add_ideology = ideology_egalitarian
-		add_ideology = ideology_populist
-		add_ideology = ideology_anti_slavery
+		ideology_nonexistent
 	}
 	
 	enable = {
-		owner = {
-			OR = {
-				has_technology_researched = mass_communication
-				AND = {
-					has_technology_researched = democracy
-					bpm_country_starts_with_liberalism = yes
-				}
-			}
-			NOT = {
-				is_country_type = decentralized
-			}
-		}
+		always = yes
 	}
 	
 	on_enable = {
@@ -37,16 +18,32 @@
 			set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
 			set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
 		}
-		ig:ig_trade_unions = {
-			every_scope_character = {
-				limit = {
-					has_ideology = ideology:ideology_placeholder_leader
-				}
-				set_ideology = ideology:ideology_social_democrat
+		
+		# Put IG initialization here (in an arbitrary IG), so it happens before any on actions (hopefully)
+		# This is a bit of a hack, but it's the only way to do it
+		if = {
+			limit = { game_date > 1836.1.1 }
+			owner = {
+				bpm_setup_country_sta_ideologies = yes
+				bpm_setup_country_rel_ideologies = yes
+				bpm_setup_country_gov_ideologies = yes
+				bpm_setup_country_dop_ideologies = yes
+				bpm_setup_country_eco_ideologies = yes
+				bpm_setup_country_mil_cit_ideologies = yes
 			}
-			bpm_reorder_ideologies = yes
 		}
-		bpm_rename_igs = yes
+		if = {
+			limit = {
+				OR = {
+					has_technology_researched = mass_communication
+					AND = {
+						has_technology_researched = democracy
+						bpm_country_starts_with_liberalism = yes
+					}
+				}
+			}
+			bpm_initialize_trade_unions = yes
+		}
 	}
 	on_disable = {}
 	on_character_ig_membership = {
@@ -85,6 +82,11 @@
 			owner = {
 				NOT = {
 					is_country_type = decentralized
+				}
+				ig:ig_trade_unions ?= {
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
 				}
 			}
 		}

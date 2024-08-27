@@ -39,6 +39,12 @@ class Agenda:
     def set_trigger(self, trigger: Union[list, dict]):
         self.trigger = trigger
 
+    def scripted_trigger(self):
+        return self.trigger
+    
+    def scripted_trigger_name(self):
+        return f"bpm_iga_{self.name}_possible_trigger"
+
     def scripted_effect(self, recurrence: EffectRecurrence):
         #print(self.effects)
         return self.effects[recurrence]

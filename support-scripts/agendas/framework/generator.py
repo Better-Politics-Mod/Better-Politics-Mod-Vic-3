@@ -21,6 +21,7 @@ class Generator:
     def generate_picker(self, categories):
         script_values = self.__generate_script_values(categories)
         effect_templates = self.__create_effect_templates(categories)
+        scripted_triggers = self.__generate_triggers(self.__get_agendas_from_categories(categories))
         final_scripted_effect = self.__assemble_final_scripted_effect(effect_templates)
 
         scripted_effects = {
@@ -29,6 +30,21 @@ class Generator:
 
         self.scripted_effects.append(PdxObject(scripted_effects))
         self.script_values.append(PdxObject(script_values))
+        self.scripted_triggers.append(PdxObject(scripted_triggers))
+
+    
+    def generate_effects(self, categories):
+        self.__generate_effect_for_tick(categories, EffectRecurrence.AGENDA_TICK)
+        self.__generate_effect_for_tick(categories, EffectRecurrence.MONTHLY)
+
+    def __get_agendas_from_categories(self, categories):
+        return [agenda for category in categories for agenda in category.agendas]
+    
+    def __generate_triggers(self, agendas: list[Agenda]):
+        scripted_triggers = {}
+        for agenda in agendas:
+            scripted_triggers[agenda.scripted_trigger_name()] = agenda.scripted_trigger()
+        return scripted_triggers
 
     def __generate_script_values(self, categories):
         script_values = {}
@@ -98,12 +114,8 @@ class Generator:
         
         return final_scripted_effect
 
-    def generate_effects(self, categories):
-        self.__generate_effect_for_tick(categories, EffectRecurrence.AGENDA_TICK)
-        self.__generate_effect_for_tick(categories, EffectRecurrence.MONTHLY)
-
     def __generate_effect_for_tick(self, categories, tick):
-        agendas = [agenda for category in categories for agenda in category.agendas]
+        agendas = self.__get_agendas_from_categories(categories)
         scripted_effects = {}
         caller_list = []
         for agenda in agendas:

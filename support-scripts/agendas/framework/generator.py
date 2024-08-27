@@ -5,6 +5,48 @@ from agendas.framework.PdxObject import PdxObject
 # generate picker (the picker will also call the on_add effect if applicable)
 # generate script value consts
 
+# The picker needs to generate a script value for each category
+# Then it generates the scripted effect
+def generate_picker(categories: list[Category]):
+    script_values = {}
+
+    total_weight_list = []
+
+    #effect_temp = []
+    for category in categories:
+        script_values[category.script_value_name()] = category.script_value()
+        script_values[category.script_value_name() + "normalized"] = [
+            {"value": 0},
+            {"add": category.script_value_name()},
+            {"divide": "bpm_agenda_categories_total_weight"},
+            {"multiply": 100},
+            {"round": True}
+        ]
+        total_weight_list.append({"add": category.script_value_name()})
+
+    script_values["bpm_agenda_categories_total_weight"] = [{"value": 0}] + total_weight_list
+
+
+    final_scripted_effect = {
+        "bpm_pick_agenda_effect": [ 
+            {
+                "set_variable": [
+                    { "name": "bpm_agenda_category_random_number" },
+                    {
+                        "value": {
+                            "integer_range": {
+                                "min": 0,
+                                "max": 100
+                            }
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+
+    
+
 def generate_effects(categories: list[Category]):
     a = generate_effect_for_tick(categories, EffectRecurrence.AGENDA_TICK)
     b = generate_effect_for_tick(categories, EffectRecurrence.MONTHLY)
@@ -48,3 +90,22 @@ def generate_effect_for_tick(categories: list[Category], tick: EffectRecurrence)
 
     return ( PdxObject(raw_on_action), PdxObject(scripted_effects) ) 
 
+
+
+class PdxObjectList:
+
+    def __init__(self):
+        self.scripted_effects = []
+        self.on_actions = []
+        self.scripted_triggers = []
+        self.script_values = []
+
+    def __generate(self, f, categories):
+        for k, v in f(categories).items():
+            setattr(self, k, v)
+
+    def generate_effects(self, categories):
+        self.__generate(generate_effects, categories)
+    
+    def generate_picker(self, categories):
+        self.__generate(generate_picker, categories)

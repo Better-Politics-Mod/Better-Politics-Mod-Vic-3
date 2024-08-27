@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Callable
 
 from common.converter import json_to_pdx
 
@@ -10,4 +10,3 @@ class PdxObject:
     def __str__(self):
         return json_to_pdx(self.data)
 
-    

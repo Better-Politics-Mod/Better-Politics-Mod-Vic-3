@@ -1,6 +1,5 @@
 import enum
 from typing import Union
-from agendas.framework.PdxObject import PdxObject
 
 class EffectRecurrence(enum.Enum):
     AGENDA_TICK = 0
@@ -24,20 +23,20 @@ class EffectRecurrence(enum.Enum):
 
 class Agenda:
     effects: dict[EffectRecurrence, Union[list, dict]]
-    trigger: PdxObject
-    weight: int
+    trigger: Union[list, dict]
     name: str
+    _id: int
 
-    def __init__(self, name, base_weight):
+    def __init__(self, name, id):
         self.raw_name = name
         self._name = name.replace("bpm_iga_", "")
         self.effects = {}
-        self.weight = base_weight
+        self._id = id
 
-    def add_effect(self, effect: PdxObject, recurrence: EffectRecurrence):
+    def add_effect(self, effect: Union[list, dict], recurrence: EffectRecurrence):
         self.effects[recurrence] = effect
     
-    def set_trigger(self, trigger: PdxObject):
+    def set_trigger(self, trigger: Union[list, dict]):
         self.trigger = trigger
 
     def scripted_effect(self, recurrence: EffectRecurrence):
@@ -60,6 +59,13 @@ class Agenda:
 
 
 class Category:
-    def __init__(self, name: str, agendas: list[Agenda]):
+    def __init__(self, name: str, agendas: list[Agenda], weight: Union[list, dict]={'weight': 100}):
         self.name = name
         self.agendas = agendas
+        self.weight = weight
+
+    def script_value_name(self):
+        return f"bpm_agenda_{self.name}_category_weight"
+    
+    def script_value(self):
+        return self.weight

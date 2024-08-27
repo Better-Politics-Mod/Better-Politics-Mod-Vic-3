@@ -25,13 +25,15 @@ class Agenda:
     effects: dict[EffectRecurrence, Union[list, dict]]
     trigger: Union[list, dict]
     name: str
+    weight: int
     _id: int
 
-    def __init__(self, name, id):
+    def __init__(self, name, id, weight=1):
         self.raw_name = name
         self._name = name.replace("bpm_iga_", "")
         self.effects = {}
         self._id = id
+        self.weight = weight
 
     def add_effect(self, effect: Union[list, dict], recurrence: EffectRecurrence):
         self.effects[recurrence] = effect

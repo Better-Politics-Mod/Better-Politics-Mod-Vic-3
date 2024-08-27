@@ -1,25 +1,26 @@
 import os
 import shutil
+from typing import List, Dict
 from agendas.framework.Agenda import Agenda, EffectRecurrence, Category
-from agendas.framework.PdxObject import PdxObject
-from agendas.framework.PdxUtils import PdxUtil
+from common.PdxObject import PdxObject
+from common.PdxUtils import PdxUtil
 
-FOLDER = "support-scripts/agendas/framework-output"
+FOLDER: str = "support-scripts/agendas/framework-output"
 
 class Generator:
     
     def __init__(self):
-        self.scripted_effects = []
-        self.on_actions = []
-        self.scripted_triggers = []
-        self.script_values = []
+        self.scripted_effects: List[PdxObject] = []
+        self.on_actions: List[PdxObject] = []
+        self.scripted_triggers: List[PdxObject] = []
+        self.script_values: List[PdxObject] = []
 
-    def generate(self, categories):
+    def generate(self, categories: List[Category]) -> None:
         self.generate_effects(categories)
         self.generate_picker(categories)
         self.write_to_files()
 
-    def generate_picker(self, categories):
+    def generate_picker(self, categories: List[Category]) -> None:
         script_values = self.__generate_script_values(categories)
         effect_templates = self.__create_effect_templates(categories)
         scripted_triggers = self.__generate_triggers(self.__get_agendas_from_categories(categories))
@@ -31,22 +32,22 @@ class Generator:
         self.script_values.append(PdxObject(script_values))
         self.scripted_triggers.append(PdxObject(scripted_triggers))
 
-    def generate_effects(self, categories):
+    def generate_effects(self, categories: List[Category]) -> None:
         self.__generate_effect_for_tick(categories, EffectRecurrence.AGENDA_TICK)
         self.__generate_effect_for_tick(categories, EffectRecurrence.MONTHLY)
 
-    def __get_agendas_from_categories(self, categories):
+    def __get_agendas_from_categories(self, categories: List[Category]) -> List[Agenda]:
         return [agenda for category in categories for agenda in category.agendas]
 
-    def __generate_triggers(self, agendas: list[Agenda]):
-        scripted_triggers = {}
+    def __generate_triggers(self, agendas: List[Agenda]) -> Dict[str, str]:
+        scripted_triggers: Dict[str, str] = {}
         for agenda in agendas:
             scripted_triggers[agenda.scripted_trigger_name()] = agenda.scripted_trigger()
         return scripted_triggers
 
-    def __generate_script_values(self, categories):
-        script_values = {}
-        total_weight_list = []
+    def __generate_script_values(self, categories: List[Category]) -> Dict[str, PdxObject]:
+        script_values: Dict[str, PdxObject] = {}
+        total_weight_list: List[PdxObject] = []
 
         for category in categories:
             script_values[category.script_value_name()] = category.script_value()
@@ -58,12 +59,12 @@ class Generator:
             )
             total_weight_list.append(PdxUtil.pair("add", category.script_value_name()))
 
-        script_values["bpm_agenda_categories_total_weight"] = [{"value": 0}] + total_weight_list
+        script_values["bpm_agenda_categories_total_weight"] = [PdxUtil.pair("value", 0)] + total_weight_list
         
         return script_values
 
-    def __create_effect_templates(self, categories):
-        effect_templates = []
+    def __create_effect_templates(self, categories: List[Category]) -> List[PdxObject]:
+        effect_templates: List[PdxObject] = []
 
         for category in categories:
             effect_templates.append(PdxUtil.change_variable("bpm_agenda_category_weight_running_total", category.script_value_name_normalized()))
@@ -78,21 +79,21 @@ class Generator:
 
         return effect_templates
 
-    def __assemble_final_scripted_effect(self, effect_templates):
-        final_scripted_effect = [
+    def __assemble_final_scripted_effect(self, effect_templates: List[PdxObject]) -> List[PdxObject]:
+        final_scripted_effect: List[PdxObject] = [
             PdxUtil.set_variable(
                 "bpm_agenda_category_random_number",
-                {"integer_range": {"min": 0, "max": 100}}
+                PdxUtil.integer_range(0, 100)
             ),
             PdxUtil.set_variable("bpm_agenda_category_weight_running_total", 0)
         ] + effect_templates
         
         return final_scripted_effect
 
-    def __generate_effect_for_tick(self, categories, tick):
+    def __generate_effect_for_tick(self, categories: List[Category], tick: EffectRecurrence) -> None:
         agendas = self.__get_agendas_from_categories(categories)
-        scripted_effects = {}
-        caller_list = []
+        scripted_effects: Dict[str, str] = {}
+        caller_list: List[PdxObject] = []
         for agenda in agendas:
             if agenda.has_tick_effect(tick):
                 scripted_effects[agenda.scripted_effect_name(tick)] = agenda.scripted_effect(tick)
@@ -113,7 +114,7 @@ class Generator:
         self.on_actions.append(PdxObject(raw_on_action))
         self.scripted_effects.append(PdxObject(scripted_effects))
 
-    def delete_all_files_in_folder(self, folder_path):
+    def delete_all_files_in_folder(self, folder_path: str) -> None:
         if os.path.exists(folder_path) and os.path.isdir(folder_path):
             for filename in os.listdir(folder_path):
                 file_path = os.path.join(folder_path, filename)
@@ -127,7 +128,7 @@ class Generator:
         else:
             print(f"The folder {folder_path} does not exist or is not a directory.")
 
-    def write_to_files(self):
+    def write_to_files(self) -> None:
         self.delete_all_files_in_folder(FOLDER)
         for k, v in self.__dict__.items():
             with open(f"{FOLDER}/{k}.txt", "w") as f:

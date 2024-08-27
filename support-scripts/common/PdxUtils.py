@@ -35,3 +35,7 @@ class PdxUtil:
     @staticmethod 
     def set_list(name, *args):
         return {name: [*args]}
+    
+    @staticmethod
+    def integer_range(min, max):
+        return {"integer_range": {"min": min, "max": max}}

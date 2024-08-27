@@ -11,4 +11,5 @@ def main():
 
     obj = PdxObjectList()
     obj.generate_effects([exploitation])
-    print(obj.script_values)
+    obj.generate_picker([exploitation])
+    obj.write_to_files()

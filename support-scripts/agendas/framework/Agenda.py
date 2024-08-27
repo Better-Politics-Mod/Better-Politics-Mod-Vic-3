@@ -59,13 +59,16 @@ class Agenda:
 
 
 class Category:
-    def __init__(self, name: str, agendas: list[Agenda], weight: Union[list, dict]={'weight': 100}):
+    def __init__(self, name: str, agendas: list[Agenda], weight: Union[list, dict]={'value': 100}):
         self.name = name
         self.agendas = agendas
         self.weight = weight
 
     def script_value_name(self):
         return f"bpm_agenda_{self.name}_category_weight"
+    
+    def script_value_name_normalized(self):
+        return f"bpm_agenda_{self.name}_category_weight_normalized"
     
     def script_value(self):
         return self.weight

@@ -9,42 +9,79 @@ from agendas.framework.PdxObject import PdxObject
 # Then it generates the scripted effect
 def generate_picker(categories: list[Category]):
     script_values = {}
+    scripted_effects = {}
 
     total_weight_list = []
 
-    #effect_temp = []
+    effect_temp = []
     for category in categories:
         script_values[category.script_value_name()] = category.script_value()
-        script_values[category.script_value_name() + "normalized"] = [
+        script_values[category.script_value_name_normalized()] = [
             {"value": 0},
             {"add": category.script_value_name()},
             {"divide": "bpm_agenda_categories_total_weight"},
             {"multiply": 100},
-            {"round": True}
         ]
         total_weight_list.append({"add": category.script_value_name()})
+        effect_temp.append({
+            "change_variable": [
+                { "name": "bpm_agenda_category_weight_running_total" },
+                {
+                    "add": category.script_value_name_normalized()
+                }
+            ]
+        })
+        effect_temp.append(
+            {
+                "if": [
+                    {
+                        "limit": [
+                            "var:bpm_agenda_category_random_number <= var:bpm_agenda_category_weight_running_total",
+                            { "NOT": {
+                                "has_variable": "bpm_agenda_picker_ifelse_ended"
+                            } }
+                        ]
+                        
+                    },
+                    "# do something here",
+                    { "set_variable": "bpm_agenda_picker_ifelse_ended" }
+                ]
+            }
+        )
 
     script_values["bpm_agenda_categories_total_weight"] = [{"value": 0}] + total_weight_list
 
 
-    final_scripted_effect = {
-        "bpm_pick_agenda_effect": [ 
-            {
-                "set_variable": [
-                    { "name": "bpm_agenda_category_random_number" },
-                    {
-                        "value": {
-                            "integer_range": {
-                                "min": 0,
-                                "max": 100
-                            }
+    final_scripted_effect = [ 
+        {
+            "set_variable": [
+                { "name": "bpm_agenda_category_random_number" },
+                {
+                    "value": {
+                        "integer_range": {
+                            "min": 0,
+                            "max": 100
                         }
                     }
-                ]
-            }
-        ]
-    }
+                }
+            ]
+        },
+        {
+            "set_variable": [
+                { "name": "bpm_agenda_category_weight_running_total" },
+                {
+                    "value": 0
+                }
+            ]
+        }
+    ] + effect_temp
 
+    scripted_effects["bpm_agenda_picker"] = final_scripted_effect
+
+    return {
+        "scripted_effects": [PdxObject(scripted_effects)],
+        "script_values": [PdxObject(script_values)]
+    }
     
 
 def generate_effects(categories: list[Category]):
@@ -103,6 +140,11 @@ class PdxObjectList:
     def __generate(self, f, categories):
         for k, v in f(categories).items():
             setattr(self, k, v)
+
+    def write_to_files(self):
+        for k, v in self.__dict__.items():
+            with open(f"support-scripts/agendas/framework-output/{k}.txt", "w") as f:
+                f.write('\n\n'.join(str(x) for x in v))
 
     def generate_effects(self, categories):
         self.__generate(generate_effects, categories)

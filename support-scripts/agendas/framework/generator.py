@@ -25,11 +25,13 @@ class Generator:
         effect_templates = self.__create_effect_templates(categories)
         scripted_triggers = self.__generate_triggers(self.__get_agendas_from_categories(categories))
         final_scripted_effect = self.__assemble_final_scripted_effect(effect_templates)
+        agenda_weights = self.__generate_agenda_weights(categories)
 
         scripted_effects = PdxUtil.pair("bpm_agenda_picker", final_scripted_effect)
 
         self.scripted_effects.append(PdxObject(scripted_effects))
         self.script_values.append(PdxObject(script_values))
+        self.script_values.append(PdxObject(agenda_weights))
         self.scripted_triggers.append(PdxObject(scripted_triggers))
 
     def generate_effects(self, categories: List[Category]) -> None:
@@ -39,6 +41,23 @@ class Generator:
     def __get_agendas_from_categories(self, categories: List[Category]) -> List[Agenda]:
         return [agenda for category in categories for agenda in category.agendas]
 
+    def __generate_agenda_weights(self, categories: List[Category]) -> Dict[str, int]:
+        agenda_weights = []
+        total_weights = []
+        normalized_weights = []
+        for category in categories:
+            v = sum([agenda.weight for agenda in category.agendas])
+            total_weight = {
+                category.agendas_weight_total_name(): v
+            }
+            agenda_weight = PdxUtil.pairs(*[(agenda.get_weight_name(), agenda.weight) for agenda in category.agendas])
+            normalized_weight = PdxUtil.pairs(*[(agenda.get_weight_name_normalized(), PdxUtil.pairs(("value", agenda.weight), ("divide", v))) for agenda in category.agendas])
+            agenda_weights.append(agenda_weight)
+            normalized_weights.append(normalized_weight)
+            total_weights.append(total_weight)
+
+        return agenda_weights + total_weights + normalized_weights
+        
     def __generate_triggers(self, agendas: List[Agenda]) -> Dict[str, str]:
         scripted_triggers: Dict[str, str] = {}
         for agenda in agendas:

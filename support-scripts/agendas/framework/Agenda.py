@@ -57,6 +57,12 @@ class Agenda:
     def scripted_effect_name(self, recurrence: EffectRecurrence):
         return f"bpm_iga_{self.name}_{recurrence}_effect"
     
+    def get_weight_name(self):
+        return f"bpm_agenda_{self.name}_weight"
+    
+    def get_weight_name_normalized(self):
+        return f"bpm_agenda_{self.name}_weight_normalized"
+    
     @property 
     def id(self):
         return f"bpm_agenda_{self.name}_id"
@@ -77,6 +83,9 @@ class Category:
     
     def script_value_name_normalized(self):
         return f"bpm_agenda_{self.name}_category_weight_normalized"
-    
+
+    def agendas_weight_total_name(self):
+        return f"bpm_agenda_{self.name}_total_weight"
+        
     def script_value(self):
         return self.weight

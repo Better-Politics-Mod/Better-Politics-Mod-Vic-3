@@ -125,7 +125,7 @@ class Generator:
                 category.agendas_weight_total_name(): v
             }
             agenda_weight = PdxUtil.pairs(*[(agenda.get_weight_name(), agenda.weight) for agenda in category.agendas])
-            normalized_weight = PdxUtil.pairs(*[(agenda.get_weight_name_normalized(), PdxUtil.pairs(("value", agenda.get_weight_name()), ("divide", category.agendas_weight_total_name()))) for agenda in category.agendas])
+            normalized_weight = PdxUtil.pairs(*[(agenda.get_weight_name_normalized(), PdxUtil.pairs(("value", agenda.get_weight_name()), ("divide", category.agendas_weight_total_name()), ("multiply", 100))) for agenda in category.agendas])
             agenda_weights.append(agenda_weight)
             normalized_weights.append(normalized_weight)
             total_weights.append(total_weight)

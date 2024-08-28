@@ -39,3 +39,19 @@ class PdxUtil:
     @staticmethod
     def integer_range(min, max):
         return {"integer_range": {"min": min, "max": max}}
+    
+    @staticmethod
+    def remove_variable(name):
+        return {"remove_variable": name}
+    
+    @staticmethod
+    def do(arg):
+        return {arg: True}
+    
+    @staticmethod
+    def add_agenda(id):
+        return {
+            "bpm_add_agenda": {
+                "id": id
+            }
+        }

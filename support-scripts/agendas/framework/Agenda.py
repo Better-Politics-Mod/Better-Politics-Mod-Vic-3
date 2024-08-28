@@ -44,6 +44,9 @@ class Agenda:
     def scripted_trigger(self):
         return self.trigger
     
+    def on_activate_scripted_effect_name(self):
+        return f"bpm_iga_{self.name}_on_activate"
+    
     def scripted_trigger_name(self):
         return f"bpm_iga_{self.name}_possible_trigger"
 
@@ -62,10 +65,15 @@ class Agenda:
     
     def get_weight_name_normalized(self):
         return f"bpm_agenda_{self.name}_weight_normalized"
+
     
     @property 
     def id(self):
         return f"bpm_agenda_{self.name}_id"
+    
+    @property
+    def raw_id(self):
+        return self._id
 
     @property
     def name(self):
@@ -84,8 +92,11 @@ class Category:
     def script_value_name_normalized(self):
         return f"bpm_agenda_{self.name}_category_weight_normalized"
 
+    def get_picker_name(self):
+        return f"bpm_agenda_{self.name}_category_picker"
+    
     def agendas_weight_total_name(self):
-        return f"bpm_agenda_{self.name}_total_weight"
+        return f"bpm_agenda_{self.name}_category_total_weight"
         
     def script_value(self):
         return self.weight

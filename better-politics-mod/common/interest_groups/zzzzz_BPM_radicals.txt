@@ -1,65 +1,52 @@
-﻿ig_market_liberals = {
-	color = hsv{ 0.45 0.7 0.9 }
-	texture = "gfx/interface/icons/ig_icons/market_liberals.dds"
-	layer = "revolution_dynamic_industrialists"
-	index = 12
+﻿ig_radicals = {
+	color = hsv{ 0.11 1 1 }
+	texture = "gfx/interface/icons/ig_icons/radicals.dds"
+	layer = "revolution_dynamic_intelligentsia"
+	index = 13
 	
 	ideologies = {
 		ideology_nonexistent
 	}
 	
 	enable = {
-		always = yes
+		owner = {
+			NOT = { is_country_type = decentralized }
+		}	
 	}
 	
 	on_enable = {
-		ig:ig_market_liberals = {
-			# set_ig_trait = ig_trait:ig_trait_urban_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_urban_well_oiled_machine
-			set_ig_trait = ig_trait:ig_trait_urban_systematic_opposition
+		ig:ig_radicals ?= {
+			# set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
+			set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
+			set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
 		}
 	}
 	on_disable = {}
 	on_character_ig_membership = {}
 	
 	pop_potential = {
-		custom_tooltip = {
-			text = BPM_VALID_POP_FOR_IG
-			owner = {
-				NOT = {
-					is_country_type = decentralized
-				}
-				ig:ig_market_liberals ?= {
-					NOT = {
-						has_ideology = ideology:ideology_nonexistent
-					}
-				}
+		owner = {
+			ig:ig_radicals ?= {
+				NOT = { has_ideology = ideology:ideology_nonexistent }
 			}
 		}
 	}
 	
 	pop_weight = {
-		value = 40
+		value = 20
 
 		if = {
 			limit = { is_pop_type = peasants }
 			add = {
 				desc = "POP_EXCLUSIONS"
-				value = -50
-			}
-		}
-		else_if = {
-			limit = { is_pop_type = aristocrats }
-			add = {
-				desc = "POP_ARISTOCRATS"
-				value = 60
+				value = -10
 			}
 		}
 		else_if = {
 			limit = { is_pop_type = capitalists }
 			add = {
 				desc = "POP_CAPITALISTS"
-				value = 195
+				value = 100
 			}
 		}
 		else_if = {
@@ -69,35 +56,17 @@
 			}
 			add = {
 				desc = "MIDDLE_CLASS"
-				value = 20
+				value = 50
 			}
 		}
 
-		# URBAN EMPLOYMENT
-		if = {
-			limit = {
-				bpm_pop_employment_is_rural = no
-			}
-			add = {
-				value = 30
-				desc = "URBAN"
-			}
+		add = {
+			desc = "URBAN_POP"
 			if = {
-				limit = {
-					strata = middle
-					NOT = { is_pop_type = clergymen }
+				limit = { 
+					bpm_pop_employment_is_rural = no
 				}
-				add = {
-					value = 80
-					desc = "URBAN_MIDDLE_CLASS"
-				}
-			}
-			else_if = {
-				limit = { strata = rich }
-				add = {
-					value = 60
-					desc = "URBAN_UPPER_CLASS"
-				}
+				value = 40
 			}
 		}
 
@@ -113,7 +82,7 @@
 							state = { is_slave_state = no }
 						}
 					}
-					value = 100
+					value = 50
 				}
 			}
 			multiply = {
@@ -127,45 +96,54 @@
 						min = 0.67
 					}
 				}
-			}
-			multiply = {
-				desc = "TRADITIONAL_MONARCHY"	
-				value = 1.0
-				
-				if = {
-					limit = { 
-						owner = {
-							has_law = law_type:law_monarchy
-							OR = {
-								has_law = law_type:law_oligarchy
-								has_law = law_type:law_autocracy
-							}
-						}
-					}
-					value = 0.75
-				}		
-			}
+			}	
 			multiply = bpm_ig_agitators_popularity
 			multiply = bpm_ig_ruler_popularity
 			multiply = ig_attraction_from_radicals_and_loyalists
 		}
+
 		multiply = {
 			desc = "UNEDUCATED"
 			value = literacy_rate
-			multiply = 1.5
+			multiply = 1.4
 			max = 1.0
 		}
+
+		if = {
+			limit = { game_date < 1855.1.1 }
+			if = {
+				limit = {
+					owner = {
+						NOT = { has_variable = completed_peoples_springtime_je }
+						has_global_variable = bpm_je_march_to_radicalism_progress
+						bpm_country_is_in_europe = yes
+						bpm_country_laws_no_voting = yes
+					}
+				}
+				multiply = {
+					desc = "PEOPLES_SPRINGTIME_BUILDUP"
+					value = global_var:bpm_je_march_to_radicalism_progress
+					multiply = 0.05
+				}
+			}
+		}
+
 		multiply = ig_attraction_to_ruler_ideology_from_stability
 	}
 	
 	monarch_weight = {
-		value = 0.2
+		value = 0.1
 	}	
+
+	agitator_weight = {
+		value = 1.0
+		multiply = bpm_base_agitator_weight
+	}
 	
 	commander_weight = {
 		value = 1.0
 		multiply = bpm_commander_assignment_from_laws_factor
-	}	
+	}		
 	
 	noble_chance = {
 		value = 0.3

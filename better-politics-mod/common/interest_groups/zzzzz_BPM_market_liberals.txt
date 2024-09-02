@@ -1,35 +1,31 @@
-﻿ig_liberals = {
-	color = hsv{ 0.16 1 1 }
-	texture = "gfx/interface/icons/ig_icons/liberals.dds"
+﻿ig_market_liberals = {
+	color = hsv{ 0.45 0.7 0.9 }
+	texture = "gfx/interface/icons/ig_icons/market_liberals.dds"
 	layer = "revolution_dynamic_industrialists"
 	index = 12
 	
 	ideologies = {
-		ideology_gov_liberal_republican
-		ideology_dop_moderate_democrat
-		ideology_sta_weak_state
-		ideology_cit_liberal_nationalist
-		ideology_rel_secularist
-		ideology_mil_patriotic_liberal
-		ideology_eco_laissez_faire
-		ideology_wel_market_welfare
-		ideology_fem_benevolent_sexism
-		ideology_ban_averse
-		# Vanilla
-		ideology_liberal
-		ideology_laissez_faire
-		ideology_individualist
+		ideology_nonexistent
 	}
 	
 	enable = {
-		always = yes
+		owner = {
+			NOT = { is_country_type = decentralized }
+			has_variable = local_marlib_split_var
+		}	
 	}
 	
 	on_enable = {
-		ig:ig_liberals = {
-			# set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
-			set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
+		ig:ig_market_liberals ?= {
+			# set_ig_trait = ig_trait:ig_trait_urban_systematic_corruption
+			set_ig_trait = ig_trait:ig_trait_urban_well_oiled_machine
+			set_ig_trait = ig_trait:ig_trait_urban_systematic_opposition
+		}
+		if = {
+			limit = {
+				ig:ig_market_liberals ?= { has_ideology = ideology:ideology_nonexistent }
+			}
+			bpm_initialize_marlibs = yes
 		}
 	}
 	on_disable = {}
@@ -42,7 +38,11 @@
 				NOT = {
 					is_country_type = decentralized
 				}
-				has_technology_researched = rationalism
+				ig:ig_market_liberals ?= {
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
 			}
 		}
 	}
@@ -63,21 +63,6 @@
 				desc = "POP_ARISTOCRATS"
 				value = 60
 			}
-			if = {
-				limit = { 
-					owner = {
-						has_law = law_type:law_monarchy
-						OR = {
-							has_law = law_type:law_oligarchy
-							has_law = law_type:law_autocracy
-						}
-					}
-				}
-				add = {
-					desc = "ARISTOCRAT_REFORMERS"
-					value = 40
-				}
-			}
 		}
 		else_if = {
 			limit = { is_pop_type = capitalists }
@@ -93,7 +78,7 @@
 			}
 			add = {
 				desc = "MIDDLE_CLASS"
-				value = 30
+				value = 20
 			}
 		}
 
@@ -112,27 +97,21 @@
 					NOT = { is_pop_type = clergymen }
 				}
 				add = {
-					value = 100
+					value = 80
 					desc = "URBAN_MIDDLE_CLASS"
 				}
 			}
 			else_if = {
 				limit = { strata = rich }
 				add = {
-					value = 50
+					value = 60
 					desc = "URBAN_UPPER_CLASS"
 				}
 			}
 		}
 
 		if = {
-			limit = { 
-				AND = {
-					owner = { bpm_performance_significant_country = yes }
-					NOT = { owner = { has_variable = bpm_2nd_party_system } }
-				}
-			}
-
+			limit = { owner = { bpm_performance_significant_country = yes } }
 			add = {
 				desc = "SLAVERY_DETRACTORS"
 				if = {
@@ -146,7 +125,6 @@
 					value = 100
 				}
 			}
-
 			multiply = {
 				desc = "LEADER_POPULARITY"
 				scope:interest_group = {
@@ -158,6 +136,23 @@
 						min = 0.67
 					}
 				}
+			}
+			multiply = {
+				desc = "TRADITIONAL_MONARCHY"	
+				value = 1.0
+				
+				if = {
+					limit = { 
+						owner = {
+							has_law = law_type:law_monarchy
+							OR = {
+								has_law = law_type:law_oligarchy
+								has_law = law_type:law_autocracy
+							}
+						}
+					}
+					value = 0.75
+				}		
 			}
 			multiply = bpm_ig_agitators_popularity
 			multiply = bpm_ig_ruler_popularity
@@ -173,13 +168,8 @@
 	}
 	
 	monarch_weight = {
-		value = 0.75
+		value = 0.2
 	}	
-
-	agitator_weight = {
-		value = 1.0
-		multiply = bpm_base_agitator_weight
-	}
 	
 	commander_weight = {
 		value = 1.0

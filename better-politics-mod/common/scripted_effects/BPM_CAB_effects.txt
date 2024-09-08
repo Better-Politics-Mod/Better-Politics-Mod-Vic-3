@@ -429,6 +429,90 @@ bpm_add_to_cabinet_interaction_shared_effect = {
         bpm_add_character_to_cabinet = yes
     }
 
+    # Appointing a Minister of Foreign Affairs
+    # This will affect lobbies and current forpol laws
+    if = {
+        limit = {
+            owner = { has_institution = institution_diplomacy }
+            owner.var:bpm_cabinet_char_select.type ?= owner.institution:institution_diplomacy.type
+        }
+
+        # Lobby Results
+        if = {
+            limit = { interest_group = { is_member_of_any_lobby = yes } }
+
+            owner = {
+                every_political_lobby = {
+                    limit = {
+                        any_lobby_member = {
+                            this ?= scope:actor.interest_group
+                        }
+                    }
+    
+                    change_appeasement = {
+                        amount = 2
+                        factor = appeasement_bpm_minister_appointed
+                    }
+                }
+            }
+            
+        }
+
+        # Law Change (If permitted by laws)
+        if = {
+            limit = { owner.modifier:country_bpm_forpol_minister_appointment_switches_law = yes }
+
+            if = { # Fash
+                limit = {
+                    OR = {
+                        bpm_leader_is_fascist = yes
+                        interest_group = {
+                            law_stance = {
+                                law = law_type:law_ultramilitarism
+                                value = strongly_approve
+                            }
+                        }
+                    }
+                }
+                owner = { activate_law = law_type:law_ultramilitarism }
+            } else_if = { # Hawk (2A)
+                limit = {
+                    OR = {
+                        bpm_leader_is_hawkish = yes
+                        AND = {
+                            bpm_leader_is_doveish = no
+                            interest_group = {
+                                law_stance = {
+                                    law = law_type:law_jingoism
+                                    value >= approve
+                                }
+                            }
+                        }
+                    }
+                } 
+                owner = { activate_law = law_type:law_jingoism }
+            } else_if = { # Dove
+                limit = {
+                    OR = {
+                        bpm_leader_is_doveish = yes
+                        AND = {
+                            bpm_leader_is_hawkish = no
+                            interest_group = {
+                                law_stance = {
+                                    law = law_type:law_dove_politics
+                                    value >= approve
+                                }
+                            }
+                        }
+                    }
+                }
+                owner = { activate_law = law_type:law_dove_politics }
+            } else = { # Everyone else makes policy flexible
+                owner = { activate_law = law_type:law_flexible_foreign_policy }
+            }
+        }
+    }
+
     if = {
         limit = {
             popularity > 0
@@ -440,7 +524,7 @@ bpm_add_to_cabinet_interaction_shared_effect = {
                     divide = 100
                     multiply = 0.5
                 }
-                interest_group = interest_group
+                interest_group = prev.interest_group
             }
         }
     }

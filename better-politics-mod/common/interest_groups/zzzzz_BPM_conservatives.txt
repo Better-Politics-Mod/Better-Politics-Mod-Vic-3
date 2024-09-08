@@ -1,32 +1,32 @@
-﻿ig_reactionaries = {
-	color = hsv{ 0.67 0.7 0.9 }
-	texture = "gfx/interface/icons/ig_icons/reactionaries.dds"
-	layer = "revolution_dynamic_landowners"
-	index = 14
-	
+﻿ig_conservatives = {
+	color = hsv{ 0.57 1 1 }
+	texture = "gfx/interface/icons/ig_icons/conservatives.dds"
+	layer = "revolution_dynamic_petty_bourgeoisie"
+	index = 10
+
 	ideologies = {
-		ideology_gov_radical_monarchist
-		ideology_dop_autocrat
-		ideology_sta_security_state
-		ideology_cit_ethnonationalist
-		ideology_rel_radical_moralist
-		ideology_mil_aristocratic_militarist
-		ideology_eco_traditional_agrarian
-		ideology_wel_no_welfare
-		ideology_fem_patriarchal
-		ideology_ban_conservative_supremacist
+		ideology_gov_moderate_monarchist
+		ideology_dop_authoritarian_democrat
+		ideology_sta_powerful_state
+		ideology_cit_nationalist
+		ideology_eco_conservative_agrarian
+		ideology_rel_moralist
+		ideology_mil_patriotic
+		ideology_wel_religious_welfare
+		ideology_fem_moderate_patriarchal
+		ideology_ban_averse
 		# Vanilla
-		ideology_reactionary
+		ideology_paternalistic
 		ideology_stratocratic
 		ideology_patriotic
 	}
 	
 	enable = {
-		always = yes
+		owner = { NOT = { is_country_type = decentralized } }
 	}
 	
 	on_enable = {
-		ig:ig_reactionaries = {
+		ig:ig_conservatives ?= {
 			# set_ig_trait = ig_trait:ig_trait_right_systematic_corruption
 			set_ig_trait = ig_trait:ig_trait_right_bastion_of_freedom
 			set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
@@ -39,18 +39,22 @@
 		custom_tooltip = {
 			text = BPM_VALID_POP_FOR_IG
 			owner = {
-				NOT = {
-					is_country_type = decentralized
-				}
 				has_technology_researched = rationalism
 			}
 		}
 	}
 	
 	pop_weight = {
-		value = 10
-
+		value = 30
+	
 		if = {
+			limit = { strata = poor }
+			add = {
+				desc = "LOWER_CLASS"
+				value = 20
+			}
+		}
+		else_if = {
 			limit = { strata = middle }
 			add = {
 				desc = "MIDDLE_CLASS"
@@ -58,32 +62,37 @@
 			}
 		}
 		else_if = {
-			limit = { is_pop_type = aristocrats }
+			limit = {
+				is_pop_type = capitalists
+			}
 			add = {
-				desc = "POP_ARISTOCRATS"
-				value = 150
+				desc = "POP_CAPITALISTS"
+				value = 175
 			}
 		}
 		else_if = {
-			limit = { is_pop_type = capitalists }
+			limit = {
+				is_pop_type = aristocrats
+			}
 			add = {
-				desc = "POP_CAPITALISTS"
-				value = 100
+				desc = "POP_ARISTOCRATS"
+				value = 250
 			}
 		}
 
-		add = {
-			desc = "RURAL"
-			if = {
-				limit = { 
-					bpm_pop_employment_is_rural = yes
-				}
-				value = 40
-			}
-		}
-
-		# PATCON
+		# RURAL
 		if = {
+			limit = {
+				bpm_pop_employment_is_rural = yes
+			}
+			add = {
+				desc = "RURAL"
+				value = 50
+			}
+		}
+
+		# PATCON AND URBAN
+		else_if = {
 			limit = {
 				scope:interest_group = { 
 					#has_ideology = ideology:ideology_wel_paternalistic_welfare 
@@ -105,40 +114,23 @@
 				}
 			}
 			else_if = {
-				limit = { is_pop_type = capitalists }
+				limit = { strata = rich }
 				add = {
 					desc = "PATCON_CAPITALISTS"
-					value = 30
+					value = 50
 				}
 			}
 		}
 
+		multiply = {
+			desc = "UNEDUCATED"
+			value = literacy_rate
+			multiply = 2.0
+			max = 1.0
+		}
+
 		if = {
 			limit = { owner = { bpm_performance_significant_country = yes } }
-			add = {
-				desc = "SLAVERY_SUPPORTERS"
-				if = {
-					limit = {
-						pop_has_primary_culture = yes
-						state = { is_slave_state = yes }
-					}
-					value = 200
-				}
-			}
-	
-			add = {
-				desc = "SLAVERY_DETRACTORS"
-				if = {
-					limit = {
-						owner = { NOT = { has_law = law_type:law_slavery_banned } }
-						OR = {
-							pop_has_primary_culture = no
-							state = { is_slave_state = no }
-						}
-					}
-					value = -150
-				}
-			}
 			multiply = {
 				desc = "LEADER_POPULARITY"
 				scope:interest_group = {
@@ -151,6 +143,19 @@
 					}
 				}
 			}	
+			multiply = {
+				desc = "STILL_OLIGARCHIC"
+				value = 1.0
+				if = {
+					limit = {
+						owner = {
+							has_law = law_type:law_oligarchy
+							has_law = law_type:law_monarchy
+						}
+					}
+					value = 0.5
+				}
+			}
 			multiply = bpm_ig_agitators_popularity
 			multiply = bpm_ig_ruler_popularity
 			multiply = ig_attraction_from_radicals_and_loyalists
@@ -163,17 +168,13 @@
 
 			if = {
 				limit = { owner = { is_at_war = yes } }
-				value = 1.3
+				value = 1.4
 			}		
 		}
 	}
 	
 	monarch_weight = {
 		value = 1.0
-		if = {
-			limit = { owner = { bpm_country_laws_no_voting = yes } }
-			multiply = 2.0
-		}
 	}	
 
 	agitator_weight = {

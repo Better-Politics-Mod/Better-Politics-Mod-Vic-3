@@ -173,7 +173,7 @@ bpm_socialist_utils.6 = {
 	}
 }
 
-# Disable independent socialists once split complete
+# Deinitialize independent socialists once split complete
 bpm_socialist_utils.7 = {
 	type = country_event
 	placement = root
@@ -181,8 +181,8 @@ bpm_socialist_utils.7 = {
 
 	trigger = {
 		owner = { 
-			has_variable = disable_socialists_var
-			ig:ig_socialists = {
+			has_variable = bpm_deinitialize_socialists_var
+			ig:ig_socialists ?= {
 				ig_clout <= 0.001
 			}
 		}
@@ -190,12 +190,53 @@ bpm_socialist_utils.7 = {
 
 	immediate = {
 		owner = {
-			ig:ig_socialists = {
+			if = {
+				limit = { NOT = { has_global_variable = bpm_socialist_characters_cleared_var } }
+				every_character = {
+					limit = {
+						is_interest_group_type = ig_socialists
+					}
+					kill_character = yes
+				}
+				set_global_variable = bpm_socialist_characters_cleared_var
+			}
+			ig:ig_socialists ?= {
 				bpm_remove_all_ideologies = yes
 				leader = {
 					set_ideology = ideology:ideology_center_leader
 				}
+				remove_ruling_interest_group = yes
+				abandon_revolution = yes
+				set_ig_bolstering = no
+				set_ig_suppression = no
 			}
+			trigger_event = { id = bpm_socialist_utils.8 days = 365 }
+		}
+	}
+}
+
+# Disable independent socialists once split complete
+bpm_socialist_utils.8 = {
+	type = country_event
+	placement = root
+	hidden = yes
+
+	immediate = {
+		owner = {
+			every_character = {
+				limit = {
+					is_interest_group_type = ig_socialists
+					has_role = agitator
+				}
+				kill_character = yes
+			}
+			ig:ig_socialists ?= {
+				remove_ruling_interest_group = yes
+				abandon_revolution = yes
+				set_ig_bolstering = no
+				set_ig_suppression = no
+			}
+			set_variable = bpm_disable_socialists_var
 		}
 	}
 }

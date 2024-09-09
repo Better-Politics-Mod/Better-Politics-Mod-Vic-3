@@ -101,3 +101,77 @@ bpm_law_veto.1 = {
 		hidden_effect = { remove_modifier = bpm_block_law_cancel }
 	}
 }
+
+# The [HoG]'s desk
+bpm_law_veto.2 = {
+	type = country_event
+	placement = root
+	title = bpm_law_veto.2.t
+	desc = bpm_law_veto.2.d
+	flavor = bpm_law_veto.2.f
+
+	category = enactment
+
+	gui_window = event_window_1char_tabloid
+	left_icon = scope:executive
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 5
+
+	dlc = dlc_bpm
+
+	trigger = {
+		# NOT = { ruler = { has_trait = trait_child } }
+	}
+
+	immediate = {
+		var:bpm_headofgov = {
+			save_scope_as = executive
+		}
+		add_modifier = {
+			name = bpm_block_law_cancel
+			months = 5 # Matching event duration in case it gets cancelled before resolving
+		}
+	}
+
+	# Send to the [Ruler]'s desk
+	option = {
+		name = bpm_law_veto.2.a
+		default_option = yes
+		trigger = {
+			bpm_law_enactment_hog_approval > 0
+		}
+		if = {
+			limit = {
+				NOT = { bpm_law_enactment_ruler_must_accept = yes }
+			}
+			trigger_event = { id = bpm_law_veto.1 popup = yes }
+		}
+		else = {
+			add_enactment_phase = 1
+		}
+		hidden_effect = { remove_modifier = bpm_block_law_cancel }
+	}
+	# Send back to the legislature
+	option = { 
+		name = bpm_law_veto.2.b
+		trigger = {
+			enactment_setback_count < 2
+		}
+		add_enactment_setback = 1
+		hidden_effect = { remove_modifier = bpm_block_law_cancel }
+	}
+	# Review with the Cabinet
+	option = {
+		name = bpm_law_veto.2.c
+		trigger = {
+			OR = {
+				NOT = { bpm_law_enactment_ruler_must_accept = yes }
+			}
+		}
+		# Todo
+	}
+}

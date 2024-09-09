@@ -1,0 +1,220 @@
+﻿ig_liberals = {
+	color = hsv{ 0.16 1 1 }
+	texture = "gfx/interface/icons/ig_icons/liberals.dds"
+	layer = "revolution_dynamic_industrialists"
+	index = 12
+	
+	ideologies = {
+		ideology_gov_liberal_republican
+		ideology_dop_moderate_democrat
+		ideology_sta_weak_state
+		ideology_cit_liberal_nationalist
+		ideology_rel_secularist
+		ideology_mil_patriotic_liberal
+		ideology_eco_laissez_faire
+		ideology_wel_market_welfare
+		ideology_fem_benevolent_sexism
+		ideology_ban_averse
+		# Vanilla
+		ideology_liberal
+		ideology_laissez_faire
+		ideology_individualist
+	}
+	
+	enable = {
+		owner = { NOT = { is_country_type = decentralized } }	
+	}
+	
+	on_enable = {
+		ig:ig_liberals ?= {
+			# set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
+			set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
+			set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
+		}
+	}
+	on_disable = {}
+	on_character_ig_membership = {}
+	
+	pop_potential = {
+		custom_tooltip = {
+			text = BPM_VALID_POP_FOR_IG
+			owner = {
+				has_technology_researched = rationalism
+			}
+		}
+	}
+	
+	pop_weight = {
+		value = 40
+
+		if = {
+			limit = { is_pop_type = peasants }
+			add = {
+				desc = "POP_EXCLUSIONS"
+				value = -50
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = aristocrats }
+			add = {
+				desc = "POP_ARISTOCRATS"
+				value = 60
+			}
+			if = {
+				limit = { 
+					owner = {
+						has_law = law_type:law_monarchy
+						OR = {
+							has_law = law_type:law_oligarchy
+							has_law = law_type:law_autocracy
+						}
+					}
+				}
+				add = {
+					desc = "ARISTOCRAT_REFORMERS"
+					value = 40
+				}
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = capitalists }
+			add = {
+				desc = "POP_CAPITALISTS"
+				value = 195
+			}
+		}
+		else_if = {
+			limit = {
+				strata = middle
+				NOT = { is_pop_type = clergymen }
+			}
+			add = {
+				desc = "MIDDLE_CLASS"
+				value = 30
+			}
+		}
+
+		# URBAN EMPLOYMENT
+		if = {
+			limit = {
+				bpm_pop_employment_is_rural = no
+			}
+			add = {
+				value = 30
+				desc = "URBAN"
+			}
+			if = {
+				limit = {
+					strata = middle
+					NOT = { is_pop_type = clergymen }
+				}
+				add = {
+					value = 100
+					desc = "URBAN_MIDDLE_CLASS"
+				}
+			}
+			else_if = {
+				limit = { strata = rich }
+				add = {
+					value = 50
+					desc = "URBAN_UPPER_CLASS"
+				}
+			}
+		}
+
+		if = {
+			limit = { 
+				AND = {
+					owner = { bpm_performance_significant_country = yes }
+					NOT = { owner = { has_variable = bpm_2nd_party_system } }
+				}
+			}
+
+			add = {
+				desc = "SLAVERY_DETRACTORS"
+				if = {
+					limit = {
+						owner = { NOT = { has_law = law_type:law_slavery_banned } }
+						OR = {
+							pop_has_primary_culture = no
+							state = { is_slave_state = no }
+						}
+					}
+					value = 100
+				}
+			}
+
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.005
+						add = 1
+						max = 1.5
+						min = 0.67
+					}
+				}
+			}
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+			multiply = ig_attraction_from_radicals_and_loyalists
+		}
+		multiply = {
+			desc = "UNEDUCATED"
+			value = literacy_rate
+			multiply = 1.5
+			max = 1.0
+		}
+		multiply = ig_attraction_to_ruler_ideology_from_stability
+	}
+	
+	monarch_weight = {
+		value = 0.75
+	}	
+
+	agitator_weight = {
+		value = 1.0
+		multiply = bpm_base_agitator_weight
+	}
+	
+	commander_weight = {
+		value = 1.0
+		multiply = bpm_commander_assignment_from_laws_factor
+	}	
+	
+	noble_chance = {
+		value = 0.3
+	}
+	
+	female_commander_chance = {	
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
+	}
+	
+	female_politician_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
+
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
+	}
+	
+	# The chance that a commander belonging to this IG takes over leadership when it changes
+	# scope:character is the most popular commander in the IG
+	commander_leader_chance = {
+		value = 0.25
+		if = {
+			limit = {
+				exists = scope:character
+			}
+			multiply = {
+				value = 1
+				add = scope:character.popularity
+				min = 0
+			}
+		}
+	}
+}

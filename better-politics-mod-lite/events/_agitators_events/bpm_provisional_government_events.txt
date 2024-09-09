@@ -1,0 +1,156 @@
+﻿namespace = bpm_provisional_government_events
+
+bpm_provisional_government_events.1 = {
+	type = country_event
+	placement = root
+	event_image = {
+		video = "unspecific_military_parade"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	title = bpm_provisional_government_events.1.t
+	desc = bpm_provisional_government_events.1.d
+	flavor = bpm_provisional_government_events.1.f
+
+	duration = 3
+
+	trigger = {
+		#Triggered by on_action
+	}
+
+	immediate = {
+		remove_variable = bpm_can_new_constitution
+	}
+
+	option = {
+		name = bpm_provisional_government_events.1.a
+		default_option = yes
+        add_modifier = {
+            name = bpm_new_constitution
+            months = 12
+        }
+		add_loyalists = {
+			value = 0.2
+		}
+		add_radicals = {
+			value = -0.1
+		}
+	}
+}
+
+bpm_provisional_government_events.2 = {
+	type = country_event
+	placement = root
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	title = bpm_provisional_government_events.2.t
+	desc = bpm_provisional_government_events.2.d
+	flavor = bpm_provisional_government_events.2.f
+
+	duration = 3
+
+	trigger = {
+		#Triggered by JE
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				has_variable = bpm_law_sway_promise_proposed
+			}
+			save_scope_as = bpm_government_promise_ig
+			ordered_preferred_law = {
+				limit = {
+					bpm_ig_law_can_be_promised = yes
+				}
+				min = 0
+				max = 2
+				check_range_bounds = no
+				save_scope_as = bpm_government_promise_law_one
+			}
+
+			ordered_preferred_law = {
+				limit = {
+					bpm_ig_law_can_be_promised = yes
+					NOT = { scope:bpm_government_promise_law_one ?= THIS }
+				}
+				min = 1
+				max = 3
+				check_range_bounds = no
+				save_scope_as = bpm_government_promise_law_two
+			}
+
+        }
+		currently_enacting_law = {
+			save_scope_as = bpm_currently_enacting_law
+		}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:bpm_government_promise_ig }
+			NOT = { exists = scope:bpm_government_promise_law_one }
+		}
+	}
+
+	option = {
+		name = bpm_provisional_government_events.2.a
+		trigger = {
+			exists = scope:bpm_government_promise_law_one
+		}
+		set_variable = { name = bpm_promise_desired_law value = scope:bpm_government_promise_law_one }
+		custom_tooltip = bpm_government_promise_law_tt
+		scope:bpm_government_promise_ig = {
+			set_variable = bpm_law_sway_promise_made
+			bpm_subtract_from_law_sways = yes
+
+		}
+		add_journal_entry = {
+			type = je_bpm_government_promise_law
+		}
+		hidden_effect = { bpm_update_law_enactment_variables_modifiers = yes }
+	}
+
+	option = {
+		name = bpm_provisional_government_events.2.b
+		trigger = {
+			exists = scope:bpm_government_promise_law_two
+		}
+		set_variable = { name = bpm_promise_desired_law value = scope:bpm_government_promise_law_two }
+		custom_tooltip = bpm_government_promise_law_tt_two
+		scope:bpm_government_promise_ig = {
+			set_variable = bpm_law_sway_promise_made
+			bpm_subtract_from_law_sways = yes
+		}
+		add_journal_entry = {
+			type = je_bpm_government_promise_law
+		}
+		hidden_effect = { bpm_update_law_enactment_variables_modifiers = yes }
+	}
+
+	option = {
+		name = bpm_provisional_government_events.2.c
+		default_option = yes
+		scope:bpm_government_promise_ig = { 
+			remove_variable = bpm_law_sway_promise_proposed
+		}
+		custom_tooltip = bpm_government_promise_law_tt_cancel
+		set_variable = bpm_cannot_promise_a_law
+		set_variable = {
+			name = bpm_cpal_removal_flag
+			value = 0
+		}
+		hidden_effect = { bpm_update_law_enactment_variables_modifiers = yes }
+	}
+	
+
+}

@@ -1,0 +1,538 @@
+﻿on_political_movement_formed = {
+	on_actions = {
+		on_bpm_political_movement_formed
+	}
+}
+
+on_yearly_pulse_country = {
+	on_actions = {
+		on_bpm_yearly_pulse_country
+	}
+}
+
+on_half_yearly_pulse_country = {
+	on_actions = {
+		on_bpm_half_yearly_pulse_country
+	}
+}
+
+on_monthly_pulse_country = {
+	on_actions = {
+		on_bpm_monthly_pulse_country
+		bpm_update_enactment_success_on_action
+		bpm_on_actions_colonial_check
+	}
+}
+
+on_law_activated = {
+	on_actions = {
+		on_bpm_law_activated
+	}
+}
+
+on_secession_start = {
+	on_actions = {
+		on_bpm_seccession_start
+	}
+}
+
+on_revolution_start = {
+	on_actions = {
+		on_bpm_revolution_start
+	}
+}
+
+on_capitulation = {
+	on_actions = {
+		on_bpm_capitulation
+	}
+}
+
+on_diplo_play_war_start = {
+	on_actions = {
+		on_bpm_diplo_play_war_start
+	}
+}
+
+on_investment_increased ={ 
+	on_actions = {
+		on_bpm_investment_increased
+	}
+}
+
+on_investment_decreased ={ 
+	on_actions = {
+		on_bpm_investment_decreased
+	}
+}
+
+on_country_formed = {
+	on_actions = {
+		on_bpm_country_formed
+	}
+}
+
+on_revolution_end = {
+	on_actions = {
+		on_bpm_civil_war_won
+	}
+}
+
+on_default = {
+	on_actions = {
+		on_bpm_default
+	}
+}
+
+on_new_ruler = { 
+	on_actions = {
+		on_bpm_new_ruler
+	}
+	events = {
+		bpm_scandinavia.1
+	}
+}
+
+on_character_creation = {
+	on_actions = {
+		on_bpm_character_creation
+	}
+}
+
+on_bpm_yearly_pulse_country = {
+	effect = {
+		if = {
+			limit = { 
+				NOT = { has_global_variable = bpm_je_march_to_radicalism_progress }
+			}
+			set_global_variable = {
+				name = bpm_je_march_to_radicalism_progress
+				value = 0
+			}
+		}
+		bpm_je_march_to_radicalism_progress_update = yes
+	}
+}
+
+on_bpm_half_yearly_pulse_country = {
+	events = {
+		bpm_union_laws.1
+	}
+	effect = {
+		owner = { 
+			update_party_support = yes
+			bpm_ig_update_ig_ban_support = yes
+		}
+	}
+}
+
+on_bpm_monthly_pulse_country = {
+	events = {
+		bpm_misc.1
+		bpm_colony_events.2
+		bpm_colony_events.3
+	}
+	random_events = {
+		chance_of_no_event = 80
+		1 = coup.6
+	}
+
+	effect = {
+		if = {
+			limit = {
+				has_law = law_type:law_colonial_admin
+				NOT = { has_variable = bpm_on_col_adm }
+			}
+			bpm_colonial_admin_activate_effect = yes
+		}
+		if = {
+			limit = {
+				modifier:country_bpm_change_primary_culture_to_overlord = yes
+				NOT = { has_variable = bpm_colony_primary_culture_set_to_overlord }
+			}
+			trigger_event = { id = bpm_colony_events.1 days = 1 }
+		}
+		if = {
+			limit = {
+				modifier:country_bpm_change_primary_culture_to_overlord = yes
+				has_variable = bpm_current_overlord
+				NOT = { var:bpm_current_overlord = top_overlord }
+			}
+			trigger_event = { id = bpm_colony_events.1 days = 1 }
+		}
+		if = {
+			limit = {
+				modifier:country_bpm_change_primary_culture_to_overlord = no
+				has_variable = bpm_colony_primary_culture_set_to_overlord
+			}
+			bpm_colony_reset_primary_culture = yes
+		}
+		owner = { 
+			bpm_update_ai_cheats = yes
+			bpm_update_political_stability = yes
+			bpm_update_igs_current_party = yes
+			bpm_institution_workaround_effect = yes
+		}
+		# 6 months cooldown
+		if = {
+			limit = {
+				has_variable = bpm_cpal_removal_flag
+			}
+			change_variable = {
+				name = bpm_cpal_removal_flag
+				add = 1
+			}
+			if = {
+				limit = {
+					var:bpm_cpal_removal_flag >= 6
+				}
+				remove_variable = bpm_cpal_removal_flag
+				remove_variable = bpm_cannot_promise_a_law
+			}
+		}
+	}
+}
+
+bpm_on_actions_colonial_check = {
+	effect = {
+		if = {
+			limit = {
+				NOT = { owner = { has_law = law_type:law_colonial_admin } }
+				owner = { has_variable = bpm_on_col_adm }
+			}
+			if = {
+				limit = {
+					is_subject = yes
+					is_subject_type = subject_type_puppet
+				}
+				change_subject_type = subject_type_dominion
+			}
+			remove_variable = bpm_on_col_adm
+			every_interest_group = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_landowners
+						is_interest_group_type = ig_industrialists
+						is_interest_group_type = ig_armed_forces
+					}
+				}
+				remove_ideology = ideology_dop_metropole_loyalist
+				bpm_reorder_ideologies = yes
+			}
+		}
+	}
+}
+
+on_bpm_seccession_start = {
+	effect = {
+		scope:target = {
+			set_variable = bpm_can_new_constitution
+		}
+	}
+}
+
+on_bpm_law_activated = {
+	effect = {
+
+		if = {
+			limit = {
+				game_date > 1836.1.1
+				owner = { is_revolutionary = no }
+			}
+			if = {
+				limit = {
+					OR = {
+						this.type = law_type:law_presidential_republic
+						this.type = law_type:law_parliamentary_republic
+					}
+				}
+				trigger_event = bpm_send_notification.1
+			}
+			else_if = {
+				limit = {
+					this.type = law_type:law_council_republic
+				}
+				trigger_event = bpm_send_notification.2
+			}
+			else_if = {
+				limit = {
+					this.type = law_type:law_monarchy
+				}
+				trigger_event = bpm_send_notification.3
+			}
+		}
+
+		if = {
+			limit = { this.type = law_type:law_serfdom }
+			owner = { set_variable = bpm_country_has_serfdom }
+		}
+		else_if = {
+			limit = {
+				this.type = {
+					is_same_law_group_as = law_type:law_serfdom
+					NOT = { this = law_type:law_serfdom }
+				}
+				owner = { has_variable = bpm_country_has_serfdom }
+			}
+			owner = {
+				remove_variable = bpm_country_has_serfdom
+				if = {
+					limit = { is_player = no }
+					if = {
+						limit = {
+							OR = {
+								has_law = law_type:law_land_based_taxation
+								has_law = law_type:law_consumption_based_taxation
+							}
+						}
+						activate_law = law_type:law_per_capita_based_taxation
+					}
+					if = {
+						limit = {
+							has_law = law_type:law_traditionalism
+						}
+						activate_law = law_type:law_agrarianism	
+					}
+				}
+			}
+		}
+		if = {
+			limit = {
+				this.type = {
+					is_same_law_group_as = law_type:law_isolationism
+					NOT = { this = law_type:law_isolationism }	
+				}
+				owner = { has_law = law_type:law_closed_borders }
+			}
+			owner = { activate_law = law_type:law_migration_controls }
+		}
+		else_if = {
+			limit = {
+				game_date > 1836.1.1
+				this.type = law_type:law_isolationism
+			}
+			owner = { activate_law = law_type:law_closed_borders }
+		}
+		if = {
+			limit = {
+				this.type = {
+					is_same_law_group_as = law_type:law_closed_borders
+					NOT = { this = law_type:law_closed_borders}	
+				}
+				owner = { has_law = law_type:law_isolationism }
+			}
+			owner = { activate_law = law_type:law_mercantilism }
+		}
+		else_if = {
+			limit = {
+				game_date > 1836.1.1
+				this.type = law_type:law_closed_borders
+			}
+			owner = { activate_law = law_type:law_isolationism }
+		}
+	}
+}
+
+on_bpm_seccession_start = {
+	effect = {
+		scope:target = {
+			set_variable = bpm_can_new_constitution
+		}
+	}
+}
+
+on_bpm_peace_agreement_signed_war_participant = {
+	events = {
+		italian_springtime.8
+	}
+}
+
+on_bpm_new_ruler = {
+	# events = {
+	# 	bpm_election_events.1
+	# }
+	effect = {
+		owner = {
+			if = {
+				limit = {
+					is_player = yes
+					has_law = law_type:law_presidential_republic
+					NOT = { has_law = law_type:law_autocracy }
+				}
+				trigger_event = { id = bpm_election_events.1 days = 30 }
+			}
+		}
+	}
+}
+
+on_bpm_default = {
+	effect = {
+		bpm_remove_political_stability_big = yes
+	}
+}
+
+on_bpm_diplo_play_war_start = {
+	effect = {
+		# Removing Rigidity from participants
+		if = {
+			limit = {
+				war = {
+					attacker_warleader = {
+						country_rank > rank_value:insignificant_power
+					}
+					defender_warleader = {
+						country_rank > rank_value:insignificant_power
+					}
+				}
+			}
+			every_scope_play_involved = {
+				bpm_add_political_stability_big = yes
+			}
+		}
+
+		# Removing permanent military defunding modifier for aggressors
+		war = {
+			if = {
+				limit = {
+					NOT = { has_war_goal = colonization_rights }
+					NOT = {
+						any_country = {
+							OR = {
+								is_revolutionary = yes
+								is_secessionist = yes
+							}
+						}
+					}
+				}
+				attacker_warleader = {
+					bpm_clear_upgradeable_country_modifier = { $MOD$ = bpm_repeatable_law_army_defunding_result_permanent }
+					every_cobelligerent_in_war = {
+						bpm_clear_upgradeable_country_modifier = { $MOD$ = bpm_repeatable_law_army_defunding_result_permanent }
+					}
+				}
+			}
+		}
+	}
+}
+
+on_bpm_revolution_start = {
+	effect = {
+		bpm_add_political_stability_big = yes # Crackdowns, most disloyal people left for revolution
+		scope:target = {
+			set_variable = bpm_can_new_constitution
+		}
+		if = {
+			limit = {
+				has_law = law_type:law_monarchy
+				scope:target ?= {
+					NOT = { has_law = law_type:law_monarchy }
+				}
+			}
+			set_variable = bpm_active_anti_monarchist_revolution
+		}
+		if = {
+			limit = {
+				NOT = { has_law = law_type:law_monarchy }
+				scope:target ?= {
+					has_law = law_type:law_monarchy
+				}
+			}
+			set_variable = bpm_active_monarchist_revolution
+		}
+		if = {
+			limit = {
+				NOT = { has_law = law_type:law_council_republic }
+				scope:target ?= {
+					has_law = law_type:law_council_republic
+				}
+			}
+			set_variable = bpm_active_socialist_revolution
+		}
+	}
+}
+
+on_bpm_civil_war_won = {
+	effect = {
+		if = {
+			limit = {
+				has_variable = bpm_can_new_constitution
+			}
+			trigger_event = { id = bpm_provisional_government_events.1 days = 7 popup = yes }
+		}
+
+		if = {
+			limit = {
+				bpm_country_is_bourgeois_republic = yes
+				has_variable = bpm_active_anti_monarchist_revolution
+			}
+			trigger_event = bpm_send_notification.1
+			remove_variable = bpm_active_anti_monarchist_revolution
+		}
+		else_if = {
+			limit = {
+				has_law = law_type:law_council_republic
+				has_variable = bpm_active_socialist_revolution	
+			}
+			trigger_event = bpm_send_notification.2
+			remove_variable = bpm_active_socialist_revolution
+		}
+		else_if = {
+			limit = {
+				has_law = law_type:law_monarchy
+				has_variable = bpm_active_monarchist_revolution
+			}
+			trigger_event = bpm_send_notification.3
+			remove_variable = bpm_active_monarchist_revolution
+		}
+	}
+}
+
+on_bpm_country_formed = {
+	effect = {
+		bpm_setup_country = yes
+		if = {
+			limit = { NOT = { has_law = law_type:law_confederated }}
+			activate_law = law_type:law_federated
+		}
+	}
+}
+
+on_bpm_election_campaign_start = {
+	effect = {
+		bpm_remove_political_stability_small = yes
+	}
+}
+
+on_bpm_election_campaign_end = {
+	effect = {
+		bpm_remove_political_stability_small = yes
+	}
+}
+
+on_bpm_investment_increased = {
+	effect ={ 
+		owner = { bpm_institution_workaround_effect = yes }
+	}
+}
+
+on_bpm_investment_decreased = { 
+	effect = { 
+		owner = { bpm_institution_workaround_effect = yes }
+	}
+}
+
+on_bpm_political_movement_formed = {
+	effect = {
+		if = {
+			limit = {
+				NOT = { is_political_movement_type = movement_to_preserve }
+				desired_law ?= {
+					bpm_is_repeatable_law = yes
+				}
+			}
+			add_modifier = {
+				name = bpm_repeatable_movements_not_allowed
+			}
+		}
+	}
+}

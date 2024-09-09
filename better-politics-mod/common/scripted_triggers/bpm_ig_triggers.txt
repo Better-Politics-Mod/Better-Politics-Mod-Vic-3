@@ -145,7 +145,7 @@ bpm_ig_is_actually_desiring_socialism = {
 bpm_ig_is_socialist_trade_unions = {
 	is_interest_group_type = ig_trade_unions
 	OR = {
-		leader = { bpm_leader_is_socialist = yes }
+		leader ?= { bpm_leader_is_socialist = yes }
 		has_ideology = ideology:ideology_dop_syndical_unionist
 	}
 }
@@ -298,6 +298,9 @@ bpm_ig_is_market_liberal = {
 		OR = {
 			is_interest_group_type = ig_market_liberals
 			has_ideology = ideology:ideology_eco_laissez_faire
+			leader ?= { 
+				has_ideology = ideology:ideology_market_liberal
+			}
 		}
 	}
 }
@@ -340,9 +343,17 @@ bpm_ig_is_liberal_conservative = {
 			is_interest_group_type = ig_market_liberals
 			AND = {
 				is_interest_group_type = ig_conservatives
-				has_ideology = ideology:ideology_wel_paternalistic_welfare
+				#has_ideology = ideology:ideology_wel_paternalistic_welfare
+				bpm_ig_is_paternalistic = yes
 			}
 		}
+	}
+}
+
+bpm_ig_is_paternalistic = {
+	OR = {
+		has_ideology = ideology:ideology_wel_paternalistic_welfare
+		has_ideology = ideology:ideology_wel_distributist_welfare
 	}
 }
 
@@ -350,7 +361,8 @@ bpm_ig_is_non_paternal_conservative = {
 	custom_tooltip = {
 		text = "tooltip_bpm_ig_is_non_paternal_conserative"
 		is_interest_group_type = ig_conservatives
-		NOT = { has_ideology = ideology:ideology_wel_paternalistic_welfare }
+		#NOT = { has_ideology = ideology:ideology_wel_paternalistic_welfare }
+		bpm_ig_is_paternalistic = no
 	}
 
 }
@@ -370,6 +382,7 @@ bpm_ig_is_militaristic = {
 	custom_tooltip = {
 		text = "tooltip_bpm_ig_is_militaristic"
 		OR = {
+			has_ideology = ideology:ideology_mil_ultramilitarist
 			has_ideology = ideology:ideology_jingoist
 			has_ideology = ideology:ideology_mil_aristocratic_militarist
 			has_ideology = ideology:ideology_mil_mass_army
@@ -387,6 +400,8 @@ bpm_ig_is_patriotic = {
 			bpm_ig_is_militaristic = yes
 			has_ideology = ideology:ideology_mil_frontier_expansion
 			has_ideology = ideology:ideology_mil_patriotic
+			has_ideology = ideology:ideology_mil_patriotic_liberal
+			has_ideology = ideology:ideology_mil_defensive_patriot
 		}
 	}
 }
@@ -407,6 +422,9 @@ bpm_ig_is_very_sexist = {
 		OR = {
 			has_ideology = ideology:ideology_fem_patriarchal
 			has_ideology = ideology:ideology_fem_moderate_patriarchal
+			leader ?= { 
+				has_ideology = ideology:ideology_traditionalist
+			}
 		}
 	}
 }
@@ -433,6 +451,7 @@ bpm_ig_is_anti_democratic = {
 			has_ideology = ideology:ideology_dop_autocrat
 			has_ideology = ideology:ideology_dop_party_socialist
 			has_ideology = ideology:ideology_dop_dissent
+			has_ideology = ideology:ideology_dop_organic_power
 		}
 	}
 }
@@ -458,6 +477,8 @@ bpm_ig_is_traditionalist = {
 			has_ideology = ideology:ideology_dop_traditional_power
 			has_ideology = ideology:ideology_dop_meritocratic_autocrat
 			has_ideology = ideology:ideology_gov_radical_monarchist
+			has_ideology = ideology:ideology_dop_organic_power
+			has_ideology = ideology:ideology_sta_organic_state
 		}
 	}
 }
@@ -592,6 +613,54 @@ bpm_ig_is_lower_institutional = {
 	}
 }
 
+# CROSS-IDEOLOGY STANCES
+
+bpm_ig_is_isolationist = {
+	custom_tooltip = {
+		text = "tooltip_bpm_ig_is_isolationist"
+		OR = {
+			has_ideology = ideology:ideology_eco_autarky
+			has_ideology = ideology:ideology_eco_trad_isolationist
+			has_ideology = ideology:ideology_eco_agrarian_autarky
+			has_ideology = ideology:ideology_eco_socialist_autarky
+		}
+	}
+}
+
+bpm_ig_is_hawkish = {
+	custom_tooltip = {
+		text = "tooltip_bpm_ig_is_hawkish"
+		OR = {
+			bpm_ig_is_very_hawkish = yes
+			has_ideology = ideology:ideology_mil_patriotic
+			has_ideology = ideology:ideology_mil_mass_army
+			has_ideology = ideology:ideology_mil_institutional_militarist
+		}
+	}
+}
+
+bpm_ig_is_very_hawkish = {
+	custom_tooltip = {
+		text = "tooltip_bpm_ig_is_very_hawkish"
+		OR = {
+			has_ideology = ideology:ideology_jingoist
+			has_ideology = ideology:ideology_mil_ultramilitarist
+		}
+	}
+}
+
+bpm_ig_is_doveish = {
+	custom_tooltip = {
+		text = "tooltip_bpm_ig_is_doveish"
+		OR = {
+			has_ideology = ideology:ideology_mil_patriotic_liberal
+			has_ideology = ideology:ideology_mil_defensive_patriot
+			has_ideology = ideology:ideology_mil_popular_army
+			has_ideology = ideology:ideology_mil_antimilitarist
+		}
+	}
+}
+
 # IG POPULARITY
 
 bpm_ig_is_unpopular = {
@@ -698,7 +767,7 @@ bpm_ig_enabled = {
 
 # EVENT SPECIFIC TRIGGERS
 bpm_ig_can_have_radical_leader_1848 = {
-	leader = { bpm_leader_is_radical_leftist = no }
+	leader ?= { bpm_leader_is_radical_leftist = no }
 	OR = {
 		is_interest_group_type = ig_rural_folk
 		is_interest_group_type = ig_intelligentsia
@@ -711,88 +780,6 @@ bpm_ig_can_have_radical_leader_1848 = {
 	}
 }
 
-
-# IG STANCE ON GOVERNMENT
-
-# The IGs that are radical opposition propose very different alternative to status quo
-bpm_ig_is_radical_opposition = {
-	OR = {
-		# Non-council republic: Socialists are Radical Opposition
-		AND = {
-			owner = { NOT = { has_law = law_type:law_council_republic } }
-			bpm_ig_is_socialist = yes
-		}
-
-		# Fascists: Fascists are always Radical Opposition, tbh 
-		bpm_ig_is_fascist = yes 
-
-		# Council Republic: Non-Socialist, Non-institutional IGs are Radical Opposition
-		AND = {
-			owner = { has_law = law_type:law_council_republic }
-			bpm_ig_is_socialist = no 
-			bpm_ig_is_institutional = no
-		} 
-
-		# Monarchy: Republicans are Radical Opposition
-		AND = {
-			owner = { has_law = law_type:law_monarchy }
-			bpm_ig_is_republican = yes
-		}
-
-		# Non-Democracy: Democrats/Anarchists are Radical Opposition
-		AND = {
-			owner = { bpm_country_laws_are_very_undemocratic = yes }
-			OR = {
-				bpm_ig_is_democrat = yes
-				bpm_ig_is_anarchist = yes
-			}
-		}
-
-		# Democracy: Authoritarians are Radical Opposition 
-		AND = {
-			owner = {
-				bpm_country_laws_are_very_undemocratic = no
-				bpm_country_laws_are_moderately_undemocratic = no
-			}
-			bpm_ig_is_anti_democratic = yes
-		}
-	}
-}
-
-# The IGs that are very radical opposition propose extremely different alternative to status quo; reserved for certain specific IGs
-bpm_ig_is_very_radical_opposition = {
-	OR = {
-		# Non-council republic: Radical Socialists are Radical Opposition/Normal Socialists before second split are very radical opposition
-		AND = {
-			owner = { NOT = { has_law = law_type:law_council_republic } }
-			OR = {
-				bpm_ig_is_radical_socialist = yes 
-				AND = {
-					bpm_ig_is_socialist = yes
-					NOT = { has_global_variable = second_intl_chain_complete_var }
-				}
-			}
-		}
-
-		# Fascists: Fascists are always Very Radical Opposition, tbh 
-		bpm_ig_is_fascist = yes 
-
-		# Council Republic: Market Liberal IGs are Very Radical Opposition in Council Republics
-		AND = {
-			owner = { has_law = law_type:law_council_republic }
-			bpm_ig_is_market_liberal = yes
-		} 
-
-		# Non-Democracy: Radical Liberals/Anarchists are Very Radical Opposition
-		AND = {
-			owner = { bpm_country_laws_are_very_undemocratic = yes }
-			OR = {
-				bpm_ig_is_radical_liberal = yes
-				bpm_ig_is_anarchist = yes
-			}
-		}
-	}
-}
 
 bpm_is_strongest_ig_in_government = {
 	is_in_government = yes

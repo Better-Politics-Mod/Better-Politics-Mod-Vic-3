@@ -1,0 +1,291 @@
+﻿ig_trade_unions = {
+	color = hsv{ 0.02 0.7 1 }
+	texture = "gfx/interface/icons/ig_icons/trade_unions.dds"
+	layer = "revolution_dynamic_trade_unions"
+	index = 7
+
+	ideologies = {
+		ideology_nonexistent
+	}
+	
+	enable = {
+		always = yes
+	}
+	
+	on_enable = {
+		ig:ig_trade_unions = {
+			set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
+			set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
+			set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
+		}
+
+		# Put IG initialization here (in an arbitrary IG), so it happens before any on actions (hopefully)
+		# This is a bit of a hack, but it's the only way to do it
+		if = {
+			limit = { game_date > 1836.1.1 }
+			owner = {
+				bpm_setup_country_sta_ideologies = yes
+				bpm_setup_country_rel_ideologies = yes
+				bpm_setup_country_gov_ideologies = yes
+				bpm_setup_country_dop_ideologies = yes
+				bpm_setup_country_eco_ideologies = yes
+				bpm_setup_country_mil_cit_ideologies = yes
+			}
+		}
+	}
+	on_disable = {}
+	on_character_ig_membership = {
+		if = {
+			limit = { is_historical = no }
+			if = {
+				limit = { 
+					owner = { has_law = law_type:law_state_controlled_labor_unions }
+					bpm_leader_is_left_wing = yes 
+				}
+				set_ideology = ideology:ideology_corporatist_leader
+			}
+			else_if = {
+				limit = { owner = { has_law = law_type:law_socialist_labor_unions } }
+				set_ideology = ideology:ideology_vanguardist
+			}
+			else_if = {
+				limit = { 
+					owner = { has_law = law_type:law_limited_labor_unions } 
+					bpm_leader_is_socialist = yes
+				}
+				set_ideology = ideology:ideology_moderate
+			}
+		}
+	}
+	
+	pop_potential = {
+		NOR = {
+			is_pop_type = aristocrats
+			is_pop_type = capitalists
+			is_pop_type = soldiers
+			is_pop_type = officers
+		}
+		custom_tooltip = {
+			text = BPM_VALID_POP_FOR_IG
+			owner = {
+				NOT = {
+					is_country_type = decentralized
+				}
+				ig:ig_trade_unions ?= {
+					NOT = { has_ideology = ideology:ideology_nonexistent }
+				}
+			}
+		}
+	}
+	
+	pop_weight = {
+		value = 20
+
+		add = {
+			desc = "UNEMPLOYED"
+			if = {
+				limit = { 
+					is_employed = no
+				}
+				value = 50
+			}
+		}		
+
+		add = {
+			desc = "URBAN_POP"
+			if = {
+				limit = { 
+					bpm_pop_employment_is_rural = no
+				}
+				value = 60
+			}
+		}
+
+		if = {
+			limit = { 
+				is_pop_type = peasants
+			}
+			add = {
+				desc = "NOT_PEASANTS"
+				value = -100
+			}
+		}
+		else_if = {
+			limit = { 
+				OR = {
+					is_pop_type = laborers
+					is_pop_type = clerks
+					is_pop_type = machinists
+				}
+			}
+			add = {
+				desc = "POP_PROLETARIAT"
+				value = 100
+			}
+			add = {
+				desc = "POP_EDUCATED_PROLETARIAT"
+				value = literacy_rate
+				multiply = 100
+			}
+		}
+		else_if = {
+			limit = { 
+				OR = {
+					is_pop_type = academics
+					is_pop_type = engineers
+				}
+			}
+			add = {
+				desc = "POP_LEADERS"
+				value = 80
+			}
+		}
+		else_if = {
+			limit = {
+				strata = rich
+			}
+			add = {
+				desc = "NOT_UPPER"
+				value = -100
+			}
+		}
+		add = {
+			desc = "POP_DISCRIMINATED"
+			if = {
+				limit = { 
+					pop_is_discriminated = yes
+				}
+				value = 50
+			}
+		}	
+
+		if = {
+			limit = {
+				owner = {
+					NOR = { 
+						has_law = law_type:law_illegal_labor_unions
+					}
+				}
+			}
+			multiply = ig_attraction_to_interests_from_stability	
+		}	
+		
+		if = {
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			if = {
+				limit = { owner = { has_variable = bpm_je_syndicalism } }
+				multiply = {
+					desc = "FROM_SYNDICALISM_JE"
+					value = 1
+					add = {
+						value = owner.var:bpm_je_syndicalism
+						multiply = 0.01
+					}
+				}
+			}
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.005
+						add = 1
+						max = 1.5
+						min = 0.67
+					}
+				}
+			}	
+			multiply = bpm_ig_agitators_popularity
+			multiply = ig_attraction_from_radicals_and_loyalists
+		}
+
+		# multiply = {
+		# 	desc = "LOW_WELFARE"
+		# 	value = 1.0
+
+		# 	if = {
+		# 		limit = {
+		# 			owner = {
+		# 				OR = {
+		# 					institution_investment_level = {
+		# 						institution = institution_social_security
+		# 						value <= 3
+		# 					}
+		# 					institution_investment_level = {
+		# 						institution = institution_workplace_safety
+		# 						value <= 3
+		# 					}
+		# 				}
+		# 			}
+		# 		}
+		# 		value = 1.2
+		# 	}
+		# }
+
+		multiply = {
+			desc = "NO_LABOR_MOVEMENT"	
+			value = 1.0
+			if = {
+				limit = { owner = { NOT = { has_technology_researched = labor_movement } } }
+				value = 0.8
+			}		
+		}		
+		multiply = {
+			desc = "NO_EGALITARIANISM"	
+			value = 1.0
+			if = {
+				limit = { owner = { NOT = { has_technology_researched = egalitarianism } } }
+				value = 0.25
+			}		
+		}
+	}
+	
+	monarch_weight = {
+		value = 0.0
+	}	
+
+	agitator_weight = {
+		value = 1.0
+		multiply = bpm_base_agitator_weight
+	}
+
+	commander_weight = {
+		value = 1.0
+		multiply = bpm_commander_assignment_from_laws_factor
+	}	
+	
+	noble_chance = {
+		value = 0.0
+	}
+	
+	female_commander_chance = {	
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
+	}
+	
+	female_politician_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
+
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
+	}
+	
+	# The chance that a commander belonging to this IG takes over leadership when it changes
+	# scope:character is the most popular commander in the IG
+	commander_leader_chance = {
+		value = 0.25
+		if = {
+			limit = {
+				exists = scope:character
+			}
+			multiply = {
+				value = 1
+				add = scope:character.popularity
+				min = 0
+			}
+		}
+	}
+}

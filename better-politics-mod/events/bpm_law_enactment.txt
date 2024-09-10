@@ -137,12 +137,13 @@ bpm_law_veto.2 = {
 		}
 	}
 
-	# Send to the [Ruler]'s desk
+	# Send to the [Ruler]'s desk directly
 	option = {
 		name = bpm_law_veto.2.a
 		default_option = yes
 		trigger = {
 			bpm_law_enactment_hog_approval > 0
+			bpm_cabinet_current_law_support_percentage > 0.2
 		}
 		if = {
 			limit = {
@@ -155,23 +156,46 @@ bpm_law_veto.2 = {
 		}
 		hidden_effect = { remove_modifier = bpm_block_law_cancel }
 	}
-	# Send back to the legislature
-	option = { 
-		name = bpm_law_veto.2.b
-		trigger = {
-			enactment_setback_count < 2
-		}
-		add_enactment_setback = 1
-		hidden_effect = { remove_modifier = bpm_block_law_cancel }
-	}
-	# Review with the Cabinet
+	# Override the Cabinet
 	option = {
-		name = bpm_law_veto.2.c
+		name = bpm_law_veto.2.b
+		default_option = yes
 		trigger = {
-			OR = {
+			bpm_law_enactment_hog_approval > 0
+			NOT = { bpm_cabinet_current_law_support_percentage > 0.2 }
+		}
+		if = {
+			limit = {
 				NOT = { bpm_law_enactment_ruler_must_accept = yes }
 			}
+			trigger_event = { id = bpm_law_veto.1 popup = yes }
 		}
-		# Todo
+		else = {
+			add_enactment_phase = 1
+		}
+		hidden_effect = { remove_modifier = bpm_block_law_cancel }
+	}
+	# The Cabinet forces the [HoG]'s hand
+	option = {
+		name = bpm_law_veto.2.c
+		default_option = yes
+		trigger = {
+			bpm_law_enactment_hog_approval < 0
+			bpm_cabinet_current_law_support_percentage > 0.75
+			bpm_cabinet_number_of_members >= 4
+		}
+		if = {
+			limit = {
+				bpm_law_enactment_ruler_must_accept = yes
+			}
+			add_enactment_phase = 1
+		}
+		hidden_effect = { remove_modifier = bpm_block_law_cancel }
+	}
+	# Send back to the legislature
+	option = { 
+		name = bpm_law_veto.2.e
+		add_enactment_setback = 1
+		hidden_effect = { remove_modifier = bpm_block_law_cancel }
 	}
 }

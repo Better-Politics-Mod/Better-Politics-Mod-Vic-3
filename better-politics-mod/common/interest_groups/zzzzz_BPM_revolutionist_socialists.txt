@@ -1,76 +1,37 @@
-﻿ig_socialists = {
-	color = hsv{ 0.98 0.9 0.8 }
-	texture = "gfx/interface/icons/ig_icons/socialists.dds"
+﻿ig_revolutionist_socialists = {
+	color = hsv{ 0 0.9 0.8 }
+	texture = "gfx/interface/icons/ig_icons/revolutionists.dds"
 	layer = "revolution_dynamic_trade_unions"
-	index = 16
+	index = 15
 	
 	ideologies = {
 		ideology_nonexistent
-
-		ideology_gov_moderate_proletarian
-		ideology_dop_radical_democrat
-		ideology_sta_subjugated_state
-		ideology_cit_internationalist
-		ideology_rel_radical_secularist
-		ideology_mil_antimilitarist
-		ideology_eco_proletarian_economy
-		ideology_wel_expanded_public_welfare
-		ideology_fem_gender_egalitarian
-		ideology_ban_opposed
-			# Vanilla
-		ideology_proletarian
-		ideology_egalitarian
-		ideology_socialist
 	}
 	
 	enable = {
-		NOT = { is_country_type = decentralized }
-		OR = {
-			has_technology_researched = egalitarianism
-			AND = {
-				bpm_country_is_in_europe = yes
-				has_global_variable = march_to_radicalism_complete_var
-			}
+		has_variable = local_socialists_split_var
+		owner = {
+			NOT = { is_country_type = decentralized }
 		}
-		NOT = { has_variable = disable_socialists_var }
-	}
+	}	
 	
 	on_enable = {
-		ig:ig_socialists = {
+		ig:ig_revolutionist_socialists ?= {
 			# set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
 			set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
 			set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
 		}
-		ig:ig_socialists = {
-			remove_ideology = ideology_nonexistent
-			every_scope_character = {
-				limit = {
-					has_ideology = ideology:ideology_placeholder_leader
-				}
-				set_ideology = ideology:ideology_center_leader
+		if = {
+			limit = {
+				ig:ig_revolutionist_socialists ?= { has_ideology = ideology:ideology_nonexistent }
 			}
-			bpm_reorder_ideologies = yes
+			bpm_initialize_revsocs = yes
 		}
-		bpm_rename_igs = yes
 	}
 	on_disable = {}
 	on_character_ig_membership = {}
 	
-	pop_potential = {
-		custom_tooltip = {
-			text = BPM_VALID_POP_FOR_IG
-			owner = {
-				OR = {
-					has_technology_researched = egalitarianism
-					AND = {
-						bpm_country_is_in_europe = yes
-						has_global_variable = march_to_radicalism_complete_var
-					}
-				}
-				NOT = { has_variable = disable_socialists_var }
-				NOT = { is_country_type = decentralized }
-			}
-		}
+	pop_potential = {	
 		NOR = {
 			is_pop_type = aristocrats
 			is_pop_type = capitalists
@@ -83,8 +44,8 @@
 		if = {
 			limit = { 
 				OR = {
-					is_pop_type = laborers
 					is_pop_type = clerks
+					is_pop_type = laborers
 					is_pop_type = machinists
 				}
 			}
@@ -95,15 +56,12 @@
 			add = {
 				desc = "POP_EDUCATED_PROLETARIAT"
 				value = literacy_rate
-				multiply = 200
+				multiply = 100
 			}
 		}
 		else_if = {
 			limit = {
-				OR = {
-					is_pop_type = peasants
-					is_pop_type = capitalists
-				}
+				is_pop_type = peasants
 			}
 			add = {
 				desc = "POP_EXCLUSIONS"
@@ -115,7 +73,7 @@
 			add = {
 				desc = "POP_EDUCATED_FARMERS"
 				value = literacy_rate
-				multiply = 200
+				multiply = 100
 			}
 		}
 		else_if = {
@@ -127,7 +85,7 @@
 			}
 			add = {
 				desc = "POP_LEADERS"
-				value = 80
+				value = 60
 			}
 		}
 		else_if = {
@@ -137,7 +95,7 @@
 			}
 			add = {
 				desc = "POP_SOLDIERS"
-				value = 150
+				value = 100
 			}
 		}
 
@@ -147,13 +105,13 @@
 			}
 			add = {
 				desc = "URBAN_POP"
-				value = 40
+				value = 30
 			}
 			if = {
 				limit = { is_employed = no }
 				add = {
 					desc = "URBAN_UNEMPLOYED"
-					value = 100
+					value = 70
 				}
 			}
 		}
@@ -168,7 +126,7 @@
 					}
 					owner = { has_variable = bpm_ig_laborers_angry_var }
 				}
-				value = 100
+				value = 50
 			}
 		}
 
@@ -181,11 +139,18 @@
 				value = 50
 			}
 		}	
-		
+
 		add = ig_attraction_agrarian_socialism
 
 		if = {
 			limit = { owner = { bpm_performance_significant_country = yes } }
+			add = {
+				desc = "POWERFUL_FAC"
+				if = {
+					limit = { owner = { has_variable = bpm_country_has_powerful_fascists_var } }
+					value = 30
+				}
+			}
 			add = ig_attraction_tmp_bpm_non_rural_socialist
 			multiply = {
 				desc = "LEADER_POPULARITY"
@@ -198,9 +163,17 @@
 						min = 0.5
 					}
 				}
-			}	
+			}
 			multiply = bpm_ig_agitators_popularity
 			multiply = bpm_ig_ruler_popularity
+			multiply = {
+				desc = "POLITICAL_AGITATION"	
+				value = 1.0
+				if = {
+					limit = { owner = { has_technology_researched = political_agitation } }
+					value = 1.3
+				}		
+			}
 			multiply = {
 				desc = "DEVASTATED"	
 				value = 1.0
@@ -213,14 +186,29 @@
 					}
 					value = 1.5
 				}		
-			}
+			}	
 			multiply = ig_attraction_from_radicals_and_loyalists
 		}
 
 		multiply = ig_attraction_to_ruler_ideology_from_stability
 
+		if = {
+			limit = { owner = { has_variable = bpm_country_very_undemocratic_var } }
+			multiply = {
+				desc = "NO_DEMOCRACY"
+				value = 1.5
+			}
+		}
+		else_if = {
+			limit = { owner = { has_variable = bpm_country_undemocratic_var } }
+			multiply = {
+				desc = "LIMITED_DEMOCRACY"
+				value = 1.2
+			}
+		}
+
 		multiply = {
-			desc = "WEAK_UNIONS"
+			desc = "WEAK_UNIONS"	
 			value = 1.0
 
 			if = {
@@ -241,6 +229,7 @@
 				value = 1.5
 			}		
 		}
+
 		multiply = {
 			desc = "AT_WAR"	
 			value = 1.0
@@ -251,21 +240,27 @@
 						is_at_war = yes
 					}
 				}
-				value = 1.9
+				value = 1.5
 			}		
 		}	
 
-
 		owner = {
 			if = {
-				limit = { has_global_variable = second_intl_chain_complete_var }
+				limit = { has_global_variable = global_socialist_heroic_period }
 				multiply = 1.0
+			}
+			else_if = {
+				limit = { has_global_variable = second_intl_chain_complete_var }
+				multiply = {
+					desc = "BEFORE_HEROIC_PERIOD"
+					value = 1.0
+				}
 			}
 			else_if = {
 				limit = { has_global_variable = first_intl_chain_complete_var }
 				multiply = {
 					desc = "BEFORE_SECOND_INTERNATIONAL"
-					value = 0.7
+					value = 0.6
 				}
 			}
 			else = {
@@ -288,38 +283,6 @@
 			multiply = {
 				desc = "NO_SOCIALISM"
 				value = 0.7
-			}
-		}
-
-		multiply = {
-			desc = "SPLIT_SOCIALISTS"
-			value = 1.0
-
-			if = {
-				limit = {
-					owner = {
-						has_variable = socialists_split_complete_var
-					}
-				}
-				value = -0.1
-			}
-		}
-
-		if = {
-			limit = { game_date < 1860.1.1 }
-			if = {
-				limit = {
-					owner = {
-						NOT = { has_global_variable = peoples_springtime_happened }
-						has_global_variable = bpm_je_march_to_radicalism_progress
-						bpm_country_is_in_europe = yes
-					}
-				}
-				multiply = {
-					desc = "PEOPLES_SPRINGTIME_BUILDUP"
-					value = global_var:bpm_je_march_to_radicalism_progress
-					multiply = 0.02
-				}
 			}
 		}
 	}

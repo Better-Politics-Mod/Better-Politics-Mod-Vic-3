@@ -8,7 +8,7 @@ IGs = [
 ]
 
 def get_data():
-    with open('better-politics-mod/common/static_modifiers/BPM_CAB_modifiers.txt', 'r', encoding='utf-8') as f:
+    with open('better-politics-mod/common/static_modifiers/BPM_cabinet_special_modifiers.txt', 'r', encoding='utf-8') as f:
         t = f.read()
 
 

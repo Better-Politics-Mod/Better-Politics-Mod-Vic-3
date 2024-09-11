@@ -1,52 +1,61 @@
-﻿ig_conservatives = {
-	color = hsv{ 0.57 1 1 }
-	texture = "gfx/interface/icons/ig_icons/conservatives.dds"
+﻿ig_national_liberals = {
+	color = hsv{ 0.50 0.9 0.8 }
+	texture = "gfx/interface/icons/ig_icons/national_liberals.dds"
 	layer = "revolution_dynamic_petty_bourgeoisie"
 	index = 10
 
 	ideologies = {
-		ideology_gov_moderate_monarchist
-		ideology_dop_authoritarian_democrat
-		ideology_sta_powerful_state
-		ideology_cit_nationalist
-		ideology_eco_conservative_agrarian
-		ideology_rel_moralist
-		ideology_mil_patriotic
-		ideology_wel_religious_welfare
-		ideology_fem_moderate_patriarchal
-		ideology_ban_averse
-		# Vanilla
-		ideology_paternalistic
-		ideology_stratocratic
-		ideology_patriotic
+		ideology_nonexistent
 	}
 	
 	enable = {
-		NOT = {
-			is_country_type = decentralized
-		}
+		owner = {
+			NOT = { is_country_type = decentralized }
+			trigger_if = {
+				limit = {
+					exists = c:FRA
+					this = c:FRA
+				}
+				OR = {
+					game_date > 1846.4.1
+					has_global_variable = bpm_march_to_radicalism_complete_var
+					ruler = { has_variable = napoleon_iii_var }
+					ig:ig_national_liberals ?= {
+						leader = { has_variable = napoleon_iii_var }
+					}
+				}
+			}
+			trigger_else = {
+				has_variable = local_natlib_split_var
+			}
+		}	
 	}
 	
 	on_enable = {
-		ig:ig_conservatives = {
+		ig:ig_national_liberals ?= {
 			# set_ig_trait = ig_trait:ig_trait_right_systematic_corruption
 			set_ig_trait = ig_trait:ig_trait_right_bastion_of_freedom
 			set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
+		}
+		if = {
+			limit = {
+				ig:ig_national_liberals ?= { has_ideology = ideology:ideology_nonexistent }
+			}
+			bpm_initialize_natlibs = yes
+			if = {
+				limit = {
+					exists = c:FRA
+					this = c:FRA
+				}
+				trigger_event = { id = bpm_natlib_split.4 }
+			}
 		}
 	}
 	on_disable = {}
 	on_character_ig_membership = {}
 	
 	pop_potential = {
-		custom_tooltip = {
-			text = BPM_VALID_POP_FOR_IG
-			owner = {
-				NOT = {
-					is_country_type = decentralized
-				}
-				has_technology_researched = rationalism
-			}
-		}
+		game_date > 1836.1.2
 	}
 	
 	pop_weight = {
@@ -81,7 +90,7 @@
 			}
 			add = {
 				desc = "POP_ARISTOCRATS"
-				value = 250
+				value = 220
 			}
 		}
 
@@ -95,47 +104,50 @@
 				value = 50
 			}
 		}
-
-		# PATCON AND URBAN
-		else_if = {
-			limit = {
-				scope:interest_group = { 
-					#has_ideology = ideology:ideology_wel_paternalistic_welfare 
-					bpm_ig_is_paternalistic = yes
+		if = { 
+			limit = { 
+				owner = { 
+					bpm_performance_significant_country = yes
+					is_unification_candidate = yes
 				}
 			}
-			if = {
-				limit = { strata = poor }
-				add = {
-					desc = "PATCON_LOWER_CLASS"
-					value = 50
-				}
-			}
-			else_if = {
-				limit = { strata = middle }
-				add = {
-					desc = "PATCON_MIDDLE_CLASS"
-					value = 50
-				}
-			}
-			else_if = {
-				limit = { strata = rich }
-				add = {
-					desc = "PATCON_CAPITALISTS"
-					value = 50
-				}
+			add = { 
+				desc = "UNIFICATION_CANDIDATE"
+				value = 15
 			}
 		}
-
+		if = { 
+			limit = { 
+				owner = { 
+					bpm_performance_significant_country = yes
+					has_modifier = unification_prestige
+				}
+			}
+			add = { 
+				desc = "RECENTLY_UNIFIED"
+				value = 20
+			}
+		}
 		multiply = {
 			desc = "UNEDUCATED"
 			value = literacy_rate
-			multiply = 2.0
+			multiply = 1.6
 			max = 1.0
 		}
 
+		multiply = ig_attraction_to_ruler_ideology_from_stability
+
 		if = {
 			limit = { owner = { bpm_performance_significant_country = yes } }
+			multiply = {
+				desc = "IN_WAR"	
+				value = 1.0
+	
+				if = {
+					limit = { owner = { is_at_war = yes } }
+					value = 1.5
+				}		
+			}
 			multiply = {
 				desc = "LEADER_POPULARITY"
 				scope:interest_group = {
@@ -148,81 +160,24 @@
 					}
 				}
 			}	
-			multiply = {
-				desc = "STILL_OLIGARCHIC"
-				value = 1.0
-				if = {
-					limit = {
-						owner = {
-							has_law = law_type:law_oligarchy
-							has_law = law_type:law_monarchy
-						}
-					}
-					value = 0.5
-				}
-			}
 			multiply = bpm_ig_agitators_popularity
 			multiply = bpm_ig_ruler_popularity
 			multiply = ig_attraction_from_radicals_and_loyalists
 		}
-		multiply = ig_attraction_to_ruler_ideology_from_stability
-
-		multiply = {
-			desc = "AT_WAR"	
-			value = 1.0
-
-			if = {
-				limit = { owner = { is_at_war = yes } }
-				value = 1.4
-			}		
-		}
 	}
 	
 	monarch_weight = {
-		value = 1.0
-		if = { 
-			limit = { 
-				owner = {
-					NOT = {
-						has_technology_researched = rationalism
-					}
-					is_country_type = decentralized
-				}
-			}
-			multiply = 0
-		}
+		value = 0.5
 	}	
 
 	agitator_weight = {
 		value = 1.0
 		multiply = bpm_base_agitator_weight
-		if = { 
-			limit = { 
-				owner = {
-					NOT = {
-						has_technology_researched = rationalism
-					}
-					is_country_type = decentralized
-				}
-			}
-			multiply = 0
-		}
 	}
 	
 	commander_weight = {
-		value = 1.0
+		value = 2.5
 		multiply = bpm_commander_assignment_from_laws_factor
-		if = { 
-			limit = { 
-				owner = {
-					NOT = {
-						has_technology_researched = rationalism
-					}
-					is_country_type = decentralized
-				}
-			}
-			multiply = 0
-		}
 	}	
 	
 	noble_chance = {

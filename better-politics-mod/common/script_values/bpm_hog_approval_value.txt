@@ -1,0 +1,128 @@
+bpm_law_enactment_hog_approval = {
+	value = 0
+	if = {
+		limit = {
+			var:bpm_law_enactment_yea_votes_cached < 0.5
+		}
+		add = {
+			value = -999
+			desc = "bpm_ruler_law_support_from_legislative_vote_fail"
+		}
+	}
+	else = {
+		# Vote in autocracy: 0 to 10
+		if = {
+			limit = { has_law = law_type:law_autocracy }
+			add = {
+				value = var:bpm_law_enactment_yea_votes_cached
+				multiply = 10
+				desc = "bpm_ruler_law_support_from_vote_in_autocracy"
+			}
+		}
+		# Vote otherwise: 0 to 20
+		else = {
+			add = {
+				value = var:bpm_law_enactment_yea_votes_cached
+				multiply = 20
+				desc = "bpm_ruler_law_support_from_vote"
+			}
+		}
+	}
+	if = {
+		limit = {
+			var:bpm_headofgov ?= {
+				has_variable = bpm_ig_enacting_law_change_steps
+				interest_group = { has_variable = bpm_ig_enacting_law_change_steps }
+			}
+		}
+		# var:bpm_headofgov base law support: -32 to 32 (8 per step)
+		add = {
+			value = 0
+			if = {
+				# If no var:bpm_headofgov stance, use interest group stance
+				limit = {
+					var:bpm_headofgov.var:bpm_ig_enacting_law_change_steps = 0
+				}
+				add = var:bpm_headofgov.interest_group.var:bpm_ig_enacting_law_change_steps
+			}
+			else = {
+				add = var:bpm_headofgov.var:bpm_ig_enacting_law_change_steps
+			}
+			multiply = 8
+			desc = "bpm_ig_law_support_from_ruler_ideology"
+		}
+		if = {
+			limit = {
+				var:bpm_headofgov = {
+					OR = {
+						var:bpm_ig_enacting_law_change_steps < 0
+						AND = {
+							var:bpm_ig_enacting_law_change_steps = 0
+							interest_group.var:bpm_ig_enacting_law_change_steps < 0
+						}
+					}
+				}
+			}
+			if = {
+				limit = { var:bpm_headofgov = { has_trait = persistent } }
+				add = {
+					value = -5
+					desc = "bpm_ruler_law_support_from_trait_persistent"
+				}
+			}
+			else_if = {
+				limit = { var:bpm_headofgov = { has_trait = arrogant } }
+				add = {
+					value = -10
+					desc = "bpm_ruler_law_support_from_trait_arrogant"
+				}
+			}
+			else_if = {
+				limit = { var:bpm_headofgov = { has_trait = imposing } }
+				add = {
+					value = -10
+					desc = "bpm_ruler_law_support_from_trait_imposing"
+				}
+			}
+			else_if = {
+				limit = { var:bpm_headofgov = { has_trait = imperious } }
+				add = {
+					value = -15
+					desc = "bpm_ruler_law_support_from_trait_imperious"
+				}
+			}
+		}
+	}
+	# Insurrection: 20
+	# Movement: 10
+	if = {
+		limit = { has_political_movement = currently_enacting_law.type }
+		add = {
+			value = 10
+			desc = "bpm_ruler_law_support_from_movement"
+		}
+		if = {
+			limit = {
+				has_variable = bpm_law_enactment_desired_by_revolution
+			}
+			add = {
+				desc = "bpm_ruler_law_support_from_insurrection"
+				value = 15
+			}
+		}
+	}
+	if = {
+		limit = { var:bpm_headofgov = { has_trait = tactful } }
+		add = {
+			value = 5
+			desc = "bpm_ruler_law_support_from_trait_tactful"
+		}
+	}
+	else_if = {
+		limit = { var:bpm_headofgov = { has_trait = honorable } }
+		add = {
+			value = 10
+			desc = "bpm_ruler_law_support_from_trait_honorable"
+		}
+	}
+}

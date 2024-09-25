@@ -1,24 +1,41 @@
 import pdxpy, math
 
 
-def generate(n):
+def generate(n, start):
     angle = 180 / n
     r = []
     for i in range(n+1):
-        r.append(i*angle)
+        r.append((i*angle, start))
     return r
 
-def draw(r, radius):
+def generate_all(start, step, n):
+    final_r = []
+    #num_columns = len(n)
+    for i in n:
+        final_r.extend(generate(i, start))
+        start -= step
+
+
+    return sorted(final_r, key=lambda x: (x[0], x[1]))
+
+
+XCENTER = 300
+YCENTER = 200
+
+def draw(r, color, xcenter=XCENTER, ycenter=YCENTER):
     result = []
-    for v in r:
+    for i, v in enumerate(r):
         # calculate x y relative to 0, 0, where we have taken 500, 600 as the center of the circle
-        x = 500 + radius * math.cos(v * math.pi / 180)
-        y = 600 - radius * math.sin(v * math.pi / 180)
+        angle  = v[0]
+        radius = v[1]
+        x = xcenter + radius * math.cos(angle * math.pi / 180)
+        y = 1.5*ycenter - radius * math.sin(angle * math.pi / 180)
         result.append(
             {
                 "icon": { 
-                    "texture": "gfx/interface/icons/red_circle.dds",
+                    "texture": f"gfx/interface/icons/{color}_circle.dds",
                     "size": r"{10 10}",
+                    "visible": f"\"[And(GreaterThan_CFixedPoint(Country.MakeScope.Var('bpm_{color}_parl_max').GetValue, '(CFixedPoint){i}'), LessThan_CFixedPoint(Country.MakeScope.Var('bpm_{color}_parl_min').GetValue, '(CFixedPoint){i}'))]\"",
                     "position": r"{" + f"{int(x)} {int(y)}" + r"}"
                 }
             }
@@ -26,22 +43,36 @@ def draw(r, radius):
     return result
 
 
-start = 200 
-step = 12
-n = [50, 46, 43, 39, 36, 32, 29]
+def creator(start=200, step=12, n=[50, 46, 43, 39, 36, 32, 29, 25], color="red"):
+    last_r = generate_all(start, step, n)
+    return draw(last_r, color)
 
-final_result = []
-
-for i in n:
-    final_result.extend(draw(generate(i), start))
-    start -= step
-
+ 
 #result = draw(generate(35), 176)
 
-res = str(pdxpy.PdxObject(final_result))
+def make_parliament(color):
 
-# add 4 tabs before each line of res
-res = res.replace("\n", "\n" + "\t" * 4)
+
+    res = str(pdxpy.PdxObject(creator(color=color)))
+
+    # add 4 tabs before each line of res
+    res = res.replace("\n", "\n" + "\t" * 2)
+
+    fres = """
+types politics_panel_types
+{
+    type bpm_parliament_visual_XXX = widget {
+        size = { YYY ZZZ }
+        using = tooltip_below
+        GGG
+        #using = entry_bg_fancy
+    """.replace("XXX", color).replace('YYY', str(XCENTER*2)).replace('ZZZ', str(YCENTER*2)).replace("GGG", 
+    f"visible = \"[And(Country.MakeScope.Var('bpm_{color}_parl_max').IsSet, Country.MakeScope.Var('bpm_{color}_parl_min').IsSet)]\"") + "\t" + res + """
+    }
+}
+    """
+
+    return fres
 
 with open("output.txt", "w") as f:
-    f.write(res)
+    f.write(make_parliament("red"))

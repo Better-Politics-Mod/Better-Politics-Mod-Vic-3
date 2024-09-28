@@ -1,0 +1,127 @@
+﻿
+bpm_add_unique = {
+    set_variable = {
+        name = bpm_temp_unique_add
+        value = $VALUE$
+    }
+    while = {
+        limit = {
+            is_target_in_variable_list = {
+                name = $LIST$
+                target = var:bpm_temp_unique_add
+            }
+        }
+        
+        change_variable = {
+            name = bpm_temp_unique_add
+            add = $INCREMENT$
+        }
+    }
+    add_to_variable_list = {
+        name = $LIST$
+        target = var:bpm_temp_unique_add
+    }
+    remove_variable = bpm_temp_unique_add
+}
+
+
+bpm_calc_party_votes  = {
+    #this = country
+    if = {
+        limit = {
+            not = {
+                has_variable_list = bpm_potential_parties_list
+            }
+        }
+        every_potential_party = {
+            prev = {
+                add_to_variable_list = {
+                    name = bpm_potential_parties_list
+                    target = prev
+                }
+            }
+        }
+    }
+    if = {
+        limit = {
+            modifier:country_legitimacy_base_add = 0
+            modifier:country_legitimacy_govt_leader_clout_add = 0
+            modifier:country_legitimacy_govt_total_clout_add = 0
+            modifier:country_legitimacy_govt_total_votes_add = 100
+            modifier:country_legitimacy_headofstate_add = 0
+            modifier:country_legitimacy_ideological_incoherence_mult = 0
+            modifier:country_legitimacy_min_add = 0
+        }
+        clear_variable_list = bpm_temp_government_igs
+        every_interest_group = {
+            limit = {
+                is_in_government = yes
+            }
+            prev = {
+                add_to_variable_list = {
+                    name = bpm_temp_government_igs
+                    target = prev
+                }
+            }
+        }
+        every_in_list = {
+            variable = bpm_potential_parties_list
+            if = {
+                limit = {
+                    any_member = {
+                        exists = yes
+                    }
+                }
+                prev = {
+                    every_interest_group = {
+                        remove_ruling_interest_group = yes
+                    }
+                }
+                every_member = {
+                    add_ruling_interest_group = yes
+                }
+                prev = {
+                    bpm_add_unique = {
+                        VALUE = government_legitimacy
+                        LIST = bpm_momentum
+                        INCREMENT = 0.01
+                    }
+                    #add_to_variable_list = {
+                    #    name = bpm_momentum
+                    #    target = government_legitimacy
+                    #}
+                }
+            }
+            else = {
+                prev = {
+                    bpm_add_unique = {
+                        VALUE = -1
+                        LIST = bpm_momentum
+                        INCREMENT = -1
+                    }
+                }
+            }
+        }
+        every_interest_group = {
+            remove_ruling_interest_group = yes
+        }
+        every_in_list = {
+            variable = bpm_temp_government_igs
+            add_ruling_interest_group = yes
+        }
+    
+        clear_variable_list = bpm_temp_government_igs
+        set_variable = {
+            name = bpm_vote_calc_status
+            value = true
+        }
+    }
+    else = {
+        set_variable = {
+            name = bpm_vote_calc_status
+            value = false
+        }
+    }
+    
+
+}

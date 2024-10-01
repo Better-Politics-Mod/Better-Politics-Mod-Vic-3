@@ -39,7 +39,7 @@ for i, ig in enumerate(IGs):
 t = "republic"
 crisis = "crisis"
 
-rr = f"bpm_update_sta_ideology_{crisis}_{t}"
+rr = f"bpm_update_exe_ideology_{crisis}_{t}"
 
 
 p = []

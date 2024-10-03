@@ -49,7 +49,35 @@ bpm_update_internal_skill_pool = {
     }
 }
 
+bpm_fix_ig_saved_characters = {
+    scope:bpm_selected_ig = {
+        clear_variable_list = bpm_saved_characters_temp
+        every_in_list = {
+            variable = bpm_saved_characters
+            if = {
+                limit = { 
+                    is_character_alive = yes 
+                    #exists = interest_group
+                } 
+                scope:bpm_selected_ig = { add_to_variable_list = { name = bpm_saved_characters_temp target = PREV } }
+            }
+        }
+        clear_variable_list = bpm_saved_characters
+        every_in_list = {
+            variable = bpm_saved_characters_temp
+            if = {
+                limit = { 
+                    is_character_alive = yes 
+                    #exists = interest_group
+                } 
+                scope:bpm_selected_ig = { add_to_variable_list = { name = bpm_saved_characters target = PREV } }
+            }
+        }
+    }
+}
+
 bpm_generate_cabinet_character = {
+    bpm_fix_ig_saved_characters = yes
     if = {
         limit = {
             scope:bpm_selected_ig.var:bpm_expert_characters > 0
@@ -99,16 +127,20 @@ bpm_generate_cabinet_character = {
                 any_in_list = {
                     variable = bpm_saved_characters
                     var:bpm_skill_rank >= scope:bpm_desired_skill_rank
+                    NOT = { has_variable = bpm_cabinet_minister }
                 }
             }
-            scope:bpm_selected_ig = {
-                random_in_list = {
-                    variable = bpm_saved_characters
-                    limit = {
-                        var:bpm_skill_rank >= scope:bpm_desired_skill_rank
+        }
+        scope:bpm_selected_ig = {
+            random_in_list = {
+                variable = bpm_saved_characters
+                limit = {
+                    var:bpm_skill_rank >= scope:bpm_desired_skill_rank
+                    NOT = {
+                        has_variable = bpm_cabinet_minister
                     }
-                    save_scope_as = bpm_selected_character
                 }
+                save_scope_as = bpm_selected_character
             }
         }
     }
@@ -122,6 +154,10 @@ bpm_generate_cabinet_character = {
             save_scope_as = bpm_selected_character
         }
         scope:bpm_selected_character ?= {
+            set_variable = {
+                name = bpm_skill_rank
+                value = scope:bpm_desired_skill_rank
+            }
             if = {
                 limit = {
                     scope:bpm_desired_skill_rank = 0

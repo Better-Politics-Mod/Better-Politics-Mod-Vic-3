@@ -1,0 +1,164 @@
+bpm_update_internal_skill_pool = {
+    # Internal skill pool
+    # Based on the laws and institutions & rigidity of the country
+    # As well as the clout of the interest group
+    change_variable = {
+        name = bpm_unskilled_characters
+        add = 4
+    }
+    if = {
+        limit = {
+            owner = {
+                OR = {
+                    has_law = law_type:law_universal_suffrage
+                    has_law = law_type:law_census_voting
+                    has_law = law_type:law_landed_voting
+                    has_law = law_type:law_wealth_voting
+                }
+            }
+            ig_clout > 0.1
+        }
+        change_variable = {
+            name = bpm_skilled_characters
+            add = 1
+        }
+        if = {
+            limit = {
+                ig_clout > 0.2
+            }
+            change_variable = {
+                name = bpm_expert_characters
+                add = 1
+            }
+        }
+    }
+    clamp_variable = {
+        name = bpm_unskilled_characters
+        min = 0
+        max = 10
+    }
+    clamp_variable = {
+        name = bpm_skilled_characters
+        min = 0
+        max = 10
+    }
+    clamp_variable = {
+        name = bpm_expert_characters
+        min = 0
+        max = 10
+    }
+}
+
+bpm_generate_cabinet_character = {
+    if = {
+        limit = {
+            scope:bpm_selected_ig.var:bpm_expert_characters > 0
+        }
+        save_scope_value_as = {
+            name = bpm_desired_skill_rank
+            value = 2
+        }
+        scope:bpm_selected_ig = {
+            change_variable = {
+                name = bpm_expert_characters
+                subtract = 1
+            }
+        }
+    }
+    else_if = {
+        limit = {
+            scope:bpm_selected_ig.var:bpm_skilled_characters > 0
+        }
+        save_scope_value_as = {
+            name = bpm_desired_skill_rank
+            value = 1
+        }
+        scope:bpm_selected_ig = {
+            change_variable = {
+                name = bpm_skilled_characters
+                subtract = 1
+            }
+        }
+    }
+    else = {
+        save_scope_value_as = {
+            name = bpm_desired_skill_rank
+            value = 0
+        }
+        scope:bpm_selected_ig = {
+            change_variable = {
+                name = bpm_unskilled_characters
+                subtract = 1
+            }
+        }
+    }
+    if = {
+        limit = {
+            scope:bpm_selected_ig = {
+                has_variable_list = bpm_saved_characters
+                any_in_list = {
+                    variable = bpm_saved_characters
+                    var:bpm_skill_rank >= scope:bpm_desired_skill_rank
+                }
+            }
+            scope:bpm_selected_ig = {
+                random_in_list = {
+                    variable = bpm_saved_characters
+                    limit = {
+                        var:bpm_skill_rank >= scope:bpm_desired_skill_rank
+                    }
+                    save_scope_as = bpm_selected_character
+                }
+            }
+        }
+    }
+    else = {
+        create_character = {
+            interest_group = scope:bpm_selected_ig
+            on_created = {
+                place_character_in_void = 10000
+            }
+            trait_generation = { }
+            save_scope_as = bpm_selected_character
+        }
+        scope:bpm_selected_character ?= {
+            if = {
+                limit = {
+                    scope:bpm_desired_skill_rank = 0
+                }
+                bpm_generate_character_traits_autocracy = yes
+            }
+            else_if = {
+                limit = {
+                    scope:bpm_desired_skill_rank = 1
+                }
+                bpm_generate_character_traits_semi_democracy = yes
+            }
+            else_if = {
+                limit = {
+                    scope:bpm_desired_skill_rank > 1
+                }
+                bpm_generate_character_traits_technocracy = yes
+            }
+        }
+        scope:bpm_selected_ig = {
+            if = {
+                limit = {
+                    owner = { is_player =  yes }
+                    NAND = {
+                        has_variable_list = bpm_saved_characters
+                        variable_list_size = {
+                            name = bpm_saved_characters
+                            value >= 5
+                        }
+                    }
+                }
+                # These characters will not be removed from void when fired
+                add_to_variable_list = {
+                    name = bpm_saved_characters
+                    target = scope:bpm_selected_character
+                }
+            }
+        }
+    }
+}

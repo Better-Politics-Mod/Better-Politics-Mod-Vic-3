@@ -195,3 +195,114 @@ bpm_generate_cabinet_character = {
         }
     }
 }
+
+bpm_initialize_government_mandate = {
+    set_variable = {
+        name = bpm_government_mandate
+        value = modifier:country_bpm_base_mandate_add
+    }
+    set_variable = {
+        name = bpm_government_mandate_used
+        value = 0
+    }
+    set_variable = {
+        name = bpm_reform_counter
+        value = 0
+    }
+    bpm_reload_government_mandate = yes
+}
+
+bpm_reload_government_mandate = {
+    change_variable = {
+        name = bpm_reform_counter
+        add = 1
+    }
+    if = {
+        limit = {
+            var:bpm_reform_counter > 2
+        }
+        change_variable = {
+            name = bpm_government_mandate
+            subtract = 5
+        }
+    }
+    every_interest_group = {
+        set_variable = {
+            name = bpm_ig_mandate_used
+            value = 0
+        }
+        set_variable = {
+            name = bpm_ig_mandate
+            value = 0
+        }
+    }
+    set_variable = {
+        name = bpm_tempgovmandis
+        value = var:bpm_government_mandate
+    }
+    if = {
+        limit = {
+            has_law = law_type:law_no_separate_hog
+            ruler.interest_group = {
+                is_in_government = yes
+            }
+        }
+        ruler.interest_group = {
+            bpm_distribute_mandate = { VALUE = 10 }
+        }
+    }
+    if = {
+        limit = {
+            has_law = law_type:law_appointed_on_advice
+            ruler.interest_group = {
+                is_in_government = yes
+            }
+        }
+        ruler.interest_group = {
+            bpm_distribute_mandate = { VALUE = 5}
+        }
+    }
+
+    ordered_interest_group = {
+        limit = {
+            is_in_government = yes
+        }
+        min = 0
+        order_by = ig_clout
+        bpm_distribute_mandate = { VALUE = bpm_mandate_deserved }
+    }
+}
+
+bpm_distribute_mandate = {
+    save_scope_value_as = {
+        name = bpm_mandate_delta
+        value = $VALUE$
+    }
+    if = {
+        limit = {
+            owner.var:bpm_tempgovmandis > scope:bpm_mandate_delta
+        }
+        change_variable = {
+            name = bpm_ig_mandate
+            add = scope:bpm_mandate_delta
+        }
+        owner = {
+            change_variable = {
+                name = bpm_tempgovmandis
+                subtract = scope:bpm_mandate_delta
+            }
+        }
+    }
+    else = {
+        change_variable = {
+            name = bpm_ig_mandate
+            add = owner.var:bpm_tempgovmandis
+        }
+        owner = {
+            set_variable = {
+                name = bpm_tempgovmandis
+                value = 0
+            }
+        }
+    }
+}

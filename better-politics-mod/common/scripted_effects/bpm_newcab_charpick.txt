@@ -1,0 +1,119 @@
+bpm_newcab_char_pick = {
+    bpm_newcab_char_pick_subp = { INST = economy }
+    bpm_newcab_char_pick_subp = { INST = diplomacy }
+    bpm_newcab_char_pick_subp = { INST = schools }
+    bpm_newcab_char_pick_subp = { INST = centralization }
+    bpm_newcab_char_pick_subp = { INST = suffrage }
+    bpm_newcab_char_pick_subp = { INST = police }
+    bpm_newcab_char_pick_subp = { INST = health_system }
+    bpm_newcab_char_pick_subp = { INST = colonial_affairs }
+    bpm_newcab_char_pick_subp = { INST = home_affairs }
+    bpm_newcab_char_pick_subp = { INST = workplace_safety }
+    bpm_newcab_char_pick_subp = { INST = social_security }
+    bpm_newcab_char_pick_subp = { INST = culture }
+}
+
+bpm_newcab_char_pick_subp = {
+    if = {
+        limit = {
+            OR = {
+                NOT = {
+                    exists = var:bpm_minister_of_$INST$
+                }
+                NOT = {
+                    has_variable = bpm_minister_of_$INST$
+                }
+            }
+        }
+        institution:institution_$INST$.type = {
+            save_scope_as = bpm_reference_institution_type
+        }
+        every_interest_group = {
+            limit = {
+                is_in_government = yes
+                leader = { NOT = { bpm_is_antagonistic_hypothetical_inst = { INST = $INST$ } } }
+                ig_approval > angry
+            }
+            owner = { add_to_variable_list = {
+                name = bpm_potential_interest_groups
+                target = prev
+            } }
+            set_variable = {
+                name = bpm_cost_ig_position_var
+                value = bpm_cost_ig_position
+            }
+        }
+        if = {
+            limit = {
+                any_in_list = {
+                    variable = bpm_potential_interest_groups
+                    OR = {
+                        var:bpm_skilled_characters > 0
+                        var:bpm_unskilled_characters > 0
+                        var:bpm_expert_characters > 0
+                    }
+                    bpm_remaining_mandate >= var:bpm_cost_ig_position_var
+                    var:bpm_cost_ig_position_var < 5
+                }
+            }
+            save_scope_value_as = {
+                name = bpm_lax_select
+                value = no
+            }
+        }
+        else = {
+            save_scope_value_as = {
+                name = bpm_lax_select
+                value = yes
+            }
+        }
+        every_in_list = {
+            variable = bpm_potential_interest_groups
+            if = {
+                limit = {
+                    OR = {
+                        var:bpm_skilled_characters > 0
+                        var:bpm_unskilled_characters > 0
+                        var:bpm_expert_characters > 0
+                    }
+                    bpm_remaining_mandate >= var:bpm_cost_ig_position_var
+                    OR = {
+                        scope:bpm_lax_select = yes
+                        var:bpm_cost_ig_position_var < 5
+                    }
+                }
+                owner = { add_to_variable_list = {
+                    name = bpm_valid_interest_groups
+                    target = prev
+                } }
+            }
+        }
+
+        ordered_interest_group = {
+            limit = {
+                owner = { is_target_in_variable_list = { name = bpm_valid_interest_groups target = prev } }
+            }
+            min = 0
+            max = 1
+            order_by = bpm_remaining_mandate
+
+            save_scope_as = bpm_selected_ig
+        }
+
+        if = {
+            limit = {
+                exists = scope:bpm_selected_ig
+            }
+            bpm_generate_cabinet_character = yes
+
+            scope:bpm_selected_character ?= {
+                set_variable = {
+                    name = bpm_cabinet_minister
+                    value = owner.institution:institution_$INST$
+                }
+                bpm_add_to_cabinet_interaction_shared_effect = yes
+            }
+        }
+
+    }
+}

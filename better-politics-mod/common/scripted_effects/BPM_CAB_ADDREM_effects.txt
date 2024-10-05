@@ -1,13 +1,19 @@
 bpm_add_character_to_cabinet = {
     if = {
         limit = {
-            owner = { 
-                has_variable = bpm_cabinet_char_select
+            OR = {
+                owner = { has_variable = bpm_cabinet_char_select  }
+                has_variable = bpm_cabinet_minister
             }
         }
-        set_variable = {
-            name = bpm_cabinet_minister
-            value = owner.var:bpm_cabinet_char_select
+        if = {
+            limit = {
+                NOT = { has_variable = bpm_cabinet_minister }
+            }
+            set_variable = {
+                name = bpm_cabinet_minister
+                value = owner.var:bpm_cabinet_char_select
+            }
         }
         set_variable = {
             name = bpm_associated_country
@@ -47,19 +53,73 @@ bpm_remove_character_from_cabinet = {
             has_variable = bpm_cabinet_minister
         }
 
+        if = {
+            limit = {
+                interest_group = {
+                    NAND = {
+                        has_variable_list = bpm_saved_characters
+                        is_target_in_variable_list = {
+                            name = bpm_saved_characters
+                            target = PREV
+                        }
+                    }
+                }
+            }
+            free_character_from_void = yes
+        }
+        else = {
+            if = {
+                limit = {
+                    var:bpm_skill_rank ?= 0
+                }
+                interest_group = {
+                    change_variable = {
+                        name = bpm_unskilled_characters
+                        add = 1
+                    }
+                }
+            }
+            else_if = {
+                limit = {
+                    var:bpm_skill_rank ?= 1
+                }
+                interest_group = {
+                    change_variable = {
+                        name = bpm_skilled_characters
+                        add = 1
+                    }
+                }
+            }
+            else_if = {
+                limit = {
+                    var:bpm_skill_rank ?= 2
+                }
+                interest_group = {
+                    change_variable = {
+                        name = bpm_expert_characters
+                        add = 1
+                    }
+                }
+            }
+        }
+
         save_scope_value_as = {
             name = addrem
             value = no
         }
         bpm_addrem_cabinet = yes
 
+        interest_group = {
+            bpm_update_mandate_used = { VALUE = prev.var:bpm_mandate_usage_neg }
+        }
+
         remove_variable = bpm_cabinet_minister
 
         owner = {
-            add_to_variable_list = {
-                name = bpm_CAB_char_select_pool
-                target = prev
-            }
+            #add_to_variable_list = {
+            #    name = bpm_CAB_char_select_pool
+            #    target = prev
+            #}
             bpm_reload_cabinet_picks_expectation = yes
         }
     }
@@ -75,6 +135,8 @@ bpm_remove_character_from_cabinet = {
     bpm_emergency_rem_subp = { INST = colonial_affairs }
     bpm_emergency_rem_subp = { INST = social_security }
     bpm_emergency_rem_subp = { INST = workplace_safety }
+    bpm_emergency_rem_subp = { INST = diplomacy }
+    bpm_emergency_rem_subp = { INST = economy }
 
 
     bpm_update_temporary_cabinet_members_list = yes

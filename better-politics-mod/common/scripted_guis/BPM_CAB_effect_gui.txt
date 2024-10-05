@@ -10,18 +10,66 @@ bpm_CAB_toggle_char_select = {
                 name = bpm_cabinet_char_select
                 value = prev
             }
-            every_in_list = {
-                variable = bpm_CAB_char_select_pool
-                bpm_cab_character_calculate_hyp_synergy = yes
+            clear_variable_list = bpm_CAB_ig_select_pool
+            var:bpm_cabinet_char_select.type = {
+                save_scope_as = bpm_reference_institution_type
             }
-            bpm_fix_cabinet_pool = yes
-            bpm_fill_leader_pool = yes
+            every_interest_group = {
+                limit = {
+                    is_in_government = yes
+                }
+                owner = { add_to_variable_list = {
+                    name = bpm_CAB_ig_select_pool
+                    target = prev
+                } }
+                set_variable = {
+                    name = bpm_cost_ig_position_var
+                    value = bpm_cost_ig_position
+                }
+            }
+            
+
+            #bpm_fix_cabinet_pool = yes
+            #bpm_fill_leader_pool = yes
             every_in_list = {
-                variable = bpm_CAB_leader_select_pool
-                bpm_cab_character_calculate_hyp_synergy = yes
+                variable = bpm_CAB_ig_select_pool
+                leader = {
+                    bpm_cab_character_calculate_hyp_synergy = yes
+                }
             }
         }
 	}
+}
+
+bpm_newcab_select_ig = {
+    scope = interest_group
+    is_shown = {
+    }
+    is_valid = {
+        custom_tooltip = {
+            text = "bpm_cab_select_ig_tt"
+            OR = {
+                var:bpm_skilled_characters > 0
+                var:bpm_unskilled_characters > 0
+                var:bpm_expert_characters > 0
+            }
+        }   
+        custom_tooltip = {
+            text = "bpm_cab_select_ig_enough_mandate_tt"
+            bpm_remaining_mandate >= var:bpm_cost_ig_position_var
+        }
+    }
+    effect = {
+        save_scope_as = bpm_selected_ig
+        hidden_effect = {
+            owner = {
+                bpm_generate_cabinet_character = yes
+            }
+        }
+        scope:bpm_selected_character ?= {
+            bpm_add_to_cabinet_interaction_shared_effect = yes
+        }
+    }
 }
 
 bpm_cabinet_fill_gui = {
@@ -32,7 +80,7 @@ bpm_cabinet_fill_gui = {
         has_variable = bpm_has_cabinet
     }
     effect = {
-        bpm_cab_fill_positions = yes
+        bpm_newcab_char_pick = yes
     }
 }
 

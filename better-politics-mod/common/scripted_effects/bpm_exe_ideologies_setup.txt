@@ -1,0 +1,240 @@
+
+bpm_set_exe_ideology = {
+    bpm_remove_all_exe_ideologies = yes
+    add_ideology = ideology_exe_$ideology$
+    bpm_reorder_ideologies = yes
+}
+
+bpm_set_exe_ideology_weak_rigid     = { bpm_set_exe_ideology = { ideology = weak_rigid     } }
+bpm_set_exe_ideology_strong_rigid   = { bpm_set_exe_ideology = { ideology = strong_rigid   } }
+bpm_set_exe_ideology_weak_dynamic   = { bpm_set_exe_ideology = { ideology = weak_dynamic   } }
+bpm_set_exe_ideology_strong_dynamic = { bpm_set_exe_ideology = { ideology = strong_dynamic } }
+bpm_set_exe_ideology_traditional    = { bpm_set_exe_ideology = { ideology = traditional    } }
+bpm_set_exe_ideology_ceremonial     = { bpm_set_exe_ideology = { ideology = ceremonial     } }
+
+bpm_update_exe_ideology = {
+    every_interest_group = {
+        if = {
+            limit = {
+                NOT = {
+                    has_variable = bpm_do_not_touch_exe_ideology
+                }
+            }
+            bpm_remove_all_exe_ideologies = yes
+            bpm_set_rest_exe_ideology = yes
+            bpm_update_exe_ideology_extremists = yes
+            bpm_update_exe_ideology_crisis = yes
+            if = {
+                limit = {
+                    is_interest_group_type = ig_anarchists
+                }
+                bpm_set_exe_ideology_ceremonial = yes
+            }
+            bpm_reorder_ideologies = yes
+        }
+    }
+}
+
+bpm_update_exe_ideology_extremists = {
+    owner.ruler.interest_group = {
+        save_scope_as = ruler_ig
+    }
+    if = {
+        limit = {
+            OR = {
+                bpm_ig_is_radical_opposition = yes
+                bpm_ig_is_very_radical_opposition = yes
+            }
+        }
+        if = {
+            limit = {
+                scope:ruler_ig = {
+                    OR = {
+                        bpm_ig_is_radical_opposition = yes
+                        bpm_ig_is_very_radical_opposition = yes
+                    }
+               }            
+            }
+            bpm_set_exe_ideology_strong_dynamic = yes
+        }
+        else = {
+            if = {
+                limit = {
+                    owner = { has_law = law_type:law_monarchy }
+                }
+                bpm_set_exe_ideology_ceremonial = yes
+            }
+            else = {
+                bpm_set_exe_ideology_weak_dynamic = yes
+            }
+        }
+    }
+}
+
+bpm_update_exe_ideology_crisis = {
+    if = {
+        limit = {
+            NOR = {
+                bpm_ig_is_radical_opposition = yes
+                bpm_ig_is_very_radical_opposition = yes
+            }
+            owner = {
+                bpm_is_crisis_or_sticky = yes
+            }
+        }
+        owner.ruler.interest_group = {
+            save_scope_as = ruler_ig
+        }
+        if = {
+            limit = {
+                scope:ruler_ig = {
+                    OR = {
+                        bpm_ig_is_radical_opposition = yes
+                        bpm_ig_is_very_radical_opposition = yes
+                    }
+               }            
+            }
+            if = {
+                limit = {
+                    owner = { has_law = law_type:law_monarchy }
+                    OR = {
+                        bpm_ig_is_institutional = yes
+                        is_interest_group_type = ig_conservatives
+                    }
+                }
+                bpm_set_exe_ideology_weak_rigid = yes
+            }
+            else_if = {
+                limit = {
+                    NOT = { owner = { has_law = law_type:law_monarchy } }
+                }
+                bpm_set_exe_ideology_weak_dynamic = yes
+            }
+        }
+        else = {
+            if = {
+                limit = {
+                    owner = { has_law = law_type:law_monarchy }
+                    OR = {
+                        bpm_ig_is_institutional = yes
+                        is_interest_group_type = ig_conservatives
+                    }
+                }
+                bpm_set_exe_ideology_strong_rigid = yes
+            }
+            else_if = {
+                limit = {
+                    NOT = { owner = { has_law = law_type:law_monarchy } }
+                }
+                bpm_set_exe_ideology_strong_dynamic = yes
+            }
+        }
+    }
+}
+
+bpm_set_rest_exe_ideology = {
+    if = {
+        limit = {
+            bpm_ig_is_institutional = yes
+        }
+        bpm_set_rest_exe_ideology_ing = yes
+    }
+    else = {
+        bpm_set_rest_exe_ideology_idg = yes
+    }
+    if = {
+        limit = {
+            is_interest_group_type = ig_trade_unions
+        }
+        bpm_set_exe_ideology_weak_rigid = yes
+    }
+    if = {
+        limit = {
+            is_interest_group_type = ig_anarchists
+        }
+        bpm_set_exe_ideology_weak_dynamic = yes
+    }
+    if = {
+        limit = {
+            is_interest_group_type = ig_reactionaries
+            c:USA ?= owner
+            date < 1837.1.1
+        }
+        bpm_set_exe_ideology_strong_dynamic = yes
+    }
+}
+
+bpm_set_rest_exe_ideology_ing = {
+    bpm_set_exe_ideology_strong_rigid = yes
+    if = {
+        limit = {
+            owner = {
+                #bpm_country_is_in_new_world = yes
+                bpm_country_is_republic = yes
+            }
+        }
+        bpm_set_exe_ideology_strong_dynamic = yes
+    }
+    if = {
+        limit = {
+            OR = {
+                is_interest_group_type = ig_rural_folk
+            }
+            owner = { has_law = law_type:law_monarchy }
+        }
+        bpm_set_exe_ideology_weak_rigid = yes
+    }
+    if = {
+        limit = {
+            OR = {
+                is_interest_group_type = ig_armed_forces
+                is_interest_group_type = ig_devout
+            }
+        }
+        bpm_remove_all_exe_ideologies = yes
+    }
+    if = {
+        limit = {
+            owner = {
+                NOT = {
+                    has_variable = meiji_var
+                }
+                exists = c:JAP
+                c:JAP = THIS
+            }
+            is_interest_group_type = ig_landowners
+        }
+        bpm_set_exe_ideology_weak_dynamic = yes
+    }
+}
+
+bpm_set_rest_exe_ideology_idg = {
+    bpm_set_exe_ideology_strong_dynamic = yes
+
+    # Under a monarchy
+    # People won't want the Monarch to exercise too much power
+    if = {
+        limit = {
+            OR = { 
+                bpm_ig_is_liberal = yes
+                bpm_ig_is_left_wing = yes
+            }
+            owner = { has_law = law_type:law_monarchy }
+        }
+        bpm_set_exe_ideology_ceremonial = yes
+    }
+    if = {
+        limit = {
+            is_interest_group_type = ig_conservatives
+            owner = { has_law = law_type:law_monarchy }
+        }
+        bpm_set_exe_ideology_weak_rigid = yes
+    }
+    if = {
+        limit = {
+            owner = { has_law = law_type:law_monarchy }
+            is_interest_group_type = ig_reactionaries
+        }
+        bpm_set_exe_ideology_traditional = yes
+    }
+}

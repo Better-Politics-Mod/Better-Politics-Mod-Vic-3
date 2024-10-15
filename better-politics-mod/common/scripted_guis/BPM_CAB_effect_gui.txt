@@ -1,0 +1,230 @@
+bpm_CAB_toggle_char_select = {
+	scope = institution
+	is_shown = {
+	}
+	is_valid = {
+	}
+	effect = {
+        owner = { 
+            set_variable = {
+                name = bpm_cabinet_char_select
+                value = prev
+            }
+            clear_variable_list = bpm_CAB_ig_select_pool
+            var:bpm_cabinet_char_select.type = {
+                save_scope_as = bpm_reference_institution_type
+            }
+            every_interest_group = {
+                limit = {
+                    is_in_government = yes
+                }
+                owner = { add_to_variable_list = {
+                    name = bpm_CAB_ig_select_pool
+                    target = prev
+                } }
+                set_variable = {
+                    name = bpm_cost_ig_position_var
+                    value = bpm_cost_ig_position
+                }
+            }
+            bpm_reset_mandate_used = yes
+            
+
+            #bpm_fix_cabinet_pool = yes
+            #bpm_fill_leader_pool = yes
+            every_in_list = {
+                variable = bpm_CAB_ig_select_pool
+                leader = {
+                    bpm_cab_character_calculate_hyp_synergy = yes
+                }
+            }
+        }
+	}
+}
+
+bpm_newcab_select_ig = {
+    scope = interest_group
+    is_shown = {
+    }
+    is_valid = {
+        custom_tooltip = {
+            text = "bpm_cab_select_ig_tt"
+            OR = {
+                var:bpm_skilled_characters > 0
+                var:bpm_unskilled_characters > 0
+                var:bpm_expert_characters > 0
+            }
+        }   
+        custom_tooltip = {
+            text = "bpm_cab_select_ig_enough_mandate_tt"
+            bpm_remaining_mandate >= var:bpm_cost_ig_position_var
+        }
+    }
+    effect = {
+        save_scope_as = bpm_selected_ig
+        hidden_effect = {
+            owner = {
+                bpm_generate_cabinet_character = yes
+            }
+        }
+        scope:bpm_selected_character ?= {
+            bpm_add_to_cabinet_interaction_shared_effect = yes
+        }
+    }
+}
+
+bpm_cabinet_fill_gui = {
+    scope = country
+    is_shown = {
+    }
+    is_valid = {
+        has_variable = bpm_has_cabinet
+    }
+    effect = {
+        bpm_newcab_char_pick = yes
+    }
+}
+
+bpm_cabinet_shuffle_gui = {
+    scope = country
+    is_shown = {
+    }
+    is_valid = {
+        has_variable = bpm_has_cabinet
+        NOT = { has_variable = bpm_cab_cannot_shuffle }
+    }
+    effect = {
+        set_variable = {
+            name = bpm_cab_cannot_shuffle
+            days = 730
+        }
+        bpm_cab_shuffle = yes
+    }
+}
+
+bpm_CAB_toggle_char_select_off = {
+    scope = institution
+    is_shown = {
+    }
+    is_valid = {
+    }
+    effect = {
+        remove_variable = bpm_cabinet_char_select
+    }
+}
+
+bpm_CAB_is_antagonistic = {
+    scope = character
+    is_shown = {
+        bpm_is_antagonistic = yes
+    }
+    is_valid = {
+    }
+    effect = {
+    }
+}
+
+bpm_CAB_char_is_antag = {
+    scope = character
+    is_shown = {
+        bpm_is_antagonistic_hypothetical = yes
+    }
+    is_valid = {
+    }
+    effect = {
+    }
+}
+
+bpm_CAB_filter_out_antag = {
+    scope = country
+    is_shown = {
+    }
+    is_valid = {
+    }
+    effect = {
+        if = {
+            limit = {
+                has_variable = bpm_CAB_antag_is_filtered_out
+            }
+            remove_variable = bpm_CAB_antag_is_filtered_out
+        }
+        else = {
+            set_variable = bpm_CAB_antag_is_filtered_out
+        }
+    }
+}
+
+bpm_CAB_filter_in_gov = {
+    scope = country
+    is_shown = {
+    }
+    is_valid = {
+    }
+    effect = {
+        if = {
+            limit = {
+                has_variable = bpm_CAB_gov_is_filtered_in
+            }
+            remove_variable = bpm_CAB_gov_is_filtered_in
+        }
+        else = {
+            set_variable = bpm_CAB_gov_is_filtered_in
+        }
+    }
+}
+
+bpm_CAB_filter_out_neutral = {
+    scope = country
+    is_shown = {
+    }
+    is_valid = {
+    }
+    effect = {
+        if = {
+            limit = {
+                has_variable = bpm_CAB_neutral_is_filtered_out
+            }
+            remove_variable = bpm_CAB_neutral_is_filtered_out
+        }
+        else = {
+            set_variable = bpm_CAB_neutral_is_filtered_out
+        }
+    }
+}
+
+bpm_CAB_char_is_filtered_in = {
+    scope = character
+    is_shown = {
+        trigger_if = {
+            limit = {
+                owner = { has_variable = bpm_CAB_antag_is_filtered_out }
+            }
+            bpm_is_antagonistic_hypothetical = no
+        }
+        trigger_if = {
+            limit = {
+                owner = { has_variable = bpm_CAB_gov_is_filtered_in }
+            }
+            interest_group = {
+                is_in_government = yes
+            }
+        }
+        trigger_if = {
+            limit = { 
+                owner = { has_variable = bpm_CAB_neutral_is_filtered_out}
+            }
+            bpm_is_neutral_hypothetical = no
+        }
+    }
+}
+
+bpm_CAB_fire_minister_gui = {
+    scope = character
+    is_shown = {
+    }
+    is_valid = {
+    }
+    effect = {
+        bpm_fire_cabinet_minister = yes
+    }
+}

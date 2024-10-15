@@ -1,0 +1,772 @@
+
+
+bpm_fix_cabinet_pool = {
+    every_in_list = {
+        variable = bpm_CAB_char_select_pool
+        if = {
+            limit = { 
+                is_character_alive = yes 
+                #exists = interest_group
+            } 
+            owner = { add_to_variable_list = { name = bpm_CAB_temp_pool target = PREV } }
+       }
+    }
+    clear_variable_list = bpm_CAB_char_select_pool
+    every_in_list = {
+        variable = bpm_CAB_temp_pool
+        if = {
+            limit = { 
+                is_character_alive = yes 
+                #exists = interest_group
+            } 
+            owner = { add_to_variable_list = { name = bpm_CAB_char_select_pool target = PREV } }
+       }
+    }
+}
+
+bpm_clear_cabinet_pool = {
+    every_in_list = {
+        variable = bpm_CAB_char_select_pool
+        if = {
+            limit = { 
+                OR = {
+                    NOR = {
+                        has_variable = bpm_cabinet_minister
+                        has_variable = bpm_cabinet_important_character
+                    }
+                    is_character_alive = no
+                }
+                is_in_void = yes
+            } 
+            free_character_from_void = yes  
+       }
+    }
+    clear_variable_list = bpm_CAB_temp_pool
+    every_in_list = {
+        variable = bpm_CAB_char_select_pool
+        if = {
+            limit = { 
+                is_character_alive = yes 
+                OR = {
+                    has_variable = bpm_cabinet_minister
+                    has_variable = bpm_cabinet_important_character
+                }
+            } 
+            owner = { add_to_variable_list = { name = bpm_CAB_temp_pool target = PREV } }
+       }
+    }
+    clear_variable_list = bpm_CAB_char_select_pool
+    every_in_list = {
+        variable = bpm_CAB_temp_pool
+        if = {
+            limit = { 
+                is_character_alive = yes 
+            } 
+            owner = { add_to_variable_list = { name = bpm_CAB_char_select_pool target = PREV } }
+       }
+    }
+}
+
+bpm_pick_cabinet_minister = {
+    every_interest_group = {
+        limit = {
+            bpm_ig_enabled = yes
+            is_marginal = no
+        }
+        if = {
+            limit = {
+                NOT = {
+                    has_variable = bpm_cabinet_interest_group_luck_factor
+                }
+            }
+            set_variable = {
+                name = bpm_cabinet_interest_group_luck_factor
+                value = 0
+            }
+        }
+        change_variable = {
+            name = bpm_cabinet_interest_group_luck_factor
+            add = { 0 10 }
+        }
+    }
+    ordered_interest_group = {
+        limit = {
+            bpm_ig_enabled = yes
+            is_marginal = no
+            is_in_government = yes
+        }
+        min = 0
+        max = 1
+
+        order_by = bpm_cabinet_character_pool_ig_weight
+        
+        save_scope_as = ranig
+    }
+
+    scope:ranig ?= {
+        remove_variable = bpm_cabinet_interest_group_luck_factor
+    }
+
+    if = {
+        limit = {
+            NOT = { has_variable_list = bpm_CAB_char_select_pool }
+            scope:ranig.leader ?= {
+                NOT = {
+                    has_variable = bpm_cabinet_minister
+                }
+            }
+        }
+        scope:ranig.leader ?= {
+            set_variable = bpm_send_to_void_if_not_anchored
+        }
+        add_to_variable_list = {
+            name = bpm_CAB_char_select_pool
+            target = scope:ranig.leader
+        }
+    }
+    else_if = {
+        limit = {
+            exists = scope:ranig
+        }
+        if = {
+            limit = {
+                NOT = { is_target_in_variable_list = { name = bpm_CAB_char_select_pool target = scope:ranig.leader } }
+                scope:ranig.leader ?= {
+                    NOT = {
+                        has_variable = bpm_cabinet_minister
+                    }
+                }
+            }
+            scope:ranig.leader ?= {
+                set_variable = bpm_send_to_void_if_not_anchored
+            }
+            add_to_variable_list = {
+                name = bpm_CAB_char_select_pool
+                target = scope:ranig.leader
+            }
+        }
+        else = {
+            create_character = {
+                interest_group = scope:ranig
+                on_created = {
+                    place_character_in_void = 10000
+                }
+                trait_generation = { }
+                save_scope_as = ranchar
+            }
+            scope:ranchar ?= {
+                bpm_generate_character_traits = yes
+            }
+            add_to_variable_list = {
+                name = bpm_CAB_char_select_pool
+                target = scope:ranchar
+            }
+        }
+    }
+}
+
+bpm_set_headofgov_sticky = {
+    set_variable = bpm_headofgov_sticky
+    owner = {
+        set_variable = {
+            name = bpm_headofgov
+            value = prev
+        }
+    }
+}
+
+bpm_remove_headofgov_sticky = {
+    remove_variable = bpm_headofgov_sticky
+    owner = {
+        bpm_choose_hog = yes
+    }
+}
+
+bpm_choose_hog_parlelec = {
+    random_interest_group = {
+        limit = {
+            bpm_is_strongest_ig_in_government = yes
+            bpm_ig_enabled = yes
+        }
+        save_scope_as = ranig
+    }
+    if = {
+        limit = {
+            scope:ranig.leader ?= ruler
+        }
+        if = {
+            # If the current HoG already is the leader of the strongest IG in government & isn't the ruler, we don't need to do anything
+            limit = {
+                NOT = {
+                    AND = {
+                        var:bpm_headofgov ?= {
+                            interest_group = scope:ranig
+                        } 
+                        NOT = { var:bpm_headofgov ?= ruler }
+                    }
+                }
+            }
+            if = {
+                limit = {
+                    scope:ranig = {
+                        has_variable = bpm_attached_hog_non_ruler
+                    }
+                    NOT = { scope:ranig.var:bpm_attached_hog_non_ruler ?= scope:ranig.leader }
+                    NOT = { scope:ranig.var:bpm_attached_hog_non_ruler ?= ruler }
+                }
+                set_variable = {
+                    name = bpm_headofgov
+                    value = scope:ranig.var:bpm_attached_hog_non_ruler
+                }
+            }
+            else = {
+                create_character = {
+                    interest_group = scope:ranig
+                    on_created = {
+                        place_character_in_void = 10000
+                    }
+                    save_scope_as = ranchar
+                }
+                set_variable = {
+                    name = bpm_headofgov
+                    value = scope:ranchar
+                }
+                scope:ranig = {
+                    set_variable = {
+                        name = bpm_attached_hog_non_ruler
+                        value = scope:ranchar
+                    }
+                }
+            }
+        }
+    }
+    else = {
+        set_variable = {
+            name = bpm_headofgov
+            value = scope:ranig.leader
+        }
+    }
+}
+bpm_choose_hog = {
+    if = {
+        limit = {
+            bpm_is_hoshog = yes
+        }
+        set_variable = {
+            name = bpm_headofgov
+            value = ruler
+        }
+    }
+    else = {
+        bpm_choose_hog_others = yes
+    }
+}
+
+bpm_choose_hog_others = {
+    if = {
+        limit = {
+            NOT = {
+                var:bpm_headofgov ?= {
+                    has_variable = bpm_headofgov_sticky
+                }
+            }
+            NOT = {
+                owner = {
+                    var:bpm_headofgov ?= {
+                        has_variable = bpm_headofgov_sticky
+                    }
+                }
+            }
+        }
+        if = {
+            limit = {
+                modifier:country_bpm_hog_top_parlelec = yes
+            }
+            bpm_choose_hog_parlelec = yes
+        }
+        else_if = {
+            limit = {
+                NAND = {
+                    has_variable = bpm_headofgov
+		            exists = var:bpm_headofgov
+                }
+            }
+            set_variable = {
+                name = bpm_headofgov
+                value = ruler
+            }
+        }
+    }
+
+    bpm_reload_institution_modifiers_hog = yes
+    bpm_reload_interim_penalty = yes
+}
+
+bpm_fill_cabinet_pool = {
+    if = {
+        limit = {
+            # only the player has a cabinet pool
+            # the AI should use bpm_newcab_char_pick
+            is_player = yes
+        }
+        bpm_pick_cabinet_minister = yes
+        while = {
+            limit  = {
+                trigger_if = {
+                    limit = {
+                        modifier:country_bpm_cabinet_variety = yes
+                    }
+                    variable_list_size = {
+                        name = bpm_CAB_char_select_pool
+                        value <= 15
+                    }
+                }
+                trigger_else = {
+                    variable_list_size = {
+                        name = bpm_CAB_char_select_pool
+                        value <= 9
+                    }
+                }
+            }
+            bpm_pick_cabinet_minister = yes
+            bpm_fix_cabinet_pool = yes
+        }
+    }
+
+}
+
+bpm_initialize_cabinet = {
+    bpm_fill_cabinet_pool = yes
+
+    set_variable = bpm_has_cabinet
+
+    if = {
+        limit = {
+            is_player = no
+        }
+        bpm_cab_fill_positions = yes
+    }
+
+
+    set_variable = {
+        name = bpm_cached_antagonism
+        value = 0
+    }
+    set_variable = {
+        name = bpm_cached_antagonism_raw
+        value = 0
+    }
+    set_variable = {
+        name = bpm_cab_synergy
+        value = 1
+    }
+    every_interest_group = {
+        set_variable = {
+            name = bpm_expert_characters 
+            value = 0
+        }
+        set_variable = {
+            name = bpm_skilled_characters
+            value = 0
+        }
+        set_variable = {
+            name = bpm_unskilled_characters 
+            value = 0
+        }
+        bpm_update_internal_skill_pool = yes
+    }
+    bpm_initialize_government_mandate = yes
+    bpm_choose_hog = yes
+
+    bpm_reload_institution_modifiers = yes
+    bpm_reload_cabinet_picks_expectation = yes
+}
+
+bpm_cab_get_random_inst = {
+    bpm_cab_add_inst_to_varlist_if_valid = { VARLIST = bpm_cab_inst_list INST = colonial_affairs }
+    bpm_cab_add_inst_to_varlist_if_valid = { VARLIST = bpm_cab_inst_list INST = social_security }
+    bpm_cab_add_inst_to_varlist_if_valid = { VARLIST = bpm_cab_inst_list INST = workplace_safety }
+    bpm_cab_add_inst_to_varlist_if_valid = { VARLIST = bpm_cab_inst_list INST = schools }
+    bpm_cab_add_inst_to_varlist_if_valid = { VARLIST = bpm_cab_inst_list INST = police }
+    bpm_cab_add_inst_to_varlist_if_valid = { VARLIST = bpm_cab_inst_list INST = health_system }
+    bpm_cab_add_inst_to_varlist_if_valid = { VARLIST = bpm_cab_inst_list INST = home_affairs }
+    bpm_cab_add_inst_to_varlist_if_valid = { VARLIST = bpm_cab_inst_list INST = centralization }
+    bpm_cab_add_inst_to_varlist_if_valid = { VARLIST = bpm_cab_inst_list INST = suffrage }
+    bpm_cab_add_inst_to_varlist_if_valid = { VARLIST = bpm_cab_inst_list INST = culture }
+    random_in_list = {
+        variable = bpm_cab_inst_list
+        save_scope_as = bpm_found_inst
+    }
+    set_variable = {
+        name = bpm_temp_out_num_to_inst
+        value = scope:bpm_found_inst
+    }
+}   
+
+bpm_cab_add_inst_to_varlist_if_valid = {
+    if = {
+        limit = {
+            has_institution = institution:institution_$INST$.type
+        }
+        add_to_variable_list = {
+            name = $VARLIST$
+            target = institution:institution_$INST$
+        }
+    }
+}
+
+# -- Cabinet Register Institutions (9) --
+bpm_get_character_in_cabinet_position = {
+    bpm_get_character_in_cabinet_position_subp = { INST = colonial_affairs }
+    bpm_get_character_in_cabinet_position_subp = { INST = social_security }
+    bpm_get_character_in_cabinet_position_subp = { INST = workplace_safety }
+    bpm_get_character_in_cabinet_position_subp = { INST = schools }
+    bpm_get_character_in_cabinet_position_subp = { INST = police }
+    bpm_get_character_in_cabinet_position_subp = { INST = health_system }
+    bpm_get_character_in_cabinet_position_subp = { INST = home_affairs }
+    bpm_get_character_in_cabinet_position_subp = { INST = centralization }
+    bpm_get_character_in_cabinet_position_subp = { INST = suffrage }
+    bpm_get_character_in_cabinet_position_subp = { INST = culture }
+    bpm_get_character_in_cabinet_position_subp = { INST = diplomacy }
+    bpm_get_character_in_cabinet_position_subp = { INST = economy }
+}
+# -- Cabinet Register Institutions (10) --
+bpm_update_temporary_cabinet_members_list = {
+    clear_variable_list = bpm_temporary_cabinet_members_list
+    bpm_update_temporary_cabinet_members_list_subp = { INST = colonial_affairs }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = social_security }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = workplace_safety }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = schools }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = police }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = health_system }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = home_affairs }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = centralization }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = suffrage }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = culture }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = diplomacy }
+    bpm_update_temporary_cabinet_members_list_subp = { INST = economy }
+}
+
+bpm_update_temporary_cabinet_members_list_subp = {
+    if = {
+        limit = {
+            has_variable = bpm_minister_of_$INST$
+        }
+        add_to_variable_list = {
+            name = bpm_temporary_cabinet_members_list
+            target = var:bpm_minister_of_$INST$
+        }
+    }
+}
+
+bpm_get_character_in_cabinet_position_subp = {
+    if = {
+        limit = {
+            scope:bpm_institution_to_check ?= institution:institution_$INST$.type
+        }
+        var:bpm_minister_of_$INST$ = {
+            save_scope_as = bpm_cab_char
+        }
+    }
+}
+
+bpm_fire_cabinet_minister = {
+    custom_tooltip = {
+        text = bpm_remove_from_cabinet_effect_tt
+        bpm_remove_character_from_cabinet = yes
+    }
+
+    if = {
+        limit = {
+            popularity > 0
+        }
+        add_radicals = {
+            value = {
+                value = popularity
+                divide = 100
+                multiply = 0.5
+            }
+            interest_group = interest_group
+        }
+    }
+    else = {
+        add_loyalists = {
+            value = {
+                value = popularity
+                divide = 100
+                multiply = -0.2
+            }
+        }
+    }
+
+    interest_group = {
+        add_modifier = {
+            name = bpm_recently_removed_from_cabinet
+            months = short_modifier_time
+            is_decaying = yes
+        }
+    }
+}
+
+
+bpm_fill_leader_pool = {
+    if = {
+        limit = {
+            has_variable_list = bpm_CAB_leader_select_pool
+        }
+        clear_variable_list = bpm_CAB_leader_select_pool
+    }
+    every_interest_group = {
+        limit = {
+            bpm_ig_enabled = yes
+            is_marginal = no
+        }
+        leader = {
+            save_scope_as = ig_leader
+        }
+        owner = {
+            add_to_variable_list = {
+                name = bpm_CAB_leader_select_pool
+                target = scope:ig_leader
+            }
+        }
+    }
+}
+
+
+bpm_add_to_cabinet_interaction_shared_effect = {
+    custom_tooltip = {
+        text = bpm_add_to_cabinet_effect_tt
+        save_scope_as = actor
+        # if = {
+        #     limit = {
+        #         owner = { NOT = {
+        #             is_target_in_variable_list = {
+        #                 name = bpm_CAB_char_select_pool
+        #                 target = scope:actor
+        #             }
+        #         } }
+        #     }
+        #     custom_tooltip = {
+        #         text = bpm_cant_pick_leader_cab_for_4_years_tt
+        #         owner = { set_variable = {
+        #             name = bpm_cant_pick_leader_cab
+        #             days = 1460
+        #         } }
+        #     }
+
+        # }
+        owner ?= {
+            remove_list_variable = {
+                name = bpm_CAB_char_select_pool
+                target = scope:actor
+            }
+        }
+        bpm_add_character_to_cabinet = yes
+    }
+    bpm_add_character_to_cabinet_shared_effect_extra = yes
+}
+
+bpm_add_character_to_cabinet_shared_effect_extra = {
+    var:bpm_cabinet_minister.type = {
+        save_scope_as = bpm_reference_institution_type
+    }
+    interest_group = {
+        bpm_update_mandate_used = { VALUE = bpm_cost_ig_position }
+    }
+    set_variable = {
+        name = bpm_mandate_usage_pos
+        value = interest_group.bpm_cost_ig_position
+    }
+    set_variable = {
+        name = bpm_mandate_usage_neg
+        value = var:bpm_mandate_usage_pos
+    }
+    change_variable = {
+        name = bpm_mandate_usage_neg
+        multiply = -1
+    }
+
+    
+    if = {
+        limit = {
+            interest_group = { bpm_ig_is_ideological = yes }
+        }
+        if = {
+            limit = {
+                interest_group = { bpm_ig_is_radical_opposition = yes }
+            }
+            owner = { bpm_remove_political_stability_small = yes }
+        }
+        else = {
+            owner = { bpm_remove_political_stability_tiny = yes }
+        }
+    }
+    else = {
+        owner = { bpm_add_political_stability_tiny = yes }
+    }
+
+    # Appointing a Minister of Foreign Affairs
+    # This will affect lobbies and current forpol laws
+    if = {
+        limit = {
+            owner = { has_institution = institution_diplomacy }
+            owner.var:bpm_cabinet_char_select.type ?= owner.institution:institution_diplomacy.type
+        }
+
+        # Lobby Results
+        if = {
+            limit = { interest_group = { is_member_of_any_lobby = yes } }
+
+            owner = {
+                every_political_lobby = {
+                    limit = {
+                        any_lobby_member = {
+                            this ?= scope:actor.interest_group
+                        }
+                    }
+    
+                    change_appeasement = {
+                        amount = 2
+                        factor = appeasement_bpm_minister_appointed
+                    }
+                }
+            }
+            
+        }
+
+        # Law Change (If permitted by laws)
+        if = {
+            limit = { owner.modifier:country_bpm_forpol_minister_appointment_switches_law = yes }
+
+            if = { # Fash
+                limit = {
+                    OR = {
+                        bpm_leader_is_fascist = yes
+                        interest_group = {
+                            law_stance = {
+                                law = law_type:law_ultramilitarism
+                                value = strongly_approve
+                            }
+                        }
+                    }
+                }
+                owner = { activate_law = law_type:law_ultramilitarism }
+            } else_if = { # Hawk (2A)
+                limit = {
+                    OR = {
+                        bpm_leader_is_hawkish = yes
+                        AND = {
+                            bpm_leader_is_doveish = no
+                            interest_group = {
+                                law_stance = {
+                                    law = law_type:law_jingoism
+                                    value >= approve
+                                }
+                            }
+                        }
+                    }
+                } 
+                owner = { activate_law = law_type:law_jingoism }
+            } else_if = { # Dove
+                limit = {
+                    OR = {
+                        bpm_leader_is_doveish = yes
+                        AND = {
+                            bpm_leader_is_hawkish = no
+                            interest_group = {
+                                law_stance = {
+                                    law = law_type:law_dove_politics
+                                    value >= approve
+                                }
+                            }
+                        }
+                    }
+                }
+                owner = { activate_law = law_type:law_dove_politics }
+            } else = { # Everyone else makes policy flexible
+                owner = { activate_law = law_type:law_flexible_foreign_policy }
+            }
+        }
+    }
+
+    if = {
+        limit = {
+            popularity > 0
+        }
+        owner ?= {
+            add_loyalists = {
+                value = {
+                    value = popularity
+                    divide = 100
+                    multiply = 0.5
+                }
+                interest_group = prev.interest_group
+            }
+        }
+    }
+    else = {
+        owner ?= {
+            add_radicals = {
+                value = {
+                    value = popularity
+                    divide = 100
+                    multiply = -0.3
+                }
+            }
+        }
+    }
+    interest_group = {
+        add_modifier = {
+            name = bpm_recently_assigned_to_cabinet
+            months = short_modifier_time
+            is_decaying = yes
+        }
+    }
+}
+
+bpm_appoint_as_hog = {
+    owner = {
+        set_variable = {
+            name = bpm_headofgov
+            value = prev
+        }
+    }
+    set_variable = {
+        name = bpm_headofgov_sticky
+    }
+    if = {
+        limit = {
+            NOT = { interest_group.leader ?= THIS }
+        }
+        place_character_in_void = 10000
+    }
+    set_variable = bpm_appointed_headofgov
+    owner = { bpm_reload_interim_penalty = yes }
+}
+
+bpm_unappoint_as_hog = {
+    remove_variable = bpm_headofgov_sticky
+    remove_variable = bpm_appointed_headofgov
+    owner = { set_variable = { name = bpm_headofgov value = ruler } }
+    owner = { bpm_choose_hog = yes }
+}
+
+bpm_reload_interim_penalty = {
+    if = {
+        limit = {
+            bpm_ruler_is_acting_as_interim_head_of_government = yes
+            NOT = {
+                has_modifier = bpm_interim_government_synergy_penalty
+            }
+        }
+        add_modifier = { name = bpm_interim_government_synergy_penalty }
+    }
+    else_if = {
+        limit = {
+            NOT = { bpm_ruler_is_acting_as_interim_head_of_government = yes }
+            has_modifier = bpm_interim_government_synergy_penalty
+        }
+        remove_modifier = bpm_interim_government_synergy_penalty
+    }
+}

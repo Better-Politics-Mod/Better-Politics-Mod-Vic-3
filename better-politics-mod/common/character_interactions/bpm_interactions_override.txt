@@ -301,3 +301,215 @@ exile_character = {
 		multiply = 0.3
 	}
 }
+
+invite_exile = {
+	# icon = ""
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/character_invite"
+
+	potential = {
+		is_in_exile_pool = yes
+	}
+
+	show_requirements = yes
+
+	possible = {
+		scope:actor ?= {
+			empty_agitator_slots >= 1
+			NOT = { is_country_type = decentralized }
+		}
+		# Only popular individuals need apply
+		popularity > 15
+		# Devout exiles must have country religion
+		trigger_if = {
+			limit = {
+				is_interest_group_type = ig_devout
+			}
+		    custom_tooltip = {
+		        text = invite_exile_devout_tt
+		        religion = scope:actor.religion
+		    }
+		}
+		# If you have state religion, exiles must have your religion
+		trigger_if = {
+			limit = {
+				NOT = { is_interest_group_type = ig_devout }
+				scope:actor ?= {
+					has_law = law_type:law_state_religion
+				}
+			}
+			custom_tooltip = {
+				text = invite_exile_state_religion_tt
+				religion = scope:actor.religion
+			}
+		}
+		# cannot invite culturally discriminated exiles
+		NOT = {
+			culture = {
+				culture_is_discriminated_in = scope:actor
+			}
+		}
+		# Cannot invite exiles if you have Closed Borders
+		scope:actor ?= {
+			NOT = { has_law = law_type:law_closed_borders }
+		}
+		trigger_if = {
+			limit = { is_interest_group_type = ig_socialists }
+			scope:actor ?= { exists = ig:ig_socialists }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_anarchists }
+			scope:actor ?= { exists = ig:ig_anarchists }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_reformist_socialists }
+			scope:actor ?= { exists = ig:ig_reformist_socialists }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_revolutionist_socialists }
+			scope:actor ?= { exists = ig:ig_revolutionist_socialists }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_market_liberals }
+			scope:actor ?= { exists = ig:ig_market_liberals }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_national_liberals }
+			scope:actor ?= { exists = ig:ig_national_liberals }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_fascists }
+			scope:actor ?= { exists = ig:ig_fascists }
+		}
+	}
+
+	effect = {
+		transfer_character = scope:actor
+		set_variable = exile_to_ruler_var
+		set_variable = {
+			name = memento_mori_immunity
+			months = 60
+		}
+		custom_tooltip = invite_exile_start_join_movement_effect
+		hidden_effect = {
+			remove_modifier = in_exile_modifier
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					has_variable = mazzini_var
+					has_dlc_feature = voice_of_the_people_content
+				}
+				scope:actor ?= {
+					trigger_event = { id = historical_agitators.7 days = 3 }
+				}
+			}
+			if = {
+				limit = {
+					has_variable = garibaldi_var
+					has_dlc_feature = voice_of_the_people_content
+				}
+				set_variable = {
+					name = garibaldi_cooldown_var
+					months = short_modifier_time
+				}
+			}
+			if = {
+				limit = {
+					exists = root.home_country
+					NOT = { root.home_country = scope:actor }
+				}
+				if = {
+					limit = {
+						root.home_country = {
+							any_interest_group = {
+								is_in_government = yes
+								OR = {
+									this.type = root.interest_group_type
+									this.leader.ideology = root.ideology
+								}
+							}
+						}
+					}
+					root.home_country = {
+						create_diplomatic_catalyst = {
+							type = catalyst_invited_exile_positive
+							target = scope:actor
+						}		
+					}
+				}
+				else = {
+					root.home_country = {
+						create_diplomatic_catalyst = {
+							type = catalyst_invited_exile_negative
+							target = scope:actor
+						}		
+					}
+				}
+			}
+		}
+	}
+
+	cooldown = { months = normal_modifier_time }
+
+	ai_chance = {
+		value = -85
+		if = {
+			limit = {
+				popularity >= 75
+			}
+			add = 25
+		}	
+		if = {
+			limit = {
+				popularity >= 50
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				culture = {
+					is_primary_culture_of = root
+				}			
+			}
+			add = 50
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					any_interest_group = {
+						is_in_government = yes
+						save_temporary_scope_as = ex_ig
+					}
+				}		
+				ig_type_matches_former = yes	
+			}
+			add = 50
+		}
+		if = {
+			limit = {
+				scope:actor ?= { has_law = law_type:law_closed_borders }
+			}
+			add = -200
+		}
+		if = {
+			limit = {
+				scope:actor ?= { has_law = law_type:law_no_migration_controls }
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				scope:actor ?= { has_law = law_type:law_multicultural }
+			}
+			add = 15
+		}
+		if = { 
+			limit = {
+				scope:actor ?= {
+					country_rank < rank_value:major_power
+				}
+			}
+			multiply = 0
+		}
+	}
+}

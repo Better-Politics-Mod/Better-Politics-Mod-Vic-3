@@ -1,0 +1,107 @@
+on_monthly_pulse_country = {
+    on_actions = {
+        bpm_monthly_country_switcharoo
+        bpm_appointed_headofgov_check
+        bpm_crisis_checking
+    }
+}
+
+on_law_activated = {
+    on_actions = {
+        bpm_ep_law_change
+    }
+}
+
+bpm_monthly_country_switcharoo = {
+    effect = {
+        #bpm_choose_hog = yes
+        bpm_republic_switcharoo = yes
+        bpm_update_exe_ideology = yes
+    }
+}
+
+bpm_ep_law_change = {
+    effect = {
+        if = {
+            limit = {
+                owner = {
+                    has_variable = bpm_appointed_headofgov
+                }
+            }
+            var:bpm_headofgov ?= {
+                remove_variable = bpm_headofgov_sticky
+            }
+        }
+        owner = { 
+            bpm_choose_hog = yes
+        }
+    }
+}
+
+bpm_appointed_headofgov_check = {
+    effect = {
+        if = {
+            limit = {
+                exists = c:JAP
+                THIS = c:JAP
+                NAND = {
+                    has_law = law_type:law_advisory_body
+                    has_law = law_type:law_answers_to_legislature
+                }
+            }
+            set_variable = meiji_var
+        }
+        if = {
+            limit = {
+                modifier:country_bpm_hog_top_advice = yes
+            }
+            var:bpm_headofgov ?= {
+                if = {
+                    limit = {
+                        interest_group ?= {
+                            is_powerful = no
+                            NOT = { has_variable = bpm_hog_grace_period }
+                        }
+                    }
+                    post_notification = bpm_pm_nocofidence
+                    bpm_unappoint_as_hog = yes
+                }
+            }
+        }
+
+        bpm_reload_interim_penalty = yes
+    }
+}
+
+bpm_crisis_checking = {
+    effect = {
+        if = {
+            limit = {
+                NOR = {
+                    has_variable = bpm_active_sticky_crisis
+                    has_variable = bpm_crisis_cooldown
+                }
+                bpm_is_crisis = yes
+            }
+            trigger_event = { id = bpm_state_crisis.1 }
+        }
+        if = {
+            limit = {
+                has_variable = bpm_crisis_cooldown
+                NOT = {
+                    has_variable = bpm_active_sticky_crisis
+                }
+            }
+            change_variable = {
+                name = bpm_crisis_cooldown
+                add = -1
+            }
+            if = {
+                limit = {
+                    var:bpm_crisis_cooldown = 0
+                }
+                remove_variable = bpm_crisis_cooldown
+            }
+        }
+    }
+}

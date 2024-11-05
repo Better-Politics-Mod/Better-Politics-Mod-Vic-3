@@ -1,0 +1,381 @@
+﻿je_coup = {
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	group = je_group_crises
+	#Change approval requirements for a few things
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				has_variable = coup_ig_var
+			}
+			save_scope_as = coup_ig
+			remove_variable = coup_ig_var
+			leader = { save_scope_as = coup_leader }
+		}
+		if = {
+			limit = {
+				var:coup_for_law = 1
+			}
+			random_law = {
+				limit = {
+					type = law_type:law_monarchy
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+		else_if = {
+			limit = {
+				var:coup_for_law = 2
+			}
+			random_law = {
+				limit = {
+					type = law_type:law_presidential_republic
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+		else_if = {
+			limit = {
+				var:coup_for_law = 3
+			}
+			random_law = {
+				limit = {
+					type = law_type:law_council_republic
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+		else_if = {
+			limit = {
+				var:coup_for_law = 4
+			}
+			random_law = {
+				limit = {
+					type = law_type:law_parliamentary_republic
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+		else_if = {
+			limit = {
+				var:coup_for_law = 5
+			}
+			random_law = {
+				limit = {
+					type = law_type:law_theocracy
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+		else_if = {
+			limit = {
+				var:coup_for_law = 6
+			}
+			random_law = {
+				limit = {
+					type = law_type:law_autocracy
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+		else_if = {
+			limit = {
+				var:coup_for_law = 7
+			}
+			random_law = {
+				limit = {
+					type = law_type:law_oligarchy
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+		else_if = {
+			limit = {
+				var:coup_for_law = 8
+			}
+			random_law = {
+				limit = {
+					type = law_type:law_military_junta
+				}
+				save_scope_as = coup_desired_law
+			}
+		}
+
+		remove_variable = coup_for_law
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					scope:coup_ig = {
+						OR = {
+							is_powerful = no
+							ig_approval >= -10
+						}
+					}
+				}
+				change_variable = {
+					name = coup_var
+					add = -1
+				}
+			}
+			if = {
+				limit = {
+					scope:coup_ig = {
+						is_powerful = yes
+						ig_approval < -10
+					}
+				}
+				change_variable = {
+					name = coup_var
+					add = 1
+				}
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		random_events = {
+			150 = 0
+			10 = coup_pulse_events.1
+			10 = coup_pulse_events.2
+			10 = coup_pulse_events.3 
+			10 = coup_pulse_events.4
+			10 = coup_pulse_events.5
+			10 = coup_pulse_events.6
+			10 = coup_pulse_events.7
+			10 = coup_pulse_events.8
+			10 = coup_pulse_events.9
+			10 = coup_pulse_events.10
+			25 = coup_pulse_events.11
+			25 = coup_pulse_events.12
+			25 = coup_pulse_events.13
+			25 = coup_pulse_events.14
+			25 = coup_pulse_events.15
+			25 = coup_pulse_events.16
+			25 = coup_pulse_events.17
+			25 = coup_pulse_events.18
+		}
+	}
+
+	complete = {
+		scope:coup_ig = {
+			trigger_if = {
+				limit = { is_interest_group_type = ig_armed_forces }
+				is_marginal = no
+			}
+			trigger_else = {
+				is_powerful = yes
+			}
+			ig_approval < -10
+		}
+		scope:journal_entry = {
+			is_goal_complete = yes
+		}
+	}
+
+	on_complete = {
+		if = {
+			limit = {
+				scope:coup_ig = {
+					is_interest_group_type = ig_armed_forces
+				}
+			}
+			set_variable = achievement_military_junta_var
+		}
+		remove_variable = coup_var
+		
+		custom_tooltip = coup_success_tt
+		
+		if = {
+			limit = {
+				exists = currently_enacting_law
+			}
+			currently_enacting_law = {
+				type = {
+					save_scope_as = law_being_enacted
+				}
+				currently_active_law_in_group = {
+					type = {
+						save_scope_as = law_being_replaced
+					}
+				}
+			}
+			if = {
+				limit = {
+					scope:coup_ig = {
+						prefers_law = { # If we prefer the current law to the enacting law
+							law = scope:law_being_replaced
+							comparison_law = scope:law_being_enacted
+						}
+					}
+				}
+				cancel_enactment = yes
+			}	
+		}
+		
+		trigger_event = { id = coup.2 popup = yes }
+		hidden_effect = {
+			random_list = {
+				25 = {
+					trigger_event = { id = coup_aftermath_events.1 days = 30 }
+				}
+				25 = {
+					trigger_event = { id = coup_aftermath_events.2 days = 30 }
+				}
+				25 = {
+					trigger_event = { id = coup_aftermath_events.3 days = 30 }
+				}
+				25 = {
+					trigger_event = { id = coup_aftermath_events.4 days = 30 }
+				}
+			}
+		}
+	}
+
+	fail = {
+		OR = {
+			# fail if the coup has run out of steam
+			custom_tooltip = {
+				text = coup_no_progress
+				root.var:coup_var <= -10
+			}
+			# fail if the IG is kicked out of government, for AI only
+			trigger_if = {
+				limit = {
+					is_player = no
+					scope:coup_ig = { bpm_ig_is_state_institutional = no }
+				}
+				scope:coup_ig = {
+					is_in_government = no
+				}
+			}
+			# fail if the coup leader is no longer IG leader
+			custom_tooltip = {
+				text = bpm_coup_leader_changed
+				OR = {
+					NOT = { exists = scope:coup_leader }
+					NOT = { scope:coup_leader = scope:coup_ig.leader }
+				}
+			}
+			# fail if IG changes law stances
+			scope:coup_ig = {
+				law_stance = {
+					law = scope:coup_desired_law.type
+					value < approve
+				}
+			}
+		}
+	}
+
+	on_fail = {
+		custom_tooltip = coup_remove_ig
+		# IG is angry that they were removed from government
+		if = {
+			limit = {
+				scope:coup_ig = {
+					is_in_government = no
+					NOT = {
+						has_variable = resigned_from_gov_coup
+					}
+				}
+			}
+			trigger_event = { id = coup.3 popup = yes }
+		}
+		# IG is angry that the coup leader was removed
+		else_if = {
+			limit = {
+				OR = {
+					NOT = { exists = scope:coup_leader }
+				}
+			}
+			trigger_event = { id = coup.3 popup = yes }
+		}
+		else_if = {
+			limit = {
+				scope:coup_ig = {
+					is_in_government = no
+					has_variable = resigned_from_gov_coup
+				}
+			}
+			trigger_event = { id = coup.5 popup = yes }
+			remove_variable = resigned_from_gov_coup
+		}
+		# coup runs out of steam or IG changes law stances
+		else_if = {
+			limit = {
+				OR = {
+					root.var:coup_var <= 0
+					scope:coup_ig = {
+						law_stance = {
+							law = scope:coup_desired_law.type
+							value < approve
+						}
+					}
+				}
+			}
+			trigger_event = { id = coup.4 popup = yes }
+		}
+		remove_variable = coup_var
+	}
+
+	invalid = {
+		OR = {
+			NOT = {
+				exists = scope:coup_desired_law
+			}
+			NOT = {
+				exists = scope:coup_ig
+			}
+			has_law = scope:coup_desired_law.type
+		}
+	}
+
+	on_invalid = {
+		remove_variable = coup_var
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = coup_advancing
+				trigger = {
+					scope:coup_ig = {
+						is_powerful = yes
+						ig_approval < -10
+					}
+				}
+			}
+			triggered_desc = {
+				desc = coup_declining
+				trigger = {
+					scope:coup_ig = {
+						OR = {
+							is_powerful = no
+							ig_approval >= -10
+						}
+					}
+				}
+			}
+		}
+	}
+
+	current_value = {
+		value = root.var:coup_var
+	}
+
+	goal_add_value = {
+		add = 100
+	}
+
+	progressbar = yes
+
+	should_be_pinned_by_default = yes
+
+	transferable = no
+	can_revolution_inherit = no
+
+	weight = 100
+}

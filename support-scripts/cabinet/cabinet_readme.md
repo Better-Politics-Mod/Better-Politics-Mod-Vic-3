@@ -1,3 +1,7 @@
+# How to register a new institution
+
+Look up every place that has the `# --Cabinet Register Institution (number)` comment (ignore those where it's not a number)
+
 # How to setup an already registered institution
 
 - Go to scripted_triggers/bpm_CAB_triggers and modify bpm_is_antagonistic and bpm_is_antagonistic_hypothetical by following the Cabinet modifiers table available in the google docs (https://docs.google.com/document/d/1HWZgEZsPGhpzg-vzSsyvWd0yzwPtwjh2EX8vWRFerDs/edit?usp=sharing).

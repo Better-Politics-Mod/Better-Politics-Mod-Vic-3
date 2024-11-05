@@ -13,10 +13,21 @@ law_monarchy = {
 		law_anarchy
 	}
 
+	can_impose = {
+		OR = {
+			AND = {
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_governance_principles_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			can_impose_law_default = yes
+		}
+	}
+
 	modifier = {
-		country_legitimacy_headofstate_add = 10
 		country_aristocrats_pol_str_mult = 0.25
-		country_authority_add = 200
 		country_rigidity_baseline_add = 10
 	}
 
@@ -101,6 +112,33 @@ law_monarchy = {
 			add = 750
 		}
 	}
+
+	ai_impose_chance = {
+		value = 0
+		
+		if = {
+			limit = {
+				has_law = law_type:law_monarchy
+				has_strategy = ai_strategy_reactionary_agenda
+				power_bloc ?= { has_identity = identity:identity_ideological_union }
+				scope:target_country = { # Is their law different enough from what we want to impose?
+					NOT = { has_law = law_type:law_theocracy }
+				}				
+			}
+			
+			add = base_impose_law_weight	
+			if = {
+				limit = { 
+					scope:target_country = { has_law = law_type:council_republic } 
+					NOT = { has_strategy = ai_strategy_egalitarian_agenda }
+				}
+				multiply = 5
+			}	
+			else = {
+				multiply = 0.5 # AI is less likely to mess with governance principles unless dealing with council republics
+			}
+		}
+	}
 }
 
 law_presidential_republic = {
@@ -114,6 +152,25 @@ law_presidential_republic = {
 		democracy
 	}
 
+	can_impose = {
+		OR = {
+			AND = {
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_governance_principles_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			can_impose_law_default = yes
+		}
+	}
+
+	is_visible = {
+		NOT = {
+			has_law = law_type:law_parliamentary_republic
+		}
+	}
+
 	on_activate = {
 		if = {
 			limit = {
@@ -124,14 +181,18 @@ law_presidential_republic = {
 				add = 1
 			}
 		}
+		if = {
+			limit = {
+				has_law = law_type:law_answers_to_legislature
+			}
+			activate_law = law_type:law_parliamentary_republic
+		}
 		scripted_effect_parties_emergence = yes
 		bpm_deactivate_syndicalism = yes
 	}
 	
 	modifier = {
 		country_bureaucrats_voting_power_add = 5
-		country_legitimacy_headofstate_add = 10
-		country_legitimacy_govt_total_votes_add = 10
 		country_authority_add = 100
 		country_legitimacy_ideological_incoherence_mult = 0.2
 	}
@@ -177,6 +238,40 @@ law_presidential_republic = {
 			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
 			add = 750
 		}
+
+		if = {
+			limit = {
+				has_journal_entry = je_pedro_republic
+			}
+			add = 100
+		}
+	}
+
+	ai_impose_chance = {
+		value = 0
+		
+		if = {
+			limit = {
+				has_law = law_type:law_presidential_republic
+				has_strategy = ai_strategy_progressive_agenda
+				power_bloc ?= { has_identity = identity:identity_ideological_union }
+				scope:target_country = { # Is their law different enough from what we want to impose?
+					NOT = { has_law = law_type:law_parliamentary_republic }
+				}				
+			}
+			
+			add = base_impose_law_weight
+			if = {
+				limit = { 
+					scope:target_country = { has_law = law_type:council_republic } 
+					NOT = { has_strategy = ai_strategy_egalitarian_agenda }
+				}
+				multiply = 5
+			}	
+			else = {
+				multiply = 0.5 # AI is less likely to mess with governance principles unless dealing with council republics
+			}
+		}
 	}
 }
 
@@ -191,6 +286,23 @@ law_parliamentary_republic = {
 		democracy
 	}
 	
+	can_impose = {
+		OR = {
+			AND = {
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_governance_principles_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			can_impose_law_default = yes
+		}
+	}
+
+	can_enact = {
+		always = no
+	}
+
 	on_activate = {
 		if = {
 			limit = {
@@ -203,6 +315,10 @@ law_parliamentary_republic = {
 		}
 		scripted_effect_parties_emergence = yes
 		bpm_deactivate_syndicalism = yes
+	}
+
+	is_visible = {
+		has_law = law_type:law_parliamentary_republic
 	}
 
 	modifier = {
@@ -233,6 +349,33 @@ law_parliamentary_republic = {
 			add = 750
 		}
 	}
+
+	ai_impose_chance = {
+		value = 0
+		
+		if = {
+			limit = {
+				has_law = law_type:law_parliamentary_republic
+				has_strategy = ai_strategy_progressive_agenda
+				power_bloc ?= { has_identity = identity:identity_ideological_union }
+				scope:target_country = { # Is their law different enough from what we want to impose?
+					NOT = { has_law = law_type:law_presidential_republic }
+				}				
+			}
+			
+			add = base_impose_law_weight
+			if = {
+				limit = { 
+					scope:target_country = { has_law = law_type:council_republic } 
+					NOT = { has_strategy = ai_strategy_egalitarian_agenda }
+				}
+				multiply = 5
+			}		
+			else = {
+				multiply = 0.5 # AI is less likely to mess with governance principles unless dealing with council republics
+			}
+		}
+	}
 }
 
 law_theocracy = {
@@ -244,6 +387,19 @@ law_theocracy = {
 
 	disallowing_laws = {
 		law_total_separation 
+	}
+
+	can_impose = {
+		OR = {
+			AND = {
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_governance_principles_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			can_impose_law_default = yes
+		}
 	}
 
 	on_activate = {
@@ -286,6 +442,34 @@ law_theocracy = {
 	ai_will_do = {
 		always = no
 	}
+
+	ai_impose_chance = {
+		value = 0
+		
+		if = {
+			limit = {
+				has_law = law_type:law_theocracy
+				has_strategy = ai_strategy_reactionary_agenda
+				power_bloc ?= { has_identity = identity:identity_religious }
+				religion = scope:target_country.religion
+				scope:target_country = { # Is their law different enough from what we want to impose?					
+					NOT = { has_law = law_type:law_monarchy }
+				}				
+			}
+			
+			add = base_impose_law_weight
+			if = {
+				limit = { 
+					scope:target_country = { has_law = law_type:council_republic } 
+					NOT = { has_strategy = ai_strategy_egalitarian_agenda }
+				}
+				multiply = 5
+			}		
+			else = {
+				multiply = 0.5 # AI is less likely to mess with governance principles unless dealing with council republics
+			}
+		}
+	}
 }
 
 law_council_republic = {
@@ -318,12 +502,25 @@ law_council_republic = {
 			}
 			deactivate_law = law_type:law_party_anti_socialist
 		}
-		ig:ig_agrarian_populists = {
+		ig:ig_agrarian_populists ?= {
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_gov_radical_proletarian
 			bpm_remove_all_eco_ideologies = yes
 			add_ideology = ideology_eco_agrarian_socialist
 			bpm_reorder_ideologies = yes
+		}
+	}
+
+	can_impose = {
+		OR = {
+			AND = {
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_governance_principles_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			can_impose_law_default = yes
 		}
 	}
 
@@ -404,6 +601,20 @@ law_council_republic = {
 				}
 			}
 			add = 1000
+		}
+	}
+
+	ai_impose_chance = {
+		value = 0
+		
+		if = {
+			limit = {
+				has_law = law_type:law_council_republic
+				has_strategy = ai_strategy_egalitarian_agenda				
+			}
+			
+			add = base_impose_law_weight
+			multiply = 5.0
 		}
 	}
 }

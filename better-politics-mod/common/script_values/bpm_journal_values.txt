@@ -20,7 +20,7 @@ bpm_je_propaganda_of_the_deed_decay_threshold_value = {
 		if = {
 			limit = { has_variable = bpm_je_propaganda_of_the_deed_bombs_done }
 			add = var:bpm_je_propaganda_of_the_deed_bombs_done
-			multiply = 2
+			multiply = 4
 		}
 	}
 }
@@ -31,7 +31,7 @@ bpm_je_propaganda_of_the_deed_complete_threshold_value = {
 		if = {
 			limit = { has_variable = bpm_je_propaganda_of_the_deed_bombs_done }
 			add = var:bpm_je_propaganda_of_the_deed_bombs_done
-			multiply = -2
+			multiply = -4
 		}
 	}
 }
@@ -301,7 +301,7 @@ bpm_je_propaganda_of_the_deed_бомбометр_rate = {
 		desc = "BPM_VALUE_POWERFUL_ANARCHISTS"
 		if = {
 			limit = {
-				ig:ig_anarchists = {
+				ig:ig_anarchists ?= {
 					is_powerful = yes
 				}
 			}
@@ -314,7 +314,7 @@ bpm_je_propaganda_of_the_deed_бомбометр_rate = {
 		desc = "BPM_VALUE_BOLSTERED_ANARCHISTS"
 		if = {
 			limit = {
-				ig:ig_anarchists = {
+				ig:ig_anarchists ?= {
 					is_being_bolstered = yes
 				}
 			}
@@ -1460,7 +1460,7 @@ bpm_je_split_natlibs_progress_rate = {
 	value = 0
 	add = bpm_je_split_natlibs_progress_from_base
 	add = bpm_je_split_natlibs_progress_from_conflicts
-	add = bpm_je_split_natlibs_progress_from_libcons_empowered
+	add = bpm_je_split_natlibs_progress_from_liberals_empowered
 	add = bpm_je_split_natlibs_progress_from_libcons_suppressed
 	add = bpm_je_split_natlibs_progress_from_libcons_marginal
 	if = {
@@ -1500,36 +1500,47 @@ bpm_je_split_natlibs_progress_from_conflicts = {
 		add = 0.2
 	}
 }
-bpm_je_split_natlibs_progress_from_libcons_empowered = {
+bpm_je_split_natlibs_progress_from_liberals_empowered = {
 	value = 0
 	if = {
-		limit = { ig:ig_conservatives = { OR = { is_being_bolstered = yes is_in_government = yes} } }
-		add = 0.1
-	}
-	if = {
-		limit = { ig:ig_conservatives = { OR = { is_being_bolstered = yes is_in_government = yes} } }
-		add = 0.1
+		limit = {
+			OR = {
+				AND = {
+					exists = ig:ig_liberals
+					ig:ig_liberals ?= { OR = { is_being_bolstered = yes is_in_government = yes} }
+				}
+				AND = {
+					exists = ig:ig_market_liberals
+					ig:ig_market_liberals ?= { OR = { is_being_bolstered = yes is_in_government = yes} }
+				}
+				AND = {
+					exists = ig:ig_radicals
+					ig:ig_radicals ?= { OR = { is_being_bolstered = yes is_in_government = yes} }
+				}
+			}
+		}
+		add = 0.2
 	}
 }
 bpm_je_split_natlibs_progress_from_libcons_suppressed = {
 	value = 0
 	if = {
-		limit = { ig:ig_liberals = { is_being_suppressed = yes } }
+		limit = { ig:ig_liberals ?= { is_being_suppressed = yes } }
 		add = -0.2
 	} 
 	if = {
-		limit = { ig:ig_conservatives = { is_being_suppressed = yes } }
+		limit = { ig:ig_conservatives ?= { is_being_suppressed = yes } }
 		add = -0.2
 	} 
 }
 bpm_je_split_natlibs_progress_from_libcons_marginal = {
 	value = 0
 	if = {
-		limit = { ig:ig_liberals = { is_marginal = yes } }
+		limit = { ig:ig_liberals ?= { is_marginal = yes } }
 		add = -0.1
 	} 
 	if = {
-		limit = { ig:ig_conservatives = { is_marginal = yes } }
+		limit = { ig:ig_conservatives ?= { is_marginal = yes } }
 		add = -0.1
 	} 
 }
@@ -1730,7 +1741,7 @@ bpm_je_split_patcons_progress_from_radicals = {
 bpm_je_split_patcons_progress_from_conservative_status = {
 	value = 0
 	if = {
-		limit = { ig:ig_conservatives = { is_being_suppressed = yes } }
+		limit = { ig:ig_conservatives ?= { is_being_suppressed = yes } }
 		add = 0.2
 	}
 }
@@ -1748,7 +1759,7 @@ bpm_je_split_patcons_progress_from_left_wing_government = {
 	value = 0
 	if = {
 		limit = { 
-			ig:ig_conservatives = { is_in_government = no }
+			ig:ig_conservatives ?= { is_in_government = no }
 			any_interest_group = {
 				bpm_ig_is_radical_left = yes
 				is_in_government = yes
@@ -1783,6 +1794,8 @@ bpm_je_split_patcons_progress_from_corporatism = {
 bpm_je_split_fascists_progress_rate = {
 	value = 0
 	add = bpm_je_split_fascists_progress_from_base
+	add = bpm_je_split_fascists_progress_from_socialist_revolutions
+	add = bpm_je_split_fascists_progress_from_socialist_countries
 	add = bpm_je_split_fascists_progress_from_conflicts
 	add = bpm_je_split_fascists_progress_from_rightists_empowered
 	add = bpm_je_split_fascists_progress_from_rightists_suppressed
@@ -1799,6 +1812,28 @@ bpm_je_split_fascists_progress_rate = {
 }
 bpm_je_split_fascists_progress_from_base = {
 	value = 0
+}
+bpm_je_split_fascists_progress_from_socialist_revolutions = {
+	value = 0
+	if = {
+		limit = { socialist_revolution_ongoing = yes }
+		every_civil_war ={
+			limit = { is_civil_war_type = revolution }
+			add = civil_war_progress
+		}
+	}
+}
+bpm_je_split_fascists_progress_from_socialist_countries = {
+	value = 0
+	if = {
+		limit = {
+			any_country = {
+				country_rank >= rank_value:major_power
+				has_law = law_type:law_council_republic
+			}
+		}
+		add = 1.0
+	}
 }
 bpm_je_split_fascists_progress_from_conflicts = {
 	value = 0
@@ -1821,11 +1856,11 @@ bpm_je_split_fascists_progress_from_conflicts = {
 bpm_je_split_fascists_progress_from_rightists_empowered = {
 	value = 0
 	if = {
-		limit = { ig:ig_reactionaries = { OR = { is_being_bolstered = yes is_in_government = yes } } }
+		limit = { ig:ig_reactionaries ?= { OR = { is_being_bolstered = yes is_in_government = yes } } }
 		add = 0.2
 	}
 	if = {
-		limit = { ig:ig_conservatives = { OR = { is_being_bolstered = yes is_in_government = yes } } }
+		limit = { ig:ig_conservatives ?= { OR = { is_being_bolstered = yes is_in_government = yes } } }
 		add = 0.2
 	}
 	if = {
@@ -1840,11 +1875,11 @@ bpm_je_split_fascists_progress_from_rightists_empowered = {
 bpm_je_split_fascists_progress_from_rightists_suppressed = {
 	value = 0
 	if = {
-		limit = { ig:ig_reactionaries = { is_being_suppressed = yes } }
+		limit = { ig:ig_reactionaries ?= { is_being_suppressed = yes } }
 		add = -0.2
 	}
 	if = {
-		limit = { ig:ig_conservatives = { is_being_suppressed = yes } }
+		limit = { ig:ig_conservatives ?= { is_being_suppressed = yes } }
 		add = -0.2
 	}
 	if = {
@@ -1859,11 +1894,11 @@ bpm_je_split_fascists_progress_from_rightists_suppressed = {
 bpm_je_split_fascists_progress_from_rightists_marginal = {
 	value = 0
 	if = {
-		limit = { ig:ig_reactionaries = { is_marginal = yes } }
+		limit = { ig:ig_reactionaries ?= { is_marginal = yes } }
 		add = -0.1
 	}
 	if = {
-		limit = { ig:ig_conservatives = { is_marginal = yes } }
+		limit = { ig:ig_conservatives ?= { is_marginal = yes } }
 		add = -0.1
 	}
 	if = {
@@ -1949,5 +1984,272 @@ bpm_russia_rapid_bureaucratic_modernization_severity = {
 	add = {
 		limit = { has_modifier = bpm_russia_zemstvos_abolished }
 		mult = 2
+	}
+}
+
+bpm_je_modernizers_ideology_rate = {
+	value = 0
+	add = {
+		desc = "BPM_VALUE_FROM_MODERNIZER_DIALECTIC_STRENGTH"
+		add = bpm_je_modernizers_ideology_rate_modernizers
+	}
+	subtract = {
+		desc = "BPM_VALUE_FROM_ANTI_MODERNIZER_DIALECTIC_STRENGTH"
+		add = bpm_je_modernizers_ideology_rate_conservatives
+	}
+}
+
+bpm_je_modernizers_ideology_rate_modernizers = {
+	value = 0		
+	subtract = {
+		desc = "BPM_VALUE_FROM_MONARCH_POPULARITY_NEGATIVE"
+		if = {
+			limit = { 
+				has_law = law_type:law_monarchy 
+				ruler.popularity < 0
+			}
+			add = {
+				value = ruler.popularity
+				multiply = 0.01
+			}
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_LIBERAL_LEADER_AND_AGITATORS"
+		every_scope_character = {
+			limit = {
+				is_interest_group_type = ig_liberals
+				OR = {
+					has_role = politician
+					has_role = agitator
+				}
+			}
+			add = popularity
+		}
+		multiply = 0.01
+	}
+	add = {
+		desc = "BPM_VALUE_FROM_RADICAL_LEADER_AND_AGITATORS"
+		every_scope_character = {
+			limit = {
+				is_interest_group_type = ig_radicals
+				OR = {
+					has_role = politician
+					has_role = agitator
+				}
+			}
+			add = popularity
+		}
+		multiply = 0.01
+	}
+	add = {
+		desc = "BPM_VALUE_FROM_SOCIALIST_LEADER_AND_AGITATORS"
+		every_scope_character = {
+			limit = {
+				is_interest_group_type = ig_socialists
+				OR = {
+					has_role = politician
+					has_role = agitator
+				}
+			}
+			add = popularity
+		}
+		multiply = 0.01
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_PRO_MODERNIZER_LOBBY_APPEASEMENT"
+		every_political_lobby = {
+			limit = {
+				is_political_lobby_type = lobby_pro_country
+				any_lobby_member = {
+					OR = {
+						is_interest_group_type = ig_liberals
+						is_interest_group_type = ig_radicals
+						is_interest_group_type = ig_socialists
+					}
+				}
+			}
+			add = appeasement
+		}
+		multiply = 0.25
+		add = 0.0001
+	}
+	subtract = 0.0001
+
+	add = {
+		desc = "BPM_VALUE_FROM_PRO_MODERNIZER_LAW_PASSING"
+		add = var:bpm_je_modernizers_liberal_laws_passed
+		multiply = 0.25
+		add = 0.0001
+	}
+	subtract = 0.0001
+
+	add = {
+		desc = "BPM_VALUE_FROM_PROMOTE_SECULAR_VALUES_LAW"
+		add = 0.0001
+		if = {
+			limit = { has_modifier = bpm_repeatable_law_promote_secular_values_result }
+			add = 1
+		}
+		multiply = 0.5
+	}
+	add = {
+		desc = "BPM_VALUE_FROM_INVITE_FOREIGN_EXPERTS_LAW"
+		add = 0.0001
+		if = {
+			limit = { has_modifier = bpm_repeatable_law_invite_foreign_experts_result }
+			add = 1
+		}
+		multiply = 0.5
+	}
+	add = {
+		desc = "BPM_VALUE_FROM_PROMOTE_DEMOCRATIC_VALUES_LAW"
+		add = 0.0001
+		if = {
+			limit = { has_modifier = bpm_repeatable_law_promote_democratic_values_result }
+			add = 1
+		}
+		multiply = 0.5
+	}
+	subtract = 0.00015
+}
+
+bpm_je_modernizers_ideology_rate_conservatives = {
+	value = 0
+	add = {
+		desc = "BPM_VALUE_FROM_MONARCH_POPULARITY"
+		if = {
+			limit = { 
+				has_law = law_type:law_monarchy 
+				ruler.popularity < 0
+			}
+			add = {
+				value = ruler.popularity
+				multiply = 0.01
+			}
+		}
+	}
+	add = {
+		desc = "BPM_VALUE_FROM_REACTIONARY_LEADER_AND_AGITATORS"
+		every_scope_character = {
+			limit = {
+				is_interest_group_type = ig_reactionaries
+				OR = {
+					has_role = politician
+					has_role = agitator
+				}
+			}
+			add = popularity
+		}
+		multiply = 0.01
+	}
+	add = {
+		desc = "BPM_VALUE_FROM_CONSERVATIVE_LEADER_AND_AGITATORS"
+		every_scope_character = {
+			limit = {
+				is_interest_group_type = ig_conservatives
+				OR = {
+					has_role = politician
+					has_role = agitator
+				}
+			}
+			add = popularity
+		}
+		multiply = 0.01
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_PRO_CONSERVATIVE_LAW_PASSING"
+		add = var:bpm_je_modernizers_conservative_laws_passed
+		multiply = 0.25
+		add = 0.0001
+	}
+	subtract = 0.0001
+
+	add = {
+		desc = "BPM_VALUE_FROM_ANTI_SECULAR_REACTION_LAW"
+		add = 0.0001
+		if = {
+			limit = { has_modifier = bpm_repeatable_law_anti_secular_reaction_result }
+			add = 1
+		}
+		multiply = 0.5
+	}
+	add = {
+		desc = "BPM_VALUE_FROM_PARADES_AND_DRILLS_LAW"
+		add = 0.0001
+		if = {
+			limit = { has_modifier = bpm_repeatable_law_parades_and_drills_result }
+			add = 1
+		}
+		multiply = 0.5
+	}
+	add = {
+		desc = "BPM_VALUE_FROM_PROMOTE_ABSOLUTIST_VALUES_LAW"
+		add = 0.0001
+		if = {
+			limit = { has_modifier = bpm_repeatable_law_promote_absolutist_values_result }
+			add = 1
+		}
+		multiply = 0.5
+	}
+	add = {
+		desc = "BPM_VALUE_FROM_PROMOTE_STATE_RELIGION_LAW"
+		add = 0.0001
+		if = {
+			limit = { has_modifier = bpm_repeatable_law_promote_state_religion_result }
+			add = 1
+		}
+		multiply = 0.5
+	}
+	subtract = 0.0002
+}
+
+bpm_je_modernizers_dialectic_rate = {
+	value = 0
+	add = {
+		value = bpm_je_modernizers_ideology_rate_modernizers
+		max = bpm_je_modernizers_ideology_rate_conservatives
+		desc = "BPM_VALUE_FROM_MODERNIZER_MINIMUM_BETWEEN_TWO_IDEOLOGIES"
+	}
+
+	add = {
+		value = var:bpm_je_modernizers_copied_society_times
+		multiply = 0.2
+		desc = "BPM_VALUE_FROM_MODERNIZER_COPIED_SOCIETY_AMOUNT"
+	} 
+
+	subtract = {
+		if = {
+			limit = {
+				has_law = law_type:law_censorship
+			}
+			add = institution:institution_culture.investment
+		}
+		multiply = 0.2
+		desc = "BPM_VALUE_FROM_INSTITUTION_CENSORSHIP"
+	}
+
+	subtract = {
+		if = {
+			limit = {
+				has_law = law_type:law_outlawed_dissent
+			}
+			add = institution:institution_culture.investment
+		}
+		multiply = 0.2
+		desc = "BPM_VALUE_FROM_INSTITUTION_OUTLAWED_DISSENT"
+	}
+
+	subtract = {
+		if = {
+			limit = {					
+				has_law = law_type:law_traditional_ostracism
+			}
+			add = 0.5
+		}
+		desc = "BPM_VALUE_FROM_LAW_TRADITIONAL_OSTRACISM"
 	}
 }

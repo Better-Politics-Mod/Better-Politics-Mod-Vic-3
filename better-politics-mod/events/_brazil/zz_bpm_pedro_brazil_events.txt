@@ -34,13 +34,13 @@ pedro.1 = {
 			}
 			save_scope_as = pedro_scope
 		}
-		ig:ig_conservatives = { # old regency
+		ig:ig_conservatives ?= { # old regency
 			save_scope_as = landowners_scope
 		}
-		ig:ig_reactionaries = { # old regency
+		ig:ig_reactionaries ?= { # old regency
 			save_scope_as = armed_forces_scope
 		}
-		ig:ig_liberals = { # new regency
+		ig:ig_liberals ?= { # new regency
 			save_scope_as = intelligentsia_scope
 			leader = {
 				save_scope_as = feijo_regent
@@ -54,10 +54,10 @@ pedro.1 = {
 					}
 				}
 			}
-			ig:ig_conservatives = { 
+			ig:ig_conservatives ?= { 
 				remove_ruling_interest_group = yes
 			}
-			ig:ig_liberals = { 
+			ig:ig_liberals ?= { 
 				add_ruling_interest_group = yes
 			}
 		}
@@ -230,7 +230,7 @@ pedro.7 = {
 				culture = cu:afro_brazilian
 			}
 		}
-		ig:ig_conservatives = { 
+		ig:ig_conservatives ?= { 
 			add_modifier = {
 				name = bpm_empowered_ig
 				months = very_long_modifier_time
@@ -241,6 +241,30 @@ pedro.7 = {
 				NOT = { has_variable = local_patcon_split_var }
 			}
 			trigger_event = { id = bpm_patcon_split.1 }
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					game_date >= 1878.1.26
+				}
+				create_character = {
+					template = brz_luis_orleans_template
+				}
+			}
+		}
+		every_interest_group = {
+			limit = {
+				bpm_ig_is_monarchist = yes
+				leader = { has_ideology = ideology:ideology_abolitionist }
+			}
+			leader = { set_ideology = ideology:ideology_humanitarian_royalist }
+		}
+		every_interest_group = {
+			limit = {
+				bpm_ig_is_monarchist = no
+				leader = { has_ideology = ideology:ideology_abolitionist }
+			}
+			leader = { set_ideology = ideology:ideology_humanitarian }
 		}
 	}
 }
@@ -289,6 +313,8 @@ pedro.8 = {
 			}
 			activate_law = law_type:law_landed_voting
 		}
+		activate_law = law_type:law_separated_powers
+		activate_law = law_type:law_no_separate_hog
 		activate_law = law_type:law_presidential_republic
 		if = {
 			limit = {
@@ -361,6 +387,10 @@ pedro.8 = {
 			bpm_reorder_ideologies = yes
 		}
 		ig:ig_armed_forces = {
+			bpm_remove_all_gov_ideologies = yes
+			bpm_remove_all_rel_ideologies = yes
+			add_ideology = ideology_gov_liberal_republican
+			add_ideology = ideology_rel_radical_secularist
 			add_modifier = {
 				name = bpm_empowered_ig
 				months = very_long_modifier_time
@@ -381,18 +411,16 @@ pedro.8 = {
 				months = very_long_modifier_time
 			}
 		}
-		ig:ig_liberals = { 
+		ig:ig_liberals ?= { 
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_gov_liberal_republican
 			bpm_reorder_ideologies = yes
 		}
 		if = {
 			limit = {
-				ig:ig_market_liberals = {
-					NOT = { has_ideology = ideology:ideology_nonexistent }
-				}
+				exists = ig:ig_market_liberals
 			}
-			ig:ig_market_liberals = { 
+			ig:ig_market_liberals ?= { 
 				bpm_remove_all_gov_ideologies = yes
 				add_ideology = ideology_gov_liberal_republican
 				bpm_reorder_ideologies = yes
@@ -565,27 +593,131 @@ pedro.10 = {
 				is_decaying = yes
 			}
 		}
-		ig:ig_conservatives = { 
+		ig:ig_conservatives ?= { 
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_gov_liberal_republican
 			bpm_reorder_ideologies = yes
 		}
-		ig:ig_liberals = { 
+		ig:ig_liberals ?= { 
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_gov_liberal_republican
 			bpm_reorder_ideologies = yes
 		}
 		if = {
 			limit = {
-				ig:ig_market_liberals = {
+				ig:ig_market_liberals ?= {
 					NOT = { has_ideology = ideology:ideology_nonexistent }
 				}
 			}
-			ig:ig_market_liberals = { 
+			ig:ig_market_liberals ?= { 
 				bpm_remove_all_gov_ideologies = yes
 				add_ideology = ideology_gov_liberal_republican
 				bpm_reorder_ideologies = yes
 			}
+		}
+	}
+}
+
+# Death of Pedro's heirs
+pedro.12 = {
+	type = country_event
+	placement = ROOT
+	
+	title = pedro.12.t
+	desc = pedro.12.d
+	flavor = pedro.12.f
+	
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+	
+	duration = 3
+
+	#dlc = dlc008
+	
+	trigger = {
+		NOT = { has_variable = pedro_heir_death }
+		year > 1849
+		any_scope_character = {
+			is_heir = yes
+		}
+	}
+
+	immediate = {
+		set_variable = pedro_heir_death
+		ruler = {
+			save_scope_as = pedro_scope
+		}
+		heir = {
+			save_scope_as = heir_scope
+		}
+	}
+
+	option = { # No women allowed
+		name = pedro.12.a
+		default_option = yes
+		create_character = {
+			template = brz_isabel_template
+			heir = yes
+		}
+		# appease the landowners slightly
+		ig:ig_landowners = {
+			add_modifier = {
+				name = princess_isabel
+				months = long_modifier_time
+				multiplier = -1
+			}
+		}
+		remove_pedropoint_effect = yes
+	}
+	option = { # Prepare isabel for the throne
+		name = pedro.12.b
+		default_option = yes
+		remove_pedropoint_effect = yes
+		create_character = {
+			template = brz_isabel_template
+			heir = yes
+			on_created = {
+				save_scope_as = isabel_scope
+				set_variable = isabel_var
+				add_modifier = {
+					name = isabel_heir_popularity
+				}
+				set_character_immortal = yes
+			}
+		}
+		# pedro's popularity is reduced
+		scope:pedro_scope = {
+			add_modifier = {
+				name = isabel_heir_popularity
+			}
+		}
+		# annoy the landowners
+		ig:ig_landowners = {
+			add_modifier = {
+				name = princess_isabel
+				months = long_modifier_time
+				multiplier = 3
+				is_decaying = yes
+			}
+		}
+		ig:ig_reactionaries ?= { 
+			bpm_remove_all_fem_ideologies = yes
+			add_ideology = ideology_fem_moderate_patriarchal
+			bpm_reorder_ideologies = yes
+		}
+		# add isabel JE
+		set_variable = {
+			name = isabel_points
+			value = 0
+		}
+		add_journal_entry = { type = je_isabel target = scope:isabel_scope }
+		custom_tooltip = {
+			text = isabel_je_tt
 		}
 	}
 }

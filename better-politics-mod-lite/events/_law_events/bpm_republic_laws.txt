@@ -1,0 +1,439 @@
+﻿namespace = republic_laws
+
+
+republic_laws.1 = { #King misses meeting
+	type = country_event
+	placement = ROOT
+	
+	title = republic_laws.1.t
+	desc = republic_laws.1.d
+	flavor = republic_laws.1.f
+
+	category = enactment
+	
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		has_law = law_type:law_monarchy
+		or = {
+			is_enacting_law = law_type:law_presidential_republic
+			is_enacting_law = law_type:law_parliamentary_republic
+		}
+		NOT = {
+			has_modifier = republic_representation
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #Do we need a king?
+		name = republic_laws.1.a
+		default_option = yes
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_list = { 
+				2 = { #+40% chance in vanilla, so pretty strong 
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+							bpm_ig_is_lower_institutional = yes
+						}
+						bpm_ig_increase_law_enactment_approval_big = yes
+						}
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+							bpm_ig_is_middle_institutional = yes
+						}
+						bpm_ig_increase_law_enactment_approval_big = yes
+					}
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+							bpm_ig_is_upper_institutional = yes
+						}
+						bpm_ig_increase_law_enactment_approval_big = yes
+					}
+				}
+				3 = { #10% in vanilla
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_small = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				2 = {
+					add_enactment_modifier = {
+						name = republic_representation
+						multiplier = 4
+					}
+				}
+				3 = {
+					add_enactment_modifier = {
+						name = republic_representation
+					}
+				}
+			}
+		}
+	}
+	option = { #Best to tread softly
+		name = republic_laws.1.b
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_lower_institutional = yes
+				}
+				bpm_ig_increase_law_enactment_approval_small = yes
+				}
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+					bpm_ig_is_middle_institutional = yes
+				}
+				bpm_ig_increase_law_enactment_approval_small = yes
+			}
+		else = { 
+			add_enactment_modifier = {
+				name = republic_representation
+				multiplier = 2
+			}
+		}
+	}
+	option = { #publish it in the paper
+		name = republic_laws.1.c
+		trigger = {
+			always = no #sorry republicans, but this is real life, you dont get a 'I win' option only because the king missed a cabinet session
+		}
+		add_enactment_modifier = { #60%? Just...no...
+			name = republic_representation
+			multiplier = 6
+		}
+	}
+}
+
+republic_laws.2 = { #Fate of the King
+	type = country_event
+	placement = ROOT
+	
+	title = republic_laws.2.t
+	desc = republic_laws.2.d
+	flavor = republic_laws.2.f
+
+	category = enactment
+	
+	event_image = {
+		video = "europenorthamerica_london_center"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		has_law = law_type:law_monarchy
+		or = {
+			is_enacting_law = law_type:law_presidential_republic
+			is_enacting_law = law_type:law_parliamentary_republic
+		}
+		NOT = {
+			has_modifier = fate_of_the_monarchy
+		}
+		any_interest_group = {
+			is_marginal = no
+			law_stance = {
+				law = law_type:law_monarchy
+				value > neutral
+			}
+		}
+		any_interest_group = {
+			bpm_ig_neutral_enactment = yes
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = {
+				is_marginal = no
+				law_stance = {
+					law = law_type:law_monarchy
+					value > neutral
+				}
+			}
+			save_scope_as = rulers_fate
+			leader = {
+				save_scope_as = monarchist_supporter
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #keep the king around
+		name = republic_laws.2.a
+		default_option = yes
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = fate_of_the_monarchy 
+			}
+		}
+	}
+
+	option = { #Exile the king
+		name = republic_laws.2.b
+		every_interest_group = { 
+			limit = { 
+				bpm_ig_is_monarchist = yes
+			}
+			add_modifier = {
+				name = exile_the_monarch
+				months = normal_modifier_time
+			}
+		}
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+					or = { 
+						bpm_ig_is_upper_institutional = yes
+						bpm_ig_is_middle_institutional = yes
+					}
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+					or = { 
+						bpm_ig_is_lower_institutional = yes
+						bpm_ig_is_ideological = yes
+					}
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = fate_of_the_monarchy
+				multiplier = 2
+			}
+		}
+	}
+}
+
+republic_laws.3 = { #The kings Speech
+	type = country_event
+	placement = ROOT
+	
+	title = republic_laws.3.t
+	desc = republic_laws.3.d
+	flavor = republic_laws.3.f
+
+	category = enactment
+	
+	event_image = {
+		video = "unspecific_ruler_speaking_to_people"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+	
+	trigger = {
+		has_law = law_type:law_monarchy
+		or = {
+			is_enacting_law = law_type:law_presidential_republic
+			is_enacting_law = law_type:law_parliamentary_republic
+		}
+		NOT = {
+			has_modifier = the_kings_speech
+		}
+		any_interest_group = {
+			is_marginal = no
+			law_stance = {
+				law = law_type:law_monarchy
+				value > neutral
+			}
+		}
+		any_interest_group = { 
+			bpm_ig_neutral_enactment = yes
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+		if = {
+			limit = {
+				any_interest_group = {
+					is_marginal = no
+					law_stance = {
+						law = law_type:law_monarchy
+						value < neutral
+					}
+				}
+			}
+			random_interest_group = {
+				limit = {
+					is_marginal = no
+					law_stance = {
+						law = law_type:law_monarchy
+						value < neutral
+					}
+				}
+				save_scope_as = rulers_speech_opposition
+			}
+		}
+		random_interest_group = {
+			limit = {
+				is_marginal = no
+				law_stance = {
+					law = law_type:law_monarchy
+					value > neutral
+				}
+			}
+			save_scope_as = rulers_speech_supporters
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { #Kings speech unchallenged
+		name = republic_laws.3.a
+		trigger = {
+			enactment_setback_count < max_setbacks_minus_one
+		}
+		highlighted_option = yes
+		add_enactment_setback = 1
+		if = {
+			limit = {
+				any_interest_group = {
+					is_marginal = no
+					law_stance = {
+						law = law_type:law_monarchy
+						value < neutral
+					}
+				}
+			}
+			scope:rulers_speech_opposition = {
+				add_modifier = {
+					name = speech_opposition
+					multiplier = -1
+					months = normal_modifier_time
+				}
+			}
+		}
+		scope:rulers_speech_supporters = {
+			add_modifier = {
+				name = speech_supporters
+				multiplier = 2
+				months = normal_modifier_time
+			}
+		}
+	}
+
+	option = { #Kings speech challenged
+		name = republic_laws.3.b
+		default_option = yes
+		scope:rulers_speech_supporters = {
+			add_modifier = {
+				name = speech_supporters
+				multiplier = -1
+				months = normal_modifier_time
+			}
+		}
+		if = {
+			limit = {
+				any_interest_group = {
+					is_marginal = no
+					law_stance = {
+						law = law_type:law_monarchy
+						value < neutral
+					}
+				}
+			}
+			scope:rulers_speech_opposition = {
+				add_modifier = {
+					name = speech_opposition
+					months = normal_modifier_time
+				}
+			}
+		}
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name =  the_kings_speech
+				multiplier = -1
+			}
+		}
+	}
+}

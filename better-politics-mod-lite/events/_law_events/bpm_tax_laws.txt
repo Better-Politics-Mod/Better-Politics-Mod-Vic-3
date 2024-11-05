@@ -1,0 +1,913 @@
+﻿namespace = tax
+
+# Taxation is theft
+# Stall event for any tax law
+tax.1 = {
+	type = country_event
+	placement = ROOT
+	
+	title = tax.1.t
+	desc = tax.1.d
+	flavor = tax.1.f
+
+	category = enactment
+	
+	event_image = {
+		video = "middleeast_courtroom_upheaval"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+	
+	duration = 3
+	
+	trigger = {
+		OR = {
+			is_enacting_law = law_type:law_proportional_taxation
+			is_enacting_law = law_type:law_graduated_taxation
+			is_enacting_law = law_type:law_land_based_taxation
+			is_enacting_law = law_type:law_per_capita_based_taxation
+		}
+		any_political_movement = {
+			is_political_movement_type = movement_to_preserve
+		}
+		NOT = { has_modifier = taxation_is_theft }
+	}
+
+	immediate = {
+		random_political_movement = {
+			limit = {
+				is_political_movement_type = movement_to_preserve
+			}
+			save_scope_as = antitax_rebels
+		}
+		currently_enacting_law = {
+			save_scope_as = current_law_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = tax.1.a
+		default_option = yes
+		# lose success chance
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+					or = { 
+						bpm_ig_is_lower_institutional = yes
+						bpm_ig_is_ideological = yes
+					}
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+					or = { 
+						bpm_ig_is_upper_institutional = yes
+						bpm_ig_is_middle_institutional = yes
+					}
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = taxation_is_theft
+				multiplier = 2
+			}
+		}
+		# movement gets angrier
+		scope:antitax_rebels = {
+			add_modifier = {
+				name = antitax_anger
+				months = long_modifier_time
+			}
+		}
+	}
+	option = { # promise to keep taxes low
+		name = tax.1.b
+		# lose less success chance
+
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					OR = {
+						bpm_ig_is_upper_institutional = yes
+						bpm_ig_is_middle_institutional = yes
+					}
+					NOT = { owner = { has_law = law_type:law_consumption_based_taxation } }
+					NOT = { has_modifier = bpm_law_sway_tax_break_middle_mod }
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+				bpm_subtract_from_law_sways = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = taxation_is_theft
+			}
+		}
+		add_modifier = {
+			name = bpm_law_sway_tax_break_middle_used
+			years = 5
+		}
+	}
+}
+
+# Advance event - Supporting the War Effort
+tax.2 = {
+	type = country_event
+	placement = ROOT
+	
+	title = tax.2.t
+	desc = tax.2.d
+	flavor = tax.2.f
+
+	category = enactment
+	
+	event_image = {
+		video = "europenorthamerica_before_the_battle"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+	
+	duration = 3
+	
+	trigger = {
+		OR = {
+			is_enacting_law = law_type:law_proportional_taxation
+			is_enacting_law = law_type:law_graduated_taxation
+			is_enacting_law = law_type:law_per_capita_based_taxation
+		}
+		any_political_movement = {
+			is_political_movement_type = movement_to_preserve
+		}
+		is_at_war = yes
+		any_diplomatic_play = {
+			is_war = yes
+			any_scope_play_involved = {
+				THIS = ROOT
+			}
+		}
+		NOT = { has_modifier = patriotic_taxation }
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		random_political_movement = {
+			limit = {
+				is_political_movement_type = movement_to_preserve
+			}
+			save_scope_as = antitax_rebels
+		}
+		ig:ig_armed_forces = {
+			save_scope_as = patriotic_military
+		}
+		random_diplomatic_play = {
+			limit = {
+				is_war = yes
+				any_scope_play_involved = {
+					THIS = ROOT
+				}
+			}
+			save_scope_as = war_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # cast dissenters as unpatriotic
+		name = tax.2.a
+		default_option = yes
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			every_interest_group = { 
+				limit = { 
+					bpm_ig_is_patriotic = yes
+				}
+				bpm_ig_increase_law_enactment_approval_small = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = patriotic_taxation
+			}
+		}
+		# reduce movement support substantially
+		scope:antitax_rebels = {
+			add_modifier = {
+				name = unpatriotic_movement
+				months = long_modifier_time
+			}
+		}
+	}
+	option = { # cast the law as patriotic
+		name = tax.2.b
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			every_interest_group = { 
+				limit = { 
+					bpm_ig_is_patriotic = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = patriotic_taxation
+			}
+		}
+		scope:patriotic_military ={
+			add_modifier = {
+				name = patriocitc_taxation_ig
+				months = normal_modifier_time
+			}
+		}
+		add_loyalists = {
+			pop_type = soldiers
+			value = 0.1
+		}
+		add_loyalists = {
+			pop_type = officers
+			value = 0.1
+		}
+	}
+}
+
+# Debate event - Death and Taxes
+tax.3 = {
+	type = country_event
+	placement = ROOT
+	
+	title = tax.3.t
+	desc = tax.3.d
+	flavor = tax.3.f
+
+	category = enactment
+	
+	event_image = {
+		video = "africa_leader_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+	
+	duration = 3
+	
+	trigger = {
+		any_interest_group = {
+			is_in_government = yes
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value > neutral
+			}
+			leader = {
+				is_busy = no
+			}
+		}
+		OR = {
+			is_enacting_law = law_type:law_consumption_based_taxation
+			is_enacting_law = law_type:law_proportional_taxation
+			is_enacting_law = law_type:law_graduated_taxation
+			is_enacting_law = law_type:law_land_based_taxation
+			is_enacting_law = law_type:law_per_capita_based_taxation
+		}
+		NOT = {
+			has_modifier = death_and_taxes_mod
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+    	random_interest_group = {
+    		limit = {
+    			is_in_government = yes
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value > neutral
+				}
+				leader = {
+					is_busy = no
+				}
+    		}
+    		leader = {
+    			save_scope_as = death_and_taxes_leader
+    		}
+    	}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # a mourning period would be appropriate
+		name = tax.3.a
+		default_option = yes
+		# slower but more likely
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+			add_enactment_modifier = {
+				name = bpm_death_and_taxes_mod
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = death_and_taxes_mod
+			}
+		}
+		scope:death_and_taxes_leader = {
+			kill_character = yes
+		}
+	}
+	option = { 
+		name = tax.3.b # push on 
+		# faster but less likely
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_neutral_enactment = yes
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+			add_enactment_modifier = {
+				name = bpm_death_and_taxes_mod
+				multiplier = -1
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = death_and_taxes_mod
+				multiplier = -1
+			}
+		}
+		scope:death_and_taxes_leader = {
+			kill_character = yes
+		}
+	}
+}
+
+# Stall - Popular social bandit
+tax.4 = {
+	type = country_event
+	placement = ROOT
+	
+	title = tax.4.t
+	desc = tax.4.desc
+	flavor = tax.4.f
+
+	category = enactment
+	
+	event_image = {
+		video = "rp1_social_banditry"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+	
+	duration = 3
+	
+	trigger = {
+		OR = {
+			is_enacting_law = law_type:law_land_based_taxation
+			is_enacting_law = law_type:law_per_capita_based_taxation
+		}
+		any_scope_state = {
+			is_incorporated = yes
+			any_scope_pop = {
+				standard_of_living < 15
+				strata = poor
+				pop_is_discriminated = no
+			}
+		}
+		NOT = { has_modifier = social_banditry }
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		random_scope_state = {
+			limit = {
+				is_incorporated = yes
+				any_scope_pop = {
+					standard_of_living < 15
+					strata = poor
+					pop_is_discriminated = no
+				}
+			}
+			save_scope_as = bandit_state
+			random_scope_pop = {
+	    		limit = {
+	    			standard_of_living < 15
+					strata = poor
+					pop_is_discriminated = no
+	    		}
+	    		save_scope_as = bandit_pop
+	    	}
+	    }
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # hunt down the bandit
+		name = tax.4.a
+		default_option = yes
+		trigger = {
+			NOT = { 
+				institution_investment_level = {
+					institution = institution_police
+					value >= 3
+				}
+			}
+		}
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_list = { 
+				1 = { 
+					random_interest_group = { 
+						limit = { 
+							OR = { 
+								bpm_ig_is_lower_institutional = yes
+								bpm_ig_is_ideological = yes
+							}
+							bpm_ig_disapproves_to_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+				}
+				1 = { 
+					random_interest_group = { 
+						limit = { 
+							OR = { 
+								bpm_ig_is_lower_institutional = yes
+								bpm_ig_is_ideological = yes
+							}
+							bpm_ig_disapproves_to_neutral_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+				}
+				1 = { 
+					random_interest_group = { 
+						limit = { 
+							OR = { 
+								bpm_ig_is_upper_institutional = yes
+								bpm_ig_is_middle_institutional = yes
+							}
+							bpm_ig_approves_to_neutral_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+					random_interest_group = { 
+						limit = { 
+							OR = { 
+								bpm_ig_is_lower_institutional = yes
+								bpm_ig_is_ideological = yes
+							}
+							bpm_ig_approves_to_neutral_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				1 = {
+					add_enactment_modifier = {
+						name = social_banditry
+						multiplier = -1
+					}
+				}
+				1 = {
+					add_enactment_modifier = {
+						name = social_banditry
+					}
+				}
+				1 = {
+					add_enactment_modifier = {
+						name = social_banditry
+						multiplier = 2
+					}
+				}
+			}
+		}
+		scope:bandit_state = {
+			add_radicals_in_state = {
+				value = 0.25
+				strata = poor
+			}
+		}
+	}
+	option = { # hunt him down with trained police
+		name = tax.4.b
+		highlighted_option = yes
+		trigger = {
+			institution_investment_level = {
+				institution = institution_police
+				value >= 3
+			}
+		}
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_list = { 
+				1 = { 
+					random_interest_group = { 
+						limit = { 
+							OR = { 
+								bpm_ig_is_lower_institutional = yes
+								bpm_ig_is_ideological = yes
+							}
+							bpm_ig_disapproves_to_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+				}
+				1 = { 
+					random_interest_group = { 
+						limit = { 
+							OR = { 
+								bpm_ig_is_lower_institutional = yes
+								bpm_ig_is_ideological = yes
+							}
+							bpm_ig_approves_to_neutral_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				1 = {
+					add_enactment_modifier = {
+						name = social_banditry
+						multiplier = -1
+					}
+				}
+				1 = {
+					add_enactment_modifier = {
+						name = social_banditry
+					}
+				}
+			}
+		}
+		scope:bandit_state = {
+			add_radicals_in_state = {
+				value = 0.1
+				strata = poor
+			}
+		}
+	}
+	option = { # 
+		name = tax.4.c
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					OR = { 
+						bpm_ig_is_lower_institutional = yes
+						bpm_ig_is_ideological = yes
+					}
+					bpm_ig_approves_to_neutral_enactment = yes
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = social_banditry
+			}
+		}
+		scope:bandit_state = {
+			add_modifier = { # state_tax_waste_add
+				name = poverty_relief_mod
+				months = short_modifier_time
+				multiplier = 2
+			}
+		}
+	}
+	option = { # triggered by emergency relief present in state, or good welfare institution
+		name = tax.4.d
+		highlighted_option = yes
+		trigger = {
+			OR = {
+				institution_investment_level = {
+					institution = institution_social_security
+					value >= 3
+				}
+				scope:bandit_state = {
+					has_decree = decree_emergency_relief
+				}
+			}
+		}
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					OR = { 
+						bpm_ig_is_lower_institutional = yes
+						bpm_ig_is_ideological = yes
+					}
+					bpm_ig_approves_to_neutral_enactment = yes
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = social_banditry
+			}
+		}
+		scope:bandit_state = {
+			add_modifier = { # state_tax_waste_add
+				name = poverty_relief_mod
+				months = short_modifier_time
+			}
+		}
+	}
+}
+
+# Advance - Philanthropy
+# Rich pops are giving to charity and supporting the law
+tax.5 = {
+	type = country_event
+	placement = ROOT
+	
+	title = tax.5.t
+	desc = tax.5.d
+	flavor = tax.5.f
+
+	category = enactment
+	
+	event_image = {
+		video = "middleeast_upperclass_party"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+	
+	duration = 3
+	
+	trigger = {
+		OR = {
+			is_enacting_law = law_type:law_proportional_taxation
+			is_enacting_law = law_type:law_graduated_taxation
+			is_enacting_law = law_type:law_per_capita_based_taxation
+		}
+		any_scope_pop = {
+			standard_of_living > 40
+			strata = rich
+			pop_is_discriminated = no
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+    	random_scope_pop = {
+    		limit = {
+    			standard_of_living > 40
+				strata = rich
+				pop_is_discriminated = no
+    		}
+    		save_scope_as = philanthropists
+    	}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # encourage philanthropy
+		name = tax.5.a
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					bpm_ig_disapproves_to_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = philanthropy_law
+			}
+		}
+		# welfare for the poor, less expectations for the rich
+		add_modifier = {
+			name = philanthropy_mod
+			months = short_modifier_time
+		}
+	}
+	option = { # rally support for the law
+		name = tax.5.b
+		default_option = yes
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					OR = { 
+						bpm_ig_is_upper_institutional = yes
+						bpm_ig_is_middle_institutional = yes
+					}
+					bpm_ig_disapproves_to_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					OR = { 
+						bpm_ig_is_lower_institutional = yes
+						bpm_ig_is_ideological = yes
+					}
+					bpm_ig_disapproves_to_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = philanthropy_law
+				multiplier = 2
+			}
+		}
+	}
+}
+
+# Debate - Temporarily embarrassed millionaires
+tax.6 = {
+	type = country_event
+	placement = ROOT
+	
+	title = tax.6.t
+	desc = tax.6.d
+	flavor = tax.6.f
+
+	category = enactment
+	
+	event_image = {
+		video = "middleeast_middleclass_cafe"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+	
+	duration = 3
+	
+	trigger = {
+		NOT = { has_law = law_type:law_consumption_based_taxation }
+		OR = {
+			is_enacting_law = law_type:law_proportional_taxation
+			is_enacting_law = law_type:law_graduated_taxation
+			is_enacting_law = law_type:law_per_capita_based_taxation
+		}
+		any_scope_pop = {
+			standard_of_living < 40
+			strata = middle
+			pop_is_discriminated = no
+		}
+		NOT = { has_modifier = temporary_embarrassment }
+		any_interest_group ={  
+			OR = {
+				bpm_ig_is_upper_institutional = yes
+				bpm_ig_is_middle_institutional = yes
+			}
+			NOT = { has_modifier = bpm_law_sway_tax_break_middle_mod }
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+    	random_scope_pop = {
+    		limit = {
+    			standard_of_living < 40
+				strata = middle
+				pop_is_discriminated = no
+    		}
+    		save_scope_as = middle_class_pop
+    	}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # lose some progress, middle class have higher expectations
+		name = tax.6.a
+		default_option = yes
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					OR = {
+						bpm_ig_is_upper_institutional = yes
+						bpm_ig_is_middle_institutional = yes
+					}
+					NOT = { owner = { has_law = law_type:law_consumption_based_taxation } }
+					NOT = { has_modifier = bpm_law_sway_tax_break_middle_mod }
+				}
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = temporary_embarrassment
+				multiplier = -1
+			}
+		}
+		add_modifier = {
+			name = temporary_embarrassment_pops
+			months = short_modifier_time
+		}
+	}
+	option = { # reduce middle class taxes, add some success chance
+		name = tax.6.b
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group = { 
+				limit = { 
+					OR = {
+						bpm_ig_is_upper_institutional = yes
+						bpm_ig_is_middle_institutional = yes
+					}
+					NOT = { owner = { has_law = law_type:law_consumption_based_taxation } }
+					NOT = { has_modifier = bpm_law_sway_tax_break_middle_mod }
+				}
+				add_modifier = bpm_law_sway_tax_break_middle_mod
+				bpm_subtract_from_law_sways = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = temporary_embarrassment
+			}
+		}
+		add_modifier = {
+			name = bpm_law_sway_tax_break_middle_used
+			years = 5
+		}
+	}
+}

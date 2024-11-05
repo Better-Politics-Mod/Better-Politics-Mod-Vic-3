@@ -1,0 +1,365 @@
+
+je_bpm_modernizers = {
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	group = je_group_internal_affairs
+
+	can_revolution_inherit = yes
+
+	scripted_button = bpm_je_modernizers_copy_production_button
+	scripted_button = bpm_je_modernizers_invite_production_button
+	scripted_button = bpm_je_modernizers_copy_military_button
+	scripted_button = bpm_je_modernizers_copy_society_button
+
+	scripted_progress_bar = je_bpm_modernizers_ideology_progress_bar
+	scripted_progress_bar = je_bpm_modernizers_dialectic_progress_bar
+
+	is_shown_when_inactive = {
+		hidden_trigger = {
+			bpm_performance_significant_country = yes
+		}
+		OR = {
+			this = c:RUS
+			is_country_type = unrecognized
+		}
+		NOT = { has_variable = bpm_je_modernizers_over }
+	}
+
+	immediate = {
+		set_variable = {
+			name = bpm_je_modernizers_techs_to_research
+			value = {
+				value = root.techs_researched
+				add = 20 # Current Techs + N
+			}
+		}
+		set_variable = {
+			name = bpm_je_modernizers_liberal_laws_passed
+			value = 0
+		}
+		set_variable = {
+			name = bpm_je_modernizers_conservative_laws_passed
+			value = 0
+		}
+		set_variable = {
+			name = bpm_je_modernizers_copied_society_times
+			value = 0
+		}
+		if = {
+			limit = { c:RUS = this }
+			trigger_event = { id = bpm_russia.1 days = 1 popup = yes }
+			change_variable = {
+				name = bpm_je_modernizers_copied_society_times
+				add = 5 # Reforms of Peter the "Great"
+			}
+		} else = {
+			trigger_event = { id = bpm_modernizers.1 days = 1 popup = yes }
+		}
+	}
+
+	can_deactivate = no
+	possible = {
+		OR = {
+			AND = {
+				custom_tooltip = {
+					text = is_russia_tt
+					c:RUS = this
+				}
+				game_date >= 1836.6.12 # Chaadayev's Philosophical Letters published
+			}
+			AND = {
+				is_country_type = unrecognized
+				any_political_lobby = { # Any pro-western lobby
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						is_subject = no
+						is_country_type = recognized
+						OR = {
+							bpm_country_is_in_europe = yes
+							bpm_country_is_in_new_world = yes
+						}
+					}
+				}
+			}
+		}
+		has_technology_researched = international_relations
+		NOT = { has_law = law_type:law_isolationism }
+	}
+
+	complete = {
+		hidden_trigger = {
+			has_variable = bpm_je_modernizers_techs_to_research
+		}
+		custom_tooltip = {
+			text = bpm_je_modernizers_researched_all_techs_to_complete
+			root.techs_researched >= var:bpm_je_modernizers_techs_to_research
+		}
+	}
+
+	on_complete = {
+		if = {
+			limit = {			
+				scope:journal_entry = {
+					"scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" >= 66
+					"scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 25
+				}
+			}
+			trigger_event = { id = bpm_modernizers.2 popup = yes	} # Modernizer Victory
+		} else_if = {
+			limit = {			
+				scope:journal_entry = {
+					"scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" <= 33
+					"scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 25
+				}
+			}
+			trigger_event = { id = bpm_modernizers.3 popup = yes	} # Conservative Victory
+		} else = {
+			trigger_event = { id = bpm_modernizers.4 popup = yes	} # No Victory (timed out)
+		}
+		hidden_effect = {
+			set_variable = bpm_je_modernizers_over
+		}
+	}
+
+	fail = {
+		OR = {
+			has_law = law_type:law_isolationism
+			any_interest_group = {
+				bpm_ig_is_right_wing = yes
+				OR = {
+					is_in_government = yes
+					is_powerful = yes
+				}
+				ig_approval <= angry
+			}
+		}
+	}
+
+	on_fail = {
+		hidden_effect = {
+			remove_modifier = bpm_je_modernizers_overwhelming_modernizers
+			remove_modifier = bpm_je_modernizers_strong_modernizers
+			remove_modifier = bpm_je_modernizers_weak_modernizers
+			remove_modifier = bpm_je_modernizers_overwhelming_conservatives
+			remove_modifier = bpm_je_modernizers_strong_conservatives
+			remove_modifier = bpm_je_modernizers_weak_conservatives
+		}
+		if = {
+			limit = { has_law = law_type:law_isolationism }
+			trigger_event = { id = bpm_modernizers.5 popup = yes	} # Closed Door
+		}
+		else = {
+			trigger_event = { id = bpm_modernizers.6 popup = yes	} # Conservative Coup
+			activate_law = law_type:law_isolationism
+		}
+		add_modifier = {
+			name = bpm_je_modernizers_deafening_silence
+			years = 10
+			is_decaying = yes
+		}
+	}
+
+	on_weekly_pulse = {
+		effect = {
+
+			# Updating the modifier from JE
+			# Strength of modifier determined by strength of dialectic, type - by dominant ideology
+			remove_modifier = bpm_je_modernizers_overwhelming_modernizers
+			remove_modifier = bpm_je_modernizers_strong_modernizers
+			remove_modifier = bpm_je_modernizers_weak_modernizers
+			remove_modifier = bpm_je_modernizers_overwhelming_conservatives
+			remove_modifier = bpm_je_modernizers_strong_conservatives
+			remove_modifier = bpm_je_modernizers_weak_conservatives
+			if = {
+				limit = { scope:journal_entry = { "scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 75 } }
+				if = { 
+					limit = { scope:journal_entry = { "scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" >= 66 } }
+					add_modifier = { name = bpm_je_modernizers_overwhelming_modernizers }
+				} else_if = {
+					limit = { scope:journal_entry = { "scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" <= 33 } }
+					add_modifier = { name = bpm_je_modernizers_overwhelming_conservatives }
+				}
+			}
+			else_if = {
+				limit = { scope:journal_entry = {"scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 50 } }
+				if = { 
+					limit = { scope:journal_entry = { "scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" >= 66 } }
+					add_modifier = { name = bpm_je_modernizers_strong_modernizers }
+				} else_if = {
+					limit = { scope:journal_entry = { "scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" <= 33 } }
+					add_modifier = { name = bpm_je_modernizers_strong_conservatives }
+				}
+			}
+			else_if = {
+				limit = { scope:journal_entry = {"scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 25 } }
+				if = { 
+					limit = { scope:journal_entry = { "scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" >= 66 } }
+					add_modifier = { name = bpm_je_modernizers_weak_modernizers }
+				} else_if = {
+					limit = { scope:journal_entry = { "scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" <= 33 } }
+					add_modifier = { name = bpm_je_modernizers_weak_conservatives }
+				}
+			}
+		}
+		random_events = {
+			100 = 0
+			75 = bpm_modernizers.7 # Modernizer (Liberal) IG joins a lobby
+			75 = bpm_modernizers.8 # Conservative IG joins an anti-lobby
+		}
+		events = {
+			bpm_modernizers.9 # Non-western country achieved recognition
+		}
+	}
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_modernizers_status_no_dialectic
+				trigger = {
+					scope:journal_entry = { "scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" < 25 }
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_modernizers_status_modernizer_prominence_overwhelming
+				trigger = {
+					scope:journal_entry = {
+						"scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 75
+						"scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" >= 66
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_modernizers_status_conservative_prominence_overwhelming
+				trigger = {
+					scope:journal_entry = {
+						"scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 75
+						"scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" <= 33
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_modernizers_status_modernizer_prominence_strong
+				trigger = {
+					scope:journal_entry = {
+						"scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 50
+						"scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" >= 66
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_modernizers_status_conservative_prominence_strong
+				trigger = {
+					scope:journal_entry = {
+						"scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 50
+						"scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" <= 33
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_modernizers_status_modernizer_prominence_weak
+				trigger = {
+					scope:journal_entry = {
+						"scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 25
+						"scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" >= 66
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_modernizers_status_conservative_prominence_weak
+				trigger = {
+					scope:journal_entry = {
+						"scripted_bar_progress(je_bpm_modernizers_dialectic_progress_bar)" >= 25
+						"scripted_bar_progress(je_bpm_modernizers_ideology_progress_bar)" <= 33
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_modernizers_status_no_prominence
+				trigger = {
+					always = yes
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_modernizers_status
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+
+	weight = 1000 # Very important
+
+	should_be_pinned_by_default = yes
+}
+
+je_bpm_constitutional_restrictions = {
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+    group = je_group_tutorial
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_constitutional_restrictions_desc
+			}
+		}
+	}
+    
+    immediate = {
+    }
+
+    complete = {
+		NOT = {
+			has_law = law_type:law_advisory_body
+		}
+        NAND = {
+			OR = {
+				has_law = law_type:law_no_separate_hog
+				has_law = law_type:law_appointed_by_hos
+			}
+			has_law = law_type:law_monarchy
+		}
+	}
+
+    on_complete = {
+        add_loyalists = {
+            value = 0.25
+			strata = middle
+        }
+		add_loyalists = {
+			value = 0.1
+			strata = upper
+		}
+    }
+
+    fail = {
+    }
+
+    on_fail = {
+    }
+
+    on_monthly_pulse = {
+		#
+    }
+
+    on_timeout = {
+		add_modifier = {
+			name = bpm_the_eternal_ruler_mod
+			is_decaying = yes
+			months = 300
+		}
+    }
+
+	timeout = 7300
+
+    invalid = {
+		AND = {
+			has_law = law_type:law_answers_to_legislature
+			has_law = law_type:law_advisory_body
+		}
+	}
+
+
+	should_be_pinned_by_default = yes
+}

@@ -10,7 +10,7 @@ text = {
     trigger = {
         owner.institution:institution_XXX.type ?= type
     }
-    localization_key = bpm_is_institution_XXX
+    localization_key = bpm_minister_of_XXX
 }
 """.replace('XXX', inst)
     return fstr
@@ -24,7 +24,7 @@ def gen_cabgenbase_ult(insts):
         fstr += """
     if = {
         limit = {
-            var:bpm_is_institution_XXX ?= {
+            var:bpm_minister_of_XXX ?= {
                 bpm_is_antagonistic = yes
             }
         }

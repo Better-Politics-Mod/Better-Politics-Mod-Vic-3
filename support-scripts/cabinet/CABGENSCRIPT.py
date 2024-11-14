@@ -72,7 +72,7 @@ def gen_locs_fstr(nm, dynamic_modifiers):
 
 
 def gen_custlocs_fstr(nm, dynamic_modifiers, modtoig):
-    custlocs_fstr = "bpm_is_institution_XXX_modifier = {".replace('XXX', nm)
+    custlocs_fstr = "bpm_minister_of_XXX_modifier = {".replace('XXX', nm)
     custlocs_fstr += """
     type = character
     random_valid = no
@@ -104,20 +104,20 @@ bpm_reload_institution_modifiers_XXX = {
     }
     if = {
         limit = {
-            var:bpm_is_institution_XXX ?= {
+            var:bpm_minister_of_XXX ?= {
                 OR = {
                     is_character_alive = no
                     NOT = { exists = interest_group } 
                 }
             }
         }
-        remove_variable = bpm_is_institution_XXX
+        remove_variable = bpm_minister_of_XXX
     }
     if = {
         limit = {
-            has_variable = bpm_is_institution_XXX
+            has_variable = bpm_minister_of_XXX
         }
-        var:bpm_is_institution_XXX.interest_group = {
+        var:bpm_minister_of_XXX.interest_group = {
 """.replace('XXX', nm)
     for mod, igs in modtoig.items():
         if mod == "": continue

@@ -1,4 +1,86 @@
 bpm_cabinet_character_pool_ig_weight = {
+    value = 0 
+    if = {
+        limit = {
+            owner = { modifier:country_bpm_cabinet_variety = yes }
+        }
+        add = bpm_cabinet_character_pool_direct
+        # r^2 makes the effect of randomness more pronounced
+        multiply = var:bpm_cabinet_interest_group_luck_factor
+        #multiply = 10
+    }
+    else = {
+        add = bpm_cabinet_character_pool_legis
+    }
+    multiply = var:bpm_cabinet_interest_group_luck_factor
+}
+
+bpm_party_clout = {
+    value = 0
+    every_member = {
+        add = ig_clout
+    } 
+}
+
+bpm_cabinet_character_pool_direct = {
+    value = 2
+    if = {
+        limit = {
+            bpm_ig_is_ideological = no
+        }
+        multiply = 1.15
+    }
+
+    if = {
+        limit = {
+            owner = {
+                has_law = law_type:law_no_separate_hog
+            }
+            bpm_ig_is_ideological = yes
+            NOT = { 
+                owner = {
+                    any_in_list = {
+                        variable = bpm_CAB_char_select_pool
+                        count > 2
+                        interest_group = prev
+                    }
+                }
+            }
+            NOR = {
+                bpm_ig_is_very_radical_opposition = yes
+                bpm_ig_is_radical_opposition = yes
+            }
+        }
+        multiply = 10
+    }
+
+    if = {
+        limit = {
+            bpm_ig_is_radical_opposition = yes
+        }
+        multiply = 0.25
+    }
+    if = {
+        limit = {
+            bpm_ig_is_very_radical_opposition = yes
+        }
+        multiply = 0
+    }
+    if = {
+        limit = {
+            owner = {
+                is_target_in_variable_list = {
+                    name = bpm_CAB_char_select_pool
+                    target = prev.leader
+                }
+            }
+        }
+        multiply = 0.25
+    }
+
+}
+
+bpm_cabinet_character_pool_legis = {
     value = 0
 
     # Base weight
@@ -38,7 +120,32 @@ bpm_cabinet_character_pool_ig_weight = {
     }
 
     # IG weight 
-    multiply = ig_clout
+    if = {
+        limit = {
+            country_has_voting_franchise = yes
+        }
+        multiply = party.bpm_party_clout
+    }
+    else = {
+        multiply = ig_clout
+    }
+    if = {
+        limit = {
+            owner = { modifier:country_bpm_cabinet_controlled = yes }
+            owner = { country_has_voting_franchise = yes }
+        }
+        multiply = {
+            value = party.bpm_party_clout
+            #multiply = 10
+            #multiply = ig_clout
+        }
+        if = {
+            limit = {
+                bpm_is_strongest_ig_in_government = yes
+            }
+            multiply = 1.5
+        }
+    }
 
     # Multipliers
 
@@ -117,7 +224,4 @@ bpm_cabinet_character_pool_ig_weight = {
             divide = 100
         }
     }
-
-    multiply = var:bpm_cabinet_interest_group_luck_factor
-
 }

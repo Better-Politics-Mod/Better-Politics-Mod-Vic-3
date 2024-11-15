@@ -1987,7 +1987,7 @@ bpm_acw_events.20 = { # Battle of Fort Sumter Event CPOV
 	}
 }
 
-bpm_acw_events.21 = { # European Recognize Secessionists UPOV
+bpm_acw_events.21 = { # Leaving the District
 	type = country_event
 
 	dlc = dlc_bpm
@@ -2007,36 +2007,95 @@ bpm_acw_events.21 = { # European Recognize Secessionists UPOV
 	duration = 3
 
 	trigger = {
-		c:USA = ROOT
-	}
-
-	cancellation_trigger = {
-		NOT = {
-			OR = {
-				exists = c:FSA
-				exists = c:CSA
-			}
+		s:STATE_DISTRICT_OF_COLUMBIA = {
+			is_capital = no
+		}
+		c:USA = {
+			NOT = { has_modifier = bpm_host_state_pressure }
 		}
 	}
 
 	immediate = {
 		c:USA = {
-			every_scope_war = {
-				add_war_war_support = { 
-					target = prev
-					value = -200
-				}
-			}
+			add_modifier = bpm_host_state_pressure
+		}
+		s:STATE_DISTRICT_OF_COLUMBIA = {
+			remove_modifier = bpm_independent_capital
 		}
 	}
 
 	option = {
 		name = bpm_acw_events.21.a
 		default_option = yes
+		if = {
+			limit = {
+				any_scope_state = {
+					OR = { 
+						strategic_region = sr:region_dixie
+						state_region = s:STATE_TENNESSEE
+					}
+					NOR = {
+						state_region = s:STATE_DISTRICT_OF_COLUMBIA
+						state_region = s:STATE_OKLAHOMA
+					}
+					is_capital = yes
+				}
+			}
+			custom_tooltip = {
+				text = bpm_acw_president.2.north_tt
+				change_variable = {
+					name = bpm_slave_power_prog_var
+					add = 2
+				}
+				change_variable = {
+					name = bpm_secession_tension_prog_var
+					add = 2
+				}
+				je:je_bpm_guilty_land = {
+					add_progress = { value = 2 name = bpm_slave_power_progress_bar }
+				}
+				je:je_bpm_guilty_land = {
+					add_progress = { value = 2 name = bpm_secession_tension_progress_bar }
+				}	
+			}
+		}
+		else_if = {
+			limit = {
+				any_scope_state = {
+					OR = { 
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+					}
+					NOR = {
+						state_region = s:STATE_BERMUDA
+						state_region = s:STATE_NEW_BRUNSWICK
+						state_region = s:STATE_TENNESSEE
+					}
+					is_capital = yes
+				}
+			}	
+			custom_tooltip = {
+				text = bpm_acw_president.2.south_tt
+				change_variable = {
+					name = bpm_states_rights_prog_var
+					add = 2
+				}
+				change_variable = {
+					name = bpm_secession_tension_prog_var
+					add = 2
+				}
+				je:je_bpm_guilty_land = {
+					add_progress = { value = 2 name = bpm_states_rights_progress_bar }
+				}
+				je:je_bpm_guilty_land = {
+					add_progress = { value = 2 name = bpm_secession_tension_progress_bar }
+				}
+			}
+		}
 	}
 }
 
-bpm_acw_events.22 = { # European Recognize Secessionists FCPOV
+bpm_acw_events.22 = { # The Crittenden Compromise ###
 	type = country_event
 
 	dlc = dlc_bpm
@@ -2151,7 +2210,6 @@ bpm_acw_events.24 = {
 	option = {
 		name = bpm_acw_events.24.a
 		default_option = yes
-
 		if = {
 			limit = {
 				ruler.interest_group = {
@@ -3998,6 +4056,16 @@ bpm_acw_events.107 = { # moment of truth
         	}
 		}	
 		set_variable = bpm_won_crossroads
+		if = {
+			limit = {
+				exists = c:SEQ
+				c:SEQ = { 
+					is_subject_of = ROOT 
+					is_player = no
+				}
+			}
+			annex = c:SEQ
+		}
 	}
 }
 
@@ -7088,7 +7156,28 @@ bpm_acw_events.402 = { # Pendleton Civil Service Act Smooth Sailing
 		add_modifier = {
 			name = bpm_victor_idealist
 		}
+		every_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					strategic_region = sr:region_the_midwest
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+			}
+			add_modifier = {
+				name = bpm_victor_bottom_fell_out
+				years = 10
+				is_decaying = yes
+			}
+		}
 		remove_modifier = bpm_rec_discipline 
+		
 	}
 }
 
@@ -7123,6 +7212,11 @@ bpm_acw_events.403 = { # OH GOD OH FUCK THE PRES IS DEAD
 		default_option = yes
 		set_variable = bpm_spoils_stalwart
 		set_variable = bpm_spoils_liberal
+		ruler.interest_group = {
+			leader = {
+        		kill_character = yes
+        	}
+		}
 		remove_modifier = bpm_rec_discipline
 	}	
 }
@@ -7159,6 +7253,25 @@ bpm_acw_events.404 = { # Pendleton Civil Service Act Crashes and Burns
 		set_variable = bpm_spoils_stalwart
 		add_modifier = {
 			name = bpm_victor_pragmatist
+		}
+		every_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+			}
+			add_modifier = {
+				name = bpm_victor_readjustmaxxing
+				years = 10
+				is_decaying = yes
+			}
 		}
 		remove_modifier = bpm_rec_discipline
 	}	
@@ -7570,5 +7683,3631 @@ bpm_acw_events.412 = { # Supreme Court Plan
 		je:je_bpm_to_the_victor = {
 			add_progress = { value = 25 name = bpm_victor_progress_bar }
 		}
+	}
+}
+
+bpm_acw_events.501 = { # for 30 pieces of silver
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.501.t
+	desc = bpm_acw_events.501.d
+	flavor = bpm_acw_events.501.f
+
+	duration = 3
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = { 
+		name = bpm_acw_events.501.a
+		default_option = yes
+		set_variable = bpm_no_solidarity
+		set_variable = bpm_progressives_weak
+		remove_variable = bpm_solidarity_national_grange
+		remove_variable = bpm_solidarity_knights_of_labor
+		remove_variable = bpm_solidarity_geoists
+		remove_variable = bpm_solidarity_socialistic_laborers
+	}
+}
+
+bpm_acw_events.502 = { # left behind by the anointed
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.502.t
+	desc = bpm_acw_events.502.d
+	flavor = bpm_acw_events.502.f
+
+	duration = 3
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = { 
+		name = bpm_acw_events.502.a
+		default_option = yes
+		set_variable = bpm_no_solidarity
+		set_variable = bpm_progressives_moderate
+	}
+}
+
+bpm_acw_events.503 = { # the father and the son
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.503.t
+	desc = bpm_acw_events.503.d
+	flavor = bpm_acw_events.503.f
+
+	duration = 3
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = { 
+		name = bpm_acw_events.503.a
+		default_option = yes
+		set_variable = bpm_no_solidarity
+		set_variable = bpm_progressives_strong
+	}
+}
+
+bpm_acw_events.504 = { # the glory of the lord
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.504.t
+	desc = bpm_acw_events.504.d
+	flavor = bpm_acw_events.504.f
+
+	duration = 3
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = { 
+		name = bpm_acw_events.504.a
+		default_option = yes
+		set_variable = bpm_progressives_weak
+	}
+}
+
+bpm_acw_events.505 = { # another withholds unduly, but comes to poverty
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.505.t
+	desc = bpm_acw_events.505.d
+	flavor = bpm_acw_events.505.f
+
+	duration = 3
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = { 
+		name = bpm_acw_events.505.a
+		default_option = yes
+		if = {
+			limit = {
+				has_variable = bpm_plank_cooperatives
+			}
+			add_modifier = {
+				name = bpm_solidarity_subtreasury
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_wealth
+			}
+			activate_law = law_type:law_free_trade
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_fiat
+			}
+			add_modifier = {
+				name = bpm_solidarity_bimetal
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_bimetal
+				years = 8
+				is_decaying = yes
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_silver
+			}
+			add_modifier = {
+				name = bpm_solidarity_gold
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_gold
+				years = 4
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+bpm_acw_events.506 = { # one person gives freely, yet gains even more
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.506.t
+	desc = bpm_acw_events.506.d
+	flavor = bpm_acw_events.506.f
+
+	duration = 3
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = { 
+		name = bpm_acw_events.501.a
+		default_option = yes
+		if = {
+			limit = {
+				has_variable = bpm_plank_cooperatives
+			}
+			add_modifier = {
+				name = bpm_solidarity_regulation
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_wealth
+			}
+			activate_law = law_type:law_free_trade
+			add_modifier = {
+				name = bpm_solidarity_income
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_fiat
+			}
+			add_modifier = {
+				name = bpm_solidarity_silver
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_silver
+				years = 16
+				is_decaying = yes
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_referendum
+			}
+			add_modifier = {
+				name = bpm_solidarity_senate
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_municipalize
+			}
+			add_modifier = {
+				name = bpm_solidarity_subtreasury
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_land
+			}
+			activate_law = law_type:law_free_trade
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_silver
+			}
+			add_modifier = {
+				name = bpm_solidarity_bimetal
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_bimetal
+				years = 8
+				is_decaying = yes
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_bimetal
+			}
+			add_modifier = {
+				name = bpm_solidarity_gold
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_gold
+				years = 4
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+bpm_acw_events.507 = { # give to the poor, and you will have treasure in heaven
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.507.t
+	desc = bpm_acw_events.507.d
+	flavor = bpm_acw_events.507.f
+
+	duration = 3
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = { 
+		name = bpm_acw_events.507.a
+		default_option = yes
+		if = {
+			limit = {
+				has_variable = bpm_plank_cooperatives
+			}
+			add_modifier = {
+				name = bpm_solidarity_municipalize
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_wealth
+			}
+			activate_law = law_type:law_free_trade
+			add_modifier = {
+				name = bpm_solidarity_land
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_fiat
+			}
+			add_modifier = {
+				name = bpm_solidarity_fiat
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_fiat
+				years = 32
+				is_decaying = yes
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_referendum
+			}
+			add_modifier = {
+				name = bpm_solidarity_abolish
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_municipalize
+			}
+			add_modifier = {
+				name = bpm_solidarity_regulation
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_land
+			}
+			activate_law = law_type:law_free_trade
+			add_modifier = {
+				name = bpm_solidarity_income
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_silver
+			}
+			add_modifier = {
+				name = bpm_solidarity_silver
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_silver
+				years = 16
+				is_decaying = yes
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_abolish
+			}
+			add_modifier = {
+				name = bpm_solidarity_senate
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_regulation
+			}
+			add_modifier = {
+				name = bpm_solidarity_subtreasury
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_income
+			}
+			activate_law = law_type:law_free_trade
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_bimetal
+			}
+			add_modifier = {
+				name = bpm_solidarity_bimetal
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_bimetal
+				years = 8
+				is_decaying = yes
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_gold
+			}
+			add_modifier = {
+				name = bpm_solidarity_gold
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_gold
+				years = 4
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+bpm_acw_events.508 = { # render unto caesar what is caesar's
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.508.t
+	desc = bpm_acw_events.508.d
+	flavor = bpm_acw_events.508.f
+
+	duration = 3
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = { 
+		name = bpm_acw_events.508.a
+		default_option = yes
+		if = {
+			limit = {
+				has_variable = bpm_plank_cooperatives
+			}
+			activate_law = law_type:law_collectivized_agriculture
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_wealth
+			}
+			activate_law = law_type:law_free_trade
+			add_modifier = {
+				name = bpm_solidarity_wealth
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_referendum
+			}
+			add_modifier = {
+				name = bpm_solidarity_referendum
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_municipalize
+			}
+			add_modifier = {
+				name = bpm_solidarity_municipalize
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_land
+			}
+			activate_law = law_type:law_free_trade
+			add_modifier = {
+				name = bpm_solidarity_land
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_fiat
+			}
+			add_modifier = {
+				name = bpm_solidarity_fiat
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_fiat
+				years = 32
+				is_decaying = yes
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_abolish
+			}
+			add_modifier = {
+				name = bpm_solidarity_abolish
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_regulation
+			}
+			add_modifier = {
+				name = bpm_solidarity_regulation
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_income
+			}
+			activate_law = law_type:law_free_trade
+			add_modifier = {
+				name = bpm_solidarity_income
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_silver
+			}
+			add_modifier = {
+				name = bpm_solidarity_silver
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_silver
+				years = 16
+				is_decaying = yes
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_senate
+			}
+			add_modifier = {
+				name = bpm_solidarity_senate
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_subtreasury
+			}
+			add_modifier = {
+				name = bpm_solidarity_subtreasury
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_tariff
+			}
+			activate_law = law_type:law_free_trade
+		}
+		if = {
+			limit = {
+				has_variable = bpm_plank_bimetal
+			}
+			add_modifier = {
+				name = bpm_solidarity_bimetal
+			}
+			add_modifier = {
+				name = bpm_solidarity_capital_flight_bimetal
+				years = 8
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+bpm_acw_events.509 = { # Northern Expansion
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.509.t
+	desc = bpm_acw_events.509.d
+	flavor = bpm_acw_events.509.f
+
+	duration = 3
+
+	trigger = {
+		exists = c:USA
+		this = c:USA
+		any_scope_state = {
+			OR = { 
+				strategic_region = sr:region_new_england
+				strategic_region = sr:region_the_midwest
+				state_region = s:STATE_MARYLAND
+				state_region = s:STATE_DELAWARE
+			}
+			NOR = {
+				state_region = s:STATE_BERMUDA
+				state_region = s:STATE_NEW_BRUNSWICK
+				state_region = s:STATE_TENNESSEE
+			}
+			OR = {
+				AND = {
+					NOR = { 
+						has_modifier = bpm_state_org_weak
+						has_modifier = bpm_state_org_moderate
+						has_modifier = bpm_state_org_strong
+					}
+					any_scope_building = { 
+						OR = {
+							is_building_group = bg_agriculture
+							is_building_group = bg_plantations
+						}
+						level >= 25
+					}
+				}
+				AND = {
+					has_modifier = bpm_state_org_weak
+					any_scope_building = { 
+						OR = {
+							is_building_group = bg_agriculture
+							is_building_group = bg_plantations
+						}
+						level >= 50
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					strategic_region = sr:region_the_midwest
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				OR = {
+					AND = {
+						NOR = { 
+							has_modifier = bpm_state_org_weak
+							has_modifier = bpm_state_org_moderate
+							has_modifier = bpm_state_org_strong
+						}
+						any_scope_building = { 
+							OR = {
+								is_building_group = bg_agriculture
+								is_building_group = bg_plantations
+							}
+							level >= 25
+						}
+					}
+					AND = {
+						has_modifier = bpm_state_org_weak
+						any_scope_building = { 
+							OR = {
+								is_building_group = bg_agriculture
+								is_building_group = bg_plantations
+							}
+							level >= 50
+						}
+					}
+				}
+			}
+			save_scope_as = bpm_new_state_org
+		}
+	}
+
+	option = { 
+		name = bpm_acw_events.509.a
+		default_option = yes
+		if = { 
+			limit = {
+				scope:bpm_new_state_org = {
+					any_scope_building = { 
+						OR = {
+							is_building_group = bg_agriculture
+							is_building_group = bg_plantations
+						}
+						level >= 50
+					}
+				}
+			}
+			scope:bpm_new_state_org = {
+				remove_modifier = bpm_state_org_weak
+				add_modifier = {
+					name = bpm_state_org_strong
+				}
+			}
+		}
+		else = {
+			scope:bpm_new_state_org = {
+				add_modifier = {
+					name = bpm_state_org_moderate
+				}
+			}
+		}
+		clear_saved_scope = bpm_new_state_org
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = 1
+		}
+	}
+}
+
+bpm_acw_events.510 = { # Southern Expansion
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.510.t
+	desc = bpm_acw_events.510.d
+	flavor = bpm_acw_events.510.f
+
+	duration = 3
+
+	trigger = {
+		exists = c:USA
+		this = c:USA
+		any_scope_state = {
+			OR = { 
+				strategic_region = sr:region_dixie
+				state_region = s:STATE_TENNESSEE
+			}
+			NOR = {
+				state_region = s:STATE_MARYLAND
+				state_region = s:STATE_DELAWARE
+				state_region = s:STATE_DISTRICT_OF_COLUMBIA
+				state_region = s:STATE_OKLAHOMA
+			}
+			OR = {
+				AND = {
+					NOR = { 
+						has_modifier = bpm_state_org_weak
+						has_modifier = bpm_state_org_moderate
+						has_modifier = bpm_state_org_strong
+					}
+					any_scope_building = { 
+						OR = {
+							is_building_group = bg_agriculture
+							is_building_group = bg_plantations
+						}
+						level >= 25
+					}
+				}
+				AND = {
+					has_modifier = bpm_state_org_weak
+					any_scope_building = { 
+						OR = {
+							is_building_group = bg_agriculture
+							is_building_group = bg_plantations
+						}
+						level >= 50
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				OR = {
+					AND = {
+						NOR = { 
+							has_modifier = bpm_state_org_weak
+							has_modifier = bpm_state_org_moderate
+							has_modifier = bpm_state_org_strong
+						}
+						any_scope_building = { 
+							OR = {
+								is_building_group = bg_agriculture
+								is_building_group = bg_plantations
+							}
+							level >= 25
+						}
+					}
+					AND = {
+						has_modifier = bpm_state_org_weak
+						any_scope_building = { 
+							OR = {
+								is_building_group = bg_agriculture
+								is_building_group = bg_plantations
+							}
+							level >= 50
+						}
+					}
+				}
+			}
+			save_scope_as = bpm_new_state_org
+		}
+	}
+
+	option = { 
+		name = bpm_acw_events.510.a
+		default_option = yes
+		if = { 
+			limit = {
+				scope:bpm_new_state_org = {
+					any_scope_building = { 
+						OR = {
+							is_building_group = bg_agriculture
+							is_building_group = bg_plantations
+						}
+						level >= 50
+					}
+				}
+			}
+			scope:bpm_new_state_org = {
+				remove_modifier = bpm_state_org_weak
+				add_modifier = {
+					name = bpm_state_org_strong
+				}
+			}
+		}
+		else = {
+			scope:bpm_new_state_org = {
+				add_modifier = {
+					name = bpm_state_org_moderate
+				}
+			}
+		}
+		clear_saved_scope = bpm_new_state_org
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = 1
+		}
+	}
+}
+
+bpm_acw_events.511 = { # Western Expansion
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.511.t
+	desc = bpm_acw_events.511.d
+	flavor = bpm_acw_events.511.f
+
+	duration = 3
+
+	trigger = {
+		exists = c:USA
+		this = c:USA
+		any_scope_state = {
+			OR = { 
+				NOR = {
+					strategic_region = sr:region_new_england
+					strategic_region = sr:region_the_midwest
+					strategic_region = sr:region_dixie
+				}
+				state_region = s:STATE_OKLAHOMA
+			}
+			OR = {
+				AND = {
+					NOR = {
+						has_modifier = bpm_state_org_weak
+						has_modifier = bpm_state_org_moderate
+						has_modifier = bpm_state_org_strong
+					}
+					any_scope_building = { 
+						OR = {
+							is_building_group = bg_agriculture
+							is_building_group = bg_plantations
+						}
+						level >= 25
+					}
+				}
+				AND = {
+					has_modifier = bpm_state_org_weak
+					any_scope_building = { 
+						OR = {
+							is_building_group = bg_agriculture
+							is_building_group = bg_plantations
+						}
+						level >= 50
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				OR = {
+					AND = {
+						NOR = { 
+							has_modifier = bpm_state_org_weak
+							has_modifier = bpm_state_org_moderate
+							has_modifier = bpm_state_org_strong
+						}
+						any_scope_building = { 
+							OR = {
+								is_building_group = bg_agriculture
+								is_building_group = bg_plantations
+							}
+							level >= 25
+						}
+					}
+					AND = {
+						has_modifier = bpm_state_org_weak
+						any_scope_building = { 
+							OR = {
+								is_building_group = bg_agriculture
+								is_building_group = bg_plantations
+							}
+							level >= 50
+						}
+					}
+				}
+			}
+			save_scope_as = bpm_new_state_org
+		}
+	}
+
+	option = { 
+		name = bpm_acw_events.511.a
+		default_option = yes
+		if = { 
+			limit = {
+				scope:bpm_new_state_org = {
+					any_scope_building = { 
+						OR = {
+							is_building_group = bg_agriculture
+							is_building_group = bg_plantations
+						}
+						level >= 50
+					}
+				}
+			}
+			scope:bpm_new_state_org = {
+				remove_modifier = bpm_state_org_weak
+				add_modifier = {
+					name = bpm_state_org_strong
+				}
+			}
+		}
+		else = {
+			scope:bpm_new_state_org = {
+				add_modifier = {
+					name = bpm_state_org_moderate
+				}
+			}
+		}
+		clear_saved_scope = bpm_new_state_org
+		change_variable = {
+			name = bpm_solidarity_west_var
+			add = 1
+		}
+	}
+}
+
+bpm_acw_events.512 = { # Institutional Damage Repaired 3
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.512.t
+	desc = bpm_acw_events.512.d
+	flavor = bpm_acw_events.512.f
+
+	duration = 3
+
+	trigger = {
+		has_variable = bpm_rec_damage_three
+		NOT = { has_variable = bpm_rec_damage_four }
+	}
+
+	immediate = {
+		remove_modifier = bpm_rec_institutional_damage
+	}
+
+	option = { 
+		name = bpm_acw_events.512.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.513 = { # The Democrat's Shadow
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.513.t
+	desc = bpm_acw_events.513.d
+	flavor = bpm_acw_events.513.f
+
+	duration = 3
+
+	cooldown = {
+		years = 1
+	}
+
+	trigger = {
+		exists = c:USA
+		this = c:USA
+		var:bpm_solidarity_anticracker_var = 1
+		any_scope_state = {
+			OR = { 
+				strategic_region = sr:region_dixie
+				state_region = s:STATE_TENNESSEE
+			}
+			NOR = {
+				state_region = s:STATE_MARYLAND
+				state_region = s:STATE_DELAWARE
+				state_region = s:STATE_DISTRICT_OF_COLUMBIA
+				state_region = s:STATE_OKLAHOMA
+			}
+			has_modifier = bpm_state_org_moderate
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			save_scope_as = bpm_lost_state_org
+		}
+	}
+
+	option = { 
+		name = bpm_acw_events.513.a
+		default_option = yes
+		scope:bpm_new_state_org = {
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		clear_saved_scope = bpm_lost_state_org
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+	}
+}
+
+bpm_acw_events.514 = { # Intraparty Infighting
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.514.t
+	desc = bpm_acw_events.514.d
+	flavor = bpm_acw_events.514.f
+
+	duration = 3
+
+	cooldown = {
+		years = 1
+	}
+
+	trigger = {
+		exists = c:USA
+		this = c:USA
+		var:bpm_solidarity_anticracker_var = 2
+		any_scope_state = {
+			OR = { 
+				strategic_region = sr:region_dixie
+				state_region = s:STATE_TENNESSEE
+			}
+			NOR = {
+				state_region = s:STATE_MARYLAND
+				state_region = s:STATE_DELAWARE
+				state_region = s:STATE_DISTRICT_OF_COLUMBIA
+				state_region = s:STATE_OKLAHOMA
+			}
+			has_modifier = bpm_state_org_moderate
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			save_scope_as = bpm_lost_state_org
+		}
+	}
+
+	option = { 
+		name = bpm_acw_events.514.a
+		default_option = yes
+		scope:bpm_new_state_org = {
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		clear_saved_scope = bpm_lost_state_org
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+	}
+}
+
+bpm_acw_events.515 = { # Paramilitary Violence
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.515.t
+	desc = bpm_acw_events.515.d
+	flavor = bpm_acw_events.515.f
+
+	duration = 3
+
+	cooldown = {
+		years = 1
+	}
+
+	trigger = {
+		exists = c:USA
+		this = c:USA
+		var:bpm_solidarity_anticracker_var = 3
+		any_scope_state = {
+			OR = { 
+				strategic_region = sr:region_dixie
+				state_region = s:STATE_TENNESSEE
+			}
+			NOR = {
+				state_region = s:STATE_MARYLAND
+				state_region = s:STATE_DELAWARE
+				state_region = s:STATE_DISTRICT_OF_COLUMBIA
+				state_region = s:STATE_OKLAHOMA
+			}
+			has_modifier = bpm_state_org_moderate
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			save_scope_as = bpm_lost_state_org
+		}
+	}
+
+	option = { 
+		name = bpm_acw_events.515.a
+		default_option = yes
+		scope:bpm_new_state_org = {
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		clear_saved_scope = bpm_lost_state_org
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+	}
+}
+
+bpm_acw_events.516 = { # State-Level Crackdown
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.516.t
+	desc = bpm_acw_events.516.d
+	flavor = bpm_acw_events.516.f
+
+	duration = 3
+
+	cooldown = {
+		years = 1
+	}
+
+	trigger = {
+		exists = c:USA
+		this = c:USA
+		var:bpm_solidarity_anticracker_var = 4
+		any_scope_state = {
+			OR = { 
+				strategic_region = sr:region_dixie
+				state_region = s:STATE_TENNESSEE
+			}
+			NOR = {
+				state_region = s:STATE_MARYLAND
+				state_region = s:STATE_DELAWARE
+				state_region = s:STATE_DISTRICT_OF_COLUMBIA
+				state_region = s:STATE_OKLAHOMA
+			}
+			has_modifier = bpm_state_org_moderate
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			save_scope_as = bpm_lost_state_org
+		}
+	}
+
+	option = { 
+		name = bpm_acw_events.516.a
+		default_option = yes
+		scope:bpm_new_state_org = {
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		clear_saved_scope = bpm_lost_state_org
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+	}
+}
+
+bpm_acw_events.517 = { # A Little Civil War
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.517.t
+	desc = bpm_acw_events.517.d
+	flavor = bpm_acw_events.517.f
+
+	duration = 3
+
+	cooldown = {
+		years = 1
+	}
+
+	trigger = {
+		exists = c:USA
+		this = c:USA
+		var:bpm_solidarity_anticracker_var = 5
+		any_scope_state = {
+			OR = { 
+				strategic_region = sr:region_dixie
+				state_region = s:STATE_TENNESSEE
+			}
+			NOR = {
+				state_region = s:STATE_MARYLAND
+				state_region = s:STATE_DELAWARE
+				state_region = s:STATE_DISTRICT_OF_COLUMBIA
+				state_region = s:STATE_OKLAHOMA
+			}
+			has_modifier = bpm_state_org_moderate
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			save_scope_as = bpm_lost_state_org
+		}
+	}
+
+	option = { 
+		name = bpm_acw_events.517.a
+		default_option = yes
+		scope:bpm_new_state_org = {
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		clear_saved_scope = bpm_lost_state_org
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+	}
+}
+
+bpm_acw_events.518 = { # Senate Reform Plank
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.518.t
+	desc = bpm_acw_events.518.d
+	flavor = bpm_acw_events.518.f
+
+	duration = 3
+
+	cooldown = {
+		years = 100
+	}
+
+	trigger = {
+		var:bpm_solidarity_ripe_var >= 120
+	}
+
+	immediate = {
+	}
+
+	option = {
+		name = bpm_acw_events.518.a
+		trigger_event = { id = bpm_acw_events.519 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.518.b
+		default_option = yes
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_knights_of_labor.tt
+				has_variable = bpm_solidarity_knights_of_labor
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_senate
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 1
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.519 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.518.c
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_geoists.tt
+				has_variable = bpm_solidarity_geoists
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_abolish
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 2
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -1
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.519 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.518.e
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_socialistic_laborers.tt
+				has_variable = bpm_solidarity_socialistic_laborers
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_referendum
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 3
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -2
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.519 days = 5 popup = yes }
+	}
+}
+
+bpm_acw_events.519 = { # Economic Reform Plank
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.519.t
+	desc = bpm_acw_events.519.d
+	flavor = bpm_acw_events.519.f
+
+	duration = 3
+
+	cooldown = {
+		years = 100
+	}
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = {
+		name = bpm_acw_events.519.a
+		set_variable = bpm_plank_subtreasury
+		trigger_event = { id = bpm_acw_events.520 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.519.b
+		default_option = yes
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_knights_of_labor.tt
+				has_variable = bpm_solidarity_knights_of_labor
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_regulation
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 1
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.520 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.519.c
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_geoists.tt
+				has_variable = bpm_solidarity_geoists
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_municipalize
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 2
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -1
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.520 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.519.e
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_socialistic_laborers.tt
+				has_variable = bpm_solidarity_socialistic_laborers
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_cooperatives
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 3
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -2
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.520 days = 5 popup = yes }
+	}
+}
+
+bpm_acw_events.520 = { # Tax Reform Plank
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.520.t
+	desc = bpm_acw_events.520.d
+	flavor = bpm_acw_events.520.f
+
+	duration = 3
+
+	cooldown = {
+		years = 100
+	}
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = {
+		name = bpm_acw_events.520.a
+		set_variable = bpm_plank_tariff
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = 1
+		}
+		trigger_event = { id = bpm_acw_events.521 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.520.b
+		default_option = yes
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_knights_of_labor.tt
+				has_variable = bpm_solidarity_knights_of_labor
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_income
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 1
+		}
+		trigger_event = { id = bpm_acw_events.521 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.520.c
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_geoists.tt
+				has_variable = bpm_solidarity_geoists
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_land
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 2
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.521 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.520.e
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_socialistic_laborers.tt
+				has_variable = bpm_solidarity_socialistic_laborers
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_wealth
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 3
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -1
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.521 days = 5 popup = yes }
+	}
+}
+
+bpm_acw_events.521 = { # Currency Reform Plank
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.521.t
+	desc = bpm_acw_events.521.d
+	flavor = bpm_acw_events.521.f
+
+	duration = 3
+
+	cooldown = {
+		years = 100
+	}
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = {
+		name = bpm_acw_events.521.a
+		set_variable = bpm_plank_gold
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.522 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.521.b
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_knights_of_labor.tt
+				has_variable = bpm_solidarity_knights_of_labor
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_bimetal
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 2
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -1
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.522 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.521.c
+		default_option = yes
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_geoists.tt
+				has_variable = bpm_solidarity_geoists
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_silver
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 4
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -2
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.522 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.521.e
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_socialistic_laborers.tt
+				has_variable = bpm_solidarity_socialistic_laborers
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		set_variable = bpm_plank_fiat
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 6
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_new_england
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+				}
+				NOR = {
+					state_region = s:STATE_BERMUDA
+					state_region = s:STATE_NEW_BRUNSWICK
+					state_region = s:STATE_TENNESSEE
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_north_var
+			add = -2
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					strategic_region = sr:region_dixie
+					state_region = s:STATE_TENNESSEE
+				}
+				NOR = {
+					state_region = s:STATE_MARYLAND
+					state_region = s:STATE_DELAWARE
+					state_region = s:STATE_DISTRICT_OF_COLUMBIA
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate
+			}
+			remove_modifier = bpm_state_org_moderate
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_south_var
+			add = -2
+		}
+		trigger_event = { id = bpm_acw_events.522 days = 5 popup = yes }
+	}
+}
+
+bpm_acw_events.522 = { # Immigrant Policy Plank
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.522.t
+	desc = bpm_acw_events.522.d
+	flavor = bpm_acw_events.522.f
+
+	duration = 3
+
+	cooldown = {
+		years = 100
+	}
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = {
+		name = bpm_acw_events.522.a
+		add_modifier = {
+			name = bpm_solidarity_chinese_1
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_west_var
+			add = 1
+		}
+		trigger_event = { id = bpm_acw_events.523 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.522.b
+		default_option = yes
+		add_modifier = {
+			name = bpm_solidarity_jewish_1
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = -1
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_west_var
+			add = 2
+		}
+		trigger_event = { id = bpm_acw_events.523 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.522.c
+		add_modifier = {
+			name = bpm_solidarity_chinese_2
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = -2
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_west_var
+			add = 3
+		}
+		trigger_event = { id = bpm_acw_events.523 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.522.e
+		add_modifier = {
+			name = bpm_solidarity_jewish_2
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = -3
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_west_var
+			add = 4
+		}
+		trigger_event = { id = bpm_acw_events.523 days = 5 popup = yes }
+	}
+}
+
+bpm_acw_events.523 = { # Womens Policy Plank
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.523.t
+	desc = bpm_acw_events.523.d
+	flavor = bpm_acw_events.523.f
+
+	duration = 3
+
+	cooldown = {
+		years = 100
+	}
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = {
+		name = bpm_acw_events.523.a
+		add_modifier = {
+			name = bpm_solidarity_misogyny
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate 
+			}
+			remove_modifier = bpm_state_org_moderate 
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate 
+			}
+			remove_modifier = bpm_state_org_moderate 
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_west_var
+			add = -2
+		}
+		trigger_event = { id = bpm_acw_events.524 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.523.b
+		default_option = yes
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_knights_of_labor.tt
+				has_variable = bpm_solidarity_knights_of_labor
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 1
+		}
+		change_variable = {
+			name = bpm_solidarity_anticracker_var
+			add = 1
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				has_modifier = bpm_state_org_moderate 
+			}
+			remove_modifier = bpm_state_org_moderate 
+			add_modifier = {
+				name = bpm_state_org_weak
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_west_var
+			add = -1
+		}
+		trigger_event = { id = bpm_acw_events.524 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.523.c
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_geoists.tt
+				has_variable = bpm_solidarity_geoists
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		add_modifier = {
+			name = bpm_solidarity_feminism_1
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 2
+		}
+		change_variable = {
+			name = bpm_solidarity_anticracker_var
+			add = 2
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_west_var
+			add = 1
+		}
+		trigger_event = { id = bpm_acw_events.524 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.523.e
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_socialistic_laborers.tt
+				has_variable = bpm_solidarity_socialistic_laborers
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		add_modifier = {
+			name = bpm_solidarity_feminism_2
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 3
+		}
+		change_variable = {
+			name = bpm_solidarity_anticracker_var
+			add = 3
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		random_scope_state = {
+			limit = {
+				OR = { 
+					NOR = {
+						strategic_region = sr:region_new_england
+						strategic_region = sr:region_the_midwest
+						strategic_region = sr:region_dixie
+					}
+					state_region = s:STATE_OKLAHOMA
+				}
+				NOT = { has_modifier = bpm_state_org_moderate }
+			}
+			add_modifier = {
+				name = bpm_state_org_moderate
+			}
+		}
+		change_variable = {
+			name = bpm_solidarity_west_var
+			add = 2
+		}
+		trigger_event = { id = bpm_acw_events.524 days = 5 popup = yes }
+	}
+}
+
+bpm_acw_events.524 = { # African-American Policy Plank
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.524.t
+	desc = bpm_acw_events.524.d
+	flavor = bpm_acw_events.524.f
+
+	duration = 3
+
+	cooldown = {
+		years = 100
+	}
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = {
+		name = bpm_acw_events.524.a
+		add_modifier = {
+			name = bpm_solidarity_racist_2
+		}
+		trigger_event = { id = bpm_acw_events.525 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.524.b
+		default_option = yes
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_knights_of_labor.tt
+				has_variable = bpm_solidarity_knights_of_labor
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		add_modifier = {
+			name = bpm_solidarity_racist_1
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 1
+		}
+		change_variable = {
+			name = bpm_solidarity_anticracker_var
+			add = 1
+		}
+		trigger_event = { id = bpm_acw_events.525 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.524.c
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_geoists.tt
+				has_variable = bpm_solidarity_geoists
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		add_modifier = {
+			name = bpm_solidarity_awake_1
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 2
+		}
+		change_variable = {
+			name = bpm_solidarity_anticracker_var
+			add = 2
+		}
+		trigger_event = { id = bpm_acw_events.525 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.524.e
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_socialistic_laborers.tt
+				has_variable = bpm_solidarity_socialistic_laborers
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		add_modifier = {
+			name = bpm_solidarity_awake_2
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 3
+		}
+		change_variable = {
+			name = bpm_solidarity_anticracker_var
+			add = 3
+		}
+		trigger_event = { id = bpm_acw_events.525 days = 5 popup = yes }
+	}
+}
+
+bpm_acw_events.525 = { # Question of the Title
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.525.t
+	desc = bpm_acw_events.525.d
+	flavor = bpm_acw_events.525.f
+
+	duration = 3
+
+	cooldown = {
+		years = 100
+	}
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = {
+		name = bpm_acw_events.525.a
+		default_option = yes
+		add_modifier = {
+			name = bpm_solidarity_plank_jefferson
+		}
+		trigger_event = { id = bpm_acw_events.526 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.525.b
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 1
+		}
+		add_modifier = {
+			name = bpm_solidarity_plank_jackson
+		}
+		trigger_event = { id = bpm_acw_events.526 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.525.c
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_knights_of_labor.tt
+				has_variable = bpm_solidarity_knights_of_labor
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 2
+		}
+		add_modifier = {
+			name = bpm_solidarity_plank_paine
+		}
+		trigger_event = { id = bpm_acw_events.526 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.525.e
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_geoists.tt
+				has_variable = bpm_solidarity_geoists
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		add_modifier = {
+			name = bpm_solidarity_plank_george
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 3
+		}
+		trigger_event = { id = bpm_acw_events.526 days = 5 popup = yes }
+	}
+
+	option = {
+		name = bpm_acw_events.525.g
+		trigger = {
+			custom_tooltip = {
+				text = bpm_solidarity_socialistic_laborers.tt
+				has_variable = bpm_solidarity_socialistic_laborers
+			}
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		add_modifier = {
+			name = bpm_solidarity_plank_marx
+		}
+		change_variable = {
+			name = bpm_solidarity_platform_var
+			add = 4
+		}
+		trigger_event = { id = bpm_acw_events.526 days = 5 popup = yes }
+	}
+}
+
+bpm_acw_events.526 = { # The Demands are Published
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.526.t
+	desc = bpm_acw_events.526.d
+	flavor = bpm_acw_events.526.f
+
+	duration = 3
+
+	cooldown = {
+		years = 100
+	}
+
+	trigger = {
+	}
+
+	immediate = {
+	}
+
+	option = {
+		name = bpm_acw_events.526.a
+		trigger = {
+			var:bpm_solidarity_platform_var >= -3
+			var:bpm_solidarity_platform_var <= 2
+			NOT = { has_variable = bpm_rec_fail_perm }
+		}
+		add_modifier = {
+			name = bpm_solidarity_platform_jefferson
+		}
+	}
+
+	option = {
+		name = bpm_acw_events.526.b
+		trigger = {
+			var:bpm_solidarity_platform_var >= 3
+			var:bpm_solidarity_platform_var <= 8
+		}
+		add_modifier = {
+			name = bpm_solidarity_platform_jackson
+		}
+	}
+
+	option = {
+		name = bpm_acw_events.526.c
+		trigger = {
+			var:bpm_solidarity_platform_var >= 9
+			var:bpm_solidarity_platform_var <= 14
+		}
+		add_modifier = {
+			name = bpm_solidarity_platform_paine
+		}
+	}
+
+	option = {
+		name = bpm_acw_events.526.e
+		trigger = {
+			var:bpm_solidarity_platform_var >= 15
+			var:bpm_solidarity_platform_var <= 20
+		}
+		add_modifier = {
+			name = bpm_solidarity_platform_george
+		}
+	}
+
+	option = {
+		name = bpm_acw_events.526.g
+		trigger = {
+			var:bpm_solidarity_platform_var >= 21
+			var:bpm_solidarity_platform_var <= 26
+		}
+		add_modifier = {
+			name = bpm_solidarity_platform_marx
+		}
+	}
+
+	option = {
+		name = bpm_acw_events.526.h
+		trigger = {
+			var:bpm_solidarity_platform_var = -3
+			has_variable = bpm_rec_fail_perm
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+		add_modifier = {
+			name = bpm_solidarity_platform_davis
+		}
+	}
+}
+
+bpm_acw_events.527 = { # The Farmers Convention
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.527.t
+	desc = bpm_acw_events.527.d
+	flavor = bpm_acw_events.527.f
+
+	duration = 3
+
+	trigger = {
+		in_election_campaign = yes
+		owner = { has_modifier = bpm_solidarity_platform_jefferson }
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_challenge
+	}
+
+	option = { 
+		name = bpm_acw_events.527.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.528 = { # The Populists Convention
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.528.t
+	desc = bpm_acw_events.528.d
+	flavor = bpm_acw_events.528.f
+
+	duration = 3
+
+	trigger = {
+		in_election_campaign = yes
+		owner = { has_modifier = bpm_solidarity_platform_jackson }
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_challenge
+	}
+
+	option = { 
+		name = bpm_acw_events.528.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.529 = { # The Laborers Convention
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.529.t
+	desc = bpm_acw_events.529.d
+	flavor = bpm_acw_events.529.f
+
+	duration = 3
+
+	trigger = {
+		in_election_campaign = yes
+		owner = { has_modifier = bpm_solidarity_platform_george }
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_challenge
+	}
+
+	option = { 
+		name = bpm_acw_events.529.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.530 = { # The Geoists Convention
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.530.t
+	desc = bpm_acw_events.530.d
+	flavor = bpm_acw_events.530.f
+
+	duration = 3
+
+	trigger = {
+		in_election_campaign = yes
+		owner = { has_modifier = bpm_solidarity_platform_lassalle }
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_challenge
+	}
+
+	option = { 
+		name = bpm_acw_events.530.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.531 = { # The Unionists Convention
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.531.t
+	desc = bpm_acw_events.531.d
+	flavor = bpm_acw_events.531.f
+
+	duration = 3
+
+	trigger = {
+		in_election_campaign = yes
+		owner = { has_modifier = bpm_solidarity_platform_marx }
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_challenge
+	}
+
+	option = { 
+		name = bpm_acw_events.531.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.532 = { # The Landowners Convention
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.532.t
+	desc = bpm_acw_events.532.d
+	flavor = bpm_acw_events.532.f
+
+	duration = 3
+
+	trigger = {
+		in_election_campaign = yes
+		owner = { has_modifier = bpm_solidarity_platform_davis }
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_challenge
+	}
+
+	option = { 
+		name = bpm_acw_events.532.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.533 = { # The Split
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.533.t
+	desc = bpm_acw_events.533.d
+	flavor = bpm_acw_events.533.f
+
+	duration = 3
+
+	trigger = {
+		in_election_campaign = no
+		owner = { has_variable = bpm_solidarity_challenge }
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_split
+	}
+
+	option = { 
+		name = bpm_acw_events.533.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.534 = { # The National Grange
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.534.t
+	desc = bpm_acw_events.534.d
+	flavor = bpm_acw_events.534.f
+
+	duration = 3
+
+	trigger = {
+		var:bpm_solidarity_south_var >= 2
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_national_grange
+	}
+
+	option = { 
+		name = bpm_acw_events.534.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.535 = { # The Knights of Labor
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.535.t
+	desc = bpm_acw_events.535.d
+	flavor = bpm_acw_events.535.f
+
+	duration = 3
+
+	trigger = {
+		var:bpm_solidarity_north_var >=4
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_knights_of_labor
+	}
+
+	option = { 
+		name = bpm_acw_events.535.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.536 = { # The Geoist Movement
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.536.t
+	desc = bpm_acw_events.536.d
+	flavor = bpm_acw_events.536.f
+
+	duration = 3
+
+	trigger = {
+		var:bpm_solidarity_north_var >=8
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_geoists
+	}
+
+	option = { 
+		name = bpm_acw_events.536.a
+		default_option = yes
+	}
+}
+
+bpm_acw_events.537 = { # The Socialistic Laborers
+	
+	type = country_event
+
+	dlc = dlc_bpm
+
+	event_image = {
+		video = "europenorthamerica_american_civil_war"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	title = bpm_acw_events.537.t
+	desc = bpm_acw_events.537.d
+	flavor = bpm_acw_events.537.f
+
+	duration = 3
+
+	trigger = {
+		var:bpm_solidarity_north_var >=12
+	}
+
+	immediate = {
+		set_variable = bpm_solidarity_socialistic_laborers
+	}
+
+	option = { 
+		name = bpm_acw_events.537.a
+		default_option = yes
 	}
 }

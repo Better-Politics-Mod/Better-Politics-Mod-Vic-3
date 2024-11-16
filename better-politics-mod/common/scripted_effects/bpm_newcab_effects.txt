@@ -202,32 +202,19 @@ bpm_generate_cabinet_character = {
                 limit = {
                     scope:bpm_desired_skill_rank = 0
                 }
-                if = {
-                    limit = {
-                        owner = {
-                            NOR = {
-                                has_law = law_type:law_autocracy
-                                has_law = law_type:law_oligarchy
-                            }
-                        }
-                    }
-                    bpm_generate_character_traits_semi_democracy = yes
-                }
-                else = {
-                    bpm_generate_character_traits_autocracy = yes
-                }
+                bpm_generate_character_traits_unskilled = yes
             }
             else_if = {
                 limit = {
                     scope:bpm_desired_skill_rank = 1
                 }
-                bpm_generate_character_traits_full_democracy = yes
+                bpm_generate_character_traits_skilled = yes
             }
             else_if = {
                 limit = {
                     scope:bpm_desired_skill_rank > 1
                 }
-                bpm_generate_character_traits_technocracy = yes
+                bpm_generate_character_traits_expert = yes
             }
         }
         scope:bpm_selected_ig = {
@@ -295,16 +282,16 @@ bpm_reload_government_mandate = {
             bpm_unappoint_as_hog = yes
         }
     }
-    if = {
-        limit = {
-            var:bpm_reform_counter > 2
-            country_has_voting_franchise = yes
-        }
-        change_variable = {
-            name = bpm_government_mandate
-            subtract = 5
-        }
-    }
+    # if = {
+    #     limit = {
+    #         var:bpm_reform_counter > 2
+    #         country_has_voting_franchise = yes
+    #     }
+    #     change_variable = {
+    #         name = bpm_government_mandate
+    #         subtract = 5
+    #     }
+    # }
     every_interest_group = {
         #set_variable = {
         #    name = bpm_ig_mandate_used
@@ -326,23 +313,12 @@ bpm_reload_government_mandate = {
             }
         }
         else = {
-            bpm_resest_mandate_used_counter = yes
+            bpm_reset_mandate_used_counter = yes
         }
     }
     set_variable = {
         name = bpm_tempgovmandis
         value = var:bpm_government_mandate
-    }
-    if = {
-        limit = {
-            has_law = law_type:law_no_separate_hog
-            ruler.interest_group = {
-                is_in_government = yes
-            }
-        }
-        ruler.interest_group = {
-            bpm_distribute_mandate = { VALUE = 10 }
-        }
     }
     if = {
         limit = {
@@ -362,23 +338,47 @@ bpm_reload_government_mandate = {
     }
     if = {
         limit = {
-            has_law = law_type:law_appointed_on_advice
-            has_variable = bpm_headofgov
-            var:bpm_headofgov.interest_group = {
-                is_in_government = yes
+            has_law = law_type:law_no_separate_hog
+        }
+        every_interest_group = {
+            if = {
+                limit = { this = owner.interest_group }
+                bpm_distribute_mandate = { VALUE = 10 }
+            }
+            else_if = {
+                limit = {
+                    exists = party
+                    exists = owner.ruler.interest_group.party
+                    this.party = owner.ruler.interest_group.party
+                }
+                bpm_distribute_mandate = { VALUE = 5 }
             }
         }
-        var:bpm_headofgov.interest_group = {
-            bpm_distribute_mandate = { VALUE = 5}
+    }
+    if = {
+        limit = {
+            has_law = law_type:law_appointed_on_advice
+        }
+        ruler.interest_group = {
+            bpm_distribute_mandate = { VALUE = 5 }
+        }
+        if = {
+            limit = {
+                has_variable = bpm_headofgov
+                NOT = { var:bpm_headofgov = ruler }
+            }
+            var:bpm_headofgov.interest_group = {
+                bpm_distribute_mandate = { VALUE = 5 }
+            }
         }
     }
 
     ordered_interest_group = {
-        limit = {
-            is_in_government = yes
-        }
+        # limit = {
+        #     is_in_government = yes
+        # }
         min = 0
-        order_by = ig_clout
+        order_by = bpm_mandate_deserved
         bpm_distribute_mandate = { VALUE = bpm_mandate_deserved }
     }
 

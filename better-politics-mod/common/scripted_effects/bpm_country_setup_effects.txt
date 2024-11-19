@@ -6,6 +6,7 @@
 	bpm_setup_country_dop_ideologies = yes
 	bpm_setup_country_eco_ideologies = yes
 	bpm_setup_country_mil_cit_ideologies = yes
+	bpm_setup_country_wel_ideologies = yes
 	bpm_setup_country_je = yes
 	bpm_setup_country_modifiers = yes
 	bpm_setup_country_stubbornness = yes
@@ -93,6 +94,20 @@ bpm_setup_country_sta_ideologies = {
 			}
 			bpm_remove_all_sta_ideologies = yes
 			add_ideology = ideology_sta_federated_state
+		}
+	}
+	if = {
+		limit = {
+			OR = {
+				country_has_primary_culture = cu:brazilian
+				country_has_primary_culture = cu:north_andean
+				country_has_primary_culture = cu:central_american
+				country_has_primary_culture = cu:mexican
+			}
+		}
+		ig:ig_radicals ?= { 
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_minimal_state
 		}
 	}
 }
@@ -263,11 +278,36 @@ bpm_setup_country_dop_ideologies = {
 			add_ideology = ideology_dop_metropole_loyalist
 		}
 	}
+	if = {
+		limit = { 
+			bpm_country_is_latin_american = yes
+			has_law = law_type:law_appointed_bureaucrats
+		}
+		ig:ig_reactionaries ?= {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_meritocratic_autocrat
+		}
+	}
+	if = {
+		limit = { 
+			has_journal_entry = je_caudillo
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_landowners
+					is_interest_group_type = ig_armed_forces
+				}
+			}
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_oligarch
+		}
+	}
 }
 
 bpm_setup_country_eco_ideologies = {
 	if = {
-		limit = { NOT = { has_law = law_type:law_slavery_banned }}
+		limit = { NOT = { has_law = law_type:law_slavery_banned } }
 		bpm_make_igs_pro_slavery = yes
 	}
 
@@ -282,9 +322,82 @@ bpm_setup_country_eco_ideologies = {
 		}
 		bpm_make_igs_modern_agrarian = yes
 	}
+
+	if = {
+		limit = {
+			bpm_country_is_in_new_world = true
+			country_has_state_religion = rel:catholic
+		}
+		if = {
+			limit = { has_law = law_type:law_legacy_slavery }
+			ig:ig_reactionaries ?= {
+				bpm_remove_all_eco_ideologies = yes
+				add_ideology = ideology_eco_conservative_agrarian
+				remove_modifier = bpm_landowner_wary
+			}
+		}
+	}
 }
 
 bpm_setup_country_mil_cit_ideologies = {
+	if = {
+		limit = {
+			has_law = law_type:law_armed_neutrality
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_mil_patriotic
+					has_ideology = ideology:ideology_mil_patriotic_liberal
+				}
+			}
+			bpm_remove_all_mil_ideologies = yes
+			add_ideology = ideology_mil_defensive_patriot 
+			bpm_reorder_ideologies = yes
+		}
+	}
+	if = {
+		limit = {
+			has_law = law_type:law_purchased_officers
+			NOT = { has_law = law_type:law_peasant_levies }
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_reactionaries
+					is_interest_group_type = ig_conservatives
+					is_interest_group_type = ig_landowners
+				}
+			}
+			bpm_remove_all_mil_ideologies = yes
+			add_ideology = ideology_mil_plutocratic_militarist
+		}
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_professional_officers
+		}
+		if = {
+			limit = {
+				ig:ig_reactionaries ?= { has_ideology = ideology:ideology_mil_aristocratic_militarist }
+				NOT = { this = c:FRA }
+			}
+			ig:ig_reactionaries ?= { 
+				bpm_remove_all_mil_ideologies = yes
+				add_ideology = ideology_jingoist
+			}
+		}
+		if = {
+			limit = {
+				ig:ig_landowners = { has_ideology = ideology:ideology_mil_aristocratic_militarist }
+			}
+			ig:ig_landowners = { 
+				bpm_remove_all_mil_ideologies = yes
+				add_ideology = ideology_mil_plutocratic_militarist
+			}
+		}
+	}
+
 	if = {
 		limit = { is_country_type = unrecognized }
 		every_interest_group = {
@@ -350,22 +463,54 @@ bpm_setup_country_mil_cit_ideologies = {
 				add_ideology = ideology_gov_liberal_republican
 			}
 		}
-	}
-
-	if = {
-		limit = {
-			has_law = law_type:law_armed_neutrality
+		if = {
+			limit = {
+				country_has_state_religion = rel:catholic
+			}
+			ig:ig_devout = { 
+				bpm_remove_all_cit_ideologies = yes
+				add_ideology = ideology_cit_immigrant_nationalist
+			}
 		}
-		every_interest_group = {
+		if = {
+			limit = {
+				has_journal_entry = je_caudillo
+			}
+			ig:ig_reactionaries ?= {  
+				bpm_remove_all_mil_ideologies = yes
+				add_ideology = ideology_mil_institutional_militarist
+			}
+		}
+		if = {
 			limit = {
 				OR = {
-					has_ideology = ideology:ideology_mil_patriotic
-					has_ideology = ideology:ideology_mil_patriotic_liberal
+					country_has_primary_culture = cu:brazilian
+					country_has_primary_culture = cu:central_american
+					country_has_primary_culture = cu:mexican
 				}
 			}
-			bpm_remove_all_mil_ideologies = yes
-			add_ideology = ideology_mil_defensive_patriot 
-			bpm_reorder_ideologies = yes
+			ig:ig_radicals ?= { 
+				bpm_remove_all_mil_ideologies = yes
+				add_ideology = ideology_mil_antimilitarist
+			}
+		}
+	}
+
+	
+}
+
+bpm_setup_country_wel_ideologies = {
+	if = {
+		limit = { bpm_country_is_in_new_world = yes }
+		if = {
+			limit = { country_has_state_religion = rel:catholic }
+			ig:ig_reactionaries ?= { 
+				if = {
+					limit = { has_ideology = ideology:ideology_wel_no_welfare }
+				}
+				remove_ideology = ideology_wel_no_welfare
+				add_ideology = ideology_wel_religious_welfare
+			}
 		}
 	}
 }

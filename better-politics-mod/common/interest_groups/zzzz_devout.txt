@@ -13,6 +13,16 @@
 		ideology_moralist
 		ideology_patriarchal
 	}
+
+	character_ideologies = {
+		ideology_moderate
+		ideology_traditionalist
+		ideology_reformer
+		ideology_land_reformer
+		ideology_legitimist
+		ideology_authoritarian
+		ideology_theocrat
+	}
 	
 	enable = {
 		always = yes
@@ -70,6 +80,9 @@
 					country_has_primary_culture = cu:british
 					country_has_primary_culture = cu:irish
 					c:NRU ?= this
+				}
+				NOT = {
+					c:BIC ?= this
 				}
 			}
 			ig:ig_devout = {
@@ -169,7 +182,12 @@
 		}
 		# Evangelical Church
 		else_if = {
-			limit = { country_has_state_religion = rel:protestant }
+			limit = { 
+				country_has_state_religion = rel:protestant 
+				NOT = {
+					c:BIC ?= this
+				}
+			}
 			ig:ig_devout = { 
 				set_interest_group_name = ig_evangelical_church
 			}
@@ -213,10 +231,25 @@
 		}
 		# Hindu Priesthood
 		else_if = {
-			limit = { country_has_state_religion = rel:hindu }
+			limit = { 
+				OR = {
+					country_has_state_religion = rel:hindu
+					c:BIC ?= this
+				}
+			}
 			ig:ig_devout = {
 				set_interest_group_name = ig_hindu_priesthood
-				bpm_ig_make_hindu_moralist = yes
+				if = {
+					limit = {
+						owner = {
+							c:BIC ?= this
+						}
+					}
+					bpm_ig_make_hindu_moralist_british_india = yes
+				}
+				else = {
+					bpm_ig_make_hindu_moralist = yes
+				}
 			}
 		}
 		# Vajrayana Monks
@@ -255,12 +288,51 @@
 		ig:ig_devout = { bpm_reorder_ideologies = yes }
 	}
 	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				assamese avadhi baluchi bengali bihari gujarati kannada malayalam marathi oriya panjabi pathan rajput sindi tamil telegu hindustani bundeli pahari gondi bageli chhattisgarhi deccani
+			}
+		}
+	}
+
 	on_character_ig_membership = {
-		change_character_religion = scope:interest_group.owner.religion
+		if = {
+			limit = {
+				owner = {
+					c:BIC ?= this
+				}
+			}
+			change_character_religion = rel:hindu
+		}
+		else_if = {
+			limit = {
+				NOT = {
+					owner = {
+						has_law = law_type:law_state_atheism
+					}
+				}
+			}
+			change_character_religion = scope:interest_group.owner.religion
+		}
 	}
 		
 	pop_potential = {
-		has_state_religion = yes
+		OR = {
+			has_state_religion = yes
+			AND = {
+				exists = c:BIC
+				owner ?= c:BIC
+				has_pop_religion = hindu
+			}
+		}
 		NOT = { 
 			has_pop_religion = atheist
 		}

@@ -131,6 +131,13 @@ liberal_party = {
 				}
 			}
 			triggered_desc = {
+				desc = party_liberal_ast
+				trigger = {
+					country_has_primary_culture = cu:australian
+					NOT = {THIS = c:NZL}
+				}
+			}
+			triggered_desc = {
 				desc = party_hanoverian
 				trigger = {
 					exists = c:HAN
@@ -379,6 +386,30 @@ liberal_party = {
 		}
 		if = {
 			limit = {
+				owner = { has_variable = bpm_party_establishment_liberal }
+				NOR = {
+					bpm_ig_is_radical_opposition = yes
+					bpm_ig_is_very_radical_opposition = yes
+				}
+			}
+			add = {
+				desc = "bpm_from_party_establishment"
+				value = {
+					value = 20
+					if = {
+						limit = {
+							bpm_ig_is_institutional = yes
+						}
+						subtract = 12
+					}
+				}
+				multiply = owner.var:bpm_party_establishment_liberal
+				multiply = owner.var:bpm_political_stability
+				divide = 10000
+			}
+		}
+		if = {
+			limit = {
 				var:bpm_current_party ?= {
 					is_party_type = liberal_party
 					has_party_member = prev
@@ -609,6 +640,24 @@ liberal_party = {
 				desc = "from_no_or_religious_schools"
 			}
 		}
+		if = { #European politics was divided among religious lines
+			limit = { 
+				law_stance = { 
+					law = law_type:law_state_religion
+					value > neutral
+				}
+				country_is_in_europe = yes
+				NOT = { #not in Great Britain
+					owner = { 
+						this = c:GBR
+					}
+				}
+			}
+			add = { 
+				value = -5
+				desc = "bpm_from_proclericalism"
+			}
+		}
 		if = { # anti-censorship
 			limit = {
 				law_stance = {
@@ -689,6 +738,17 @@ liberal_party = {
 				desc = "from_slavery"
 			}
 		}
+		if = {
+			limit = {
+				leader = {
+					has_variable = caudillo_liberal
+				}
+			}
+			add = {
+				value = 50
+				desc = "caudillo_support"
+			}
+		}
 		# if = { # committed anti-slavery
 		# 	limit = {
 		# 		owner = {
@@ -696,7 +756,7 @@ liberal_party = {
 		# 				has_law = law_type:law_legacy_slavery
 		# 				has_law = law_type:law_slave_trade
 		# 			}
-		# 			ig:ig_liberals = {
+		# 			ig:ig_liberals ?= {
 		# 				leader = {
 		# 					OR = {
 		# 						has_ideology = ideology:ideology_abolitionist
@@ -841,7 +901,7 @@ liberal_party = {
 					}
 				}
 				owner = {
-					ig:ig_liberals = {
+					ig:ig_liberals ?= {
 						party ?= { is_party_type = liberal_party }
 						leader = { bpm_leader_is_progressive_liberal = yes }
 					}
@@ -948,6 +1008,23 @@ liberal_party = {
 				desc = "bpm_from_powerful_socialists"
 			}
 		}
+		if = { # anarchist
+			limit = {
+				OR = {
+					has_global_variable = first_intl_disunited_var
+					has_global_variable = global_socialists_disunited_var
+					has_variable = local_socialists_disunited_var
+				}
+				OR = {
+					bpm_ig_is_anarchist = yes
+					leader = { bpm_leader_is_anarchist = yes }
+				}
+			}
+			add = {
+				value = -30
+				desc = "bpm_anarchist_anti_party"
+			}
+		}
 		if = { # arbitrary weight for japanese liberals after taisho
 			limit = {
 				owner = {
@@ -978,6 +1055,25 @@ liberal_party = {
 			add = {
 				value = 20
 				desc = "bpm_from_jap_liberals"
+			}
+		}
+		if = { # greece french party radicals
+			limit = {
+				owner = {
+					exists = c:GRE
+					THIS = c:GRE
+					has_law = law_type:law_monarchy
+					ruler = {
+						culture = {
+							has_discrimination_trait = german_speaking
+						}
+					}
+				}
+				is_interest_group_type = ig_radicals
+			}
+			add = {
+				value = 30
+				desc = "bpm_from_gre_radlibs"
 			}
 		}
 		if = { # conservatives and moderates will join in council republic

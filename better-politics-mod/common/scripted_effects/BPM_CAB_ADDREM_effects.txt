@@ -1,0 +1,195 @@
+bpm_add_character_to_cabinet = {
+    if = {
+        limit = {
+            OR = {
+                owner = { has_variable = bpm_cabinet_char_select  }
+                has_variable = bpm_cabinet_minister
+            }
+        }
+        if = {
+            limit = {
+                NOT = { has_variable = bpm_cabinet_minister }
+            }
+            set_variable = {
+                name = bpm_cabinet_minister
+                value = owner.var:bpm_cabinet_char_select
+            }
+        }
+        set_variable = {
+            name = bpm_associated_country
+            value = owner
+        }
+        save_scope_value_as = {
+            name = addrem
+            value = yes
+        }
+        #if = {
+        #    limit = {
+        #        is_in_void = no
+        #    }
+        #    place_character_in_void = 10000
+        #}
+        bpm_addrem_cabinet = yes
+        owner = {
+            bpm_reload_cabinet_picks_expectation = yes
+        }
+    }
+
+    bpm_update_temporary_cabinet_members_list = yes
+}
+
+bpm_emergency_rem_subp = {
+    if = {
+        limit = {
+            owner.var:bpm_minister_of_$INST$ ?= THIS
+        }
+        owner = { remove_variable = bpm_minister_of_$INST$ }
+    }
+}
+
+bpm_remove_character_from_cabinet = {
+    if = {
+        limit = {
+            has_variable = bpm_cabinet_minister
+        }
+
+        if = {
+            limit = {
+                interest_group = {
+                    NAND = {
+                        has_variable_list = bpm_saved_characters
+                        is_target_in_variable_list = {
+                            name = bpm_saved_characters
+                            target = PREV
+                        }
+                    }
+                }
+            }
+            free_character_from_void = yes
+        }
+        else = {
+            if = {
+                limit = {
+                    var:bpm_skill_rank ?= 0
+                }
+                interest_group = {
+                    change_variable = {
+                        name = bpm_unskilled_characters
+                        add = 1
+                    }
+                }
+            }
+            else_if = {
+                limit = {
+                    var:bpm_skill_rank ?= 1
+                }
+                interest_group = {
+                    change_variable = {
+                        name = bpm_skilled_characters
+                        add = 1
+                    }
+                }
+            }
+            else_if = {
+                limit = {
+                    var:bpm_skill_rank ?= 2
+                }
+                interest_group = {
+                    change_variable = {
+                        name = bpm_expert_characters
+                        add = 1
+                    }
+                }
+            }
+        }
+
+        save_scope_value_as = {
+            name = addrem
+            value = no
+        }
+        bpm_addrem_cabinet = yes
+
+        interest_group = {
+            bpm_update_mandate_used = { VALUE = prev.var:bpm_mandate_usage_neg }
+        }
+
+        remove_variable = bpm_cabinet_minister
+        remove_variable = bpm_mandate_usage_neg
+        remove_variable = bpm_mandate_usage_pos
+
+        owner = {
+            #add_to_variable_list = {
+            #    name = bpm_CAB_char_select_pool
+            #    target = prev
+            #}
+            bpm_reload_cabinet_picks_expectation = yes
+        }
+    }
+    # remove the character if they are not a cabinet minister
+    # but are somehow stuck in the cabinet
+    bpm_emergency_rem_subp = { INST = schools }
+    bpm_emergency_rem_subp = { INST = police }
+    bpm_emergency_rem_subp = { INST = health_system }
+    bpm_emergency_rem_subp = { INST = home_affairs }
+    bpm_emergency_rem_subp = { INST = centralization }
+    bpm_emergency_rem_subp = { INST = suffrage }
+    bpm_emergency_rem_subp = { INST = culture }
+    bpm_emergency_rem_subp = { INST = colonial_affairs }
+    bpm_emergency_rem_subp = { INST = social_security }
+    bpm_emergency_rem_subp = { INST = workplace_safety }
+    bpm_emergency_rem_subp = { INST = diplomacy }
+    bpm_emergency_rem_subp = { INST = economy }
+
+
+    bpm_update_temporary_cabinet_members_list = yes
+}
+
+bpm_addrem_cabinet_subp = {
+    if = {
+        limit = {
+            type ?= owner.institution:institution_$INST$.type
+        }
+        owner = { 
+            if = {
+                limit = {
+                    scope:addrem = yes
+                }
+                set_variable = {
+                    name = bpm_minister_of_$INST$
+                    value = scope:actor
+                }
+            }
+            else = {
+                remove_variable = bpm_minister_of_$INST$
+            }
+        }
+    }
+
+}
+
+
+
+# --Cabinet Register Institutions (4) --
+bpm_addrem_cabinet = {
+    var:bpm_cabinet_minister ?= {
+        bpm_addrem_cabinet_subp = { INST = schools }
+        bpm_addrem_cabinet_subp = { INST = police }
+        bpm_addrem_cabinet_subp = { INST = health_system }
+        bpm_addrem_cabinet_subp = { INST = home_affairs }
+        bpm_addrem_cabinet_subp = { INST = centralization }
+        bpm_addrem_cabinet_subp = { INST = suffrage }
+        bpm_addrem_cabinet_subp = { INST = culture }
+        bpm_addrem_cabinet_subp = { INST = colonial_affairs }
+        bpm_addrem_cabinet_subp = { INST = social_security }
+        bpm_addrem_cabinet_subp = { INST = workplace_safety }
+        bpm_addrem_cabinet_subp = { INST = diplomacy }
+        bpm_addrem_cabinet_subp = { INST = economy }
+    }
+    random_country = {
+        limit = {
+            PREV.var:bpm_associated_country ?= THIS
+        }
+        bpm_reload_institution_modifiers = yes
+        bpm_cab_update_synergy = yes
+    }
+}

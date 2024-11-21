@@ -614,6 +614,7 @@ types ongoing_outliner_items {
 
 				item = {
 					ig_button = {
+						visible = "[GreaterThanOrEqualTo_CFixedPoint(InterestGroup.GetClout,'(CFixedPoint)0.001')]"
 						size = { 26 26 }
 						
 						tooltipwidget = {
@@ -624,4 +625,366 @@ types ongoing_outliner_items {
 			}
 		}
 	}
+
+	### REVOLUTIONARY POLITICAL MOVEMENT ITEM
+	type outliner_revolutionary_political_movement_item = flowcontainer {
+		direction = vertical
+
+		datacontext = "[AccessPlayer.AccessRevolution]"
+		visible = "[PoliticalMovement.IsValid]"
+
+		onmousehierarchyenter = "[AccessHighlightManager.HighlightPoliticalMovement(PoliticalMovement.Self)]"
+		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+
+		tooltipwidget = {
+			FancyTooltip_PoliticalMovement = {}
+		}
+
+		state = {
+			name = _show
+			
+			start_sound = {
+				soundeffect = "event:/SFX/DLC/1.3_ip1/UI/item_revolutionary_movt"
+			}
+		}
+
+		widget = {
+			size = { 350 120 }
+			parentanchor = top
+
+			alpha = 0 
+
+			###REVOLUTION ANIMATION###
+			state = {
+				#name = _show
+				name = testing
+				trigger_on_create = yes
+				alpha = 1
+				delay = 0.2
+				duration = 0.7
+				on_start = "[PdxGuiWidget.FindChild('revolution_button').TriggerAnimation('1')]"
+				on_start = "[PdxGuiWidget.FindChild('interest_group_top').TriggerAnimation('show')]"
+			}
+
+			state = {
+				#name = _hide
+				name = testing2
+				#trigger_on_create = yes
+				#on_start = "[PdxGuiWidget.FindChild('revolution_clock').TriggerAnimation('hide')]"
+				alpha = 0
+				duration = 1
+			}
+
+			widget = {
+				parentanchor = bottom
+				size = { 100% 110 }
+
+				button = {
+					size = { 0 10 }
+					name = revolution_button
+					onclick = "[InformationPanelBar.OpenPoliticalMovementPanel(PoliticalMovement.AccessSelf)]"
+					using = default_button
+					parentanchor = top|right
+
+					state = {
+						name = 1
+						next = 2
+						size = { 380 10 }
+						delay = 0.2
+						duration = 0.08
+						using = Animation_Curve_Default
+					}
+
+					state = {
+						name = 2
+						next = 3
+						size = { 350 10 }
+						delay = 0.1
+						duration = 0.05
+						using = Animation_Curve_EaseOut
+					}
+
+					state = {
+						name = 3
+						next = 4
+						size = { 350 140 }
+						delay = 0.1
+						duration = 0.08
+						using = Animation_Curve_Default
+					}
+
+					state = {
+						name = 4
+						size = { 350 110 }
+						delay = 0.1
+						duration = 0.05
+						using = Animation_Curve_EaseOut
+						on_finish = "[PdxGuiWidget.FindChild('outliner_info').TriggerAnimation('show')]"
+						on_finish = "[PdxGuiWidget.FindChild('revolution_clock').TriggerAnimation('show')]"
+					}
+
+					vfx = {
+						size = { 100% 200% }
+						blockoverride "entity_instance" {
+							entity_instance = vfx_ui_plane_war_panel_fire_plane_entity
+						}
+						
+						alpha = 0.2
+					}
+
+					icon = {
+						visible = "[PoliticalMovement.IsBeingHighlighted]"
+						using = highlighted_square_selection
+					}
+
+					hbox = {
+						layoutpolicy_horizontal = expanding
+						name = outliner_info
+						margin_left = 8
+						alpha = 0
+
+						state = {
+							name = show
+							alpha = 1
+							delay = 0.45
+							duration = 0.1
+							using = Animation_Curve_Default
+						}
+
+						widget = {
+							size = { 100 100 }
+
+							widget = {
+								name = revolution_clock
+								size = { 0 0 }
+								parentanchor = center
+
+								###REVOLUTION CLOCK ANIMATION###
+								state = {
+									name = show
+									next = 2
+									delay = 0.35
+									size = { 180 180 }
+									duration = 0.1
+									using = Animation_Curve_Default
+								}
+
+								state = {
+									name = 2
+									size = { 100 100 }
+									delay = 0.05
+									duration = 0.1
+									using = Animation_Curve_EaseOut
+								}
+
+								icon = {
+									using = rotate_glow_animation_02
+									blockoverride "rotate_animation_texture" {
+										texture = "gfx/interface/animation/color_bad.dds"
+									}
+									size = { 250% 250% }
+									parentanchor = center
+								}
+
+								round_progress_bad = {
+									size = { 80% 80% }
+									position = { 0 7 }
+									value = "[FixedPointToFloat(PoliticalMovement.GetRevolution.GetClockTime)]"
+									parentanchor = center
+								}
+								
+								icon = {
+									size = { 100% 100% }
+									texture = "gfx/interface/backgrounds/revolution_clock_frame.dds"	
+									law_icon = {
+										datacontext = "[PoliticalMovement.GetLaw]"
+										size = { 50% 50% }
+										position = { 0 4 }
+										parentanchor = center
+									}
+								}
+							}
+						}
+
+
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							margin_top = 10
+							margin_right = 5
+
+							### REVOLUTION PROGRESSBAR ###
+							widget = {
+								size = { 230 25 }
+								
+								bad_progressbar_horizontal = {
+									datacontext = "[PoliticalMovement.GetRevolution]"
+									size = { 230 25 }
+
+									tooltip = "REVOLUTIONS_PROGRESS_TOOLTIP"
+									using = tooltip_below
+
+									blockoverride "values" {
+										value = "[FixedPointToFloat( PoliticalMovement.GetRevolution.GetProgress )]"
+										min = 0
+										max = 1
+									}
+
+									flowcontainer = {
+										parentanchor = vcenter
+										margin_left = 10
+										spacing = 7
+
+										### revolution header
+										textbox = {
+											text = "REVOLUTIONS_HEADER"
+											align = nobaseline
+											autoresize = yes
+										}
+									}
+
+									textbox = {
+										text = "[PoliticalMovement.GetRevolution.GetProgress|%0v]"
+										autoresize = yes
+										align = nobaseline
+										parentanchor = right|vcenter
+										margin_right = 35
+									}
+									
+									blockoverride "in_government_icon" {}
+
+									icon = {
+										parentanchor = right|vcenter
+										size = { 25 25 }
+										texture = "gfx/interface/icons/politics_icons/radicalized.dds"
+										position = { -5 0 }
+									}
+								}
+							}
+
+							### LAW HEADER ###
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								margin_top = 5
+								margin_right = 12
+								spacing = 2
+
+								textbox = {
+									layoutpolicy_horizontal = expanding
+									size = { 0 20 }
+									align = right|vcenter
+									elide = right
+									fontsize_min = 12
+
+									background = {
+										using = dark_area
+										alpha = 0.4
+										margin_bottom = 6
+										margin_top = 4
+										
+										modify_texture = {
+											texture = "gfx/interface/masks/fade_horizontal_center.dds"
+											blend_mode = alphamultiply
+										}
+									}
+									
+									text = "[PoliticalMovement.GetName]"	
+								}
+							}
+
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								margin_right = 12
+								spacing = 2
+
+
+								widget = {
+									size = { 30 30 }
+									visible = "[IsDataModelEmpty(PoliticalMovement.GetTopSupportingCharacters)]"
+								}
+
+								### Characters ###
+								widget = {
+									layoutpolicy_horizontal = expanding
+									size = { 0 35 }
+									visible = "[Not(IsDataModelEmpty(PoliticalMovement.GetTopSupportingCharacters))]"
+									flowcontainer = {
+										parentanchor = bottom|left
+										spacing = 3
+										margin_right = 10
+
+										dynamicgridbox = {
+											flipdirection = yes
+											datamodel = "[PoliticalMovement.GetTopSupportingCharacters]"
+
+											item = {
+												character_portrait_mini = {
+													character_ig_icon = {
+														size = { 12 12 }
+														parentanchor = right|bottom
+													}
+												}
+											}
+										}
+
+										textbox = {
+											visible = "[Not(IsDataModelEmpty(PoliticalMovement.GetBottomSupportingCharacters))]"
+											tooltip = "[PoliticalMovement.GetBottomSupportingCharactersDesc]"
+											size = { 0 30 }
+											align = left|nobaseline
+											parentanchor = vcenter
+											text = "AGITATORS_IN_QUEUE"
+											fontsize_min = 12
+											autoresize = yes
+										}
+									}
+								}
+
+								textbox = {
+									layoutpolicy_horizontal = expanding
+									visible = "[Not(PoliticalMovement.IsPlacated)]"
+									margin_top = 10
+									size = { 0 20 }
+									align = right|nobaseline
+									elide = right
+									fontsize_min = 12
+									text = "POLITICAL_MOVEMENT_RADICALISM_WITHOUT_LABEL"
+								}
+							}
+						}
+					}
+				}
+			}
+
+			
+			### Interest Groups
+			flowcontainer = {
+				visible = "[Not(IsDataModelEmpty(PoliticalMovement.GetSupportingInterestGroups))]"
+				datamodel = "[PoliticalMovement.GetSupportingInterestGroups]"
+				parentanchor = hcenter
+				alpha = 0
+				name = "interest_group_top"
+
+				state = {
+					name = show
+					alpha = 1
+					delay = 1.4
+					duration = 0.2
+					using = Animation_Curve_Default
+				}
+				item = {
+					ig_button = {
+						visible = "[GreaterThanOrEqualTo_CFixedPoint(InterestGroup.GetClout,'(CFixedPoint)0.001')]"
+						size = { 26 26 }
+						
+						tooltipwidget = {
+								FancyTooltip_IG = {}
+						}
+					}
+				}
+			}
+		}
+
+		outliner_revolutionary_movement_events = {}
+	}	
 }
+

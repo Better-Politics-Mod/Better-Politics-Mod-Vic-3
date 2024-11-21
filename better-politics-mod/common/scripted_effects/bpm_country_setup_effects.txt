@@ -6,14 +6,68 @@
 	bpm_setup_country_dop_ideologies = yes
 	bpm_setup_country_eco_ideologies = yes
 	bpm_setup_country_mil_cit_ideologies = yes
+	bpm_setup_country_wel_ideologies = yes
+	bpm_setup_country_je = yes
 	bpm_setup_country_modifiers = yes
 	bpm_setup_country_stubbornness = yes
+	bpm_setup_cabinet = yes
 	bpm_institution_workaround_effect = yes
 	every_interest_group = { bpm_reorder_ideologies = yes }
 	bpm_cache_country_igs_radical_opposition_effect = yes
 	bpm_cache_country_variables_monthly_effect = yes
 	bpm_cache_country_variables_half_yearly_effect = yes
 	trigger_event = { id = bpm_misc.2 }
+	bpm_setup_foundation_laws = yes
+	bpm_trend_party_establishment = yes
+}
+
+bpm_setup_cabinet = {
+	set_variable = {
+        name = bpm_cached_antagonism
+        value = 0
+    }
+    set_variable = {
+        name = bpm_cached_antagonism_raw
+        value = 0
+    }
+    set_variable = {
+        name = bpm_cab_synergy
+        value = 1
+    }
+	if = {
+		limit = {
+			OR = {
+				has_technology_researched = currency_standards
+				c:JAP ?= THIS
+			}
+
+			#is_player = yes
+		}
+		trigger_event = {
+            id = bpm_cabinet_event.1
+			days = 1
+        }
+	}
+	else_if = {
+		limit = {
+			has_technology_researched = stock_exchange
+			#is_player = yes
+		}
+		trigger_event = {
+			id = bpm_cabinet_event.1
+			days = 7
+		}
+	}
+	else_if = {
+		limit = {
+			has_technology_researched = romanticism
+			#is_player = yes
+		}
+		trigger_event = {
+			id = bpm_cabinet_event.1
+			days = 30
+		}
+	}
 }
 
 bpm_reload_country_ig_membership = {
@@ -40,6 +94,20 @@ bpm_setup_country_sta_ideologies = {
 			}
 			bpm_remove_all_sta_ideologies = yes
 			add_ideology = ideology_sta_federated_state
+		}
+	}
+	if = {
+		limit = {
+			OR = {
+				country_has_primary_culture = cu:brazilian
+				country_has_primary_culture = cu:north_andean
+				country_has_primary_culture = cu:central_american
+				country_has_primary_culture = cu:mexican
+			}
+		}
+		ig:ig_radicals ?= { 
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_minimal_state
 		}
 	}
 }
@@ -83,7 +151,7 @@ bpm_setup_country_gov_ideologies = {
 			remove_ideology = ideology_paternalistic
 			add_ideology = ideology_republican
 		}
-		ig:ig_agrarian_populists = {
+		ig:ig_agrarian_populists ?= {
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_gov_liberal_republican
 		}
@@ -142,12 +210,16 @@ bpm_setup_country_dop_ideologies = {
 			limit = {
 				OR = {
 					is_interest_group_type = ig_landowners
-					is_interest_group_type = ig_reactionaries
-					is_interest_group_type = ig_conservatives
-				}
-				OR = {
-					has_ideology = ideology:ideology_dop_autocrat
-					has_ideology = ideology:ideology_dop_oligarch
+					AND = {
+						OR = {
+							is_interest_group_type = ig_reactionaries
+							is_interest_group_type = ig_conservatives
+						}
+						OR = {
+							has_ideology = ideology:ideology_dop_autocrat
+							has_ideology = ideology:ideology_dop_oligarch
+						}
+					}
 				}
 			}
 			bpm_remove_all_dop_ideologies = yes
@@ -176,10 +248,10 @@ bpm_setup_country_dop_ideologies = {
 		}
 		every_interest_group = {
 			limit = {
-				OR = {
-					is_interest_group_type = ig_landowners
-					is_interest_group_type = ig_reactionaries
-				}			
+				#OR = {
+				is_interest_group_type = ig_landowners
+					#is_interest_group_type = ig_reactionaries
+				#}			
 			}
 			bpm_remove_all_dop_ideologies = yes
 			add_ideology = ideology_dop_oligarch
@@ -199,34 +271,148 @@ bpm_setup_country_dop_ideologies = {
 					is_interest_group_type = ig_landowners
 					is_interest_group_type = ig_industrialists
 					is_interest_group_type = ig_armed_forces
+					is_interest_group_type = ig_conservatives
 				}
 			}
 			bpm_remove_all_dop_ideologies = yes
 			add_ideology = ideology_dop_metropole_loyalist
 		}
 	}
+	if = {
+		limit = { 
+			bpm_country_is_latin_american = yes
+			has_law = law_type:law_appointed_bureaucrats
+		}
+		ig:ig_reactionaries ?= {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_meritocratic_autocrat
+		}
+	}
+	if = {
+		limit = { 
+			has_journal_entry = je_caudillo
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_landowners
+					is_interest_group_type = ig_armed_forces
+				}
+			}
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_oligarch
+		}
+	}
 }
 
 bpm_setup_country_eco_ideologies = {
 	if = {
-		limit = { NOT = { has_law = law_type:law_slavery_banned }}
-		bpm_make_igs_pro_slavery = yes
+		limit = { 
+			has_law = law_type:law_debt_slavery
+			has_law = law_type:law_serfdom
+		}
+		bpm_make_igs_pro_debt_serfdom = yes
 	}
-
-	if = {
-		limit = { has_law = law_type:law_serfdom }
-		bpm_make_igs_pro_serfdom = yes
+	else_if = {
+		limit = { NOT = { has_law = law_type:law_slavery_banned } }
+		bpm_make_igs_pro_slavery = yes
 	}
 	else_if = {
 		limit = { 
+			has_law = law_type:law_isolationism
+			has_law = law_type:law_serfdom
+		}
+		bpm_make_igs_pro_isolationist_serfdom = yes
+	}
+	else_if = {
+		limit = { has_law = law_type:law_serfdom }
+		bpm_make_igs_pro_serfdom = yes
+	}
+
+	if = {
+		limit = { 
+			NOT = { has_law = law_type:law_serfdom }
 			NOT = { has_law = law_type:law_traditionalism }
 			NOT = { has_law = law_type:law_industry_banned }
 		}
 		bpm_make_igs_modern_agrarian = yes
 	}
+
+	if = {
+		limit = {
+			bpm_country_is_in_new_world = true
+			country_has_state_religion = rel:catholic
+		}
+		if = {
+			limit = { has_law = law_type:law_legacy_slavery }
+			ig:ig_reactionaries ?= {
+				bpm_remove_all_eco_ideologies = yes
+				add_ideology = ideology_eco_conservative_agrarian
+				remove_modifier = bpm_landowner_wary
+			}
+		}
+	}
 }
 
 bpm_setup_country_mil_cit_ideologies = {
+	if = {
+		limit = {
+			has_law = law_type:law_armed_neutrality
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_mil_patriotic
+					has_ideology = ideology:ideology_mil_patriotic_liberal
+				}
+			}
+			bpm_remove_all_mil_ideologies = yes
+			add_ideology = ideology_mil_defensive_patriot 
+			bpm_reorder_ideologies = yes
+		}
+	}
+	if = {
+		limit = {
+			has_law = law_type:law_purchased_officers
+			NOT = { has_law = law_type:law_peasant_levies }
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_reactionaries
+					is_interest_group_type = ig_conservatives
+					is_interest_group_type = ig_landowners
+				}
+			}
+			bpm_remove_all_mil_ideologies = yes
+			add_ideology = ideology_mil_plutocratic_militarist
+		}
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_professional_officers
+		}
+		if = {
+			limit = {
+				ig:ig_reactionaries ?= { has_ideology = ideology:ideology_mil_aristocratic_militarist }
+				NOT = { this = c:FRA }
+			}
+			ig:ig_reactionaries ?= { 
+				bpm_remove_all_mil_ideologies = yes
+				add_ideology = ideology_jingoist
+			}
+		}
+		if = {
+			limit = {
+				ig:ig_landowners = { has_ideology = ideology:ideology_mil_aristocratic_militarist }
+			}
+			ig:ig_landowners = { 
+				bpm_remove_all_mil_ideologies = yes
+				add_ideology = ideology_mil_plutocratic_militarist
+			}
+		}
+	}
+
 	if = {
 		limit = { is_country_type = unrecognized }
 		every_interest_group = {
@@ -292,6 +478,55 @@ bpm_setup_country_mil_cit_ideologies = {
 				add_ideology = ideology_gov_liberal_republican
 			}
 		}
+		if = {
+			limit = {
+				country_has_state_religion = rel:catholic
+			}
+			ig:ig_devout = { 
+				bpm_remove_all_cit_ideologies = yes
+				add_ideology = ideology_cit_immigrant_nationalist
+			}
+		}
+		if = {
+			limit = {
+				has_journal_entry = je_caudillo
+			}
+			ig:ig_reactionaries ?= {  
+				bpm_remove_all_mil_ideologies = yes
+				add_ideology = ideology_mil_institutional_militarist
+			}
+		}
+		if = {
+			limit = {
+				OR = {
+					country_has_primary_culture = cu:brazilian
+					country_has_primary_culture = cu:central_american
+					country_has_primary_culture = cu:mexican
+				}
+			}
+			ig:ig_radicals ?= { 
+				bpm_remove_all_mil_ideologies = yes
+				add_ideology = ideology_mil_antimilitarist
+			}
+		}
+	}
+
+	
+}
+
+bpm_setup_country_wel_ideologies = {
+	if = {
+		limit = { bpm_country_is_in_new_world = yes }
+		if = {
+			limit = { country_has_state_religion = rel:catholic }
+			ig:ig_reactionaries ?= { 
+				if = {
+					limit = { has_ideology = ideology:ideology_wel_no_welfare }
+				}
+				remove_ideology = ideology_wel_no_welfare
+				add_ideology = ideology_wel_religious_welfare
+			}
+		}
 	}
 }
 
@@ -322,6 +557,16 @@ bpm_update_ai_cheats = {
 			}
 		}
 		remove_modifier = bpm_ai_cheats
+	}
+}
+
+bpm_setup_country_je = {
+	if = {
+		limit = {
+			country_has_state_religion = rel:confucian
+			has_law = law_type:law_monarchy
+		}
+		add_journal_entry = { type = je_bpm_confucian_state }
 	}
 }
 
@@ -380,50 +625,47 @@ bpm_setup_country_stubbornness = {
 bpm_setup_basic_igs = {
 	if = {
 		limit = {
-			ig:ig_radicals = { has_ideology = ideology:ideology_nonexistent }
+			ig:ig_radicals ?= { has_ideology = ideology:ideology_nonexistent }
 			OR = {
 				has_technology_researched = mass_communication
-				AND = {
-					has_technology_researched = democracy
-					bpm_country_starts_with_liberalism = yes
-				}
+				bpm_country_starts_with_liberalism = yes
 			}
 		}
 		bpm_initialize_radlibs = yes
 	}
 	if = {
 		limit = {
-			ig:ig_trade_unions = { has_ideology = ideology:ideology_nonexistent }
+			ig:ig_trade_unions ?= { has_ideology = ideology:ideology_nonexistent }
 			OR = {
 				has_technology_researched = mass_communication
-				AND = {
-					has_technology_researched = democracy
-					bpm_country_starts_with_liberalism = yes
-				}
+				bpm_country_starts_with_liberalism = yes
 			}
 		}
 		bpm_initialize_trade_unions = yes
 	}
 	if = {
 		limit = {
-			ig:ig_agrarian_populists = { has_ideology = ideology:ideology_nonexistent }
-			has_technology_researched = romanticism
+			ig:ig_agrarian_populists ?= { has_ideology = ideology:ideology_nonexistent }
+			OR = {
+				has_technology_researched = romanticism
+				bpm_country_starts_with_liberalism = yes
+			}
 		}
 		bpm_initialize_agpops = yes
 	}
-	if = {
-		limit = {
-			ig:ig_socialists = { has_ideology = ideology:ideology_nonexistent }
-			OR = {
-				has_technology_researched = egalitarianism
-				AND = {
-					bpm_country_is_in_europe = yes
-					has_global_variable = march_to_radicalism_complete_var
-				}
-			}
-		}
-		bpm_initialize_socialists = yes
-	}
+	# if = {
+	# 	limit = {
+	# 		ig:ig_socialists ?= { has_ideology = ideology:ideology_nonexistent }
+	# 		OR = {
+	# 			has_technology_researched = egalitarianism
+	# 			AND = {
+	# 				bpm_country_is_in_europe = yes
+	# 				has_global_variable = bpm_march_to_radicalism_complete_var
+	# 			}
+	# 		}
+	# 	}
+	# 	bpm_initialize_socialists = yes
+	# }
 }
 
 # Do not use in bpm_setup_country effect, but directly in on_action due to scope
@@ -432,39 +674,95 @@ bpm_copy_variables_to_new_country = {
 		limit = { has_variable = local_patcon_split_var }
 		scope:target = {
 			set_variable = local_patcon_split_var
-			bpm_initialize_patcons = yes
+			bpm_initialize_patcons = yes # Initialize here since it's not a new IG
 		}
 	}
 	if = {
 		limit = { has_variable = local_marlib_split_var }
 		scope:target = {
 			set_variable = local_marlib_split_var
-			bpm_initialize_marlibs = yes
 		}
 	}
 	if = {
 		limit = { has_variable = local_natlib_split_var }
 		scope:target = {
 			set_variable = local_natlib_split_var
-			bpm_initialize_natlibs = yes
 		}
 	}
 	if = {
 		limit = { has_variable = local_anarchists_split_var }
 		scope:target = {
 			set_variable = local_anarchists_split_var
-			bpm_initialize_anarchists = yes
 		}
 	}
 	if = {
 		limit = { has_variable = local_socialists_split_var }
 		scope:target = {
 			set_variable = local_socialists_split_var
-			bpm_initialize_reform_revolution = yes
 		}
 	}
 	if = {
-		limit = { has_variable = local_fascist_split_var }
-		bpm_initialize_fascists = yes
+		limit = { has_variable = local_fascists_split_var }
+		scope:target = {
+			set_variable = local_fascists_split_var
+		}
+	}
+}
+
+bpm_copy_variable_from_civil_war_origin = {
+	if = {
+		limit = {
+			exists = civil_war_origin_country
+			civil_war_origin_country = {
+				has_variable = local_patcon_split_var
+			}
+		}
+		set_variable = local_patcon_split_var
+		bpm_initialize_patcons = yes # Initialize here since it's not a new IG
+	}
+	if = {
+		limit = {
+			exists = civil_war_origin_country
+			civil_war_origin_country = {
+				has_variable = local_natlib_split_var
+			}
+		}
+		set_variable = local_natlib_split_var
+	}
+	if = {
+		limit = {
+			exists = civil_war_origin_country
+			civil_war_origin_country = {
+				has_variable = local_marlib_split_var
+			}
+		}
+		set_variable = local_marlib_split_var
+	}
+	if = {
+		limit = {
+			exists = civil_war_origin_country
+			civil_war_origin_country = {
+				has_variable = local_anarchists_split_var
+			}
+		}
+		set_variable = local_anarchists_split_var
+	}
+	if = {
+		limit = {
+			exists = civil_war_origin_country
+			civil_war_origin_country = {
+				has_variable = local_socialists_split_var
+			}
+		}
+		set_variable = local_socialists_split_var
+	}
+	if = {
+		limit = {
+			exists = civil_war_origin_country
+			civil_war_origin_country = {
+				has_variable = local_fascists_split_var
+			}
+		}
+		set_variable = local_fascists_split_var
 	}
 }

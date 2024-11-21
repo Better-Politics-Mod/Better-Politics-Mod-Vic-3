@@ -1,0 +1,273 @@
+bpm_newcab_char_pick = {
+    bpm_reload_government_mandate = yes
+    every_interest_group = {
+        set_variable = {
+            name = bpm_cost_ig_position_var
+            value = bpm_cost_ig_position
+        }
+    }
+    set_variable = {
+        name = bpm_newcab_available_good_candidates
+        value = {
+            value = 0
+            every_interest_group = {
+                add = var:bpm_skilled_characters
+                add = var:bpm_expert_characters
+            }
+        }
+    }
+    bpm_newcab_char_pick_subp = { INST = economy REMAINING = 12 }
+    bpm_newcab_char_pick_subp = { INST = diplomacy REMAINING = 11 }
+    bpm_newcab_char_pick_subp = { INST = schools REMAINING = 10 }
+    bpm_newcab_char_pick_subp = { INST = centralization REMAINING = 9 }
+    bpm_newcab_char_pick_subp = { INST = suffrage REMAINING = 8 }
+    bpm_newcab_char_pick_subp = { INST = police REMAINING = 7 }
+    bpm_newcab_char_pick_subp = { INST = health_system REMAINING = 6 }
+    bpm_newcab_char_pick_subp = { INST = colonial_affairs REMAINING = 5 }
+    bpm_newcab_char_pick_subp = { INST = home_affairs REMAINING = 4 }
+    bpm_newcab_char_pick_subp = { INST = workplace_safety REMAINING = 3 }
+    bpm_newcab_char_pick_subp = { INST = social_security REMAINING = 2 }
+    bpm_newcab_char_pick_subp = { INST = culture REMAINING = 1 }
+}
+
+bpm_newcab_char_pick_subp = {
+    if = { 
+        limit = {
+            OR = {
+                NOT = { exists = var:bpm_minister_of_$INST$ }
+                NOT = { has_variable = bpm_minister_of_$INST$ }
+            }
+        }
+        # If there are enough good candidates, we don't need to think about bad ones
+        if = {
+            limit = {
+                var:bpm_newcab_available_good_candidates >= $REMAINING$
+                any_interest_group = {
+                    var:bpm_cost_ig_position_var <= bpm_remaining_mandate
+                    OR = {
+                        var:bpm_skilled_characters > 0
+                        var:bpm_expert_characters > 0
+                    }
+                }
+            }
+            # Check for cheaper ones first
+            if = {
+                limit = {
+                    any_interest_group = {
+                        var:bpm_cost_ig_position_var < 5
+                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
+                        OR = {
+                            var:bpm_skilled_characters > 0
+                            var:bpm_expert_characters > 0
+                        }
+                    }
+                }
+                random_interest_group = {
+                    limit = {
+                        var:bpm_cost_ig_position_var < 5
+                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
+                        OR = {
+                            var:bpm_skilled_characters > 0
+                            var:bpm_expert_characters > 0
+                        }
+                    }
+                    save_scope_as = bpm_selected_ig
+                }
+                change_variable = {
+                    name = bpm_newcab_available_good_candidates
+                    subtract = 1
+                }
+            }
+            # If no cheaper ones, use regular cost ones
+            else = {
+                random_interest_group = {
+                    limit = {
+                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
+                        OR = {
+                            var:bpm_skilled_characters > 0
+                            var:bpm_expert_characters > 0
+                        }
+                    }
+                    save_scope_as = bpm_selected_ig
+                }
+                change_variable = {
+                    name = bpm_newcab_available_good_candidates
+                    subtract = 1
+                }
+            }
+        }
+        else = {
+            # Check for cheaper ones first
+            if = {
+                limit = {
+                    any_interest_group = {
+                        var:bpm_cost_ig_position_var < 5
+                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
+                    }
+                }
+                random_interest_group = {
+                    limit = {
+                        var:bpm_cost_ig_position_var < 5
+                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
+                    }
+                    save_scope_as = bpm_selected_ig
+                    if = {
+                        limit = {
+                            OR = {
+                                var:bpm_skilled_characters > 0
+                                var:bpm_expert_characters > 0
+                            }
+                        }
+                        owner = {
+                            change_variable = {
+                                name = bpm_newcab_available_good_candidates
+                                subtract = 1
+                            }
+                        }
+                    }
+                }
+            }
+            # If no cheaper ones, use regular cost ones
+            else = {
+                random_interest_group = {
+                    limit = {
+                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
+                    }
+                    save_scope_as = bpm_selected_ig
+                    if = {
+                        limit = {
+                            OR = {
+                                var:bpm_skilled_characters > 0
+                                var:bpm_expert_characters > 0
+                            }
+                        }
+                        owner = {
+                            change_variable = {
+                                name = bpm_newcab_available_good_candidates
+                                subtract = 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if = {
+            limit = {
+                exists = scope:bpm_selected_ig
+            }
+            bpm_generate_cabinet_character = yes
+            scope:bpm_selected_character ?= {
+                set_variable = {
+                    name = bpm_cabinet_minister
+                    value = owner.institution:institution_$INST$
+                }
+                bpm_add_to_cabinet_interaction_shared_effect = yes
+            }
+        }
+    }
+}
+
+# bpm_newcab_char_pick_subp = {
+#     if = {
+#         limit = {
+#             OR = {
+#                 NOT = {
+#                     exists = var:bpm_minister_of_$INST$
+#                 }
+#                 NOT = {
+#                     has_variable = bpm_minister_of_$INST$
+#                 }
+#             }
+#         }
+#         institution:institution_$INST$.type = {
+#             save_scope_as = bpm_reference_institution_type
+#         }
+#         every_interest_group = {
+#             limit = {
+#                 is_in_government = yes
+#                 leader = { NOT = { bpm_is_antagonistic_hypothetical_inst = { INST = $INST$ } } }
+#                 ig_approval > angry
+#             }
+#             owner = { add_to_variable_list = {
+#                 name = bpm_potential_interest_groups
+#                 target = prev
+#             } }
+#             set_variable = {
+#                 name = bpm_cost_ig_position_var
+#                 value = bpm_cost_ig_position
+#             }
+#         }
+#         if = {
+#             limit = {
+#                 any_in_list = {
+#                     variable = bpm_potential_interest_groups
+#                     OR = {
+#                         var:bpm_skilled_characters > 0
+#                         var:bpm_unskilled_characters > 0
+#                         var:bpm_expert_characters > 0
+#                     }
+#                     bpm_remaining_mandate >= var:bpm_cost_ig_position_var
+#                     var:bpm_cost_ig_position_var < 5
+#                 }
+#             }
+#             save_scope_value_as = {
+#                 name = bpm_lax_select
+#                 value = no
+#             }
+#         }
+#         else = {
+#             save_scope_value_as = {
+#                 name = bpm_lax_select
+#                 value = yes
+#             }
+#         }
+#         every_in_list = {
+#             variable = bpm_potential_interest_groups
+#             if = {
+#                 limit = {
+#                     OR = {
+#                         var:bpm_skilled_characters > 0
+#                         var:bpm_unskilled_characters > 0
+#                         var:bpm_expert_characters > 0
+#                     }
+#                     bpm_remaining_mandate >= var:bpm_cost_ig_position_var
+#                     OR = {
+#                         scope:bpm_lax_select = yes
+#                         var:bpm_cost_ig_position_var < 5
+#                     }
+#                 }
+#                 owner = { add_to_variable_list = {
+#                     name = bpm_valid_interest_groups
+#                     target = prev
+#                 } }
+#             }
+#         }
+
+#         ordered_interest_group = {
+#             limit = {
+#                 owner = { is_target_in_variable_list = { name = bpm_valid_interest_groups target = prev } }
+#             }
+#             min = 0
+#             max = 1
+#             order_by = bpm_remaining_mandate
+
+#             save_scope_as = bpm_selected_ig
+#         }
+
+#         if = {
+#             limit = {
+#                 exists = scope:bpm_selected_ig
+#             }
+#             bpm_generate_cabinet_character = yes
+
+#             scope:bpm_selected_character ?= {
+#                 set_variable = {
+#                     name = bpm_cabinet_minister
+#                     value = owner.institution:institution_$INST$
+#                 }
+#                 bpm_add_to_cabinet_interaction_shared_effect = yes
+#             }
+#         }
+
+#     }
+# }

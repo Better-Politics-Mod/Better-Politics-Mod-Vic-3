@@ -1,0 +1,151 @@
+bpm_setup_party_establishment = {
+    bpm_setup_party_establishment_subp = { PARTY = agrarian }
+    bpm_setup_party_establishment_subp = { PARTY = anarchist }
+    bpm_setup_party_establishment_subp = { PARTY = communist }
+    bpm_setup_party_establishment_subp = { PARTY = conservative }
+    bpm_setup_party_establishment_subp = { PARTY = fascist }
+    bpm_setup_party_establishment_subp = { PARTY = free_trade }
+    bpm_setup_party_establishment_subp = { PARTY = liberal }
+    bpm_setup_party_establishment_subp = { PARTY = military }
+    bpm_setup_party_establishment_subp = { PARTY = radical }
+    bpm_setup_party_establishment_subp = { PARTY = reactionary }
+    bpm_setup_party_establishment_subp = { PARTY = religious }
+    bpm_setup_party_establishment_subp = { PARTY = social_democrat }    
+}
+
+bpm_trend_party_establishment = {
+    bpm_trend_party_establishment_subp = { PARTY = agrarian }
+    bpm_trend_party_establishment_subp = { PARTY = anarchist }
+    bpm_trend_party_establishment_subp = { PARTY = communist }
+    bpm_trend_party_establishment_subp = { PARTY = conservative }
+    bpm_trend_party_establishment_subp = { PARTY = fascist }
+    bpm_trend_party_establishment_subp = { PARTY = free_trade }
+    bpm_trend_party_establishment_subp = { PARTY = liberal }
+    bpm_trend_party_establishment_subp = { PARTY = military }
+    bpm_trend_party_establishment_subp = { PARTY = radical }
+    bpm_trend_party_establishment_subp = { PARTY = reactionary }
+    bpm_trend_party_establishment_subp = { PARTY = religious }
+    bpm_trend_party_establishment_subp = { PARTY = social_democrat }    
+}
+
+bpm_momentum_party_establishment = {
+    bpm_trend_party_establishment = yes
+    bpm_momentum_party_establishment_subp = { PARTY = agrarian }
+    bpm_momentum_party_establishment_subp = { PARTY = anarchist }
+    bpm_momentum_party_establishment_subp = { PARTY = communist }
+    bpm_momentum_party_establishment_subp = { PARTY = conservative }
+    bpm_momentum_party_establishment_subp = { PARTY = fascist }
+    bpm_momentum_party_establishment_subp = { PARTY = free_trade }
+    bpm_momentum_party_establishment_subp = { PARTY = liberal }
+    bpm_momentum_party_establishment_subp = { PARTY = military }
+    bpm_momentum_party_establishment_subp = { PARTY = radical }
+    bpm_momentum_party_establishment_subp = { PARTY = reactionary }
+    bpm_momentum_party_establishment_subp = { PARTY = religious }
+    bpm_momentum_party_establishment_subp = { PARTY = social_democrat }
+}
+
+
+## SUBPs
+
+bpm_momentum_party_establishment_subp = {
+    if = {
+        limit = {
+            exists = py:$PARTY$_party
+        }
+        save_scope_value_as = {
+            name = calculated_momentum
+            value = {
+                value = 0.5
+                multiply = {
+                    value = var:bpm_party_establishment_$PARTY$
+                    subtract = 1
+                    multiply = 2
+                }
+                divide = 100
+                multiply = var:bpm_political_stability
+                divide = 100
+            }
+        }
+
+        save_scope_as = country
+        py:$PARTY$_party ?= {
+            add_momentum = {
+                value = {
+                    value = scope:calculated_momentum
+                    if = {
+                        limit = {
+                            scope:country = { has_variable = bpm_last_party_establishment_momentum_$PARTY$ } 
+                        }
+                        subtract = scope:country.var:bpm_last_party_establishment_momentum_$PARTY$
+                    }
+                }
+            }
+        }
+        set_variable = {
+            name = bpm_last_party_establishment_momentum_$PARTY$
+            value = scope:calculated_momentum
+        }
+    }
+
+}
+
+bpm_setup_party_establishment_subp = {
+    set_variable = {
+        name = bpm_party_establishment_$PARTY$ # easier to concat if it's at the end
+        value = 0
+    }
+}
+
+bpm_trend_party_establishment_subp = {
+    if = {
+        limit = {
+            exists = py:$PARTY$_party
+        }
+        set_variable = {
+            name = bpm_party_establishment_cached_trend_$PARTY$
+            value = py:$PARTY$_party.bpm_party_establishment_trend
+        }
+    }
+    else_if = {
+        limit = {
+            has_variable = bpm_party_establishment_$PARTY$
+        }
+        set_variable = {
+            name = bpm_party_establishment_cached_trend_$PARTY$
+            value = -2
+        }
+    }
+
+    if = {
+        limit = {
+            NOT = {
+                has_variable = bpm_party_establishment_$PARTY$
+            }
+            exists = py:$PARTY$_party
+        }
+        bpm_setup_party_establishment_subp = { PARTY = $PARTY$ }
+    }
+
+    if = {
+        limit = {
+            has_variable = bpm_party_establishment_cached_trend_$PARTY$
+        }
+        change_variable = {
+            name = bpm_party_establishment_$PARTY$
+            add = var:bpm_party_establishment_cached_trend_$PARTY$
+        }
+        clamp_variable = {
+            name = bpm_party_establishment_$PARTY$
+            max = 100
+            min = 0
+        }
+        # py:$PARTY$_party ?= {
+        #     every_member = {
+        #         set_variable = {
+        #             name = bpm_party_establishment
+        #             value = prev.var:bpm_party_establishment_$PARTY$
+        #         }
+        #     }
+        # }
+    }
+}

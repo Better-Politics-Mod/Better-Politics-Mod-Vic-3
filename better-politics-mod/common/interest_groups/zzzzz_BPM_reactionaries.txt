@@ -1,0 +1,220 @@
+﻿ig_reactionaries = {
+	color = hsv{ 0.67 0.7 0.9 }
+	texture = "gfx/interface/icons/ig_icons/reactionaries.dds"
+	layer = "revolution_dynamic_landowners"
+	index = 14
+	
+	ideologies = {
+		ideology_gov_radical_monarchist
+		ideology_dop_autocrat
+		ideology_sta_security_state
+		ideology_cit_ethnonationalist
+		ideology_rel_radical_moralist
+		ideology_mil_aristocratic_militarist
+		ideology_eco_traditional_agrarian
+		ideology_wel_no_welfare
+		ideology_fem_patriarchal
+		ideology_ban_conservative_supremacist
+		# Vanilla
+		ideology_reactionary
+		ideology_stratocratic
+		ideology_patriotic
+	}
+	
+	enable = {
+		owner = { NOT = { is_country_type = decentralized } }	
+	}
+	
+	on_enable = {
+		ig:ig_reactionaries ?= {
+			# set_ig_trait = ig_trait:ig_trait_right_systematic_corruption
+			set_ig_trait = ig_trait:ig_trait_right_bastion_of_freedom
+			set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
+		}
+	}
+	on_disable = {}
+	on_character_ig_membership = {}
+	
+	pop_potential = {
+		custom_tooltip = {
+			text = BPM_VALID_POP_FOR_IG
+			owner = {
+				has_technology_researched = rationalism
+			}
+		}
+	}
+	
+	pop_weight = {
+		value = 10
+
+		if = {
+			limit = { strata = middle }
+			add = {
+				desc = "MIDDLE_CLASS"
+				value = 50
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = aristocrats }
+			add = {
+				desc = "POP_ARISTOCRATS"
+				value = 150
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = capitalists }
+			add = {
+				desc = "POP_CAPITALISTS"
+				value = 100
+			}
+		}
+
+		add = {
+			desc = "RURAL"
+			if = {
+				limit = { 
+					bpm_pop_employment_is_rural = yes
+				}
+				value = 40
+			}
+		}
+
+		# PATCON
+		if = {
+			limit = {
+				scope:interest_group = { 
+					#has_ideology = ideology:ideology_wel_paternalistic_welfare 
+					bpm_ig_is_paternalistic = yes
+				}
+			}
+			if = {
+				limit = { strata = poor }
+				add = {
+					desc = "PATCON_LOWER_CLASS"
+					value = 50
+				}
+			}
+			else_if = {
+				limit = { strata = middle }
+				add = {
+					desc = "PATCON_MIDDLE_CLASS"
+					value = 50
+				}
+			}
+			else_if = {
+				limit = { is_pop_type = capitalists }
+				add = {
+					desc = "PATCON_CAPITALISTS"
+					value = 30
+				}
+			}
+		}
+
+		if = {
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			add = {
+				desc = "SLAVERY_SUPPORTERS"
+				if = {
+					limit = {
+						pop_has_primary_culture = yes
+						state = { is_slave_state = yes }
+					}
+					value = 200
+				}
+			}
+	
+			add = {
+				desc = "SLAVERY_DETRACTORS"
+				if = {
+					limit = {
+						owner = { NOT = { has_law = law_type:law_slavery_banned } }
+						OR = {
+							pop_has_primary_culture = no
+							state = { is_slave_state = no }
+						}
+					}
+					value = -150
+				}
+			}
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.005
+						add = 1
+						max = 1.5
+						min = 0.67
+					}
+				}
+			}	
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+			multiply = ig_attraction_from_radicals_and_loyalists
+		}
+		multiply = ig_attraction_to_ruler_ideology_from_stability
+
+		multiply = {
+			desc = "AT_WAR"	
+			value = 1.0
+
+			if = {
+				limit = { owner = { is_at_war = yes } }
+				value = 1.3
+			}		
+		}
+	}
+	
+	monarch_weight = {
+		value = 1.0
+		if = {
+			limit = { owner = { bpm_country_laws_no_voting = yes } }
+			multiply = 2.0
+		}
+	}	
+
+	agitator_weight = {
+		value = 1.0
+		multiply = bpm_base_agitator_weight
+	}
+	
+	commander_weight = {
+		value = 1.0
+		multiply = bpm_commander_assignment_from_laws_factor
+	}	
+	
+	noble_chance = {
+		value = 0.3
+	}
+	
+	female_commander_chance = {	
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
+	}
+	
+	female_politician_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
+
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
+	}
+	
+	# The chance that a commander belonging to this IG takes over leadership when it changes
+	# scope:character is the most popular commander in the IG
+	commander_leader_chance = {
+		value = 0.25
+		if = {
+			limit = {
+				exists = scope:character
+			}
+			multiply = {
+				value = 1
+				add = scope:character.popularity
+				min = 0
+			}
+		}
+	}
+}

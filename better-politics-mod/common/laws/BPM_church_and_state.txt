@@ -1,7 +1,6 @@
 ﻿# group = this is the law_group a law belongs to
 # icon = graphical icon shown in-game
 # modifier = {} modifier on country for having adopted this law
-# cultural_acceptance_rule and religious_acceptance_rule are triggers in the pop scope used to check if a pop should be accepted or discriminated against
 
 law_state_religion = {
 	group = lawgroup_church_and_state
@@ -26,15 +25,23 @@ law_state_religion = {
 		}
 	}
 	
-	religious_acceptance_rule = {
-		is_state_religion = scope:country
-	}
-	
 	modifier = {
 		interest_group_ig_devout_pol_str_mult = 0.3
 		state_radicals_from_sol_change_accepted_religion_mult = -0.1
 		state_loyalists_from_sol_change_accepted_religion_mult = 0.1	
 		country_authority_add = 200
+		country_state_religion_wages_mult = 0.1
+		country_non_state_religion_wages_mult = -0.1
+
+		country_acceptance_state_religion_add = 25
+		country_acceptance_shared_religious_trait_add = 0
+		country_acceptance_religion_base_add = -25	
+
+		country_allow_conversion_violent_hostility_bool = no
+		country_allow_conversion_cultural_erasure_bool = yes
+		country_allow_conversion_open_prejudice_bool = yes
+		country_allow_conversion_second_rate_citizen_bool = yes
+		country_allow_conversion_full_acceptance_bool = yes
 	}
 
 	can_impose = {
@@ -49,20 +56,6 @@ law_state_religion = {
 			can_impose_law_default = yes
 		}
 	}
-
-	pop_support = {
-		value = 0
-		# Clergy like theocracy
-		add = {
-			desc = "POP_CLERGYMEN"
-			if = {
-				limit = {
-					is_pop_type = clergymen
-				}
-			}
-			value = 0.25
-		}
-	}
 	
 	ai_will_do = {
 		exists = ruler
@@ -75,11 +68,7 @@ law_state_religion = {
 		value = 0
 		
 		if = {
-			limit = { 
-				has_journal_entry = je_government_petition
-				has_variable = desired_law_var
-                scope:law = var:desired_law_var
-			}
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
 			add = 750
 		}
 	}
@@ -104,6 +93,20 @@ law_state_religion = {
 			else = {
 				multiply = 5
 			}
+		}
+
+		if = {
+			limit = {
+				scope:target_country = {
+					c:BIC ?= this
+					OR = {	
+						has_journal_entry = je_british_dictate_plantations
+						has_journal_entry = je_british_dictate_military
+						has_journal_entry = je_british_dictate_universities
+					}
+				}
+			}
+			multiply = 0
 		}
 	}
 }
@@ -139,15 +142,23 @@ law_freedom_of_conscience = {
 		}
 	}
 	
-	religious_acceptance_rule = {
-		shares_heritage_trait_with_state_religion = scope:country
-	}
-	
 	modifier = {
 		interest_group_ig_devout_pol_str_mult = 0.15
 		state_radicals_from_sol_change_accepted_religion_mult = -0.05
 		state_loyalists_from_sol_change_accepted_religion_mult = 0.05	
 		country_authority_add = 100
+		country_state_religion_wages_mult = 0.05
+		country_non_state_religion_wages_mult = -0.05	
+
+		country_acceptance_state_religion_add = 20
+		country_acceptance_shared_religious_trait_add = 15
+		country_acceptance_religion_base_add = 0
+
+		country_allow_conversion_violent_hostility_bool = no
+		country_allow_conversion_cultural_erasure_bool = yes
+		country_allow_conversion_open_prejudice_bool = yes
+		country_allow_conversion_second_rate_citizen_bool = yes
+		country_allow_conversion_full_acceptance_bool = yes
 	}
 	
 	can_impose = {
@@ -163,49 +174,11 @@ law_freedom_of_conscience = {
 		}
 	}
 
-	pop_support = {
-		value = 0
-		add = {
-			desc = "POP_ACADEMICS"
-			# Academics generally against religious perseecution
-			if = {
-				limit = {
-					owner = {
-						NOT = { has_law = law_type:law_total_separation }
-					}
-					is_pop_type = academics
-				}
-				value = 0.25
-			}
-		}
-		add = {
-			desc = "POP_DISCRIMINATED"
-			if = {
-				limit = { 
-					religion_accepted = no
-					owner = { NOT = { has_law = law_type:law_total_separation } }
-				}
-				add = 0.5
-				
-				if = {
-					limit = { 
-						standard_of_living <= 10
-					}
-					add = 0.5
-				}
-			}		
-		}
-	}
-
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
 		
 		if = {
-			limit = { 
-				has_journal_entry = je_government_petition
-				has_variable = desired_law_var
-                scope:law = var:desired_law_var
-			}
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
 			add = 750
 		}
 
@@ -259,8 +232,16 @@ law_total_separation = {
 		}
 	}
 	
-	religious_acceptance_rule = {
-		always = yes
+	modifier = {
+		country_acceptance_state_religion_add = 15
+		country_acceptance_shared_religious_trait_add = 15
+		country_acceptance_religion_base_add = 15
+
+		country_allow_conversion_violent_hostility_bool = no
+		country_allow_conversion_cultural_erasure_bool = yes
+		country_allow_conversion_open_prejudice_bool = yes
+		country_allow_conversion_second_rate_citizen_bool = yes
+		country_allow_conversion_full_acceptance_bool = yes
 	}
 	
 	can_impose = {
@@ -276,60 +257,13 @@ law_total_separation = {
 		}
 	}
 
-	pop_support = {
-		value = 0
-
-		add = {
-			desc = "POP_ACADEMICS"
-			# Academics generally against religious perseecution
-			if = {
-				limit = {
-					is_pop_type = academics
-				}
-				value = 0.25
-			}
-		}
-
-		# Atheists will support this
-		add = {
-			desc = "POP_ATHEISTS"
-			if = {
-				limit = {
-					has_pop_religion = atheist
-				}
-				value = 0.5
-			}
-		}
-
-		add = {
-			desc = "POP_DISCRIMINATED"
-			if = {
-				limit = { 
-					religion_accepted = no
-				}
-				add = 0.5
-
-				if = {
-					limit = { 
-						standard_of_living <= 10
-					}
-					add = 0.5
-				}
-			}			
-		}
-	}
-
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
 		
 		if = {
-			limit = { 
-				has_journal_entry = je_government_petition
-				has_variable = desired_law_var
-                scope:law = var:desired_law_var
-			}
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
 			add = 750
-		}
+		}	
 	}
 }
 
@@ -348,12 +282,6 @@ law_state_atheism = {
 		law_theocracy
 		law_anarchy
 	}
-
-	modifier = {
-		interest_group_ig_devout_pol_str_mult = -0.5
-		state_conversion_mult = 0.25
-		country_authority_add = 200
-	}
 	
 	can_enact = {
 		ig:ig_devout = {
@@ -365,6 +293,22 @@ law_state_atheism = {
 				NOT = { has_identity = identity:identity_religious }
 			}
 		}
+	}
+		
+	modifier = {
+		interest_group_ig_devout_pol_str_mult = -0.5
+		state_conversion_mult = 0.25
+		country_authority_add = 200
+
+		country_acceptance_state_religion_add = 15
+		country_acceptance_shared_religious_trait_add = 0
+		country_acceptance_religion_base_add = -10
+
+		country_allow_conversion_violent_hostility_bool = no
+		country_allow_conversion_cultural_erasure_bool = yes
+		country_allow_conversion_open_prejudice_bool = yes
+		country_allow_conversion_second_rate_citizen_bool = yes
+		country_allow_conversion_full_acceptance_bool = yes
 	}
 	
 	on_enact = {
@@ -393,8 +337,8 @@ law_state_atheism = {
 		recalculate_pop_ig_support = yes
 	}
 	
-	religious_acceptance_rule = {
-		is_state_religion = scope:country
+	on_activate = {
+		set_state_religion = rel:atheist
 	}
 
 	can_impose = {
@@ -410,39 +354,11 @@ law_state_atheism = {
 		}
 	}
 
-	pop_support = {
-		value = 0
-		# Some euphoric academics will support this
-		add = {
-			desc = "POP_ACADEMICS"
-			if = {
-				limit = {
-					is_pop_type = academics
-				}
-				value = 0.1
-			}
-		}
-		# Atheists will support this
-		add = {
-			desc = "POP_ATHEISTS"
-			if = {
-				limit = {
-					has_pop_religion = atheist
-				}
-				value = 0.5
-			}
-		}
-	}
-
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
 		
 		if = {
-			limit = { 
-				has_journal_entry = je_government_petition
-				has_variable = desired_law_var
-                scope:law = var:desired_law_var
-			}
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
 			add = 750
 		}
 	}
@@ -466,6 +382,20 @@ law_state_atheism = {
 			else = {
 				multiply = 2
 			}
+		}
+
+		if = {
+			limit = {
+				scope:target_country = {
+					c:BIC ?= this
+					OR = {	
+						has_journal_entry = je_british_dictate_plantations
+						has_journal_entry = je_british_dictate_military
+						has_journal_entry = je_british_dictate_universities
+					}
+				}
+			}
+			multiply = 0
 		}
 	}
 }

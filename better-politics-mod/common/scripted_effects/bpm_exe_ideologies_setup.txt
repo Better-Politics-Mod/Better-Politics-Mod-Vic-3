@@ -1,8 +1,13 @@
 
 bpm_set_exe_ideology = {
-    bpm_remove_all_exe_ideologies = yes
-    add_ideology = ideology_exe_$ideology$
-    bpm_reorder_ideologies = yes
+    if = {
+        limit = {
+            NOT = { has_ideology = ideology:ideology_exe_$ideology$ }
+        }
+        set_variable = bpm_exe_ideology_changed
+        bpm_remove_all_exe_ideologies = yes
+        add_ideology = ideology_exe_$ideology$
+    }
 }
 
 bpm_set_exe_ideology_weak_rigid     = { bpm_set_exe_ideology = { ideology = weak_rigid     } }
@@ -13,25 +18,34 @@ bpm_set_exe_ideology_traditional    = { bpm_set_exe_ideology = { ideology = trad
 bpm_set_exe_ideology_ceremonial     = { bpm_set_exe_ideology = { ideology = ceremonial     } }
 
 bpm_update_exe_ideology = {
-    every_interest_group = {
-        if = {
-            limit = {
-                NOT = {
-                    has_variable = bpm_do_not_touch_exe_ideology
-                }
-            }
-            bpm_remove_all_exe_ideologies = yes
-            bpm_set_rest_exe_ideology = yes
-            bpm_update_exe_ideology_extremists = yes
-            bpm_update_exe_ideology_crisis = yes
+    if = {
+        limit = {
+            NOT = { is_country_type = decentralized }
+        }
+        every_interest_group = {
             if = {
                 limit = {
-                    is_interest_group_type = ig_anarchists
+                    NOT = {
+                        has_variable = bpm_do_not_touch_exe_ideology
+                    }
                 }
-                bpm_set_exe_ideology_ceremonial = yes
+                # bpm_remove_all_exe_ideologies = yes
+                bpm_set_rest_exe_ideology = yes
+                bpm_update_exe_ideology_extremists = yes
+                bpm_update_exe_ideology_crisis = yes
+                if = {
+                    limit = {
+                        is_interest_group_type = ig_anarchists
+                    }
+                    bpm_set_exe_ideology_ceremonial = yes
+                }
+                if = {
+                    limit = { has_variable = bpm_exe_ideology_changed }
+                    bpm_reorder_ideologies = yes
+                }
+                remove_variable = bpm_exe_ideology_changed
             }
-            bpm_reorder_ideologies = yes
-        }
+        }    
     }
 }
 
@@ -135,26 +149,23 @@ bpm_update_exe_ideology_crisis = {
 bpm_set_rest_exe_ideology = {
     if = {
         limit = {
-            bpm_ig_is_institutional = yes
-        }
-        bpm_set_rest_exe_ideology_ing = yes
-    }
-    else = {
-        bpm_set_rest_exe_ideology_idg = yes
-    }
-    if = {
-        limit = {
             is_interest_group_type = ig_trade_unions
         }
         bpm_set_exe_ideology_weak_rigid = yes
     }
-    if = {
+    else_if = {
+        limit = {
+            bpm_ig_is_institutional = yes
+        }
+        bpm_set_rest_exe_ideology_ing = yes
+    }
+    else_if = {
         limit = {
             is_interest_group_type = ig_anarchists
         }
         bpm_set_exe_ideology_weak_dynamic = yes
     }
-    if = {
+    else_if = {
         limit = {
             is_interest_group_type = ig_reactionaries
             c:USA ?= owner
@@ -162,28 +173,12 @@ bpm_set_rest_exe_ideology = {
         }
         bpm_set_exe_ideology_strong_dynamic = yes
     }
+    else = {
+        bpm_set_rest_exe_ideology_idg = yes
+    }
 }
 
 bpm_set_rest_exe_ideology_ing = {
-    bpm_set_exe_ideology_strong_rigid = yes
-    if = {
-        limit = {
-            owner = {
-                #bpm_country_is_in_new_world = yes
-                bpm_country_is_republic = yes
-            }
-        }
-        bpm_set_exe_ideology_strong_dynamic = yes
-    }
-    if = {
-        limit = {
-            OR = {
-                is_interest_group_type = ig_rural_folk
-            }
-            owner = { has_law = law_type:law_monarchy }
-        }
-        bpm_set_exe_ideology_weak_rigid = yes
-    }
     if = {
         limit = {
             OR = {
@@ -192,6 +187,22 @@ bpm_set_rest_exe_ideology_ing = {
             }
         }
         bpm_remove_all_exe_ideologies = yes
+    }
+    else_if = {
+        limit = {
+            is_interest_group_type = ig_rural_folk
+            owner = { has_law = law_type:law_monarchy }
+        }
+        bpm_set_exe_ideology_weak_rigid = yes
+    }
+    else_if = {
+        limit = {
+            owner = { bpm_country_is_republic = yes }
+        }
+        bpm_set_exe_ideology_strong_dynamic = yes
+    }
+    else = {
+        bpm_set_exe_ideology_strong_rigid = yes
     }
     if = {
         limit = {
@@ -209,69 +220,85 @@ bpm_set_rest_exe_ideology_ing = {
 }
 
 bpm_set_rest_exe_ideology_idg = {
-    bpm_set_exe_ideology_strong_dynamic = yes
-
     # Under a monarchy
     # People won't want the Monarch to exercise too much power
     if = {
         limit = {
-            OR = { 
-                bpm_ig_is_liberal = yes
-                bpm_ig_is_left_wing = yes
-            }
             owner = { has_law = law_type:law_monarchy }
         }
-        bpm_set_exe_ideology_ceremonial = yes
-    }
-    if = {
-        limit = {
-            is_interest_group_type = ig_conservatives
-            owner = { has_law = law_type:law_monarchy }
-        }
-        bpm_set_exe_ideology_weak_rigid = yes
-    }
-    if = {
-        limit = {
-            owner = { has_law = law_type:law_monarchy }
-            is_interest_group_type = ig_reactionaries
-        }
-        bpm_set_exe_ideology_traditional = yes
-    }
-    if = {
-        limit = {
-            owner = {
-                exists = c:BRZ
-                c:BRZ = THIS
-                has_law = law_type:law_monarchy
+        if = {
+            limit = {
+                OR = { 
+                    bpm_ig_is_liberal = yes
+                    bpm_ig_is_left_wing = yes
+                }
             }
-            is_interest_group_type = ig_conservatives
-        }
-        bpm_set_exe_ideology_strong_rigid = yes
-    }
-    if = {
-        limit = {
-            owner = {
-                exists = c:BRZ
-                c:BRZ = THIS
-                has_law = law_type:law_monarchy
+            if = {
+                limit = {
+                    c:BRZ ?= owner
+                    bpm_ig_is_monarchist = yes
+                }
+                bpm_set_exe_ideology_weak_rigid = yes
             }
-            bpm_ig_is_liberal = yes
-            bpm_ig_is_monarchist = yes
-        }
-        bpm_set_exe_ideology_weak_rigid = yes
-    }
-    if = {
-        limit = {
-            owner = {
-                exists = c:BRZ
-                c:BRZ = THIS
-                NOT = { has_law = law_type:law_monarchy }
+            else = {
+                bpm_set_exe_ideology_ceremonial = yes
             }
+        }
+        else_if = {
+            limit = {
+                is_interest_group_type = ig_conservatives
+            }
+            if = {
+                limit = {
+                    owner = {
+                        OR = {
+                            AND = {
+                                exists = c:BRZ
+                                c:BRZ = THIS
+                            }
+                            AND = {
+                                exists = c:SPA
+                                c:SPA = THIS
+                            }
+                            AND = {
+                                exists = c:PRU
+                                c:PRU = THIS
+                            }
+                            AND = {
+                                exists = c:AUS
+                                c:AUS = THIS
+                            }
+                        }
+                    }
+                }
+                bpm_set_exe_ideology_traditional = yes
+            }
+            else = {
+                bpm_set_exe_ideology_weak_rigid = yes
+            }
+        }
+        else_if = {
+            limit = {
+                is_interest_group_type = ig_reactionaries
+            }
+            bpm_set_exe_ideology_traditional = yes
+        }
+        else = {
+            bpm_set_exe_ideology_strong_dynamic = yes
+        }
+    }
+    # Non-monarchies
+    else_if = {
+        limit = {
             OR = {
                 is_interest_group_type = ig_radicals
                 is_interest_group_type = ig_agrarian_populists
             }
+            c:BRZ ?= owner
         }
         bpm_set_exe_ideology_weak_dynamic = yes
+    }
+    else = {
+        bpm_set_exe_ideology_strong_dynamic = yes
     }
 }

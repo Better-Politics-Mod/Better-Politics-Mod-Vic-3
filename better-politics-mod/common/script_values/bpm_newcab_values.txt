@@ -13,13 +13,74 @@ bpm_relative_government_clout = {
     divide = owner.bpm_total_government_clout
 }
 
+bpm_government_total_mandate_value = {
+    value = 0
+    if = {
+        limit = { has_law = law_type:law_advisory_body }
+        add = 100
+    }
+    else_if = {
+        limit = { has_law = law_type:law_separated_powers }
+        add = 80
+    }
+    else_if = {
+        limit = { has_law = law_type:law_supreme_legislature }
+        add = 60
+    }
+}
+
 bpm_mandate_deserved = {
-    value = owner.var:bpm_government_mandate
-    multiply = bpm_relative_government_clout
+    value = 0
+    owner = {
+        add = bpm_government_total_mandate_value
+    }
+    multiply = ig_clout
     if = {
         limit = {
             owner = { has_law = law_type:law_appointed_by_hos }
             bpm_ig_is_institutional = yes
+        }
+        multiply = 1.25
+    }
+    else_if = {
+        limit = {
+            owner = { has_law = law_type:law_appointed_on_advice }
+        }
+        multiply = {
+            value = ig_clout
+            add = 1
+            if = {
+                limit = {
+                    OR = {
+                        bpm_ig_is_institutional = yes
+                    }
+                }
+                add = 0.1
+            }
+        }
+    }
+    else_if = {
+        limit = {
+            owner = { has_law = law_type:law_answers_to_legislature }
+            is_in_government = yes
+        }
+        multiply = {
+            value = ig_clout
+            multiply = 4
+            add = 1
+        }
+    }
+    else_if = {
+        limit = {
+            owner = { has_law = law_type:law_no_separate_hog }
+            OR = {
+                this = owner.ruler.interest_group
+                AND = {
+                    exists = party
+                    exists = owner.ruler.interest_group.party
+                    this.party = owner.ruler.interest_group.party
+                }
+            }
         }
         multiply = 1.2
     }

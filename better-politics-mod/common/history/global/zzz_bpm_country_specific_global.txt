@@ -121,6 +121,7 @@
 	}
 
 	c:TUR = {
+		activate_law = law_type:law_appointed_by_hos
 		every_interest_group = {
 			limit = {
 				OR = {
@@ -162,30 +163,29 @@
 		activate_law = law_type:law_answers_to_legislature
 		activate_law = law_type:law_advisory_body
 		activate_law = law_type:law_no_colonial_affairs
+
+		add_modifier = bpm_bakufu_administrative_state
 		#set_variable = bpm_has_cabinet
 
 	}
 
 	c:KOR = {
-		every_interest_group = {
-			limit = {
-				OR = {
-					has_ideology = ideology:ideology_eco_serf_economy
-					is_interest_group_type = ig_landowners
-				}
-			}
+		ig:ig_petty_bourgeoisie = { 
+			set_interest_group_name = ig_yangban
 			bpm_remove_all_eco_ideologies = yes
 			add_ideology = ideology_eco_trad_isolationist
 		}
-		ig:ig_petty_bourgeoisie = { 
-			set_interest_group_name = ig_yangban
-		}
 		ig:ig_landowners = { 
 			set_interest_group_name = ig_landowners
+			bpm_remove_all_eco_ideologies = yes
+			add_ideology = ideology_eco_trad_isolationist
 		}
 	}
 
 	c:CHI = {
+		add_modifier = {
+			name = bpm_canton_system
+		}
 		every_interest_group = {
 			limit = {
 				OR = {
@@ -196,6 +196,17 @@
 			bpm_remove_all_cit_ideologies = yes
 			add_ideology = ideology_cit_multiethnic_nationalist
 		}
+		ig:ig_petty_bourgeoisie = {
+			bpm_remove_all_exe_ideologies = yes
+			add_ideology = ideology_exe_traditional
+		}
+		activate_law = law_type:law_tenant_farmers
+		activate_law = law_type:law_agrarianism
+	}
+
+	c:DAI = {
+		activate_law = law_type:law_appointed_bureaucrats
+		set_capital = STATE_ANNAM
 	}
 
 	# TODO: certain devout should be absolutist
@@ -208,6 +219,12 @@
 			}				
 		}
 		activate_law = law_type:law_limited_labor_unions
+		ig:ig_industrialists ?= { 
+			add_modifier = {
+				name = bpm_empowered_ig
+				months = long_modifier_time
+			}
+		}
 	}
 	every_country = {
 		limit = { is_subject_of = c:GBR }
@@ -262,13 +279,17 @@
 
 	c:NET = {
 		activate_law = law_type:law_oligarchy
-		activate_law = law_type:law_appointed_bureaucrats
+		activate_law = law_type:law_hereditary_bureaucrats
+		activate_law = law_type:law_devolved
 		bpm_setup_country = yes
+		activate_law = law_type:law_advisory_body
+		activate_law = law_type:law_no_separate_hog
 	}
 
 	c:POR = {
 		add_technology_researched = egalitarianism
 		activate_law = law_type:law_landed_voting
+		activate_law = law_type:law_separated_powers
 		if = {
 			limit = { exists = py:conservative_party }
 			py:conservative_party = {
@@ -276,8 +297,8 @@
 			}				
 		}
 		ig:ig_reactionaries ?= {
-				bpm_remove_all_dop_ideologies = yes
-				add_ideology = ideology_dop_autocrat
+				#bpm_remove_all_dop_ideologies = yes
+				#add_ideology = ideology_dop_autocrat
 				bpm_remove_all_sta_ideologies = yes
 				add_ideology = ideology_sta_decentralized_state
 				bpm_remove_all_cit_ideologies = yes
@@ -325,18 +346,33 @@
 	
 	c:SPA = {
 		add_technology_researched = egalitarianism
+		activate_law = law_type:law_landed_voting
+		activate_law = law_type:law_separated_powers
 		activate_law = law_type:law_slavery_banned
 		bpm_make_igs_not_pro_slavery_serfdom = yes
+
+		if = {
+			limit = { exists = py:liberal_party }
+			py:liberal_party = {
+				set_ruling_party = yes
+			}				
+		}
+
 		ig:ig_reactionaries ?= { 
 			set_interest_group_name = ig_carlists
-			bpm_remove_all_dop_ideologies = yes
-			add_ideology = ideology_dop_autocrat
+			#bpm_remove_all_dop_ideologies = yes
+			#add_ideology = ideology_dop_autocrat
 			bpm_remove_all_sta_ideologies = yes
 			add_ideology = ideology_sta_decentralized_state
 			bpm_remove_all_cit_ideologies = yes
 			add_ideology = ideology_cit_multiethnic_nationalist
 			bpm_remove_all_wel_ideologies = yes
 			add_ideology = ideology_wel_religious_welfare
+		}
+		ig:ig_liberals ?= { 
+			add_ruling_interest_group = yes
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_federated_state
 		}
 	}
 
@@ -355,25 +391,110 @@
 		add_journal_entry = { type = je_bpm_russia_patchwork_governance }
 	}
 
-	c:CHI = {
-		activate_law = law_type:law_agrarianism
+	every_country = {
+		limit = {
+			country_has_state_religion = rel:confucian
+			has_law = law_type:law_monarchy
+		}
+		ig:ig_petty_bourgeoisie = {
+			set_interest_group_name = ig_scholar_officials
+			add_ruling_interest_group = yes
+			bpm_remove_all_eco_ideologies = yes
+			bpm_remove_all_wel_ideologies = yes
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_decentralized_state
+			add_ideology = ideology_wel_religious_welfare
+			if = {
+				limit = { owner = { has_law = law_type:law_debt_slavery } }
+				add_ideology = ideology_eco_debt_serf_economy
+			}
+			else_if = {
+				limit = { owner = { has_law = law_type:law_isolationism } }
+				add_ideology = ideology_eco_trad_isolationist
+			}
+			else = { add_ideology = ideology_eco_serf_economy }
+			bpm_ig_make_scholar_paternalistic = yes
+		}
+		ig:ig_landowners = {
+			set_interest_group_name = ig_landed_gentry
+			remove_ruling_interest_group = yes
+		}
 	}
-
+		# add_ruling_interest_group = {
+        # 	ig_petty_bourgeoisie
+        # }
+		# remove_ruling_interest_group = {
+		# 	ig_landowners
+		# }
 	c:GRE = {
 		add_technology_researched = egalitarianism
+		activate_law = law_type:law_appointed_by_hos
+		activate_law = law_type:law_landed_voting
 		ig:ig_devout = {
 			add_ruling_interest_group = yes
 		}
-		ig:ig_reactionaries ?= { 
+		#ig:ig_reactionaries ?= { 
+		#	bpm_remove_all_dop_ideologies = yes
+		#	add_ideology = ideology_dop_autocrat
+		#}
+		ig:ig_landowners ?= { 
 			bpm_remove_all_dop_ideologies = yes
 			add_ideology = ideology_dop_autocrat
 		}
-		add_journal_entry = { type = je_bpm_greece_early_parties }
+		ig:ig_petty_bourgeoisie = { 
+			add_ruling_interest_group = yes
+		}
+		#add_journal_entry = { type = je_bpm_greece_early_parties }
 	}
 
 	c:BRN ?= {
 		activate_law = law_type:law_presidential_republic
 		activate_law = law_type:law_oligarchy
+	}
+
+	c:SOK ?= {
+		activate_law = law_type:law_appointed_by_hos
+	}
+
+	c:PER ?= {
+		activate_law = law_type:law_appointed_by_hos
+		ig:ig_reactionaries ?= { 
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_meritocratic_autocrat
+		}
+	}
+
+	c:EGY ?= {
+		activate_law = law_type:law_no_separate_hog
+	}
+
+	c:SAR = {
+		ig:ig_reactionaries ?= { 
+			bpm_remove_all_wel_ideologies = yes
+			add_ideology = ideology_wel_religious_welfare
+		}
+	}
+
+	c:AUS = {
+		ig:ig_reactionaries ?= { 
+			bpm_remove_all_wel_ideologies = yes
+			add_ideology = ideology_wel_religious_welfare
+		}
+	}
+
+	c:HAN = {
+		activate_law = law_type:law_landed_voting
+		activate_law = law_type:law_separated_powers
+	}
+
+	c:BAV = {
+		activate_law = law_type:law_landed_voting
+		activate_law = law_type:law_separated_powers
+	}
+
+	c:SAX = {
+		activate_law = law_type:law_landed_voting
+		activate_law = law_type:law_separated_powers
 	}
 
 	every_country = {
@@ -392,12 +513,70 @@
 		}
 	}
 
+	every_country = {
+		limit = {
+			has_law = law_type:law_extraction_economy
+		}
+		ig:ig_industrialists = {
+			bpm_remove_all_gov_ideologies = yes
+			add_ideology = ideology_gov_liberal_republican
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_meritocratic_autocrat
+			bpm_remove_all_eco_ideologies = yes
+			add_ideology = ideology_eco_colonialist
+			bpm_remove_all_wel_ideologies = yes
+			add_ideology = ideology_wel_market_welfare
+			bpm_remove_all_cit_ideologies = yes
+			add_ideology = ideology_cit_segregationist
+		}
+		ig:ig_petty_bourgeoisie = {
+			bpm_remove_all_gov_ideologies = yes
+			add_ideology = ideology_gov_liberal_republican
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_oligarch
+			bpm_remove_all_eco_ideologies = yes
+			add_ideology = ideology_eco_colonialist
+			bpm_remove_all_wel_ideologies = yes
+			add_ideology = ideology_wel_market_welfare
+			bpm_remove_all_cit_ideologies = yes
+			add_ideology = ideology_cit_segregationist
+		}
+	}
+
+	c:BIC = {
+		ig:ig_petty_bourgeoisie = {
+			bpm_remove_all_cit_ideologies = yes
+			add_ideology = ideology_cit_liberal_nationalist
+		}
+	}
+
+	c:ALK = {
+		ig:ig_industrialists = {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_autocrat
+		}
+		ig:ig_petty_bourgeoisie = {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_meritocratic_autocrat
+		}
+	}
+
+	# DOP LAWS
+	# every_country = {
+	# 	limit = {
+	# 		bpm_country_is_pre_constitutional = yes
+	# 	}
+	# 	ig:ig_conservatives ?= {
+	# 		bpm_remove_all_dop_ideologies = yes
+	# 		add_ideology = ideology_dop_reform_oligarch
+	# 	}
+	# }
+
 	# CENTRALIZATION LAWS
 	every_country = {
 		limit = {
 			OR = {
 				this = c:BEL
-				this = c:NET
 				this = c:LIB
 				country_has_primary_culture = cu:boer
 				AND = {
@@ -461,7 +640,6 @@
 				this = c:AUS
 				this = c:PRU
 				this = c:SPA
-				this = c:DAI
 			}
 		}
 		activate_law = law_type:law_devolved
@@ -541,9 +719,10 @@
 				this = c:PRU
 				this = c:FRA
 				this = c:USA
-				bpm_country_is_latin_american = true
+				this = c:BRZ
+				#bpm_country_is_latin_american = yes
 			}
-			NOT = { has_law = law_type:law_peasant_levies }
+			#NOT = { has_law = law_type:law_peasant_levies }
 		}
 		activate_law = law_type:law_professional_officers
 	}
@@ -609,7 +788,6 @@
 					this = c:TUR
 					this = c:KOR
 					this = c:DAI
-					this = c:JAP
 					this = c:SIA
 					this = c:PER
 					this = c:EGY

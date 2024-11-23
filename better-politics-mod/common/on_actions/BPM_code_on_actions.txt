@@ -4,12 +4,6 @@
 	}
 }
 
-on_political_movement_formed = {
-	on_actions = {
-		on_bpm_political_movement_formed
-	}
-}
-
 on_yearly_pulse_country = {
 	on_actions = {
 		on_bpm_yearly_pulse_country
@@ -256,6 +250,7 @@ on_bpm_half_yearly_pulse_country = {
 on_bpm_monthly_pulse_country = {
 	events = {
 		bpm_misc.1
+		bpm_misc.3
 		bpm_ig_attraction_utils.1
 		bpm_anarchist_split.1
 		bpm_anarchist_split.2
@@ -276,6 +271,7 @@ on_bpm_monthly_pulse_country = {
 		bpm_france.3
 		bpm_france.4
 		bpm_clear_stubbornness_utils.3
+		bpm_china.3
 		bpm_colony_events.2
 		bpm_colony_events.3
 	}
@@ -330,19 +326,19 @@ on_bpm_monthly_pulse_country = {
 					bpm_reorder_ideologies = yes
 				}
 			}
-			every_interest_group = {
-				if = {
-					limit = {
-						bpm_ig_enabled = no
-						OR = {
-							is_being_bolstered = yes
-							is_being_suppressed = yes
-						}
-					}
-					set_ig_bolstering = no
-					set_ig_suppression = no
-				}
-			}
+			# every_interest_group = {
+			# 	if = {
+			# 		limit = {
+			# 			bpm_ig_enabled = no
+			# 			OR = {
+			# 				is_being_bolstered = yes
+			# 				is_being_suppressed = yes
+			# 			}
+			# 		}
+			# 		set_ig_bolstering = no
+			# 		set_ig_suppression = no
+			# 	}
+			# }
 		}
 		if = {
 			limit = {
@@ -781,6 +777,40 @@ on_bpm_revolution_start = {
 			set_variable = bpm_can_new_constitution
 		}
 
+		if = {
+			limit = {
+				c:CHI ?= THIS
+				has_journal_entry = je_warlord_china
+			}
+			change_variable = {
+				name = bpm_heaven_mandate
+				add = -5
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					country_has_primary_culture = cu:manchu
+					OR = {
+						is_secessionist = yes
+						is_revolutionary = yes
+					}
+				}
+			}
+			remove_primary_culture = cu:manchu
+			every_scope_character = {
+				limit= {
+					OR = {
+						has_role = politician
+						has_role = general
+					}
+					culture = cu:manchu
+				}
+				kill_character = yes
+			}
+		}
+
 		# Set target as a potential legitimator of syndicalism if they win
 		if = {
 			limit = {
@@ -1016,6 +1046,24 @@ on_bpm_civil_war_won = {
 
 		if = {
 			limit = {
+				c:CHI ?= THIS
+				# has_journal_entry = je_warlord_china
+				# country_has_primary_culture = cu:manchu
+				ruler = {
+					NOT = { culture = cu:manchu }
+				}
+			}
+			trigger_event = {
+				id = bpm_china_revolts.100
+				popup = yes
+			}
+			set_variable = {
+				name = bpm_han_restoration_var
+			}
+		}
+
+		if = {
+			limit = {
 				has_global_variable = peoples_springtime_happening
 				NOT = { has_variable = completed_peoples_springtime_je }
 				OR = {
@@ -1133,11 +1181,11 @@ on_bpm_country_releasing = {
 
 on_bpm_country_formed = {
 	effect = {
-		bpm_setup_country = yes
 		if = {
 			limit = { NOT = { has_law = law_type:law_confederated }}
 			activate_law = law_type:law_federated
 		}
+		bpm_setup_country = yes
 	}
 }
 
@@ -1177,22 +1225,6 @@ on_bpm_character_creation = {
 				interest_group ?= { bpm_ig_is_institutional = yes }
 			}
 			set_variable = bpm_character_in_institutional_ig_var
-		}
-	}
-}
-
-on_bpm_political_movement_formed = {
-	effect = {
-		if = {
-			limit = {
-				NOT = { is_political_movement_type = movement_to_preserve }
-				desired_law ?= {
-					bpm_is_repeatable_law = yes
-				}
-			}
-			add_modifier = {
-				name = bpm_repeatable_movements_not_allowed
-			}
 		}
 	}
 }

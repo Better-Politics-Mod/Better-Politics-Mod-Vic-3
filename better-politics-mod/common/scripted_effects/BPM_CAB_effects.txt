@@ -374,26 +374,6 @@ bpm_initialize_cabinet = {
 
     set_variable = bpm_has_cabinet
 
-    if = {
-        limit = {
-            is_player = no
-        }
-        bpm_cab_fill_positions = yes
-    }
-
-
-    set_variable = {
-        name = bpm_cached_antagonism
-        value = 0
-    }
-    set_variable = {
-        name = bpm_cached_antagonism_raw
-        value = 0
-    }
-    set_variable = {
-        name = bpm_cab_synergy
-        value = 1
-    }
     every_interest_group = {
         set_variable = {
             name = bpm_expert_characters 
@@ -409,11 +389,33 @@ bpm_initialize_cabinet = {
         }
         bpm_update_internal_skill_pool = yes
     }
+    if = {
+        limit = {
+            is_player = no
+            bpm_performance_significant_country = yes
+        }
+        # bpm_cab_fill_positions = yes
+        bpm_newcab_char_pick = yes
+    }
+    set_variable = {
+        name = bpm_cached_antagonism
+        value = 0
+    }
+    set_variable = {
+        name = bpm_cached_antagonism_raw
+        value = 0
+    }
+    set_variable = {
+        name = bpm_cab_synergy
+        value = 1
+    }
     bpm_initialize_government_mandate = yes
     bpm_choose_hog = yes
 
     bpm_reload_institution_modifiers = yes
     bpm_reload_cabinet_picks_expectation = yes
+
+    bpm_set_cabinet_ministers_japan = yes
 }
 
 bpm_cab_get_random_inst = {
@@ -514,23 +516,23 @@ bpm_fire_cabinet_minister = {
         limit = {
             popularity > 0
         }
-        add_radicals = {
+        owner = { add_radicals = {
             value = {
-                value = popularity
+                value = prev.popularity
                 divide = 100
                 multiply = 0.5
             }
-            interest_group = interest_group
-        }
+            interest_group = prev.interest_group
+        } }
     }
     else = {
-        add_loyalists = {
+        owner = { add_loyalists = {
             value = {
-                value = popularity
+                value = prev.popularity
                 divide = 100
                 multiply = -0.2
             }
-        }
+        } }
     }
 
     interest_group = {
@@ -621,24 +623,48 @@ bpm_add_character_to_cabinet_shared_effect_extra = {
         multiply = -1
     }
 
-    
-    if = {
-        limit = {
-            interest_group = { bpm_ig_is_ideological = yes }
-        }
-        if = {
-            limit = {
-                interest_group = { bpm_ig_is_radical_opposition = yes }
-            }
-            owner = { bpm_remove_political_stability_small = yes }
-        }
-        else = {
-            owner = { bpm_remove_political_stability_tiny = yes }
-        }
-    }
-    else = {
-        owner = { bpm_add_political_stability_tiny = yes }
-    }
+    # if = {
+    #     limit = {
+    #         owner = { country_has_voting_franchise = yes }
+    #         interest_group = {
+    #             exists = party
+    #             has_variable = var:bpm_party_establishment
+    #         }
+    #     }
+    #     if = {
+    #         limit = { var:bpm_party_establishment >= 67 }
+    #         owner = { bpm_add_political_stability_tiny = yes }
+    #     }
+    #     else_if = {
+    #         limit = { var:bpm_party_establishment <= 33 }
+    #         if = {
+    #             limit = { interest_group = { bpm_ig_is_radical_opposition = yes } }
+    #             owner = { bpm_remove_political_stability_small = yes }
+    #         }
+    #         else = {
+    #             owner = { bpm_remove_political_stability_tiny = yes }
+    #         }
+    #     }
+    # }
+    # else = {
+    #     if = {
+    #         limit = {
+    #             interest_group = { bpm_ig_is_ideological = yes }
+    #         }
+    #         if = {
+    #             limit = {
+    #                 interest_group = { bpm_ig_is_radical_opposition = yes }
+    #             }
+    #             owner = { bpm_remove_political_stability_small = yes }
+    #         }
+    #         else = {
+    #             owner = { bpm_remove_political_stability_tiny = yes }
+    #         }
+    #     }
+    #     else = {
+    #         owner = { bpm_add_political_stability_tiny = yes }
+    #     }
+    # }
 
     # Appointing a Minister of Foreign Affairs
     # This will affect lobbies and current forpol laws
@@ -724,32 +750,32 @@ bpm_add_character_to_cabinet_shared_effect_extra = {
         }
     }
 
-    if = {
-        limit = {
-            popularity > 0
-        }
-        owner ?= {
-            add_loyalists = {
-                value = {
-                    value = popularity
-                    divide = 100
-                    multiply = 0.5
-                }
-                interest_group = prev.interest_group
-            }
-        }
-    }
-    else = {
-        owner ?= {
-            add_radicals = {
-                value = {
-                    value = popularity
-                    divide = 100
-                    multiply = -0.3
-                }
-            }
-        }
-    }
+    # if = {
+    #     limit = {
+    #         popularity > 0
+    #     }
+    #     owner ?= {
+    #         add_loyalists = {
+    #             value = {
+    #                 value = prev.popularity
+    #                 divide = 100
+    #                 multiply = 0.5
+    #             }
+    #             interest_group = prev.interest_group
+    #         }
+    #     }
+    # }
+    # else = {
+    #     owner ?= {
+    #         add_radicals = {
+    #             value = {
+    #                 value = prev.popularity
+    #                 divide = 100
+    #                 multiply = -0.3
+    #             }
+    #         }
+    #     }
+    # }
     interest_group = {
         if = {
             limit = {
@@ -781,7 +807,9 @@ bpm_appoint_as_hog = {
         limit = {
             NOT = { interest_group.leader ?= THIS }
         }
-        place_character_in_void = 10000
+        hidden_effect = {
+            place_character_in_void = 10000
+        }
     }
     set_variable = bpm_appointed_headofgov
     owner = { bpm_reload_interim_penalty = yes }

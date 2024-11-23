@@ -14,9 +14,10 @@ bpm_CAB_toggle_char_select = {
             var:bpm_cabinet_char_select.type = {
                 save_scope_as = bpm_reference_institution_type
             }
+            bpm_reload_government_mandate = yes
             every_interest_group = {
                 limit = {
-                    is_in_government = yes
+                    var:bpm_ig_mandate > 0
                 }
                 owner = { add_to_variable_list = {
                     name = bpm_CAB_ig_select_pool
@@ -54,41 +55,62 @@ bpm_CAB_toggle_pm_select = {
 	is_shown = {
 	}
 	is_valid = {
+        owner = {
+            OR = {
+                has_law = law_type:law_appointed_by_hos
+                has_law = law_type:law_appointed_on_advice
+            }
+        }
 	}
 	effect = {
         owner = { 
-            set_variable = {
-                name = bpm_cabinet_char_select
-                value = prev
-            }
+            remove_variable = bpm_cabinet_char_select
             set_variable = bpm_cabinet_pm_select
-            clear_variable_list = bpm_CAB_ig_select_pool
-            var:bpm_cabinet_char_select.type = {
-                save_scope_as = bpm_reference_institution_type
-            }
+            clear_variable_list = bpm_CAB_pm_select_pool
             every_interest_group = {
-                limit = {
-                    is_in_government = yes
+                if = {
+                    limit = {
+                        owner = { has_law = law_type:law_appointed_by_hos }
+                        NOT = { this = owner.ruler.interest_group }
+                    }
+                    owner = {
+                        add_to_variable_list = {
+                            name = bpm_CAB_pm_select_pool
+                            target = prev.leader
+                        }
+                    }
                 }
-                owner = { add_to_variable_list = {
-                    name = bpm_CAB_ig_select_pool
-                    target = prev
-                } }
-                set_variable = {
-                    name = bpm_cost_ig_position_var
-                    value = bpm_cost_ig_position
+                else_if = {
+                    limit = {
+                        owner = { has_law = law_type:law_appointed_on_advice }
+                        NOT = { this = owner.ruler.interest_group }
+                        is_powerful = yes
+                    }
+                    owner = {
+                        add_to_variable_list = {
+                            name = bpm_CAB_pm_select_pool
+                            target = prev.leader
+                        }
+                    }
                 }
             }
-            bpm_reset_mandate_used = yes
-            
+            owner.ruler.interest_group = {
+                save_scope_as = bpm_selected_ig
+            }
+            bpm_generate_cabinet_character = yes
+            scope:bpm_selected_character = {
+                set_variable = bpm_pm_candidate_var
+            }
+            add_to_variable_list = {
+                name = bpm_CAB_pm_select_pool
+                target = scope:bpm_selected_character
+            }
+            # bpm_reset_mandate_used = yes
+            # bpm_reload_government_mandate = yes
 
-            #bpm_fix_cabinet_pool = yes
-            #bpm_fill_leader_pool = yes
             every_in_list = {
-                variable = bpm_CAB_ig_select_pool
-                leader = {
-                    bpm_cabinet_calculate_synergy_hypothetical_head_of_government = yes
-                }
+                variable = bpm_CAB_pm_select_pool
+                bpm_cabinet_calculate_synergy_hypothetical_head_of_government = yes
             }
         }
 	}

@@ -9,6 +9,8 @@
 		has_dlc_feature = rp1_content
 	}
 
+	scripted_progress_bar = positivist_progress_bar
+
 	possible = {
 		OR = {
 			has_technology_researched = philosophical_pragmatism
@@ -17,6 +19,10 @@
 		radical_fraction = {
 			value >= 0.1
 		}
+		OR = {
+			country_has_state_religion = rel:catholic
+			has_law = law_type:law_state_atheism
+		}
 		custom_tooltip = {
 			text = is_democratic_tt
 			country_has_voting_franchise = yes
@@ -24,10 +30,22 @@
 	}
 
 	immediate = {
-		set_variable = {
-			name = positivism_progress_var
-			value = 0
+		show_as_tooltip = {
+			if = {
+				limit = {
+					NOT = {
+						any_political_movement = {
+							is_political_movement_type = movement_positivist
+						}
+					}
+				}
+				create_political_movement = { type = movement_positivist }
+			}
 		}
+		#set_variable = {
+		#	name = positivism_progress_var
+		#	value = 0
+		#}
 		trigger_event = { id = positivism.2 popup = yes }
 		set_variable = positivism_happened
 		if = {
@@ -41,20 +59,8 @@
 	scripted_button = je_positivist_movement_embrace_positivism_button
 	scripted_button = je_positivist_movement_suppress_positivism_button
 
-	on_weekly_pulse = {
-		effect = {
-			clamp_variable = {
-				name = positivism_progress_var
-				max = 100
-				min = 0
-			}
-		}
-	}
-
+	
 	on_monthly_pulse = {
-		effect = {
-			
-		}
 		random_events = {
 			100 = 0
 			10 = positivism_pulse.1
@@ -67,14 +73,16 @@
 	}
 
 	complete = {
-		exists = var:positivism_progress_var
 		custom_tooltip = {
 			text = positivism_at_100_tt
-			var:positivism_progress_var >= 100
+			scope:journal_entry = {
+				"scripted_bar_progress(positivist_progress_bar)" >= 100
+			}
 		}
 	}
 
 	on_complete = {
+		set_variable = { name = positivism_progress_var value = "scripted_bar_progress(positivist_progress_bar)" days = 120 }
 		custom_tooltip = positivism_effects_most_tt
 		trigger_event = { id = positivism.3 popup = yes }
 	}
@@ -82,9 +90,12 @@
 	timeout = 3650
 
 	on_timeout = {
+		set_variable = { name = positivism_progress_var value = "scripted_bar_progress(positivist_progress_bar)" days = 120 }
 		if = {
 			limit = {
-				var:positivism_progress_var >= 50
+				scope:journal_entry = {
+					"scripted_bar_progress(positivist_progress_bar)" >= 50
+				}
 			}
 			custom_tooltip = {
 				text = positivism_positive_epoch_tt
@@ -92,13 +103,17 @@
 			}
 			if = {
 				limit = {
-					var:positivism_progress_var >= 85
+					scope:journal_entry = {
+						"scripted_bar_progress(positivist_progress_bar)" >= 85
+					}
 				}
 				custom_tooltip = positivism_effects_most_tt
 			}
 			else_if = {
 				limit = {
-					var:positivism_progress_var >= 65
+					scope:journal_entry = {
+						"scripted_bar_progress(positivist_progress_bar)" >= 65
+					}
 				}
 				custom_tooltip = positivism_effects_avg_tt
 			}
@@ -113,13 +128,17 @@
 			}
 			if = {
 				limit = {
-					var:positivism_progress_var >= 35
+					scope:journal_entry = {
+						"scripted_bar_progress(positivist_progress_bar)" >= 35
+					}
 				}
 				custom_tooltip = positivism_effects_least_tt
 			}
 			else_if = {
 				limit = {
-					var:positivism_progress_var >= 15
+					scope:journal_entry = {
+						"scripted_bar_progress(positivist_progress_bar)" >= 15
+					}
 				}
 				custom_tooltip = positivism_effects_avg_tt
 			}
@@ -129,17 +148,7 @@
 		}
 	}
 
-	current_value = {
-		value = root.var:positivism_progress_var
-	}
-
-	goal_add_value = {
-		add = 100
-	}
-
 	weight = 100
-
-	progressbar = yes
 
 	should_be_pinned_by_default = yes
 }

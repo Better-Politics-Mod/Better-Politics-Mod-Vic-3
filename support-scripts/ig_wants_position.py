@@ -10,6 +10,7 @@ result = [
     {"value": 5}
 ]
 for column in df.columns:
+    exist_sub = [{"owner.has_institution": "institution_"+ column}]
     rsub = [
         {"owner.institution:institution_" + column + ".type": "scope:bpm_reference_institution_type"}
     ]
@@ -22,7 +23,7 @@ for column in df.columns:
     if len(sub) > 0:
         result.append(
             pdxpy.PdxUtil.if_statement(
-                rsub + [{'OR': sub}],
+                exist_sub + rsub + [{'OR': sub}],
                 [{"subtract": {"value": 3, "desc": "bpm_ig_wants_position"}}],
             )
         )

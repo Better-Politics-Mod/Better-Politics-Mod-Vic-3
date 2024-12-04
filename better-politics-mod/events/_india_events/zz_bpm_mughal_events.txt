@@ -1,0 +1,327 @@
+﻿namespace = mughal
+
+mughal.6 = { # The British India Society
+	type = country_event
+	placement = root
+	
+	title = mughal.6.t
+	desc = mughal.6.d
+	flavor = mughal.6.f
+	
+	event_image = {
+		video = "ep1_persian_court"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+	
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	immediate = {
+		overlord = {
+			save_scope_as = probably_east_india_company_scope
+		}
+		top_overlord = {
+			save_scope_as = probably_britain_scope
+		}
+
+		ruler = {
+			save_scope_as = hindustan_ruler
+		}
+
+		root = {
+			save_scope_as = hindustan
+			ruler = {
+				save_scope_as = hindustan_ruler
+			}
+			
+		}
+		if = {
+			limit = {
+				OR = {
+					NOT = { has_law = law_type:law_slavery_banned }
+					has_law = law_type:law_serfdom
+				}
+			}
+			i:ideology_abolitionist = {
+				save_scope_as = potentially_swayed_mug_ideology
+			}
+			random_scope_character = {
+				limit = {
+					has_role = politician
+					is_ruler = no # but it is okay if an heir is targeted with this
+					OR = {
+						is_interest_group_type = ig_trade_unions
+						is_interest_group_type = ig_intelligentsia
+						is_interest_group_type = ig_petty_bourgeoisie
+						is_interest_group_type = ig_industrialists
+						is_interest_group_type = ig_devout
+					}
+					NOT = { has_ideology = ideology:ideology_abolitionist }
+				}
+				save_scope_as = potentially_swayed_mug_politician
+			}
+		}
+		else_if = {
+			limit = {
+				has_law = law_type:law_slavery_banned
+				NOT = { has_law = law_type:law_serfdom }
+				has_technology_researched = egalitarianism
+			}
+			i:ideology_radical = {
+				save_scope_as = potentially_swayed_mug_ideology
+			}
+			random_scope_character = {
+				limit = {
+					has_role = politician
+					is_ruler = no # but it is okay if an heir is targeted with this
+					OR = {
+						is_interest_group_type = ig_rural_folk
+						is_interest_group_type = ig_intelligentsia
+						is_interest_group_type = ig_trade_unions
+						is_interest_group_type = ig_petty_bourgeoisie
+						is_interest_group_type = ig_industrialists
+					}
+					NOT = { has_ideology = ideology:ideology_radical }
+				}
+				save_scope_as = potentially_swayed_mug_politician
+			}
+		}
+		else = {
+			i:ideology_abolitionist = {
+				save_scope_as = potentially_swayed_mug_ideology
+			}
+		}
+
+		random_political_lobby = {
+			limit = {
+				OR = {
+					is_political_lobby_type = lobby_pro_overlord 
+					is_political_lobby_type = lobby_pro_country
+				}
+				target = scope:probably_britain_scope
+			}
+			save_scope_as = pro_probably_britain_lobby_scope
+		}
+
+		set_variable = engaged_with_british_india_society
+	}
+	
+	trigger = {
+		empty_agitator_slots >= 1
+		is_subject = yes
+		exists = overlord
+		exists = top_overlord
+		overlord = {
+			is_subject = yes
+			is_direct_subject_of = top_overlord
+		}
+		NOT = {
+			has_variable = engaged_with_british_india_society
+		}
+		OR = {
+			overlord = {
+				country_has_primary_culture = cu:british
+			}
+			top_overlord = {
+				country_has_primary_culture = cu:british
+			}
+		}
+		exists = ig:ig_radicals
+	}
+
+	cancellation_trigger = {
+		OR = {
+			is_subject = no
+			NOT = { exists = scope:probably_east_india_company_scope }
+			NOT = { exists = scope:probably_britain_scope }
+			NOT = { scope:probably_east_india_company_scope = { is_direct_subject_of = scope:probably_britain_scope } }
+		}
+		empty_agitator_slots = 0
+	}
+
+	option = {
+		name = mughal.6.a
+        default_option = yes
+
+		ai_chance = {
+			base = 1
+
+			modifier = {
+				trigger = {
+					any_scope_character = {
+						is_ruler = yes
+						has_ideology = ideology:ideology_slaver
+					}
+				}
+				add = -1
+			}
+		}
+
+		create_character = {
+			template = mug_george_thompson
+			
+			# if MUG does not have any laws an abolitionist would object to, George Thompson will be radical instead
+			on_created = {
+				if = {
+					limit = {
+						owner = {
+							has_law = law_type:law_slavery_banned
+							NOT = { has_law = law_type:law_serfdom }
+							has_technology_researched = egalitarianism
+						}
+					}
+					set_ideology = ideology:ideology_radical
+				}
+			}
+		}
+
+		add_modifier = {
+			name = british_india_society_support # +0.05 liberty desire, but for a very long time
+			months = very_long_modifier_time
+		}
+
+		random_list = {
+			1 = {
+				custom_tooltip = {
+					text = mughal_6_slavers_offended
+					every_interest_group = {
+						limit = {
+							OR = {
+								has_ideology = ideology:ideology_pro_slavery
+								leader = { has_ideology = ideology:ideology_slaver }
+							}
+						}
+						add_modifier = {
+							name = ig_slavers_mad
+							months = short_modifier_time
+							multiplier = 0.66
+						}
+					}
+				}
+			}
+			1 = {
+				if = {
+					limit = {
+						exists = scope:potentially_swayed_mug_politician
+					}
+					custom_tooltip = {
+						text = mughal_6_moderate_swayed_to_ideology
+
+						scope:potentially_swayed_mug_politician = {
+							set_ideology = scope:potentially_swayed_mug_ideology
+						}
+					}
+				}
+				else_if = {
+					limit = { 
+						exists = scope:potentially_swayed_mug_ideology 
+						any_interest_group = {
+							leader = { has_ideology = scope:potentially_swayed_mug_ideology }
+						}
+					}
+					every_interest_group = {
+						limit = {
+							leader = { has_ideology = scope:potentially_swayed_mug_ideology }
+						}
+						add_modifier = {
+							name = ideology_surge_in_popularity
+							months = short_modifier_time
+						}
+					}
+				}
+				else = {
+					ig:ig_intelligentsia = {
+						add_modifier = {
+							name = ideology_surge_in_popularity
+							months = short_modifier_time
+						}
+					}
+				}
+			}
+		}
+	}
+
+	option = {
+		name = mughal.6.b
+
+		ai_chance = {
+			base = 1
+		}
+
+		if = {
+			limit = {
+				any_interest_group = {
+					OR = {
+						has_ideology = ideology:ideology_pro_slavery
+						leader = { has_ideology = ideology:ideology_slaver }
+					}
+				}
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						has_ideology = ideology:ideology_pro_slavery
+						leader = { has_ideology = ideology:ideology_slaver }
+					}
+				}
+				add_modifier = {
+					name = ig_mug_slavers_pleased
+					months = short_modifier_time
+				}
+			}
+		}
+		else = {
+			ig:ig_landowners = {
+				add_modifier = {
+					name = ig_mug_slavers_pleased
+					months = short_modifier_time
+				}
+			}
+		}
+
+		custom_tooltip = mughal_6_overlord_pleased_at_discretion
+		overlord = {
+			change_relations = {
+				country = root
+				value = 25
+			}
+		}	
+	}
+
+	option = {
+		name = mughal.6.c
+		highlighted_option = yes
+
+		trigger = {
+			has_dlc_feature = lobbies
+			exists = scope:pro_probably_britain_lobby_scope
+		}
+
+		add_modifier = {
+			name = british_india_society_support
+			months = very_long_modifier_time
+			multiplier = 2
+		}
+
+		scope:probably_east_india_company_scope = {
+			add_modifier = {
+				name = britains_baleful_eye		# decreases LD for BIC and increases LD for ALL BIC subjects
+				months = short_modifier_time
+			}
+			post_notification = britain_hindustan_intervention
+		}
+
+		scope:pro_probably_britain_lobby_scope = { # Well done, lads!
+			change_appeasement = {
+			   amount = 2
+			   factor = appeasement_lobby_pleased
+			}
+		}
+	}
+}

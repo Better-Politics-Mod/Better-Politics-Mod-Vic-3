@@ -1,26 +1,102 @@
 on_monthly_pulse_country = {
     on_actions = {
         bpm_update_movements_oa
+        bpm_update_splits_oa
         bpm_update_factions_oa
     }
 }
 
 bpm_update_movements_oa = {
     effect = {
-        random_political_movement = {
-            limit = {
-                type = movement_type:movement_liberal
-            }
-            save_scope_as = movement
-        }
         if = {
-            limit = {
-                exists = scope:movement
+            limit = { 
+                is_player = yes
             }
-            set_variable = {
-                name = bpm_liberal_movement
-                value = scope:movement
+            random_political_movement = {
+                limit = {
+                    is_political_movement_type = movement_liberal
+                }
+                save_scope_as = movement_liberal
             }
+            random_political_movement = {
+                limit = {
+                    is_political_movement_type = movement_radical
+                }
+                save_scope_as = movement_radical
+            }
+            if = {
+                limit = {
+                    exists = scope:movement_liberal
+                }
+                set_variable = {
+                    name = bpm_liberal_movement
+                    value = scope:movement
+                }
+            }
+            if = {
+                limit = {
+                    exists = scope:movement_radical
+                }
+                set_variable = {
+                    name = bpm_radical_movement
+                    value = scope:movement
+                }
+            }
+        }
+    } 
+}
+bpm_update_splits_oa = {
+    effect = {
+        # Liberal Split
+        if = {
+            limit = { 
+                has_variable = bpm_liberal_movement
+                ig:ig_industrialists = { 
+                    has_variable = bpm_movement_liberal_pressure
+                }
+                OR = { 
+                    ig:ig_industrialists.var:bpm_movement_liberal_pressure > 0.2
+                    AND = {
+                        var:bpm_liberal_movement.political_movement_radicalism > 0.3
+                        var:bpm_liberal_movement.political_movement_support > 0.3
+                    }
+                }
+            }
+            bpm_do_liberal_split = yes
+        }
+        # Radical Split
+        if = {
+            limit = { 
+                has_variable = bpm_radical_movement
+                ig:ig_industrialists = { 
+                    has_variable = bpm_movement_radical_pressure
+                }
+                OR = { 
+                    ig:ig_industrialists.var:bpm_movement_radical_pressure > 0.2
+                    AND = {
+                        var:bpm_radical_movement.political_movement_radicalism > 0.3
+                        var:bpm_radical_movement.political_movement_support > 0.3
+                    }
+                }
+            }
+            bpm_do_radical_split = yes
+        }
+        # Modernizer Split
+        if = {
+            limit = { 
+                has_variable = bpm_modernizer_movement
+                ig:ig_industrialists = { 
+                    has_variable = bpm_movement_modernizer_pressure
+                }
+                OR = { 
+                    ig:ig_industrialists.var:bpm_movement_modernizer_pressure > 0.2
+                    AND = {
+                        var:bpm_modernizer_movement.political_movement_radicalism > 0.3
+                        var:bpm_modernizer_movement.political_movement_support > 0.3
+                    }
+                }
+            }
+            bpm_do_modernizer_split = yes
         }
     }
 }
@@ -40,7 +116,6 @@ bpm_update_factions_oa = {
                         scope:selected_ig = { add_to_variable_list = { name = bpm_factions target = prev } }
                     }
                 }
-                clear_variable_list = bpm_political_movement_clout_support
                 set_variable = { 
                     name = bpm_influenced_clout
                     value = 0

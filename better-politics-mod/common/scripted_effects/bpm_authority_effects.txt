@@ -1,0 +1,474 @@
+bpm_auth_handle_potential_collapses = {
+	if = {
+		limit = { bpm_auth_can_collapse = yes }
+		if = {
+			limit = { NOT = { has_variable = bpm_auth_state_exhaustion } }
+			set_variable = { name = bpm_auth_weeks_with_high_radicalism		value = 0 }
+		}
+
+		change_variable = {
+			name = bpm_auth_weeks_with_high_radicalism
+			add = 1
+		}
+
+		if = {
+			limit = { var:bpm_auth_weeks_with_high_radicalism > bpm_auth_collapse_from_radicals_grace_period }
+
+			add_radicals_in_state = { value = 0.25 }
+
+			random = {
+				chance = {
+					value = bpm_auth_collapse_from_radicals_chance
+					multiply = turmoil
+					multiply = {
+						value = 1
+						add = modifier:state_bpm_auth_collapse_chance
+						min = 0
+					}
+				} 
+				bpm_auth_spawn_relevant_collapse = yes
+			}
+		}
+	}
+	if = {
+		add_radicals_in_state = { value = 0.25 }
+		limit = { modifier:state_bpm_auth_collapse_soon = yes } # Insta-collapse case
+		bpm_auth_spawn_relevant_collapse = yes
+	}
+}
+
+bpm_auth_remove_partisans_if_accepted = {
+	if = {
+		limit = {
+			bpm_auth_partisans_accepted_by_regime = yes
+			bpm_auth_state_has_partisans = yes
+		}
+		bpm_auth_remove_partisans_and_collapse = yes
+	}
+}
+
+bpm_auth_spawn_relevant_collapse = {
+	clear_variable = bpm_auth_weeks_with_high_radicalism
+	if = { # Normally spawns collapsed authority...
+		limit = { bpm_auth_partisan_factor < 40 }
+		add_modifier = bpm_auth_collapsed
+		bpm_auth_init_weeks_to_restore_order = yes
+		post_notification = bpm_auth_collapsed
+	} else = { # ...but if partisans can spawn strong, it spawns partisans instead
+		bpm_auth_spawn_partisans = yes
+		post_notification = bpm_auth_collapsed_partisans
+	}
+}
+
+bpm_auth_spawn_partisans = {
+	# Removing collapsed authority if present (partisans will replace it)
+	if = {
+		limit = { has_modifier = bpm_auth_collapsed }
+		remove_modifier = bpm_auth_collapsed
+	}
+
+	if = {
+		limit = { bpm_auth_partisan_factor >= 80 }
+		add_modifier = bpm_auth_partisans_overwhelming
+	} else_if = {
+		limit = { bpm_auth_partisan_factor >= 60 }
+		add_modifier = bpm_auth_partisans_powerful
+	} else_if = {
+		limit = { bpm_auth_partisan_factor >= 40 }
+		add_modifier = bpm_auth_partisans_strong
+	} else_if = {
+		limit = { bpm_auth_partisan_factor >= 20 }
+		add_modifier = bpm_auth_partisans_normal
+	} else = {
+		add_modifier = bpm_auth_partisans_weak
+	}
+	bpm_auth_init_weeks_to_restore_order = yes
+}
+
+bpm_auth_downgrade_partisans = {
+	if = {
+		limit = { has_modifier = bpm_auth_partisans_overwhelming }
+		remove_modifier = bpm_auth_partisans_overwhelming
+		add_modifier = bpm_auth_partisans_powerful
+		bpm_auth_init_weeks_to_restore_order = yes
+		post_notification = bpm_auth_partisans_weakened
+	} else_if = {
+		limit = { has_modifier = bpm_auth_partisans_powerful }
+		remove_modifier = bpm_auth_partisans_powerful
+		add_modifier = bpm_auth_partisans_strong
+		bpm_auth_init_weeks_to_restore_order = yes
+		post_notification = bpm_auth_partisans_weakened
+	} else_if = {
+		limit = { has_modifier = bpm_auth_partisans_strong }
+		remove_modifier = bpm_auth_partisans_strong
+		add_modifier = bpm_auth_partisans_normal
+		bpm_auth_init_weeks_to_restore_order = yes
+		post_notification = bpm_auth_partisans_weakened
+	} else_if = {
+		limit = { has_modifier = bpm_auth_partisans_normal }
+		remove_modifier = bpm_auth_partisans_normal
+		add_modifier = bpm_auth_partisans_weak
+		bpm_auth_init_weeks_to_restore_order = yes
+		post_notification = bpm_auth_partisans_weakened
+	} else = {
+		remove_modifier = bpm_auth_partisans_weak
+		add_radicals_in_state = {  
+			value = -1.0
+		}
+		post_notification = bpm_auth_partisans_crushed
+	}
+}
+
+bpm_auth_remove_partisans_and_collapse = {
+	if = {
+		limit = { has_modifier = bpm_auth_collapsed }
+		remove_modifier = bpm_auth_collapsed
+	}
+	if = {
+		limit = { has_modifier = bpm_auth_partisans_overwhelming }
+		remove_modifier = bpm_auth_partisans_overwhelming
+	}
+	if = {
+		limit = { has_modifier = bpm_auth_partisans_powerful }
+		remove_modifier = bpm_auth_partisans_powerful
+	}
+	if = {
+		limit = { has_modifier = bpm_auth_partisans_strong }
+		remove_modifier = bpm_auth_partisans_strong
+	}
+	if = {
+		limit = { has_modifier = bpm_auth_partisans_normal }
+		remove_modifier = bpm_auth_partisans_normal
+	}
+	if = {
+		limit = { has_modifier = bpm_auth_partisans_weak }
+		remove_modifier = bpm_auth_partisans_weak
+	}
+
+	clear_variable = bpm_auth_weeks_to_resolve
+}
+
+bpm_auth_init_weeks_to_restore_order = {
+	clear_varaible = bpm_auth_weeks_with_high_radicalism
+	if = {
+		limit = { bpm_auth_has_collapsed_auth = yes }
+		set_variable = {
+			name = bpm_auth_weeks_to_resolve
+			value = {
+				integer_range = {
+					min = bpm_auth_weeks_to_resolve_collapse_min
+					max = bpm_auth_weeks_to_resolve_collapse_max
+				}
+			}
+		}
+	} else_if = {
+		limit = { bpm_auth_state_has_partisans = yes }
+		set_variable = {
+			name = bpm_auth_weeks_to_resolve
+			value = {
+				integer_range = {
+					min = {
+						add = bpm_auth_years_to_resolve_partisans_min
+						multiply = 365
+					}
+					max = {
+						add = bpm_auth_years_to_resolve_partisans_max
+						multiply = 365
+					}
+				}
+			}
+		}
+	}
+}
+
+bpm_auth_handle_suppression_and_order = {
+	if = {
+		limit = { owner = { authority > 0 } }
+		if = { 
+			limit = { modifier:state_bpm_auth_radicals_removed_weekly > 0 }
+			add_radicals_in_state = {
+				value = {
+					subtract = modifier:state_bpm_auth_radicals_removed_weekly
+				}
+			}
+		}
+		if = { 
+			limit = { 
+				OR = {
+					modifier:state_bpm_auth_restores_order = yes 
+					AND = {
+						owner = { modifier:country_bpm_auth_restores_order = yes }
+						is_incorporated = yes
+					}
+				}
+			}
+	
+			if = {
+				limit = { has_variable = bpm_auth_weeks_to_resolve }
+				change_variable = {
+					name = bpm_auth_weeks_to_resolve
+					add = -1
+				}
+			}
+	
+			if = {
+				limit = {
+					OR = {
+						NOT = { has_variable = bpm_auth_weeks_to_resolve }
+						var:bpm_auth_weeks_to_resolve <= 0
+						turmoil <= 0
+					}
+				}
+				clear_variable = bpm_auth_weeks_to_resolve
+				if = {
+					limit = { bpm_auth_state_has_collapsed_auth = yes }
+					remove_modifier = bpm_auth_collapsed
+					post_notification = bpm_auth_order_restored
+				} else_if = {
+					limit = { bpm_auth_state_has_partisans = yes }
+					bpm_auth_downgrade_partisans = yes
+				}
+			}
+		}
+	}
+}
+
+bpm_auth_update_state_exhaustion = {
+	if = { limit = { NOT = { has_variable = bpm_auth_state_exhaustion } } 
+		set_variable = { name = bpm_auth_state_exhaustion value = 0 }
+	}
+
+	change_variable = {
+		name = bpm_auth_state_exhaustion
+		add = bpm_auth_state_exhaustion_rate
+	}
+
+	if = {
+		limit = { modifier:country_auth_transfer_state_exhaustion_to_overlord = yes }
+		overlord ?= {
+			bpm_auth_init_exhaustion_if_necessary = yes	
+			change_variable = {
+				name = bpm_auth_state_exhaustion
+				add = prev.var:bpm_auth_state_exhaustion
+			}
+		}
+		set_variable = { name = bpm_auth_state_exhaustion value = 0 }
+	}
+
+	bpm_auth_reapply_state_exhaustion_modifier = yes
+}
+
+bpm_auth_reapply_state_exhaustion_modifier = {
+	remove_modifier = bpm_auth_state_exhaustion_modifier
+
+	if = {
+		limit = { has_variable = bpm_auth_state_exhaustion }
+		add_modifier = {
+			name = bpm_auth_state_exhaustion_modifier
+			multiplier = {
+				value = var:bpm_auth_state_exhaustion
+				divide = {
+					add = 1
+					add = modifier:country_authority_mult
+				}
+			}
+		}
+	}
+}
+
+bpm_auth_save_reserve_authority = { # Saving the authority pre-civil war. Post civil-war opposition movements will gain significant boost scaled with how much authority was saved up
+	set_variable = {
+		name = bpm_auth_pre_civil_war_authority
+		value = {
+			add = produced_authority
+			subtract = bpm_auth_state_exhaustion
+		}
+	}
+
+	if = {
+		limit = { var:bpm_auth_pre_civil_war_authority > 0 }
+	} else = {
+		scope:target = {
+			set_variable = {
+				name = bpm_auth_pre_civil_war_authority
+				value = prev.var:bpm_auth_pre_civil_war_authority
+			}
+		}
+	}
+
+	clear_variable = bpm_auth_pre_civil_war_authority
+}
+
+bpm_auth_use_reserve_authority_post_civil_war = {
+	if = {
+		limit = { has_variable = bpm_auth_pre_civil_war_authority }
+		if = { 
+			limit = { var:bpm_auth_pre_civil_war_authority >= 2000 } 
+			add_modifier = { name = bpm_auth_remnant_opposition_extreme years = 25 decaying = yes }
+		} else_if = { 
+			limit = { var:bpm_auth_pre_civil_war_authority >= 1000 } 
+			add_modifier = { name = bpm_auth_remnant_opposition_very_strong years = 25 decaying = yes }
+		} else_if = {
+			limit = { var:bpm_auth_pre_civil_war_authority >= 500 } 
+			add_modifier = { name = bpm_auth_remnant_opposition_strong years = 25 decaying = yes }
+		} else = {
+			add_modifier = { name = bpm_auth_remnant_opposition years = 25 decaying = yes }
+		}
+		post_notificaiton = bpm_auth_remnants_warn
+		clear_variable = bpm_auth_pre_civil_war_authority
+	}
+}
+
+bpm_auth_handle_authority_shortage = {
+	if = {
+		limit = {
+			authority <= 0
+			NOT = { has_modifier = bpm_auth_shortage }
+		}
+		add_modifier = bpm_auth_shortage
+	} else_if = {
+		limit = {
+			authority > 0
+			has_modifier = bpm_auth_shortage
+		}
+		remove_modifier = bpm_auth_shortage
+	}
+}
+
+bpm_auth_convert_partisans_into_strength = {
+	scope:target = {
+		if = {
+			limit = { any_scope_state = { has_modifier = bpm_auth_partisans_overwhelming } }
+			add_modifier = { name = bpm_auth_partisans_overwhelming years = 10 decaying = yes	}
+		} else_if = {
+			limit = { any_scope_state = { has_modifier = bpm_auth_partisans_powerful } }
+			add_modifier = { name = bpm_auth_partisans_assistance_powerful years = 10 decaying = yes	}
+		} else_if = {
+			limit = { any_scope_state = { has_modifier = bpm_auth_partisans_strong } }
+			add_modifier = { name = bpm_auth_partisans_assistance_strong years = 10 decaying = yes	}
+		} else_if = {
+			limit = { any_scope_state = { has_modifier = bpm_auth_partisans_normal } }
+			add_modifier = { name = bpm_auth_partisans_assistance_normal years = 10 decaying = yes	}
+		} else_if = {
+			limit = { any_scope_state = { has_modifier = bpm_auth_partisans_weak } }
+			add_modifier = { name = bpm_auth_partisans_assistance_weak years = 10 decaying = yes	}
+		}
+		every_scope_state = { bpm_auth_remove_partisans_and_collapse = yes }
+	}
+}
+
+bpm_auth_civil_war_victor_effect = {
+	# Victor in a civil war has to also reassert authority on a large portion of the territory
+	# They get a consolation Authority boost though
+	# AI will be less fucked
+
+	every_scope_state = {
+		limit = {
+			is_capital = no
+			bpm_auth_state_has_partisans = no
+			bpm_auth_state_has_collapsed_auth = no
+		}
+
+		random_list = {
+			10 = {
+				modifier = {
+					if = {
+						limit = {
+							is_incorporated = no
+						}
+						add = 40
+					}
+					if = {
+						limit = {
+							turmoil >= 0.25
+						}
+						add = 20
+					}
+					if = {
+						limit = {
+							turmoil >= 0.5
+						}
+						add = 20
+					}
+					if = {
+						limit = {
+							turmoil >= 0.75
+						}
+						add = 100
+					}
+				}
+				add_radicals_in_state = {  
+					value = 0.25  
+				}
+				bpm_auth_spawn_relevant_collapse = yes
+			}
+			20 = {
+				modifier = {
+					if = {
+						limit = {
+							owner = { is_player = no }
+						}
+						add = 80
+					}
+				}
+			}
+		}
+	}
+
+
+}
+
+bpm_auth_init_exhaustion_if_necessary = {
+	if = {
+		limit = { NOT = { has_variable = bpm_auth_state_exhaustion } }
+		set_variable = { name = bpm_auth_state_exhaustion value = 0 }
+	}
+}
+
+bpm_auth_add_exhaustion_huge = {
+	custom_tooltip = {
+		text = "bpm_auth_add_exhaustion_huge"
+	}
+	hidden_effect = {
+		bpm_auth_init_exhaustion_if_necessary = yes
+		post_notification = bpm_auth_add_exhaustion_huge
+		change_variable = { name = bpm_auth_state_exhaustion add = 500 }
+		bpm_auth_reapply_state_exhaustion_modifier = yes
+	}
+}
+
+bpm_auth_add_exhaustion_large = {
+	custom_tooltip = {
+		text = "bpm_auth_add_exhaustion_large"
+	}
+	hidden_effect = {
+		bpm_auth_init_exhaustion_if_necessary = yes
+		post_notification = bpm_auth_add_exhaustion_large
+		change_variable = { name = bpm_auth_state_exhaustion add = 200 }
+		bpm_auth_reapply_state_exhaustion_modifier = yes
+	}
+}
+
+bpm_auth_add_exhaustion_normal = {
+	custom_tooltip = {
+		text = "bpm_auth_add_exhaustion_normal"
+	}
+	hidden_effect = {
+		bpm_auth_init_exhaustion_if_necessary = yes
+		post_notification = bpm_auth_add_exhaustion_normal
+		change_variable = { name = bpm_auth_state_exhaustion add = 100 }
+		bpm_auth_reapply_state_exhaustion_modifier = yes
+	}
+}
+
+bpm_auth_add_exhaustion_small = {
+	custom_tooltip = {
+		text = "bpm_auth_add_exhaustion_small"
+	}
+	hidden_effect = {
+		bpm_auth_init_exhaustion_if_necessary = yes
+		post_notification = bpm_auth_add_exhaustion_small
+		change_variable = { name = bpm_auth_state_exhaustion add = 50 }
+		bpm_auth_reapply_state_exhaustion_modifier = yes
+	}
+}

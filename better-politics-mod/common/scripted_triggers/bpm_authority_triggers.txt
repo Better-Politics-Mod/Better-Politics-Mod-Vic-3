@@ -1,0 +1,109 @@
+bpm_auth_will_spawn_partisans = { # Used when the state changes owners to ensure partisans can actually spawn in the region
+	has_modifier = recently_conquered_state
+}
+
+bpm_auth_partisans_love_terrain = { # Partisans in this terrain are way stronger
+	any_province = {
+		OR = {
+			has_terrain = mountain
+			has_terrain = desert
+			has_terrain = jungle
+		}
+	}
+}
+
+bpm_auth_partisans_like_terrain = { # Partisans in this terrain are so9mewhat stronger
+	any_province = {
+		OR = {
+			has_terrain = hills
+			has_terrain = tundra
+			has_terrain = savanna
+			has_terrain = forest
+		}
+	}
+}
+
+bpm_auth_can_collapse = {
+	owner = { NOT = { is_country_type = decentralized } }
+	bpm_auth_has_collapsed_auth = no
+	bpm_auth_has_partisans = no
+	radical_fraction = {
+		value >= bpm_auth_radicals_in_state_collapse_threshold
+	}
+	OR = {
+		modifier:state_bpm_auth_preventing_collapse = no
+		owner = { authority <= 0 }
+	}
+}
+
+bpm_auth_culture_significant_for_partisans = {
+	OR = {
+		has_homeland = prev
+		root = {
+			culture_percent_state = {
+				target = prev
+				value >= 0.33
+			}
+		}
+	}
+}
+
+bpm_auth_partisans_accepted_by_regime = {
+	every_scope_culture = {
+		OR = {
+			bpm_auth_culture_significant_for_partisans = no
+			root = {
+				state_cultural_acceptance = {  
+					target = prev
+					value >= 90
+				}
+			}
+		}
+	}
+}
+
+bpm_auth_partisans_hated_by_regime = { # Local cultures are hated by regime
+	any_scope_culture = {
+		AND = {
+			bpm_auth_culture_significant_for_partisans = yes
+			root = {
+				state_cultural_acceptance = {  
+					target = prev
+					value <= 25
+				}
+			}
+		}
+	}
+}
+
+bpm_auth_partisans_can_be_strong = { # Strong partisans can only spawn if they are too persecuted or in the mountains
+	OR = {
+		bpm_auth_partisans_hated_by_regime = yes
+		bpm_auth_partisans_love_terrain = yes
+	}
+}
+
+bpm_auth_state_has_collapsed_auth = {
+	has_modifier = bpm_auth_collapsed
+}
+
+bpm_auth_state_has_partisans = {
+	OR = {
+		has_modifier = bpm_auth_partisans_overwhelming
+		has_modifier = bpm_auth_partisans_powerful
+		has_modifier = bpm_auth_partisans_strong
+		has_modifier = bpm_auth_partisans_normal
+		has_modifier = bpm_auth_partisans_weak
+	}
+}
+
+bpm_auth_state_can_join_ideological_civil_war = { # Collapse
+	bpm_auth_state_has_collapsed_auth = yes
+}
+
+bpm_auth_state_can_join_nonideological_civil_war = { # Partisans and Collapse
+	OR = {
+		bpm_auth_state_has_collapsed_auth = yes
+		bpm_auth_state_has_partisans = yes
+	}
+}

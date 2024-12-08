@@ -236,6 +236,7 @@ exile_character = {
 				is_in_government = no
 				is_insurrectionary = no
 			}
+			NOT = { has_modifier = bpm_ig_disrupted_by_exile }
 		}
 		owner = {
 			NOT = { has_law = law_type:law_protected_speech }
@@ -253,6 +254,9 @@ exile_character = {
 		owner = {
 			save_scope_as = exiling_country_scope
 		}
+
+		owner = { bpm_auth_add_exhaustion_small = yes }
+		this.interest_group = { add_modifier = { name = bpm_ig_disrupted_by_exile years = 5 is_decaying = yes } }
 		if = {
 			limit = {
 				owner = { has_journal_entry = je_caudillo }
@@ -401,7 +405,7 @@ exile_character = {
 		}
 	}
 
-	cooldown = { months = normal_modifier_time }
+	cooldown = { months = 12 }
 	show_confirmation_box = yes
 
 	ai_chance = {
@@ -760,6 +764,8 @@ arrange_accident = {
 		}
 		interest_group = {
 			is_marginal = no
+			is_in_government = no
+			NOT = { has_modifier = bpm_ig_disrupted_by_assassination }
 		}
 	}
 
@@ -770,64 +776,175 @@ arrange_accident = {
 		this = {
 			save_scope_as = assassinated_scope
 		}
-		random_list = {
-			25 = {
-				kill_character = yes
+
+		owner = { bpm_auth_add_exhaustion_large = yes }
+		this.interest_group = { add_modifier = { name = bpm_ig_disrupted_by_assassination years = 5 is_decaying = yes } }
+		if = {
+			limit = {
+				exists = institution:institution_home_affairs
 			}
-			50 = {
-				owner = {
-					post_notification = arranged_accident_failed
-				}
-				custom_tooltip = assassination_attempt_failed_tt
-			}
-			25 = {
-				custom_tooltip = assassination_attempt_failed_loud_tt
-				owner = {
-					add_radicals = {
-						value = very_large_radicals
-						interest_group = scope:relevant_ig
-					}
-				}
-				if = {
-					limit = {
-						character_supports_political_movement = yes
-					}
-					this.political_movement = {
-						add_modifier = {
-							name = modifier_government_accident_attempt
-							months = long_modifier_time
-						}
-					}
-				}
-				else_if = {
-					limit = {
-						has_role = politician
-						THIS.interest_group = {
-							interest_group_supports_political_movement = yes
-						}
-					}
-					owner = {
-						random_political_movement = {
+			random_list = {
+				40 = {
+					modifier = {
+						if = {
 							limit = {
-								any_supporting_interest_group = {
-									this = scope:relevant_ig
-								}
+								owner.institution:institution_home_affairs.investment >= 2
 							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 3
+							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 4
+							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 5
+							}
+							add = 25
+						}
+					}
+					kill_character = yes
+				}
+				40 = {
+					owner ?= {
+						post_notification = arranged_accident_failed
+					}
+					custom_tooltip = assassination_attempt_failed_tt
+				}
+				20 = {
+					modifier = {
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 2
+							}
+							subtract = 5
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 3
+							}
+							subtract = 5
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 4
+							}
+							subtract = 5
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 5
+							}
+							subtract = 5
+						}
+					}
+					custom_tooltip = assassination_attempt_failed_loud_tt
+					owner ?= {
+						add_radicals = {
+							value = very_large_radicals
+							interest_group = scope:relevant_ig
+						}
+					}
+					if = {
+						limit = {
+							character_supports_political_movement = yes
+						}
+						this.political_movement = {
 							add_modifier = {
 								name = modifier_government_accident_attempt
 								months = long_modifier_time
 							}
 						}
 					}
+					else_if = {
+						limit = {
+							has_role = politician
+							THIS.interest_group = {
+								interest_group_supports_political_movement = yes
+							}
+						}
+						owner ?= {
+							random_political_movement = {
+								limit = {
+									any_influenced_interest_group = {
+										this = scope:relevant_ig
+									}
+								}
+								add_modifier = {
+									name = modifier_government_accident_attempt
+									months = long_modifier_time
+								}
+							}
+						}
+					}
+					owner ?= {
+						post_notification = arranged_accident_failed_incrimination
+					}
 				}
-				owner = {
-					post_notification = arranged_accident_failed_incrimination
+			}
+		}
+		else = { # Exists purely to generate a tooltip when inactive
+			random_list = {
+				40 = {
+					kill_character = yes
+				}
+				40 = {
+					custom_tooltip = assassination_attempt_failed_tt
+				}
+				20 = {
+					custom_tooltip = assassination_attempt_failed_loud_tt
+					owner ?= {
+						add_radicals = {
+							value = very_large_radicals
+							interest_group = scope:relevant_ig
+						}
+					}
+					if = {
+						limit = {
+							character_supports_political_movement = yes
+						}
+						this.political_movement = {
+							add_modifier = {
+								name = modifier_government_accident_attempt
+								months = long_modifier_time
+							}
+						}
+					}
+					else_if = {
+						limit = {
+							has_role = politician
+							THIS.interest_group = {
+								interest_group_supports_political_movement = yes
+							}
+						}
+						owner ?= {
+							random_political_movement = {
+								limit = {
+									any_influenced_interest_group = {
+										this = scope:relevant_ig
+									}
+								}
+								add_modifier = {
+									name = modifier_government_accident_attempt
+									months = long_modifier_time
+								}
+							}
+						}
+					}
 				}
 			}
 		}
 	}
 
-	cooldown = { months = normal_modifier_time }
+	cooldown = { months = 12 }
 	show_confirmation_box = yes
 
 	ai_chance = {

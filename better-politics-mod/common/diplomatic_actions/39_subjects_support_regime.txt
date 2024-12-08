@@ -1,0 +1,359 @@
+﻿da_support_regime = {
+	groups= {
+		overlord
+	}
+	requires_approval = no
+	should_notify_third_parties = yes
+	show_effect_in_tooltip = yes
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/support_regime.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_09_support_regime_benign"
+	
+	possible = {	
+		scope:target_country = {
+			NOT = { is_diplomatic_play_enemy_of = root }
+		}
+	}
+	
+	accept_effect = {
+		add_overlord_lobby_appeasement_from_diplomacy = { 
+			FIRST = scope:target_country
+			SECOND = root
+			PRO_AMOUNT = 4
+			ANTI_AMOUNT = -4
+			FACTOR = appeasement_support_regime_started
+		}
+
+		scope:target_country = {
+			if = {
+				limit = { has_variable = bpm_auth_state_exhaustion }
+				custom_tooltip = {
+					text = "bpm_auth_transfer_exhaustion_from_subject"
+				}
+			}
+		}
+	}
+	
+	pact = {	
+		cost = 50
+		recipient_pays_maintenance = yes
+		forced_duration = 12
+				
+		first_modifier = {
+			
+		}
+		
+		second_modifier = {
+			country_auth_transfer_state_exhaustion_to_overlord = yes	
+			country_liberty_desire_add = -0.1
+		}
+		
+		actor_can_break = {
+			always = yes
+		}
+	
+		manual_break_effect = {
+			scope:target_country = {
+				add_liberty_desire = 10
+			}
+			
+			add_overlord_lobby_appeasement_from_diplomacy = { 
+				FIRST = scope:target_country
+				SECOND = root
+				PRO_AMOUNT = -4
+				ANTI_AMOUNT = 4
+				FACTOR = appeasement_support_regime_ended
+			}				
+		}
+	}
+	
+	ai = {
+		max_influence_spending_fraction = 0.1
+		
+		evaluation_chance = {
+			value = 0.25
+		}
+
+		propose_score = {
+			value = 1 # Low propose score, AI should replace this with other pacts if needed
+			
+			add = {
+				value = scope:target_country.country_rank
+				multiply = 1
+			}
+		}
+	
+		will_propose = {
+			var:bpm_auth_state_exhaustion <= 500
+			"ai_ideological_opinion(scope:target_country)" >= 25
+			scope:target_country = {
+				var:bpm_auth_state_exhaustion >= 1000
+			}
+			OR = {
+				scope:target_country = { liberty_desire >= 25 }
+				NOT = {
+					any_subject_or_below = {
+						root = {
+							has_diplomatic_pact = {
+								type = da_support_regime
+								who = prev
+							}
+						}
+					}
+				}
+			}
+		}
+
+		will_break = {
+			OR = {
+				AND = {
+					NOT = { scope:actor = { is_subject_of = root } }
+					OR = {
+						var:bpm_auth_state_exhaustion >= 1000
+						authority <= 0
+					}
+				}
+				"ai_ideological_opinion(scope:target_country)" <= -25
+				has_attitude = {
+					who = scope:target_country
+					attitude = domineering
+				}					
+			}
+		}
+		
+		accept_score = {
+			value = 0
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_BASE"
+				value = -100
+			}
+
+			if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" <= -25
+				}
+				add = {
+					add = -1000
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
+				}
+			}
+			else_if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" > 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 3
+					max = 100
+				}
+			}
+			else_if = {
+				limit = {
+					"scope:actor.ai_ideological_opinion(root)" < 0
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_IDEOLOGICAL_OPINION_NEGATIVE"
+					value = "scope:actor.ai_ideological_opinion(root)"
+					multiply = 2
+					min = -100
+				}
+			}							
+							
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+				if = {
+					limit = {
+						has_attitude = {
+							who = scope:actor
+							attitude = protective
+						}	
+					}
+					value = 75
+				}				
+				else_if = {
+					limit = {
+						has_attitude = {
+							who = scope:actor
+							attitude = domineering
+						}	
+					}
+					value = -50
+				}							
+			}
+			
+			if = {
+				limit = {
+					scope:actor = { is_subject_of = root }
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ACTOR_LIBERTY_DESIRE"
+					value = "scope:actor.liberty_desire"
+					subtract = 50
+				}
+			}
+			
+			if = {
+				limit = {
+					scope:actor = { is_subject_of = root }
+				}
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_FREE_AUTHORITY"
+					value = 500
+					subtract = scope:actor.authority	
+					min = -500
+				}				
+			}			
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_RELATIONS"		
+				if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:friendly
+					}
+					value = 100
+				}	
+				else_if = {
+					limit = {
+						"relations(scope:actor)" >= relations_threshold:amicable
+					}
+					value = 50
+				}					
+				else_if = {
+					limit = {
+						"relations(scope:actor)" >=  relations_threshold:cordial
+					}
+					value = 25
+				}
+				else_if = {
+					limit = {
+						"relations(scope:actor)" > relations_threshold:poor
+					}
+					value = -25
+				}					
+				else = {
+					value = -50
+				}				
+			}
+			
+			add = {
+				desc = "DIPLOMATIC_ACCEPTANCE_INFAMY"
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:infamous
+						"scope:actor.infamy" < infamy_threshold:notorious
+					}
+					value = -10
+				}	
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:notorious
+						"scope:actor.infamy" < infamy_threshold:pariah
+					}
+					value = -25
+				}
+				if = {
+					limit = {
+						"scope:actor.infamy" >= infamy_threshold:pariah
+					}
+					value = -50
+				}					
+			}					
+		}
+	}
+}
+
+da_request_support_regime = {
+	groups= {
+		subject
+	}
+	requires_approval = yes
+	should_notify_third_parties = yes
+	show_effect_in_tooltip = yes
+	uses_random_approval = yes
+	
+	texture = "gfx/interface/icons/diplomatic_action_icons/support_regime.dds"
+	confirmation_sound = "event:/SFX/UI/MapInteraction/SubjectInteractions/diplomatic_action_subjects_09_support_regime_benign"
+	
+	possible = {
+		NOT = { is_diplomatic_play_enemy_of = scope:target_country }
+		custom_tooltip = {
+			text = "SUPPORT_REGIME_ON_COOLDOWN"
+			NOT = {
+				scope:target_country = {
+					any_diplomatic_catalyst = {
+						is_diplomatic_catalyst_type = catalyst_support_regime_requested
+						target = root
+					}					
+				}
+			}
+		}	
+	}
+	
+	accept_effect = {
+		add_overlord_lobby_appeasement_from_diplomacy = { 
+			FIRST = root
+			SECOND = scope:target_country
+			PRO_AMOUNT = 4
+			ANTI_AMOUNT = -4
+			FACTOR = appeasement_support_regime_started
+		}
+	}
+	
+	decline_effect = {
+		scope:target_country = { change_relations = { country = root value = -20 } }
+		if = {
+			limit = {
+				is_subject_of = scope:target_country
+			}
+			add_liberty_desire = 10
+		}
+		hidden_effect = {
+			scope:target_country = {
+				create_diplomatic_catalyst = {
+					type = catalyst_support_regime_requested
+					target = root
+				}		
+			}
+		}			
+	}
+	
+	reverse_pact = da_support_regime
+	
+	ai = {
+		evaluation_chance = {
+			value = 0.25
+		}
+
+		propose_score = {
+			value = 10
+		}
+	
+		will_propose = {
+			var:bpm_auth_state_exhaustion > 500
+			liberty_desire_weekly_progress > -0.2
+		}
+
+		will_break = {
+			OR = {
+				AND = {
+					NOT = { scope:actor = { is_subject_of = root } }
+					OR = {
+						var:bpm_auth_state_exhaustion >= 1000
+						authority <= 0
+					}
+				}
+				"ai_ideological_opinion(scope:target_country)" <= -25
+				has_attitude = {
+					who = scope:target_country
+					attitude = domineering
+				}
+			}
+		}
+		
+		will_propose_even_if_not_accepted = {
+			"scope:actor.ai_ideological_opinion(root)" > -25
+		}
+	}
+}

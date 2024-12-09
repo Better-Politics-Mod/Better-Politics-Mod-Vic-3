@@ -1,40 +1,58 @@
 bpm_auth_handle_potential_collapses = {
 	if = {
 		limit = { bpm_auth_can_collapse = yes }
-		if = {
-			limit = { NOT = { has_variable = bpm_auth_weeks_with_high_radicalism } }
-			set_variable = { name = bpm_auth_weeks_with_high_radicalism		value = 0 }
-		}
-
-		change_variable = {
-			name = bpm_auth_weeks_with_high_radicalism
-			add = 1
-		}
 
 		if = {
-			limit = { var:bpm_auth_weeks_with_high_radicalism > bpm_auth_collapse_from_radicals_grace_period }
+			limit = {
+				AND = {
+					owner = { is_player = no }
+					owner = { authority > 0 }
+				}
+			}
 
-			random = {
-				chance = {
-					value = bpm_auth_collapse_from_radicals_chance
-					multiply = turmoil
-					if = {
-						limit = {
-							OR = { # Only increases in chance of collapse are applied at low authority
-								modifier:state_bpm_auth_collapse_chance > 0
-								owner = { authority > 0 }
+			owner = {
+				bpm_auth_init_exhaustion_if_necessary = yes
+				change_variable = {
+					name = bpm_auth_state_exhaustion
+					add = 10 # We are nicer to AI here
+				}
+			}
+		} else = {
+			if = {
+				limit = { NOT = { has_variable = bpm_auth_weeks_with_high_radicalism } }
+				set_variable = { name = bpm_auth_weeks_with_high_radicalism		value = 0 }
+			}
+	
+			change_variable = {
+				name = bpm_auth_weeks_with_high_radicalism
+				add = 1
+			}
+	
+			if = {
+				limit = { var:bpm_auth_weeks_with_high_radicalism > bpm_auth_collapse_from_radicals_grace_period }
+	
+				random = {
+					chance = {
+						value = bpm_auth_collapse_from_radicals_chance
+						multiply = turmoil
+						if = {
+							limit = {
+								OR = { # Only increases in chance of collapse are applied at low authority
+									modifier:state_bpm_auth_collapse_chance > 0
+									owner = { authority > 0 }
+								}
+							}
+							multiply = {
+								value = 1
+								add = modifier:state_bpm_auth_collapse_chance
+								min = 0
 							}
 						}
-						multiply = {
-							value = 1
-							add = modifier:state_bpm_auth_collapse_chance
-							min = 0
-						}
-					}
-				} 
-
-				add_radicals_in_state = { value = 0.25 }
-				bpm_auth_spawn_relevant_collapse = yes
+					} 
+	
+					add_radicals_in_state = { value = 0.25 }
+					bpm_auth_spawn_relevant_collapse = yes
+				}
 			}
 		}
 	}
@@ -206,14 +224,55 @@ bpm_auth_handle_suppression_and_order = {
 				}
 			}
 		}
+		if = {
+			limit = {
+				owner = { is_player = no }
+				owner = { authority > 0 }
+				OR = {
+					turmoil >= 0.25
+					has_variable = bpm_auth_ai_is_removing_radicals
+				}
+			}
+			set_variable = bpm_auth_ai_is_removing_radicals
+			owner = {
+				bpm_auth_init_exhaustion_if_necessary = yes
+				change_variable = {
+					name = bpm_auth_state_exhaustion
+					add = 10 # We are nicer to AI here
+				}
+			}
+			add_radicals_in_state = {
+				value = -0.025
+			}
+			if = {
+				limit = { turmoil <= 0 }
+				remove_variable = bpm_auth_ai_is_removing_radicals
+			}
+		}
 		if = { 
 			limit = { 
 				OR = {
 					modifier:state_bpm_auth_restores_order = yes 
 					AND = {
+						owner = { is_player = no }
+						owner = { authority > 0 }
+					}
+					AND = {
 						owner = { modifier:country_bpm_auth_restores_order = yes }
 						is_incorporated = yes
 					}
+				}
+			}
+
+			if = {
+				limit = {
+					owner = { is_player = no }
+					owner = { authority > 0 }
+				}
+				bpm_auth_init_exhaustion_if_necessary = yes
+				change_variable = {
+					name = bpm_auth_state_exhaustion
+					add = 10 # We are nicer to AI here
 				}
 			}
 	

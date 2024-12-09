@@ -21,6 +21,8 @@
  state_bpm_auth_restores_order_desc:0 "Affected states will gradually have [Concept('concept_bpm_partisans', 'Partisans')] and [Concept('concept_bpm_state_collapse', 'Collapse')] removed over time."
  state_bpm_auth_preventing_collapse:0 "State Protected from [Concept('concept_bpm_state_collapse', 'Collapse')]"
  state_bpm_auth_preventing_collapse_desc:0 "Affected states will never [Concept('concept_bpm_state_collapse', 'Collapse')]"
+ state_bpm_auth_preventing_partisan_secessions:0 "[Concept('concept_bpm_partisans', 'Partisans')] in State can not join [Concept('concept_civil_war', 'Civil Wars')]"
+ state_bpm_auth_preventing_partisan_secessions_desc:0 "State can not join [Concept('concept_civil_war', 'Civil Wars')] regardless of presence of [Concept('concept_bpm_partisans', 'Partisans')]."
  state_bpm_auth_collapse_chance:0 "State [Concept('concept_bpm_state_collapse', 'Collapse')] Chance"
  state_bpm_auth_collapse_chance_desc:0 "An increase or reduction in chances of state [Concept('concept_bpm_state_collapse', 'Collapsing')] from [Concept('concept_radicals', 'Radicals')]"
  state_bpm_auth_collapse_soon:0 "State Guaranteed to [Concept('concept_bpm_state_collapse', 'Collapse')]"
@@ -35,6 +37,10 @@
  state_bpm_auth_state_exhaustion_weekly_add_desc:0 "How much [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')] the country gains every week" 
  country_auth_transfer_state_exhaustion_to_overlord:0 "[Concept('concept_bpm_state_exhaustion', 'State Exhaustion')] transferred to [Concept('concept_overlord', 'Overlord')]"
  country_auth_transfer_state_exhaustion_to_overlord_desc:0 "All [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')] acquired by this country will be instead transferred to their [Concept('concept_overlord', 'Overlord')]."
+ country_bpm_auth_authority_per_bureaucracy_add:0 "@aut! [Concept('concept_authority', 'Authority')] per Produced @bur! [Concept('concept_bureaucracy', 'Bureaucracy')]"
+ country_bpm_auth_authority_per_bureaucracy_add_desc:0 "Every produced unit of @bur! [Concept('concept_bureaucracy', 'Bureaucracy')] will contribute to producing this much extra @aut! [Concept('concept_authority', 'Authority')], regardless if it is consumed by anything or not, up to #variable [SCOPE.GetRootScope.GetCountry.MakeScope.ScriptValue('bpm_auth_maximum_bureaucracy_for_auth_bonus')]#! @bur! [Concept('concept_bureaucracy', 'Bureaucracy')]."
+ country_bpm_auth_authority_per_army_size_add:0 "@aut! [Concept('concept_authority', 'Authority')] per Army Battalion"
+ country_bpm_auth_authority_per_army_size_add_desc:0 "Every Army Battalion will grant us this amount of @aut! [Concept('concept_authority', 'Authority')], up to #variable [SCOPE.GetRootScope.GetCountry.MakeScope.ScriptValue('bpm_auth_maximum_army_size_for_auth_bonus')]#! Army Battalions."
 
  # DECREES
  decree_bpm_maintain_order:0 "Maintain Order"
@@ -62,11 +68,14 @@
  bpm_auth_partisans_assistance_strong:0 "Partisan Assistance"
  bpm_auth_partisans_normal:0 "Partisans (Normal)"
  bpm_auth_partisans_assistance_normal:0 "Partisan Assistance"
- bpm_auth_partisans_weak :0 "Partisans (Weak)"
+ bpm_auth_partisans_weak:0 "Partisans (Weak)"
  bpm_auth_partisans_assistance_weak:0 "Partisan Assistance"
  bpm_auth_collapsed:0 "Collapsed Authority"
  bpm_auth_state_exhaustion_modifier:0 "State Exhaustion"
+ bpm_auth_buro_to_auth_modifier:0 "Authority from Bureaucracy"
+ bpm_auth_army_to_auth_modifier:0 "Authority from Army"
  bpm_auth_shortage:0 "Authority Shortage"
+ bpm_auth_emboldened_movements:0 "Movements Emboldened by Collapses"
 
  # TOASTS
  notification_bpm_auth_collapsed_name: "[SCOPE.GetRootScope.GetState.GetName] Collapsed!"
@@ -104,17 +113,44 @@
  alert_bpm_auth_shortage_name:0 "[Concept('concept_authority', 'Authority')] Shortage!"
  alert_bpm_auth_shortage_desc:0 "We have a shortage of [Concept('concept_authority', 'Authority')]. This means that [Concept('concept_bpm_state_collapse', 'Collapse')] can not be prevented by any means and removing [Concept('concept_bpm_state_collapse', 'Collapse')] and [Concept('concept_bpm_partisans', 'Partisans')] from our [Concept('concept_state', 'States')] will be impossible. Additionally, the shortage of authory applies the following effects to our country:\n[GetStaticModifier('bpm_auth_shortage').GetDesc]"
  alert_bpm_auth_shortage_hint:0 "Consider removing [Concept('concept_decree', 'Decrees')] or passing more restrictive [Concept('concept_laws', 'Laws')]. Investing more in the [GetInstitutionType('institution_police').GetName] [Concept('concept_institution', 'Institution')] may also help."
+ alert_bpm_auth_shortage_name_action:0 "Politics Panel"
+
+ alert_bpm_auth_high_exhaustion_name:0 "High [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')]"
+ alert_bpm_auth_high_exhaustion_desc:0 "Our [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')] is reaching dangerous levels. As long as our [Concept('concept_authority', 'Authority')] is not in shortage, no negative effects will be experienced, however you should consider preventing further exhaustion gains if possible to avoid it going out of control."
+ alert_bpm_auth_high_exhaustion_hint:0 "Avoid taking on unnecessary large [Concept('concept_war', 'Wars')] and finish those that you have already. Consider mobilizing smaller portion of your [Concept('concept_army', 'Army')] while increasing its size. Find out how to reduce the amount of [Concept('concept_radical', 'Radicals')] you are gaining to avoid having to use repressive measures. Try to avoid conquering too many lands at once to avoid having to suppress [Concept('concept_bpm_partisans', 'Partisans')] or, alternatively, grant these lands to a [Concept('concept_subject', 'Subject')] to manage them in your stead."
+ alert_bpm_auth_high_exhaustion_action:0 "Politics Panel"
+
+ alert_bpm_auth_high_exhaustion_critical_name:0 "Critical [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')]!"
+ alert_bpm_auth_high_exhaustion_critical_desc:0 "Our [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')] has reached dangerous levels. As long as our [Concept('concept_authority', 'Authority')] is not in shortage, no negative effects will be experienced, however you should consider preventing further exhaustion gains if possible to avoid it going out of control."
+ alert_bpm_auth_high_exhaustion_critical_hint:0 "$alert_bpm_auth_high_exhaustion_hint$"
+ alert_bpm_auth_high_exhaustion_critical_action:0 "Politics Panel"
+
+ alert_bpm_auth_army_costs_exhaustion_name:0 "High [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')] from raised army!"
+ alert_bpm_auth_army_costs_exhaustion_desc:0 "The amount of raised battalions you have is causing [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')] gain to overwhelm its natural decay."
+ alert_bpm_auth_army_costs_exhaustion_hint:0 "Make sure that the level of military mobilization you are enacting is adequate to the military tasks in question. If your [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')] is too high to control, consider demobilizing some units or enacting a peace with your enemies."
+ alert_bpm_auth_army_costs_exhaustion_action:0 "Army Panel"
+
+ alert_bpm_auth_emboldened_movements_from_collapses_name:0 "[Concept('concept_political_movement', 'Political Movements')] Emboldened by [Concept('concept_bpm_state_collapse', 'Collapse')] and [Concept('concept_bpm_partisans', 'Partisans')]!"
+ alert_bpm_auth_emboldened_movements_from_collapses_desc:0 "Our [Concept('concept_incorporated_state', 'Incorporated States')] with [Concept('concept_bpm_state_collapse', 'Collapsed Authority')] and [Concept('concept_bpm_partisans', 'Partisans')] increase [Concept('concept_activism', 'Activism')] of our [Concept('concept_political_movement', 'Political Movements')]."
+ alert_bpm_auth_emboldened_movements_from_collapses_hint:0 "Make sure to get rid of [Concept('concept_bpm_state_collapse', 'Collapse')] and [Concept('concept_bpm_partisans', 'Partisans')] from our [Concept('concept_incorporated_state', 'Incorporated States')]. If you can not do it all at once, prioritize reducing their amount, as every state affected by these chaotic modifiers increases the [Concept('concept_activism', 'Activism')] of our [Concept('concept_political_movement', 'Political Movements')]."
+ alert_bpm_auth_emboldened_movements_from_collapses_action:0 "Politics Panel"
+
  alert_bpm_state_about_to_collapse_name:0 "[SCOPE.GetRootScope.GetState.GetName] is about to [Concept('concept_bpm_state_collapse', 'Collapse')]!"
  alert_bpm_state_about_to_collapse_desc:0 "A [Concept('concept_state', 'State')] with high [Concept('concept_turmoil', 'Turmoil')] is about to [Concept('concept_bpm_state_collapse', 'Collapse')]."
  alert_bpm_state_about_to_collapse_hint:0 "Use relevant [Concept('concept_decree', 'Decrees')], such as [GetDecreeType('decree_violent_suppression').GetName] or [GetDecreeType('decree_bpm_maintain_order').GetName] to prevent that from happening."
+ alert_bpm_state_about_to_collapse_action:0 "State Panel"
+
  alert_bpm_collapsed_state_ignored_name:0 "[SCOPE.GetRootScope.GetState.GetName] has [Concept('concept_bpm_state_collapse', 'Collapsed')]!"
- alert_bpm_collapsed_state_ignored_desc:0 "A [Concept('concept_state', 'State')] has experienced a [Concept('concept_bpm_state_collapse', 'Collapsed')]."
- alert_bpm_collapsed_state_ignored_desc:0 "Use relevant [Concept('concept_decree', 'Decrees')], such as [GetDecreeType('decree_bpm_restore_order').GetName] to remove the collapse."
+ alert_bpm_collapsed_state_ignored_desc:0 "A [Concept('concept_state', 'State')] has experienced a [Concept('concept_bpm_state_collapse', 'Collapse')]."
+ alert_bpm_collapsed_state_ignored_hint:0 "Use relevant [Concept('concept_decree', 'Decrees')], such as [GetDecreeType('decree_bpm_restore_order').GetName] to remove the collapse."
+ alert_bpm_collapsed_state_ignored_action:0 "State Panel"
+
  alert_bpm_partisans_ignored_name:0 "[SCOPE.GetRootScope.GetState.GetName] has unsuppressed [Concept('concept_bpm_partisans', 'Partisans')]!"
  alert_bpm_partisans_ignored_desc:0 "A [Concept('concept_state', 'State')] has [Concept('concept_bpm_partisans', 'Partisans')] resisting our occupation."
  alert_bpm_partisans_ignored_hint:0 "Use relevant [Concept('concept_decree', 'Decrees')], such as [GetDecreeType('decree_bpm_occupation_campaigns').GetName] to defeat the partisans."
+ alert_bpm_partisans_ignored_action:0 "State Panel"
 
  # JOURNALS
  je_bpm_auth_tracker: "State Exhaustion"
- je_bpm_crisis_of_the_state_desc: "Measure the overextension of the current regime."
- je_bpm_crisis_of_the_state_reason: "Current [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')]: #b #r [THIS.GetCountry.MakeScope.Var('bpm_auth_state_exhaustion').GetValue] #!#! Various measures by the state to suppress the population exhaust its administrative and coersive resources. This is represented by the [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')]. As long as no sources of State Exhaustion exist, it is reduced every week by #variable [SCOPE.GetRootScope.GetCountry.MakeScope.ScriptValue('bpm_je_split_fascists_progress_rate')]#!"
+ je_bpm_auth_tracker_desc: "Measure the overextension of the current regime."
+ je_bpm_auth_tracker_reason: "Current [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')]: #b #r [SCOPE.GetRootScope.GetCountry.MakeScope.Var('bpm_auth_state_exhaustion').GetValue] #!#! \n\nVarious measures by the state to suppress the population exhaust its administrative and coersive resources. This is represented by the [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')]. As long as no sources of [Concept('concept_bpm_state_exhaustion', 'State Exhaustion')] exist, it is reduced every week by #variable [SCOPE.GetRootScope.GetCountry.MakeScope.ScriptValue('bpm_auth_weekly_state_exhaustion_recovery')]#!."

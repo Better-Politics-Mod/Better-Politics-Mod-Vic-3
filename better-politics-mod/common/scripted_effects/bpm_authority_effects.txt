@@ -2,7 +2,7 @@ bpm_auth_handle_potential_collapses = {
 	if = {
 		limit = { bpm_auth_can_collapse = yes }
 		if = {
-			limit = { NOT = { has_variable = bpm_auth_state_exhaustion } }
+			limit = { NOT = { has_variable = bpm_auth_weeks_with_high_radicalism } }
 			set_variable = { name = bpm_auth_weeks_with_high_radicalism		value = 0 }
 		}
 
@@ -14,25 +14,33 @@ bpm_auth_handle_potential_collapses = {
 		if = {
 			limit = { var:bpm_auth_weeks_with_high_radicalism > bpm_auth_collapse_from_radicals_grace_period }
 
-			add_radicals_in_state = { value = 0.25 }
-
 			random = {
 				chance = {
 					value = bpm_auth_collapse_from_radicals_chance
 					multiply = turmoil
-					multiply = {
-						value = 1
-						add = modifier:state_bpm_auth_collapse_chance
-						min = 0
+					if = {
+						limit = {
+							OR = { # Only increases in chance of collapse are applied at low authority
+								modifier:state_bpm_auth_collapse_chance > 0
+								owner = { authority > 0 }
+							}
+						}
+						multiply = {
+							value = 1
+							add = modifier:state_bpm_auth_collapse_chance
+							min = 0
+						}
 					}
 				} 
+
+				add_radicals_in_state = { value = 0.25 }
 				bpm_auth_spawn_relevant_collapse = yes
 			}
 		}
 	}
 	if = {
-		add_radicals_in_state = { value = 0.25 }
 		limit = { modifier:state_bpm_auth_collapse_soon = yes } # Insta-collapse case
+		add_radicals_in_state = { value = 0.25 }
 		bpm_auth_spawn_relevant_collapse = yes
 	}
 }
@@ -42,15 +50,21 @@ bpm_auth_remove_partisans_if_accepted = {
 		limit = {
 			bpm_auth_partisans_accepted_by_regime = yes
 			bpm_auth_state_has_partisans = yes
+			NOT = { has_modifier = recently_conquered_state }
 		}
 		bpm_auth_remove_partisans_and_collapse = yes
 	}
 }
 
 bpm_auth_spawn_relevant_collapse = {
-	clear_variable = bpm_auth_weeks_with_high_radicalism
+	remove_variable = bpm_auth_weeks_with_high_radicalism
 	if = { # Normally spawns collapsed authority...
-		limit = { bpm_auth_partisan_factor < 40 }
+		limit = { 
+			OR = {
+				bpm_auth_partisan_factor < 40 
+				bpm_auth_partisans_accepted_by_regime = yes
+			}
+		}
 		add_modifier = bpm_auth_collapsed
 		bpm_auth_init_weeks_to_restore_order = yes
 		post_notification = bpm_auth_collapsed
@@ -145,13 +159,13 @@ bpm_auth_remove_partisans_and_collapse = {
 		remove_modifier = bpm_auth_partisans_weak
 	}
 
-	clear_variable = bpm_auth_weeks_to_resolve
+	remove_variable = bpm_auth_weeks_to_resolve
 }
 
 bpm_auth_init_weeks_to_restore_order = {
-	clear_varaible = bpm_auth_weeks_with_high_radicalism
+	remove_variable = bpm_auth_weeks_with_high_radicalism
 	if = {
-		limit = { bpm_auth_has_collapsed_auth = yes }
+		limit = { bpm_auth_state_has_collapsed_auth = yes }
 		set_variable = {
 			name = bpm_auth_weeks_to_resolve
 			value = {
@@ -219,9 +233,10 @@ bpm_auth_handle_suppression_and_order = {
 						turmoil <= 0
 					}
 				}
-				clear_variable = bpm_auth_weeks_to_resolve
+				remove_variable = bpm_auth_weeks_to_resolve
 				if = {
 					limit = { bpm_auth_state_has_collapsed_auth = yes }
+					add_radicals_in_state = { value = -0.25 }
 					remove_modifier = bpm_auth_collapsed
 					post_notification = bpm_auth_order_restored
 				} else_if = {
@@ -255,6 +270,8 @@ bpm_auth_update_state_exhaustion = {
 		set_variable = { name = bpm_auth_state_exhaustion value = 0 }
 	}
 
+	if = { limit = { var:bpm_auth_state_exhaustion < 0 } set_variable = { name = bpm_auth_state_exhaustion value = 0 } }
+
 	bpm_auth_reapply_state_exhaustion_modifier = yes
 }
 
@@ -281,7 +298,7 @@ bpm_auth_save_reserve_authority = { # Saving the authority pre-civil war. Post c
 		name = bpm_auth_pre_civil_war_authority
 		value = {
 			add = produced_authority
-			subtract = bpm_auth_state_exhaustion
+			subtract = var:bpm_auth_state_exhaustion
 		}
 	}
 
@@ -296,7 +313,7 @@ bpm_auth_save_reserve_authority = { # Saving the authority pre-civil war. Post c
 		}
 	}
 
-	clear_variable = bpm_auth_pre_civil_war_authority
+	remove_variable = bpm_auth_pre_civil_war_authority
 }
 
 bpm_auth_use_reserve_authority_post_civil_war = {
@@ -304,18 +321,18 @@ bpm_auth_use_reserve_authority_post_civil_war = {
 		limit = { has_variable = bpm_auth_pre_civil_war_authority }
 		if = { 
 			limit = { var:bpm_auth_pre_civil_war_authority >= 2000 } 
-			add_modifier = { name = bpm_auth_remnant_opposition_extreme years = 25 decaying = yes }
+			add_modifier = { name = bpm_auth_remnant_opposition_extreme years = 25 is_decaying = yes }
 		} else_if = { 
 			limit = { var:bpm_auth_pre_civil_war_authority >= 1000 } 
-			add_modifier = { name = bpm_auth_remnant_opposition_very_strong years = 25 decaying = yes }
+			add_modifier = { name = bpm_auth_remnant_opposition_very_strong years = 25 is_decaying = yes }
 		} else_if = {
 			limit = { var:bpm_auth_pre_civil_war_authority >= 500 } 
-			add_modifier = { name = bpm_auth_remnant_opposition_strong years = 25 decaying = yes }
+			add_modifier = { name = bpm_auth_remnant_opposition_strong years = 25 is_decaying = yes }
 		} else = {
-			add_modifier = { name = bpm_auth_remnant_opposition years = 25 decaying = yes }
+			add_modifier = { name = bpm_auth_remnant_opposition years = 25 is_decaying = yes }
 		}
-		post_notificaiton = bpm_auth_remnants_warn
-		clear_variable = bpm_auth_pre_civil_war_authority
+		post_notification = bpm_auth_remnants_warn
+		remove_variable = bpm_auth_pre_civil_war_authority
 	}
 }
 
@@ -335,23 +352,57 @@ bpm_auth_handle_authority_shortage = {
 	}
 }
 
+bpm_auth_handle_activism_from_collapses_and_partisans = {
+	remove_modifier = bpm_auth_emboldened_movements
+	set_variable = { name = bpm_auth_temp value = bpm_auth_collapsed_states_effect_power }
+
+	if = {
+		limit = { var:bpm_auth_temp > 0 }
+		add_modifier = { name = bpm_auth_emboldened_movements multiplier = var:bpm_auth_temp }
+	}
+
+	remove_variable = bpm_auth_temp
+}
+
+bpm_auth_handle_authority_from_extra_sources = {
+	remove_modifier = bpm_auth_army_to_auth_modifier
+	remove_modifier = bpm_auth_buro_to_auth_modifier
+
+	add_modifier = { 
+		name = bpm_auth_army_to_auth_modifier 
+		multiplier = {
+			value = army_size
+			max = bpm_auth_maximum_army_size_for_auth_bonus
+			multiply = modifier:country_bpm_auth_authority_per_army_size_add
+		}
+	}
+	add_modifier = { 
+		name = bpm_auth_buro_to_auth_modifier 
+		multiplier = {
+			value = produced_bureaucracy
+			max = bpm_auth_maximum_bureaucracy_for_auth_bonus
+			multiply = modifier:country_bpm_auth_authority_per_bureaucracy_add
+		}
+	}
+}
+
 bpm_auth_convert_partisans_into_strength = {
 	scope:target = {
 		if = {
 			limit = { any_scope_state = { has_modifier = bpm_auth_partisans_overwhelming } }
-			add_modifier = { name = bpm_auth_partisans_overwhelming years = 10 decaying = yes	}
+			add_modifier = { name = bpm_auth_partisans_assistance_overwhelming years = 10 is_decaying = yes	}
 		} else_if = {
 			limit = { any_scope_state = { has_modifier = bpm_auth_partisans_powerful } }
-			add_modifier = { name = bpm_auth_partisans_assistance_powerful years = 10 decaying = yes	}
+			add_modifier = { name = bpm_auth_partisans_assistance_powerful years = 10 is_decaying = yes	}
 		} else_if = {
 			limit = { any_scope_state = { has_modifier = bpm_auth_partisans_strong } }
-			add_modifier = { name = bpm_auth_partisans_assistance_strong years = 10 decaying = yes	}
+			add_modifier = { name = bpm_auth_partisans_assistance_strong years = 10 is_decaying = yes	}
 		} else_if = {
 			limit = { any_scope_state = { has_modifier = bpm_auth_partisans_normal } }
-			add_modifier = { name = bpm_auth_partisans_assistance_normal years = 10 decaying = yes	}
+			add_modifier = { name = bpm_auth_partisans_assistance_normal years = 10 is_decaying = yes	}
 		} else_if = {
 			limit = { any_scope_state = { has_modifier = bpm_auth_partisans_weak } }
-			add_modifier = { name = bpm_auth_partisans_assistance_weak years = 10 decaying = yes	}
+			add_modifier = { name = bpm_auth_partisans_assistance_weak years = 10 is_decaying = yes	}
 		}
 		every_scope_state = { bpm_auth_remove_partisans_and_collapse = yes }
 	}

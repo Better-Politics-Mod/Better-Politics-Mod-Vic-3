@@ -7,72 +7,80 @@ bpm_auth_state_exhaustion_rate = {
 	}
 }
 
-# On a scale from 0 to 100 how much do the locals hate the new regime
-bpm_auth_partisan_factor = {
+bpm_auth_collapsed_states_effect_power = {
+	value = 0
+	every_scope_state = {
+		if = {
+			limit = { 
+				is_incorporated = yes
+				OR = {
+					bpm_auth_state_has_collapsed_auth = yes
+					bpm_auth_state_has_partisans = yes
+				}
+			}
+			
+			add = 1
+		}
+	}
+
+	divide = {
+		value = 0
+		every_scope_state = {
+			if = {
+				limit = { 
+					OR = {
+						is_incorporated = yes
+						is_capital = yes # I'm doing this just in case, somehow, a country has no incorporated states which would end up crashing the game if true due to division by zero
+					}
+				}
+				
+				add = 1
+			}
+		}
+	}
+}
+
+bpm_auth_exhaustion_from_army = {
 	value = 0
 
-	# Cultural Acceptance
 	if = {
-		limit = {
-			any_state_culture = {
-				bpm_auth_culture_significant_for_partisans = yes
-				state_cultural_acceptance = {  
-					target = prev
-					value <= 10
-				}
-			}
-		}
+		limit = { army_size > 0 }
 
-		add = 80
-	} else_if = {
-		limit = {
-			any_state_culture = {
-				bpm_auth_culture_significant_for_partisans = yes
-				state_cultural_acceptance = {  
-					target = prev
-					value <= 25
-				}
+		every_military_formation = {
+			limit = {
+				is_army = yes
+				is_mobilized = yes
 			}
+			add = num_units
 		}
+	
+		divide = army_size
 
-		add = 40
-	} else_if = {
-		limit = {
-			any_state_culture = {
-				bpm_auth_culture_significant_for_partisans = yes
-				state_cultural_acceptance = {  
-					target = prev
-					value <= 50
-				}
-			}
-		}
-
-		add = 20
-	} else_if = {
-		limit = {
-			any_state_culture = {
-				bpm_auth_culture_significant_for_partisans = yes
-				state_cultural_acceptance = {  
-					target = prev
-					value <= 75
-				}
-			}
-		}
-
-		add = 10
+		multiply = bpm_auth_weekly_state_exhaustion_from_raised_army
 	}
+}
+
+# On a scale from 0 to 100 how much do the locals hate the new regime
+bpm_auth_partisan_factor = {
+	value = turmoil
+	multiply = 100
 
 	# MOUNTAINS (and forests i guess)
 	if = {
 		limit = { bpm_auth_partisans_love_terrain = yes }
-		add = 50
+	 	add = 50
 	} else_if = {
 		limit = { bpm_auth_partisans_like_terrain = yes }
 		add = 10
 	}
 
-	if = {
-		limit = { bpm_auth_partisans_can_be_strong = no }
-		max = 50 # clamping partisans that don't fit the bill
-	}
+	#if = {
+	#	limit = { has_modifier = recently_conquered_state }
+	#	min = 60 # if partisans spawn from conquest, they are guaranteed to have at least some bite
+	#}
+
+	#if = {
+	#	limit = { bpm_auth_partisans_can_be_strong = no }
+	#	max = 50 # clamping partisans that don't fit the bill
+	#}
 }

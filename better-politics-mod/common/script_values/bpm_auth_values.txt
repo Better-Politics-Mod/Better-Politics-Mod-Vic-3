@@ -6,32 +6,164 @@ bpm_auth_state_exhaustion_rate = {
 		add = modifier:state_bpm_auth_state_exhaustion_weekly_add
 	}
 
-	if = {
-		limit = {
-			is_player = yes # AI might be too stupid not to kill itself with this
-		}
-		add = bpm_auth_exhaustion_from_army
-	}
+	add = bpm_auth_exhaustion_from_army
 }
 
 bpm_auth_weekly_state_exhaustion_recovery = {
-	value = 40
+	value = 0
+
+	add = {
+		desc = "base_value"
+		value = bpm_auth_weekly_state_exhaustion_recovery_base
+	}
+
+	add = {
+		desc = "BPM_AUTH_FROM_SATISFIED_BUREAUCRATS"
+		value = modifier:country_bpm_auth_exhaustion_recovery_from_bureaucratic_ig
+		if = {
+			limit = {
+				ig:ig_petty_bourgeoisie = {
+					ig_approval < 0
+					ig_approval > angry
+					is_marginal = no
+				}
+			}
+			multiply = 0
+		} else_if = {
+			limit = {
+				ig:ig_petty_bourgeoisie = {
+					ig_approval <= angry
+					is_marginal = no
+				}
+			}
+			multiply = -1
+		}
+	}
+
+	add = {
+		desc = "BPM_AUTH_FROM_SATISFIED_ARMED_FORCES"
+		value = modifier:country_bpm_auth_exhaustion_recovery_from_military_ig
+		if = {
+			limit = {
+				ig:ig_armed_forces = {
+					ig_approval < 0
+					ig_approval > angry
+					is_marginal = no
+				}
+			}
+			multiply = 0
+		} else_if = {
+			limit = {
+				ig:ig_armed_forces = {
+					ig_approval <= angry
+					is_marginal = no
+				}
+			}
+			multiply = -1
+		}
+	}
+
+	add = {
+		desc = "BPM_AUTH_FROM_SATISFIED_ARISTOCRACY"
+		value = modifier:country_bpm_auth_exhaustion_recovery_from_aristocrat_ig
+		if = {
+			limit = {
+				ig:ig_landowners = {
+					ig_approval < 0
+					ig_approval > angry
+					is_marginal = no
+				}
+			}
+			multiply = 0
+		} else_if = {
+			limit = {
+				ig:ig_landowners = {
+					ig_approval <= angry
+					is_marginal = no
+				}
+			}
+			multiply = -1
+		}
+	}
+
+	add = {
+		desc = "BPM_AUTH_FROM_SATISFIED_GOVERNING_IGS"
+		value = 0
+		if = {
+			limit = {
+				any_interest_group = {
+					bpm_ig_is_radical_opposition = no
+					bpm_ig_is_very_radical_opposition = no
+					bpm_ig_is_ideological = yes
+					is_in_government = yes
+				}
+			}
+			every_interest_group = {
+				limit = {
+					bpm_ig_is_radical_opposition = no
+					bpm_ig_is_very_radical_opposition = no
+					bpm_ig_is_ideological = yes
+					is_in_government = yes
+				}
+				if = {
+					limit = {
+						ig_approval >= 0
+					}
+					add = {
+						value = 1
+						multiply = ig_clout
+					}
+				} else_if = {
+					limit = {
+						ig_approval <= angry
+					}
+					subtract = {
+						value = 1
+						multiply = ig_clout
+					}
+				}
+			}
+	
+			divide = {
+				value = 0
+				every_interest_group = {
+					limit = {
+						bpm_ig_is_radical_opposition = no
+						bpm_ig_is_very_radical_opposition = no
+						bpm_ig_is_ideological = yes
+						is_in_government = yes
+					}
+					add = ig_clout
+				}
+			}
+	
+			multiply = modifier:country_bpm_auth_exhaustion_recovery_from_governing_ig
+		}
+	}
 
 	if = {
 		limit = {
 			has_variable = bpm_auth_state_exhaustion
-			var:bpm_auth_state_exhaustion >= 500
+			# var:bpm_auth_state_exhaustion >= 500
+			authority <= 500
 		}
 
-		add = -20
+		divide = {
+			desc = "BPM_AUTH_FROM_LOW_AUTHORITY"
+			value = 2
+		}
 	}
 	if = {
 		limit = {
 			has_variable = bpm_auth_state_exhaustion
-			var:bpm_auth_state_exhaustion >= 1000
+			# var:bpm_auth_state_exhaustion >= 1000
+			authority <= 1000
 		}
 
-		add = -10
+		divide = {
+			desc = "BPM_AUTH_FROM_LOW_AUTHORITY"
+			value = 2
+		}
 	}
 	if = {
 		limit = {
@@ -40,6 +172,8 @@ bpm_auth_weekly_state_exhaustion_recovery = {
 
 		add = 20 # we love cheating AI folks
 	}
+
+	min = 0 # Recovery can not go below zero
 }
 
 bpm_auth_collapsed_states_effect_power = {
@@ -85,28 +219,84 @@ bpm_auth_exhaustion_from_army = {
 			limit = {
 				is_army = yes
 				is_mobilized = yes
+				has_mobilization_option = mobilization_option:mobilization_option_bpm_garrison_auxiliaries
 			}
 			add = num_units
+			random_combat_unit = {
+				multiply = modifier:unit_weekly_exhaustion_per_unit_add
+			}
 		}
-	
-		divide = army_size
-
-		multiply = bpm_auth_weekly_state_exhaustion_from_raised_army
 	}
 }
 
 # On a scale from 0 to 100 how much do the locals hate the new regime
 bpm_auth_partisan_factor = {
-	value = turmoil
-	multiply = 100
+	# value = turmoil
+	# multiply = 100
+
+	value = 20
 
 	# MOUNTAINS (and forests i guess)
 	if = {
 		limit = { bpm_auth_partisans_love_terrain = yes }
-	 	add = 50
+	 	add = 40
 	} else_if = {
 		limit = { bpm_auth_partisans_like_terrain = yes }
 		add = 10
+	}
+
+	# Different religion
+	if = {
+		limit = {
+			owner = { NOT = { has_law = law_type:law_total_separation } } # Secular countries cause less religious tension
+			religion_percent_state = {
+				target = owner.religion
+				value <= 0.75
+			}
+		}
+		add = 10
+
+		if = {
+			limit = {
+				owner = { NOT = { has_law = law_type:law_freedom_of_conscience } } # State Religion/State Atheism causes more tension
+			}
+			add = 5
+		}
+	}
+	if = {
+		limit = {
+			owner = { NOT = { has_law = law_type:law_total_separation } } # Secular countries cause less religious tension
+			religion_percent_state = {
+				target = owner.religion
+				value <= 0.5
+			}
+		}
+		add = 10
+
+		if = {
+			limit = {
+				owner = { NOT = { has_law = law_type:law_freedom_of_conscience } } # State Religion/State Atheism causes more tension
+			}
+			add = 5
+		}
+	}
+
+	# Low market access allows partisans to spawn easier
+	if = {
+		limit = {
+			market_access <= 0.75
+		}
+		add = {
+			value = 1
+			subtract = market_access
+			multiply = 40
+		}
+	}
+
+	# Partisans don't spawn against their countrymen
+	if = {
+		limit = { bpm_auth_partisans_accepted_by_regime = yes }
+		max = 0
 	}
 
 	#if = {
@@ -118,4 +308,10 @@ bpm_auth_partisan_factor = {
 	#	limit = { bpm_auth_partisans_can_be_strong = no }
 	#	max = 50 # clamping partisans that don't fit the bill
 	#}
+}
+
+bpm_auth_authority_and_recent_exhaustion = {
+	value = var:bpm_auth_state_exhaustion_old
+	subtract = var:bpm_auth_state_exhaustion
+	add = authority
 }

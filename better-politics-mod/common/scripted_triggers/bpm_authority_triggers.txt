@@ -1,6 +1,11 @@
 bpm_auth_will_spawn_partisans = { # Used when the state changes owners to ensure partisans can actually spawn in the region
 	has_modifier = recently_conquered_state
+	bpm_auth_partisans_accepted_by_regime = no
 	# always = yes
+}
+
+bpm_auth_fighting_critical_war = { # Used to make AI pick options that cost state exhaustion to try and win a war
+	has_revolution = yes
 }
 
 bpm_auth_partisans_love_terrain = { # Partisans in this terrain are way stronger
@@ -68,9 +73,9 @@ bpm_auth_can_collapse = {
 	bpm_auth_state_has_collapsed_auth = no
 	bpm_auth_state_has_partisans = no
 	NOT = { has_variable = bpm_auth_setup_check_for_partisans }
-	radical_fraction = {
-		value >= bpm_auth_radicals_in_state_collapse_threshold
-	}
+	#radical_fraction = {
+	#	value >= bpm_auth_radicals_in_state_collapse_threshold
+	#}
 	OR = {
 		modifier:state_bpm_auth_preventing_collapse = no
 		owner = { authority <= 0 }
@@ -80,25 +85,38 @@ bpm_auth_can_collapse = {
 bpm_auth_culture_significant_for_partisans = {
 	OR = {
 		has_homeland = prev
-		root = {
-			culture_percent_state = {
-				target = prev
-				value >= 0.33
-			}
-		}
+		#root = {
+		#	culture_percent_state = {
+		#		target = prev
+		#		value >= 0.33
+		#	}
+		#}
 	}
 }
 
 bpm_auth_partisans_accepted_by_regime = {
-	every_scope_culture = {
-		OR = {
-			bpm_auth_culture_significant_for_partisans = no
-			root = {
-				state_cultural_acceptance = {  
-					target = prev
-					value >= 90
-				}
-			}
+	#every_scope_culture = {
+	#	OR = {
+	#		bpm_auth_culture_significant_for_partisans = no
+	#		root = {
+	#			state_cultural_acceptance = {  
+	#				target = prev
+	#				value >= 90
+	#			}
+	#		}
+	#	}
+	#}
+	AND = {
+		is_homeland_of_country_cultures = owner
+		owner = {
+			#OR = {
+				is_subject = no
+				#overlord ?= {
+				#	any_primary_culture = {
+				#		has_homeland = prevprevprev # Theoretically won't have any partisans if your subject shares primary cultures with the homelands for some weird reason
+				#	}
+				#}
+			#}
 		}
 	}
 }
@@ -113,6 +131,34 @@ bpm_auth_partisans_hated_by_regime = { # Local cultures are hated by regime
 					value <= 40
 				}
 			}
+		}
+	}
+}
+
+bpm_country_power_from_partisans_higher_than_this_state_can_give = {
+	OR = {
+		owner = { has_modifier = bpm_auth_partisans_assistance_overwhelming }
+		AND = {
+			owner = { has_modifier = bpm_auth_partisans_assistance_powerful }
+			NOT = { has_modifier = bpm_auth_partisans_overwhelming }
+		}
+		AND = {
+			owner = { has_modifier = bpm_auth_partisans_assistance_strong }
+			NOT = { has_modifier = bpm_auth_partisans_overwhelming }
+			NOT = { has_modifier = bpm_auth_partisans_powerful }
+		}
+		AND = {
+			owner = { has_modifier = bpm_auth_partisans_assistance_normal }
+			NOT = { has_modifier = bpm_auth_partisans_overwhelming }
+			NOT = { has_modifier = bpm_auth_partisans_powerful }
+			NOT = { has_modifier = bpm_auth_partisans_strong }
+		}
+		AND = {
+			owner = { has_modifier = bpm_auth_partisans_assistance_weak }
+			NOT = { has_modifier = bpm_auth_partisans_overwhelming }
+			NOT = { has_modifier = bpm_auth_partisans_powerful }
+			NOT = { has_modifier = bpm_auth_partisans_strong }
+			NOT = { has_modifier = bpm_auth_partisans_normal }
 		}
 	}
 }
@@ -138,16 +184,34 @@ bpm_auth_state_has_partisans = {
 	}
 }
 
+bpm_auth_has_authority_shortage = {
+	has_modifier = bpm_auth_shortage
+}
+
 bpm_auth_state_can_join_ideological_civil_war = { # Collapse
-	bpm_auth_state_has_collapsed_auth = yes
+	OR = {
+		owner = { bpm_auth_has_authority_shortage = yes }
+		bpm_auth_state_has_collapsed_auth = yes
+	}
 }
 
 bpm_auth_state_can_join_nonideological_civil_war = { # Partisans and Collapse
 	OR = {
+		owner = { bpm_auth_has_authority_shortage = yes }
 		bpm_auth_state_has_collapsed_auth = yes
 		AND = {
 			modifier:state_bpm_auth_preventing_partisan_secessions = no
 			bpm_auth_state_has_partisans = yes
+		}
+	}
+}
+
+bpm_auth_has_no_exhaustion = {
+	custom_tooltip = { 
+		text = "bpm_auth_has_no_exhaustion_tt"
+		OR = {
+			NOT = { has_variable = bpm_auth_state_exhaustion }
+			var:bpm_auth_state_exhaustion <= 0
 		}
 	}
 }

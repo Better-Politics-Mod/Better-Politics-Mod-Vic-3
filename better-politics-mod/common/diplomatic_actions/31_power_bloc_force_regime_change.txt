@@ -1,0 +1,150 @@
+force_regime_change = {
+	groups= {
+		power_bloc_leader
+	}
+	show_in_lens = no
+
+	texture = "gfx/interface/icons/diplomatic_action_icons/force_regime_change.dds"
+	
+	selectable = {
+		is_power_bloc_leader = yes
+		power_bloc ?= {
+			modifier:power_bloc_leader_can_regime_change_bool = yes
+		}		
+	}	
+	
+	potential = {
+		power_bloc ?= {
+			scope:target_country.power_bloc ?= this
+		}
+	}
+	
+	possible = {
+		custom_tooltip = {
+			text = "FORCE_REGIME_CHANGE_GOV_PRINCIPLES_DIST_POWER_PROGRESSIVENESS_DIFFERENCE"
+			OR = {
+				50 <= {
+					add = {
+						add = active_law:lawgroup_governance_principles.type.progressiveness
+						subtract = scope:target_country.active_law:lawgroup_governance_principles.type.progressiveness
+						abs = yes
+					}
+				}
+				50 <= {
+					add = {
+						add = active_law:lawgroup_distribution_of_power.type.progressiveness
+						subtract = scope:target_country.active_law:lawgroup_distribution_of_power.type.progressiveness
+						abs = yes
+					}
+				}
+			}
+		}	
+
+		bpm_auth_authority_and_recent_exhaustion >= 500
+	
+		#power_bloc = {
+		#	current_cohesion_percentage >= 0.25
+		#}
+		#scope:target_country = {
+		#	tenure_in_current_power_bloc_years >= 5
+		#}
+		prestige >= {
+			value = scope:target_country.prestige
+			multiply = 3
+		}
+	}
+	
+	accept_effect = {
+		regime_change = scope:target_country
+		scope:target_country = {
+			add_modifier = {
+				name = installed_regime
+				months = normal_modifier_time
+				multiplier = 0.2
+			}
+		}
+
+		if = {
+			limit = {
+				scope:target_country = {
+					country_rank >= rank_value:great_power
+				} 
+			}
+			bpm_auth_add_exhaustion_huge = yes
+		} else_if = {
+			limit = {
+				scope:target_country = {
+					country_rank >= rank_value:major_power
+				} 
+			}
+			bpm_auth_add_exhaustion_large = yes
+		} else_if = {
+			limit = {
+				scope:target_country = {
+					country_rank <= rank_value:unrecognized_regional_power
+				} 
+			}
+			bpm_auth_add_exhaustion_small = yes
+		} else = {
+			bpm_auth_add_exhaustion_normal = yes
+		}
+		
+		#power_bloc = {
+		#	add_cohesion_percent = scaled_cohesion_cost
+		#}
+	}
+	
+	ai = {
+		evaluation_chance = {
+			value = 0.025 # AI shouldn't use this very often
+		}
+		
+		will_propose = {
+			power_bloc = { current_cohesion_percentage >= 0.75 }
+			"ai_ideological_opinion(scope:target_country)" <= -50			
+			OR = {
+				"ai_ideological_opinion(scope:target_country)" <= -100
+				has_attitude = {
+					who = scope:target_country
+					attitude = domineering
+				}					
+				AND = {
+					has_radical_leftist_government = no			
+					scope:target_country = {
+						has_radical_leftist_government = yes
+					}
+				}
+				AND = {
+					has_radical_leftist_economy = no			
+					scope:target_country = {
+						has_radical_leftist_economy = yes
+					}
+				}		
+			}
+		}
+
+		propose_score = {								
+			value = 10
+
+			if = {
+				limit = {
+					OR = {					
+						AND = {
+							has_radical_leftist_government = no			
+							scope:target_country = {
+								has_radical_leftist_government = yes
+							}
+						}
+						AND = {
+							has_radical_leftist_economy = no			
+							scope:target_country = {
+								has_radical_leftist_economy = yes
+							}
+						}				
+					}
+				}
+				add = 100
+			}				
+		}
+	}
+}

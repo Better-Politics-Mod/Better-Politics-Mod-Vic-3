@@ -54,11 +54,11 @@ bpm_frankfurt_parliament_events.1 = {
 	option = {
 		name = bpm_frankfurt_parliament_events.1.a
 		defult_option = yes
-		
-		custom_tooltip = {
-			text = catholic_boycott_tt
-			if = {
-				limit = { global_var:bpm_frankfurt_parliament_religious_law_chosen = law_type:law_state_religion }
+
+		if = {
+			limit = { global_var:bpm_frankfurt_parliament_religious_law_chosen = law_type:law_state_religion }
+			custom_tooltip = {
+				text = catholic_boycott_tt
 				every_country = {
 					limit = {
 						NOT = { has_variable = boycotting_frankfurt }
@@ -537,7 +537,7 @@ bpm_frankfurt_parliament_events.8 = {
 						}
 						order_by = country_rank
 						save_scope_as = frankfurt_crown_candidate
-						trigger_event = { id = bpm_frankfurt_parliament_events.11 }
+						trigger_event = { id = bpm_frankfurt_parliament_events.12 }
 					}
 				}
 		}
@@ -684,9 +684,8 @@ bpm_frankfurt_parliament_events.9 = {
 		}
 
 		if = {
-			limit = { 
-				global_var:bpm_frankfurt_parliament_right_percent <= global_var:bpm_frankfurt_parliament_center_percent 
-				global_var:bpm_frankfurt_parliament_right_percent <= global_var:bpm_frankfurt_parliament_left_percent
+			limit = {
+				global_var:bpm_frankfurt_parliament_left_percent >= global_var:bpm_frankfurt_parliament_right_percent
 			}
 			scope:frankfurt_crown_candidate = {
 				trigger_event = { id = bpm_frankfurt_parliament_events.9 days = 2 }
@@ -804,7 +803,7 @@ bpm_frankfurt_parliament_events.12 = {
 	option = {
 		name = bpm_frankfurt_parliament_events.12.a
 		defult_option = yes
-
+	
 		scope:frankfurt_crown_candidate ?= {
 			create_diplomatic_play = {
 				name = german_revolution
@@ -814,6 +813,23 @@ bpm_frankfurt_parliament_events.12 = {
 			hidden_effect = {
 				change_infamy = -200
 			}
+		}
+
+		every_country = {
+			limit = { 
+				has_variable = boycotting_frankfurt
+				is_subject = no
+			}
+			save_scope_as = frankfurt_opposer_ally
+		}
+
+		random_diplomatic_play = {
+			limit = {
+				target = {
+					scope:frankfurt_opposer ?= this
+				}
+			}
+			add_target_backers = { scope:frankfurt_opposer_ally }
 		}
 	}
 }
@@ -841,6 +857,7 @@ bpm_frankfurt_parliament_events.13 = {
 		name = bpm_frankfurt_parliament_events.13.a
 		defult_option = yes
 
+		set_variable = german_48_unifier
 		change_tag = GER
 
 		if = {
@@ -855,6 +872,13 @@ bpm_frankfurt_parliament_events.13 = {
 		activate_law = global_var:bpm_frankfurt_parliament_centralization_law_chosen
 		activate_law = global_var:bpm_frankfurt_parliament_voting_law_chosen
 		activate_law = global_var:bpm_frankfurt_parliament_hog_law_chosen
+
+		every_country = {
+			limit = {
+				has_variable = frankfurt_supporter
+			}
+			trigger_event = { id = bpm_frankfurt_parliament_events.102 }
+		}
 	}
 }
 
@@ -897,5 +921,23 @@ bpm_frankfurt_parliament_events.101 = {
 				type = puppet
 			}
 		}
+		set_variable = frankfurt_supporter
+	}
+}
+
+# annexes frankfurt supporters into germany
+bpm_frankfurt_parliament_events.102 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+
+	}
+
+	immediate = {
+		c:GER = {
+			annex_with_incorporation = ROOT
+		}
+		set_variable = frankfurt_supporter
 	}
 }

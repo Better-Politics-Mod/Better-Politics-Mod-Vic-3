@@ -106,11 +106,42 @@ free_trade_party = {
 		stock_exchange
 	}
 	# THIS IS RUN ONLY ONCE AT GAME START
-	valid_for_country = {
-		always = no
-	}
+	# valid_for_country = {
+	# 	always = no
+	# }
 	available_for_interest_group = {
-		always = no
+		bpm_ig_enabled = yes
+		NOT = { bpm_is_party_banned = { PARTY = liberal_party } }
+		owner = {
+			country_has_voting_franchise = yes
+		}
+		leader = { # far right won't join liberal parties
+			OR = {
+				owner = { this = c:USA }
+				NOR = {
+					bpm_leader_is_reactionary = yes
+					bpm_leader_is_fascist = yes
+				}
+			}
+		}
+		NAND = { # far left won't join liberal parties
+			bpm_ig_is_institutional = no
+			leader = { bpm_leader_is_radical_socialist = yes }
+		}
+		OR = {
+			owner = { this = c:USA }
+			NOR = {
+				bpm_ig_is_traditionalist = yes
+				bpm_ig_is_fascist = yes
+				bpm_ig_is_actually_desiring_socialism = yes
+			}
+		}
+		OR = {
+			owner = { this = c:USA }
+			NOT = { # unreformed conservatives should not join the liberals
+				bpm_ig_is_non_paternal_conservative = yes 
+			}
+		} 
 	}
 	join_weight = {
 		value = {
@@ -181,6 +212,16 @@ free_trade_party = {
 			add = {
 				value = 10
 				desc = "from_powerful_capitalists"
+			}
+		}
+		if = {
+			limit = {
+				is_powerful = yes
+				is_interest_group_type = ig_market_liberals
+			}
+			add = {
+				value = 15
+				desc = "bpm_from_powerful_marklibs"
 			}
 		}
 		# weaker market liberals fall behind powerful industrialists
@@ -364,43 +405,33 @@ free_trade_party = {
 				desc = "from_no_consumption_tax"
 			}
 		}
-		if = { # opposition to command economy
+		if = { # will strike it on their own if libs and cons are protectionist
 			limit = {
 				owner = {
-					has_law = law_type:law_command_economy
-					has_technology_researched = central_planning
-				}
-				OR = {
-					has_ideology = ideology:ideology_paternalistic
-					has_ideology = ideology:ideology_laissez_faire
-					has_ideology = ideology:ideology_agrarian
-					leader = {
-						has_ideology = ideology:ideology_market_liberal
+					AND = {
+						any_active_party = {
+							is_party_type = liberal_party
+							any_member = {
+								leader = {
+									has_ideology = ideology:ideology_protectionist
+								}
+							}
+						}
+						any_active_party = {
+							is_party_type = conservative_party
+							any_member = {
+								leader = {
+									has_ideology = ideology:ideology_protectionist
+								}
+							}
+						}
 					}
 				}
+				is_interest_group_type = ig_market_liberals
 			}
 			add = {
-				value = 3
-				desc = "from_command_economy"
-			}
-		}
-		if = { # pro-private schools
-			limit = {
-				owner = {
-					has_technology_researched = academia
-					OR = {
-						has_law = law_type:law_no_schools
-						has_law = law_type:law_religious_schools
-					}
-				}
-				OR = {
-					has_ideology = ideology:ideology_individualist
-					has_ideology = ideology:ideology_anti_clerical
-				}
-			}
-			add = {
-				value = 3
-				desc = "from_lack_of_private_schools"
+				value = 100
+				desc = "from_protectionist_center"
 			}
 		}
 	}

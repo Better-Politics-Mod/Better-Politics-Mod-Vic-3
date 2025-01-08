@@ -962,6 +962,38 @@
 		
 	}
 
+	type law_icon = widget {
+		size = { 90 90 }
+		
+		icon = {
+			size = { 90% 90% }
+			parentanchor = center
+			texture = "[Law.GetTexture]"
+		}
+
+		icon = {
+			size = { 40% 40% }
+			parentanchor = bottom|right
+			texture = "gfx/interface/icons/institution_icons/institution_icon_bg.dds"
+			visible = "[Law.HasInstitution]"
+
+			icon = {
+				parentanchor = vcenter|hcenter
+				size = { 85% 85% }
+				texture = "[Law.GetInstitutionType.GetIcon]"
+				tooltip = "[Law.GetInstitutionTooltip]"
+			}
+		}
+
+		icon = {
+			size = { 40% 40% }
+			parentanchor = top|right
+			texture = "gfx/interface/icons/codification_icons/c0.dds"
+			visible = "[Law.IsActive]"
+		}
+
+	}
+
 
 	type active_law = vbox {
 		layoutpolicy_horizontal = preferred
@@ -1742,6 +1774,399 @@
 				}
 			}
 	
+		}
+	}
+
+	type codification_level = widget {
+
+		block "size" {
+			size = { 40 48 }
+		}
+
+		using = tooltip_above
+
+		### BUTTON
+		button = {
+			using = default_background
+
+			block "button_size" {
+				size = { 35 32 }
+			}
+
+			parentanchor = center
+			block "click" {}
+			
+			icon = {
+				block "setvisible_2" {}
+				block "button_texture" {}
+				alwaystransparent = yes
+
+				block "texture_size" {
+					size = { 24 24 }
+				}
+
+				parentanchor = center
+			}
+		}
+
+		### SELECTED (icon)
+		icon = {
+			block "button_texture" {}
+
+			block "selected_texture_size" {
+				size = { 28 28 }
+			}
+
+			parentanchor = center
+			block "setvisible" {}
+		}
+
+		### ARROW BOTTOM
+		icon = {
+			texture = "gfx/interface/budget/set_level_bar_arrow.dds"
+
+			block "selected_arrow_size" {	
+				size = { 21 12 }
+			}
+
+			scale = 1.2
+			parentanchor = bottom|hcenter
+			mirror = vertical
+			block "setvisible" {}
+			
+			state = {
+				name = _show
+				next = show_2
+				position = { 0 0 }
+				duration = 0
+				alpha = 1
+			}
+			state = {
+				name = show_2
+				next = show_3
+				position = { 0 3 }
+				duration = 0
+				alpha = 1
+			}
+			state = {
+				name = show_3
+				next = show_4
+				position = { 0 -2 }
+				duration = 0.2
+				alpha = 1
+			}
+			state = {
+				name = show_4
+				position = { 0 0 }
+				duration = 0.1
+				alpha = 1
+			}
+			
+			state = {
+				name = _hide
+				position = { 0 0 }
+				duration = 0
+				alpha = 0
+			}
+		}
+	}
+
+		### this is used for VBOX/HBOX
+	type enactable_generic_law2 = hbox {
+		visible = "[Law.IsVisible]"
+		alpha = "[TransparentIfFalse(And(Law.HasNecessaryTech, Law.HasNecessaryLaws))]"
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = expanding
+
+		widget = {
+			size = { 18 87 }
+
+			icon = {
+				visible = "[Law.IsActive]"
+				size = { 100% 100% }
+				texture = "gfx/interface/icons/generic_icons/arrow_left.dds"
+			}
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = expanding
+			margin = { 5 5 }
+
+			background = {
+				visible = "[And(Not(Law.IsActive),Not(Law.IsBeingEnacted))]"
+				using = entry_bg_simple
+			}
+
+			background = {
+				visible = "[Law.IsActive]"
+				using = light_bg
+				alpha = 0.8
+				using = frame_small_mask
+			}
+			background = {
+				visible = "[Law.IsActive]"
+				using = frame_small
+			}
+
+			background = {
+				visible = "[Law.IsBeingEnacted]"
+				using = dark_area
+				alpha = 0.35
+			}
+			background = {
+				visible = "[Law.IsBeingEnacted]"
+				using = highlighted_square_selection
+			}
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				minimumsize = { 0 90 }
+
+				hbox = {
+					layoutpolicy_horizontal = preferred
+					layoutpolicy_vertical = expanding
+					margin_right = 10
+					block "spacing_between_button_and_approval_info" {}
+
+					button = {
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = expanding
+
+						block "button" {}
+
+						hbox = {
+							layoutpolicy_horizontal = preferred
+							layoutpolicy_vertical = expanding
+							margin_left = 5
+
+							tooltipwidget = {
+								FancyTooltip_Law = {}
+							}
+
+							law_icon = {
+								block "law_icon_size" {
+									size = { 80 80 }
+								}
+							}
+
+							vbox = {
+								layoutpolicy_horizontal = preferred
+								layoutpolicy_vertical = expanding
+								margin = { 0 5 }
+								spacing = 5
+
+								expand = {}
+
+								block "lawgroup"
+								{
+
+									textbox = {
+										layoutpolicy_horizontal = preferred
+										size = { 0 20 }
+										margin_left = 5
+										fontsize_min = 14
+										align = left|nobaseline
+										elide = right
+										raw_text = "#title [Law.GetGroup.GetNameNoFormatting]#!"
+									}
+								}
+								hbox = {
+
+									layoutpolicy_horizontal = expanding
+								
+									textbox = {
+										layoutpolicy_horizontal = preferred
+										size = { 0 30 }
+										margin_bottom = 5
+										margin_left = 5
+										align = left|nobaseline
+										using = fontsize_xxl
+										elide = right
+										fontsize_min = 14
+										text = "LAW"
+									}
+									codification_level = {
+										block "tooltip_1" {
+											tooltip = "[GetPlayer.GetTaxLevelDescVeryLow]"
+										}
+										blockoverride "button_texture" {
+											texture = "gfx/interface/icons/codification_icons/c0.dds"
+										}
+										blockoverride "setvisible" {
+											visible = "[Law.IsActive]"
+										}
+										blockoverride "setvisible_2" {
+											visible = "[GreaterThan_CFixedPoint('(CFixedPoint)1', '(CFixedPoint)0')]"
+										}
+									}
+									codification_level = {
+										block "tooltip_1" {
+											tooltip = "[GetPlayer.GetTaxLevelDescVeryLow]"
+										}
+										blockoverride "button_texture" {
+											texture = "gfx/interface/icons/codification_icons/c1.dds"
+										}
+										blockoverride "setvisible" {
+											visible = "[GreaterThan_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+										}
+										blockoverride "setvisible_2" {
+											visible = "[GreaterThan_CFixedPoint('(CFixedPoint)1', '(CFixedPoint)0')]"
+										}
+									}
+									codification_level = {
+										block "tooltip_1" {
+											tooltip = "[GetPlayer.GetTaxLevelDescVeryLow]"
+										}
+										blockoverride "button_texture" {
+											texture = "gfx/interface/icons/codification_icons/c2.dds"
+										}
+										blockoverride "setvisible" {
+											visible = "[GreaterThan_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+										}
+										blockoverride "setvisible_2" {
+											visible = "[GreaterThan_CFixedPoint('(CFixedPoint)1', '(CFixedPoint)0')]"
+										}
+									}
+									codification_level = {
+										block "tooltip_1" {
+											tooltip = "[GetPlayer.GetTaxLevelDescVeryLow]"
+										}
+										blockoverride "button_texture" {
+											texture = "gfx/interface/icons/codification_icons/c3.dds"
+										}
+										blockoverride "setvisible" {
+											visible = "[GreaterThan_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+										}
+										blockoverride "setvisible_2" {
+											visible = "[GreaterThan_CFixedPoint('(CFixedPoint)1', '(CFixedPoint)0')]"
+										}
+									}
+
+								}
+
+
+								hbox = {
+									layoutpolicy_horizontal = preferred
+
+									law_enactment_controls2 = {
+										visible = "[And(Not(Law.IsActive), Not(Law.IsBeingEnacted))]"
+									}
+
+									hbox = {
+										visible = "[And(Law.IsActive, Not(Law.IsBeingEnacted))]"
+										layoutpolicy_horizontal = preferred
+
+										textbox = {
+											margin = { 5 0 }
+											autoresize = yes
+											align = hcenter|nobaseline
+											using = fontsize_large
+											max_width = 160
+											fontsize_min = 12
+											elide = right
+											text = "CURRENTLY_ACTIVE_LAW"
+										}
+
+										widget = {
+											layoutpolicy_horizontal = expanding
+										}
+									}
+									
+									hbox = {
+										visible = "[Law.IsBeingEnacted]"
+										layoutpolicy_horizontal = preferred
+										layoutpolicy_vertical = expanding
+										margin = { 5 0 }
+										spacing = 10
+
+										textbox = {
+											autoresize = yes
+											align = hcenter|nobaseline
+											max_width = 130
+											fontsize_min = 12
+											elide = right
+											using = fontsize_large
+											text = "BEING_ENACTED_LAW"
+										}
+
+										button_icon_cancel = {
+											size = { 35 35 }
+											enabled = "[IsValid( Law.StopEnacting )]"
+											onclick = "[PopupManager.AskConfirmation( Law.StopEnacting )]"
+											using = close_button_sound
+
+											tooltipwidget = {
+												RegularTooltip_CancelLawEnactment = {}
+											}
+										}
+
+										expand = {}
+									}
+								}
+
+								expand = {}
+							}
+
+							block "currently_active_law" {
+
+								vbox = {
+									layoutpolicy_horizontal = preferred
+									layoutpolicy_vertical = expanding
+									margin_right = 10
+
+									widget = {
+										layoutpolicy_horizontal = expanding
+										layoutpolicy_vertical = expanding
+									}
+
+									textbox = {
+										layoutpolicy_horizontal = preferred
+										text = "CURRENTLY_ACTIVE_LAW_IN_LAWGROUP"
+										align = left|nobaseline
+										autoresize = yes
+										elide = right
+										margin_left = 5
+										fontsize_min = 14
+									}
+
+									textbox = {
+										layoutpolicy_horizontal = preferred
+										text = "LAW_GROUP_ACTIVE_LAW"
+										align = left|nobaseline
+										autoresize = yes
+										using = fontsize_large
+										elide = right
+										margin_bottom = 5
+										margin_left = 5
+										fontsize_min = 14
+									}
+
+									widget = {
+										layoutpolicy_horizontal = expanding
+										layoutpolicy_vertical = expanding
+									}
+								}
+							}
+						}
+					}
+
+					approval_info_small = {
+						name = "tutorial_highlight_approval_info"
+					}
+				}
+			}
+		}
+
+		widget = {
+			size = { 18 87 }
+
+			icon = {
+				visible = "[Law.IsBeingEnacted]"
+				size = { 100% 100% }
+				texture = "gfx/interface/icons/generic_icons/arrow_right.dds"
+			}
 		}
 	}
 

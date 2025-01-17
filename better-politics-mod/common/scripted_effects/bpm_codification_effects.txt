@@ -222,5 +222,76 @@ bpm_setup_codification = {
             bpm_setup_codification_pre_constitutional = yes
         }
     }
-
 }
+
+bpm_determine_coup_severity = { 
+    #// Trigger events for every scenario
+
+    if = {
+        limit = {
+            bpm_has_legal_authority_to_do_change = yes
+        }
+        set_variable = {
+            name = bpm_decree_actual_success
+            value = { 0 10 }
+        }
+        if = {
+            limit = { 
+                bpm_codification_decree_support > var:bpm_decree_actual_success
+            }
+            #// do success stuff
+            trigger_event = { id = bpm_codification_events.3 popup = yes }
+        }
+        else = { 
+            #// do failure stuff
+            trigger_event = { id = bpm_codification_events.2 popup = yes }
+            #//activate_law = var:bpm_decree_cooldown_current_law
+        }
+    }
+    else_if = { 
+        set_variable = {
+            name = bpm_decree_actual_success
+            value = { 0 10 }
+        }
+        set_variable = {
+            name = bpm_decree_actual_massive_success
+            value = {
+                value = var:bpm_decree_actual_success
+                add = 2
+            }
+        }
+        set_variable = {
+            name = bpm_decree_actual_massive_failure
+            value = {
+                value = var:bpm_decree_actual_success
+                add = -2
+            }
+        }
+        if = { 
+            limit = {
+                bpm_codification_decree_support > var:bpm_decree_actual_massive_success
+            }
+            #// do massive success stuff
+        }
+        else_if = {
+            limit = {
+                bpm_codification_decree_support > var:bpm_decree_actual_success
+            }
+            #// do success stuff
+            trigger_event = { id = bpm_codification_events.3 popup = yes }
+        }
+        else_if = {
+            limit = {
+                bpm_codification_decree_support > var:bpm_decree_actual_massive_failure
+            }
+            #// do failure stuff
+            #//activate_law = var:bpm_decree_cooldown_current_law
+            trigger_event = { id = bpm_codification_events.2 popup = yes }
+        }
+        else = {
+            #// do massive failure stuff
+            #// activate_law = var:bpm_decree_cooldown_current_law
+        }
+    }
+}
+

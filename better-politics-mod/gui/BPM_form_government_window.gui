@@ -177,6 +177,7 @@ types bpm_window_types {
                                         autoresize = yes
                                         minimumsize = { 420 -1 }
                                         maximumsize = { 420 -1 }
+                                        fontsize = 18
                                         parentanchor = top|hcenter
                                         align = hcenter|nobaseline
                                         raw_text = "[EventWindow.GetDescription]"
@@ -198,6 +199,19 @@ types bpm_window_types {
                                         align = top|hcenter
                                         raw_text = "#lore [EventWindow.GetFlavor]#!"
                                         margin = { 30 10 }
+                                    }
+
+                                    textbox = {
+                                        name = "resulttext"
+                                        multiline = yes
+                                        autoresize = yes
+                                        minimumsize = { 420 -1 }
+                                        maximumsize = { 420 -1 }
+                                        parentanchor = top|hcenter
+                                        align = hcenter|nobaseline
+                                        fontsize = 20
+                                        text = "bpm_form_government_events_result"
+                                        margin = { 20 0 }
                                     }
                                 }
                             }
@@ -223,10 +237,8 @@ types bpm_window_types {
                                     margin = { -15 -20 }
                                 }
 
-                                flowcontainer = {
+                                vbox = {
                                     direction = vertical
-                                    using = default_list_position
-                                    spacing = 5
                                     margin = { 50 50 }
 
                                     textbox = {
@@ -235,101 +247,205 @@ types bpm_window_types {
                                         autoresize = yes
                                         minimumsize = { 420 -1 }
                                         maximumsize = { 420 -1 }
-                                        parentanchor = top|hcenter
+                                        parentanchor = top|left
                                         align = hcenter|nobaseline
+                                        fontsize = 18
                                         text = "[Localize(Concatenate(Event.GetKey, '.st'))]"
-                                        default_format = "#header"
                                         margin = { 20 0 }
                                     }
+                                    hbox = { minimumsize = { 420 25 }}
 
                                     divider_decorative = {
                                         minimumsize = { 420 -1 }
                                         maximumsize = { 420 -1 }
                                     }
-                                }
 
-                                widget = {
-                                    size = { 100% 100% }
-                                    flowcontainer = {
-                                        direction = vertical
-                                        using = default_list_position
-                                        datamodel = "[EventWindow.GetOptions]"
-                                        spacing = 5
-            
-                                        item = {
-                                            container = {
-                                                
-                                                widget = {
-                                                    visible = "[EventOption.IsHighlightedOption]"
-                                                    
-                                                    button = {
-                                                        size = { 96% 100% }
-                                                        parentanchor = hcenter
-                                                        using = default_button_primary_action
-                                                        onclick = "[EventOption.Select]"
-                                                        tooltip = "[EventOption.GetDesc]"
-                                                        using = tooltip_ws
-                                                        enabled = "[EventOption.IsEnabled]"
-                                                        using = confirm_button_sound
-                                                    }
-            
-                                                    textbox = {
-                                                        resizeparent = yes
-                                                        minimumsize = { 500 42 }
-                                                        maximumsize = { 500 -1 }
-                                                        text = "[EventOption.GetText]"
-                                                        multiline = yes
-                                                        align = hcenter|nobaseline
-                                                        autoresize = yes
-                                                        margin = { 30 10 }
+                                    hbox = { minimumsize = { 420 50 }}
+                                    
+                                        vbox = {
+                                            layoutpolicy_vertical = growing
+                                            hbox = {
+                                                layoutpolicy_horizontal = preferred
+                                                layoutpolicy_vertical = preferred
+                                                tooltip = IN_GOVERNMENT_DESC
+                                                spacing = 10
+
+                                                minimumsize = { 100 0 }
+                                                maximumsize = { 100 0 }
+                                            
+                                                textbox = {
+                                                    autoresize = yes
+                                                    text = "OPPOSITION"
+                                                    align = right|nobaseline
+                                                    elide = right
+                                                    default_format = "#title"
+                                                    using = fontsize_large
+                                                }
+                                                icon = {
+                                                    texture = "gfx/interface/icons/generic_icons/in_opposition_icon.dds"
+                                                    size = { 30 30 }
+                                                }
+                                            }
+                                            hbox = {
+                                                size = { 420 200 }
+                                                datamodel = "[AccessPlayer.GetElection.GetParties]"
+                                                spacing = 5
+                                                item = {
+                                                    vbox = { 
+                                                        visible = "[Not(GetVariableSystem.Exists(Concatenate('bpm_party_selected_', Party.GetCustom('bpm_party_name_vote_var'))))]"
+                                                        layoutpolicy_vertical = growing
+                                                        using = entry_bg_fancy
+                                                        vbox = {
+                                                            background = {
+                                                                texture = "gfx/interface/tooltip/tooltip_title_bg.dds"
+                                                                color = "[Party.GetColor]"
+                                                                alpha = 0.45
+                                                                mirror = vertical
+                                                                
+                                                                modify_texture = {
+                                                                    using = texture_velvet
+                                                                }
+                                                            }
+
+                                                            margin = { 20 20 }
+                                                            textbox = {
+                                                                layoutpolicy_vertical = expanding
+                                                                text = "[Party.GetCurrentVotingPowerShare|%1]"
+                                                                #text = "[AccessPlayer.MakeScope.Var(Party.GetCustom('bpm_party_name_vote_var')).GetFlagName]"
+                                                                fontsize = 16
+                                                                align = hcenter
+                                                            }
+                                                            icon = {
+                                                                layoutpolicy_vertical = expanding
+                                                                name = "button_icon_check"
+                                                                texture = "[Party.GetIcon]"
+                                                                size = { 36 36 }
+                                                                parentanchor = vcenter
+                                                            }
+                                                        }
+                                                        button = {
+                                                            using = default_button_action
+                                                            onclick = "[GetVariableSystem.Toggle(Concatenate('bpm_party_selected_', Party.GetCustom('bpm_party_name_vote_var')))]"
+                                                            icon = {
+                                                                #texture = "gfx/interface/icons/generic_icons/red_cross.dds"
+                                                                texture = "gfx/interface/buttons/expand_arrow_expanded.dds"
+                                                                size = { 27 27 }
+                                                                parentanchor = hcenter
+                                                            }
+                                                            size = { 105% 30 }
+                                                        }
                                                     }
                                                 }
-            
-                                                widget = {
-                                                    visible = "[Not(EventOption.IsHighlightedOption)]"
-                                                    
-                                                    button = {
-                                                        size = { 96% 100% }
-                                                        parentanchor = hcenter
-                                                        using = default_button_action
-                                                        onclick = "[EventOption.Select]"
-                                                        tooltip = "EVENT_OPTION_TOOLTIP"
-                                                        using = tooltip_ws
-                                                        enabled = "[EventOption.IsEnabled]"
-                                                        using = confirm_button_sound
-                                                    }
-            
-                                                    textbox = {
-                                                        resizeparent = yes
-                                                        minimumsize = { 500 42 }
-                                                        maximumsize = { 500 -1 }
-                                                        text = "[EventOption.GetText]"
-                                                        multiline = yes
-                                                        align = hcenter|nobaseline
-                                                        autoresize = yes
-                                                        margin = { 30 10 }
-                                                    }
-            
-                                                    ### Time until the default option will be picked
-                                                    round_progress_default = {
-                                                        visible = "[EventOption.IsDefaultOption]"
-                                                        parentanchor = right|vcenter
-                                                        position = { 0 0.5 }
-                                                        size = { 27 27 }
-                                                        tooltip = "DEFAULT_EVENT_OPTION"
-                                                        value = "[Event.GetPercentageRemainingDays]"
-            
-                                                        icon = {
-                                                            size = { 26 26 }
-                                                            position = { -0.2 -0.2 }
-                                                            parentanchor = center
-                                                            texture = "gfx/interface/icons/generic_icons/event_default_option.dds"
+                                            }
+                                            hbox = { minimumsize = { -1 10 }}
+                                            hbox = {
+                                                layoutpolicy_horizontal = preferred
+                                                layoutpolicy_vertical = preferred
+                                                tooltip = IN_GOVERNMENT_DESC
+                                                spacing = 10
+
+                                                minimumsize = { 100 0 }
+                                                maximumsize = { 100 0 }
+                                            
+                                                textbox = {
+                                                    autoresize = yes
+                                                    text = "GOVERNMENT"
+                                                    align = right|nobaseline
+                                                    elide = right
+                                                    default_format = "#title"
+                                                    using = fontsize_large
+                                                }
+                                                icon = {
+                                                    texture = "gfx/interface/icons/generic_icons/in_government_icon.dds"
+                                                    size = { 30 30 }
+                                                }
+                                            }
+                                            hbox = {
+                                                size = { 420 200 }
+
+                                                spacing = 5
+                                                datamodel = "[AccessPlayer.GetElection.GetParties]"
+                                                item = {
+
+                                                    vbox = { 
+                                                        # this should set a variable 
+                                                        visible = "[GetVariableSystem.Exists(Concatenate('bpm_party_selected_', Party.GetCustom('bpm_party_name_vote_var')))]"
+                                                        layoutpolicy_vertical = growing
+                                                        using = entry_bg_fancy
+                                                        button = {
+                                                            using = default_button_action
+                                                            onclick = "[GetVariableSystem.Toggle(Concatenate('bpm_party_selected_', Party.GetCustom('bpm_party_name_vote_var')))]"
+                                                            icon = {
+                                                                texture = "gfx/interface/icons/generic_icons/red_cross.dds"
+                                                                #texture = "gfx/interface/buttons/expand_arrow_expanded.dds"
+                                                                size = { 21 21 }
+                                                                parentanchor = hcenter|vcenter
+                                                            }
+                                                            size = { 105% 30 }
+                                                        }
+                                                        vbox = {
+                                                            background = {
+                                                                texture = "gfx/interface/tooltip/tooltip_title_bg.dds"
+                                                                color = "[Party.GetColor]"
+                                                                alpha = 0.45
+                                                                mirror = vertical
+                                                                
+                                                                modify_texture = {
+                                                                    using = texture_velvet
+                                                                }
+                                                            }
+                                                            margin = { 20 5 }
+                                                            icon = {
+                                                                layoutpolicy_vertical = expanding
+                                                                name = "button_icon_check"
+                                                                texture = "[Party.GetIcon]"
+                                                                size = { 36 36 }
+                                                                parentanchor = top
+                                                            }
+                                                            textbox = {
+                                                                layoutpolicy_vertical = expanding
+                                                                minimumsize = { 36 30 }
+                                                                text = "[Party.GetCurrentVotingPowerShare|%1]"
+                                                                #text = "[AccessPlayer.MakeScope.Var(Party.GetCustom('bpm_party_name_vote_var')).GetFlagName]"
+                                                                fontsize = 16
+                                                                margin_top = 10
+                                                                align = hcenter
+                                                            }
+
                                                         }
                                                     }
                                                 }
                                             }
                                         }
+                                    
+
+
+                                    expand = {}
+                                }
+                                widget = { 
+                                    size = { 100% 100% }
+                                    datamodel = "[EventWindow.GetOptions]"
+
+
+                                    item = {
+                                        widget = {
+                                            size = { 80% 85% }
+                                            parentanchor = center
+                                            button_icon_check = {
+                                                visible = "[EqualTo_int32('(int32)0', PdxGuiWidget.GetIndexInDataModel)]"
+                                                tooltip = "[EventOption.GetDesc]"
+                                                size = { 48 48 }
+                                                parentanchor = bottom|right
+                                            }
+                                            button_icon_reset = {
+                                                visible = "[EqualTo_int32('(int32)1', PdxGuiWidget.GetIndexInDataModel)]"
+                                                tooltip = "[EventOption.GetDesc]"
+                                                size = { 48 48 }
+                                                parentanchor = bottom|left
+                                            }
+                                        }
                                     }
+
                                 }
                             }
                         }

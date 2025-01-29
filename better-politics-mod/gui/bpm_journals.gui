@@ -1,0 +1,330 @@
+# COPY-PASTED FOR NOW
+@panel_width_minus_10 = 530			# used to be 450
+@panel_width_minus_30 = 510
+@panel_width = 540  				# used to be 460
+@panel_width_half = 270				# used to be 230
+@panel_width_plus_10 = 550  		# used to be 470
+@panel_width_plus_14 = 554			# used to be 474
+@panel_width_plus_14_half = 277		# used to be 237
+@panel_width_plus_20 = 560			# used to be 480
+@panel_width_plus_30 = 570			# used to be 490
+@panel_width_plus_70 = 610			# used to be 530
+
+
+types journal 
+{
+    type journal_panel = default_block_window {
+		name = "journal_panel"
+		
+		blockoverride "animation_state_block" {
+			state = {
+				name = _show
+				start_sound = {
+					soundeffect = "event:/SFX/UI/SideBar/journal"
+				}
+			}
+
+			state = {
+				name = _hide
+				start_sound = {
+					soundeffect = "event:/SFX/UI/SideBar/journal_stop"
+				}
+			}
+		}
+		
+		blockoverride "window_header_name"
+		{
+			text = "JOURNAL_WINDOW_HEADER"
+		}
+
+		blockoverride "fixed_top" {
+			tab_buttons = {
+				blockoverride "first_button" {
+					text = "JOURNAL_ENTRIES_CONCEPT"
+				}
+				blockoverride "first_button_tooltip" {
+					tooltip = "JOURNAL_ENTRIES_CONCEPT"
+				}
+				blockoverride "first_button_click" {
+					onclick = "[InformationPanel.SelectTab('default')]"
+				}
+				blockoverride "first_button_visibility" {
+					visible = "[InformationPanel.IsTabSelected('default')]"
+				}
+				blockoverride "first_button_visibility_checked" {
+					visible = "[Not( InformationPanel.IsTabSelected('default') )]"
+				}
+				blockoverride "first_button_selected" {
+					text = "JOURNAL_ENTRIES_CONCEPT"
+				}
+				blockoverride "first_button_name" {
+					name = "tutorial_highlight_journal"
+				}
+
+				blockoverride "second_button" {
+					text = "POTENTIAL"
+				}
+				blockoverride "second_button_tooltip" {
+					tooltip = "POTENTIAL"
+				}
+				blockoverride "second_button_click" {
+					onclick = "[InformationPanel.SelectTab('inactive_journal_entries')]"
+				}
+				blockoverride "second_button_visibility" {
+					visible = "[InformationPanel.IsTabSelected('inactive_journal_entries')]"
+				}
+				blockoverride "second_button_visibility_checked" {
+					visible = "[Not( InformationPanel.IsTabSelected('inactive_journal_entries') )]"
+				}
+				blockoverride "second_button_selected" {
+					text = "POTENTIAL"
+				}
+
+				blockoverride "third_button" {
+					text = "NATION_FORMATION"
+				}
+				blockoverride "third_button_tooltip" {
+					tooltip = "NATION_FORMATION"
+				}
+				blockoverride "third_button_click" {
+					onclick = "[InformationPanel.SelectTab('nation_formation')]"
+				}
+				blockoverride "third_button_visibility" {
+					visible = "[InformationPanel.IsTabSelected('nation_formation')]"
+				}
+				blockoverride "third_button_visibility_checked" {
+					visible = "[Not( InformationPanel.IsTabSelected('nation_formation') )]"
+				}
+				blockoverride "third_button_selected" {
+					text = "NATION_FORMATION"
+				}
+			}
+		}
+		
+		blockoverride "scrollarea_content" {
+			
+			flowcontainer = {
+				direction = vertical
+				using = default_list_position
+				margin_top = 10
+				
+				### JOURNAL
+				flowcontainer = {
+					visible = "[InformationPanel.IsTabSelected('default')]"
+					using = default_list_position
+					direction = vertical
+					using = default_content_fade
+					
+					### GAME OBJECTIVES
+					default_header = {
+						visible = "[GetPlayer.HasObjective]"
+						blockoverride "text" {
+							text = "[AccessPlayer.GetObjective.GetName]"
+						}
+					}
+
+					empty_state = {
+						blockoverride "visible" {
+							 visible = "[And(IsDataModelEmpty(AccessPlayer.AccessActivePlayerObjectiveJournalEntries), GetPlayer.HasObjective)]"
+						}
+						blockoverride "text" {
+							text = "[AccessPlayer.GetObjective.GetObjectiveType.GetIdleHeader]"
+						}
+						blockoverride "hint" {
+							text = "[AccessPlayer.GetObjective.GetObjectiveType.GetIdleHint]"
+						}
+					}
+
+					flowcontainer = {
+						visible = "[Not(IsDataModelEmpty(AccessPlayer.AccessActivePlayerObjectiveJournalEntries))]"
+						direction = vertical
+						spacing = 2
+						parentanchor = hcenter
+						datamodel = "[AccessPlayer.AccessActivePlayerObjectiveJournalEntries]"
+						
+						item = {
+							journal_entry = {}
+						}
+					}
+
+					empty_state = {
+						blockoverride "visible" {
+							 visible = "[IsDataModelEmpty(AccessPlayer.AccessActiveNonPlayerObjectiveJournalEntries)]"
+						}
+						blockoverride "text" {
+							text = "NO_JOURNAL_ENTRIES"
+						}
+					}
+
+					flowcontainer = {
+						direction = vertical
+						parentanchor = hcenter
+						datamodel = "[AccessPlayer.GetGroupsForActiveJournalEntries]"
+						spacing = 10
+						margin_bottom = 10
+
+						item = {
+							flowcontainer = {
+								direction = vertical
+								visible = "[Not(GetScriptedGui('bpm_hidden_journal_groups_sg').IsShown(GuiScope.SetRoot(AccessPlayer.MakeScope).AddScope('group_name', MakeScopeFlag(JournalEntryGroup.GetName)).End))]"
+
+								textbox = {
+									text = "[JournalEntryGroup.GetName]"
+									autoresize = yes
+									align = nobaseline
+									default_format = "#title"
+									margin_left = 3
+								}							
+								flowcontainer = {
+									direction = vertical
+									datamodel = "[JournalEntryGroup.GetActiveJournalEntryTypes(GetPlayer.Self)]"
+									spacing = 2
+									item = {
+										journal_entry = {
+											datacontext = "[AccessPlayer.GetJournalEntry(JournalEntryType.Self)]"
+										}
+									}
+								}
+							}
+						}
+					}
+						
+					### DECISIONS
+					default_header = {
+						blockoverride "text" {
+							text = "DECISIONS"
+						}
+					}
+
+					flowcontainer = {
+						using = default_list_position
+						direction = vertical
+						margin_bottom = 10
+						using = default_content_fade
+
+						
+						textbox = {
+							visible = "[IsDataModelEmpty(GetPlayer.GetDecisions)]"
+							text = NO_DECISIONS
+							autoresize = yes
+							align = left|nobaseline
+							using = fontsize_xxl
+							parentanchor = top|hcenter
+							margin_bottom = 25
+							margin_top = 10
+							alpha = 0.3
+						}
+
+						dynamicgridbox = {
+							parentanchor = hcenter
+							datamodel = "[GetPlayer.GetDecisions]"
+							item = {
+								flowcontainer = {
+									margin = { 0 2 }
+									direction = vertical
+									
+									decision = {
+										minimumsize = { @panel_width_minus_30 -1 }
+									}
+								}
+							}
+						}
+					}
+				}
+
+				### INACTIVE JOURNAL ENTRIES
+				flowcontainer = {
+					visible = "[InformationPanel.IsTabSelected('inactive_journal_entries')]"
+					using = default_list_position
+					direction = vertical
+					using = default_content_fade
+
+					spacing = 10
+					parentanchor = hcenter
+					datamodel = "[AccessPlayer.GetGroupsForInActiveJournalEntries]"
+
+
+					empty_state = {
+						parentanchor = vcenter
+						blockoverride "visible" {
+							visible = "[IsDataModelEmpty(AccessPlayer.GetGroupsForInActiveJournalEntries)]"
+						}
+						blockoverride "text" {
+							text = "NO_INACTIVE_JOURNAL_ENTRIES"
+						}
+					}
+
+					item = {
+						flowcontainer = {
+							direction = vertical
+							visible = "[Not(GetScriptedGui('bpm_hidden_journal_groups_sg').IsShown(GuiScope.SetRoot(AccessPlayer.MakeScope).AddScope('group_name', MakeScopeFlag(JournalEntryGroup.GetName)).End))]"
+							#visible = "[Not(ObjectsEqual(MakeScopeFlag(GetJournalEntryGroup('je_group_bpm_dissent').GetName), MakeScopeFlag(JournalEntryGroup.GetName)))]"
+
+							textbox = {
+
+								#visible = "[Not(ObjectsEqual(GetJournalEntryGroup('je_group_internal_affairs'), JournalEntryGroup))]"
+								text = "[JournalEntryGroup.GetName]"
+								autoresize = yes
+								align = nobaseline
+								default_format = "#title"
+								margin_left = 3
+							}							
+							flowcontainer = {
+								direction = vertical
+								datamodel = "[JournalEntryGroup.GetInactiveJournalEntryTypes(GetPlayer.Self)]"
+								spacing = 2
+								item = {
+									journal_entry = {
+										datacontext = "[AccessPlayer.GetJournalEntry(JournalEntryType.Self)]"
+										alpha = 0.75
+										blockoverride "fontsize" {}
+										blockoverride "iconsize" {
+											size = { 35 35 }
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				### NATION FORMATION
+				flowcontainer = {
+					visible = "[InformationPanel.IsTabSelected('nation_formation')]"
+					using = default_list_position
+					direction = vertical
+					using = default_content_fade
+
+					flowcontainer = {
+						using = default_list_position
+						direction = vertical
+						margin_bottom = 10
+						using = default_content_fade
+
+
+						empty_state = {
+							blockoverride "visible" {
+								visible = "[IsDataModelEmpty(AccessPlayer.AccessFormableCountries)]"
+							}
+							blockoverride "text" {
+								text = "NO_FORMABLE_COUNTRIES"
+							}
+						}	
+
+						flowcontainer = {
+							parentanchor = hcenter
+							direction = vertical
+							visible = "[Not(IsDataModelEmpty(AccessPlayer.AccessFormableCountries))]"
+							datamodel = "[AccessPlayer.AccessFormableCountries]"
+							using = default_content_fade
+
+							item = {
+								formable_country_button = {}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

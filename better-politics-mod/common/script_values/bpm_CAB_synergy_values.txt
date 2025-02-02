@@ -1,25 +1,70 @@
-#bpm_separation_of_powers = {
-#    value = 0
-#
-#    if = {
-#        limit = {
-#            has_law = law_type:law_autocracy
-#        }
-#        add = {
-#            desc = "AUTOCRACY"
-#            value = 1
-#        }
-#    }
-#    if = {
-#        limit = {
-#            has_law = law_type:law_wealth_voting
-#        }
-#        add = {
-#            desc = "WEALTHVOTING"
-#            value = -1
-#        }
-#    }
-#}
+bpm_synergy_of_charset = {
+    # we have a variable list called bpm_synergy_calculation_charset
+    # we go through each law and check the highest opinion and lowest opinion
+    # we then calculate the difference between the highest and lowest opinion
+    value = 0
+    add = bpm_synergy_of_charset_raw
+    divide = bpm_synergy_of_charset_divisor
+}
+
+bpm_cab_synergy_value = {
+    value = 0
+
+    add = {
+        desc = "BPM_CABINET_SYNERGY_FROM_DEFAULT"
+        value = modifier:country_synergy_base_add
+    }
+
+
+    if = {
+        limit = {
+            has_variable = bpm_cab_hoshog_synergy
+        }
+        add = {
+            desc = "BPM_CABINET_SYNERGY_FROM_HOS_HOG_COMPATIBILITY"
+            value = {
+                value = modifier:country_synergy_from_hos_hog_compatibility
+                multiply = var:bpm_cab_hoshog_synergy
+            }
+        }
+    }
+
+    add = {
+        desc = "BPM_CABINET_SYNERGY_FROM_IDEOLOGY"
+        value = {
+            value = modifier:country_synergy_from_ideological_compatibility
+            multiply = var:bpm_cab_synergy
+        } 
+    }
+
+    if = {
+        limit = {
+            ruler.interest_group = {
+                is_in_government = yes
+            }
+        }
+        add = {
+            desc = "BPM_CABINET_SYNERGY_FROM_HOS_IN_GOVERNMENT"
+            value = modifier:country_synergy_from_hos_in_government
+        }
+    }
+
+    add = {
+        desc = "BPM_CABINET_SYNERGY_FROM_RIGIDITY"
+        value = {
+            value = modifier:country_synergy_from_rigidity_add
+            multiply = var:bpm_political_stability
+            divide = 100
+        }
+    }
+
+    multiply = {
+        value = 1
+        add = modifier:country_synergy_mult
+    }
+    round = yes
+    max = 100
+} 
 
 bpm_cab_char_synergy_value = {
     value = 0
@@ -27,347 +72,112 @@ bpm_cab_char_synergy_value = {
     add = var:bpm_cab_char_synergy
 }
 
-bpm_calculate_synergy = {
-    value = 0
-
-
+bpm_synergy_of_charset_divisor = {
     every_law = {
-
-        if = {
-            limit = {
-                NOR = {
-                    AND = {
-                        scope:BPM_CHAR_1.interest_group ?= {
-                            law_stance = {
-                                law = prev.type
-                                value = neutral
-                            }
-                        }
-                        scope:BPM_CHAR_1 ?= {
-                            law_stance = {
-                                law = prev.type
-                                value = neutral
-                            }
-                        }
-                    }
-                    AND = {
-                        scope:BPM_CHAR_2.interest_group ?= {
-                            law_stance = {
-                                law = prev.type
-                                value = neutral
-                            }
-                        }
-                        scope:BPM_CHAR_2 ?= {
-                            law_stance = {
-                                law = prev.type
-                                value = neutral
-                            }
-                        }
-                    }
-                }
-            }
-            add = 4
-
-            subtract = bpm_calculate_synergy_subprocess_absolute
-        }
-    
-
-
-    }
-
-
-    divide = BPM_MAX_SYN
-    subtract = 0.7
-
-    divide = 0.2
-
-    multiply = scope:bpm_calculate_synergy_multiplier
-
-    min = 0
-    max = 1
-    round_to = 0.001
-}
-
-BPM_MAX_SYN = {
-    value = 0.001
-    every_law = {
-        if = {
-            limit = {
-                NOR = {
-                    AND = {
-                        scope:BPM_CHAR_1.interest_group ?= {
-                            law_stance = {
-                                law = prev.type
-                                value = neutral
-                            }
-                        }
-                        scope:BPM_CHAR_1 ?= {
-                            law_stance = {
-                                law = prev.type
-                                value = neutral
-                            }
-                        }
-                    }
-                    AND = {
-                        scope:BPM_CHAR_2.interest_group ?= {
-                            law_stance = {
-                                law = prev.type
-                                value = neutral
-                            }
-                        }
-                        scope:BPM_CHAR_2 ?= {
-                            law_stance = {
-                                law = prev.type
-                                value = neutral
-                            }
-                        }
-                    }
-                }
-            }
-            add = 4
-        }
-        
-        
-
+        add = 1
     }
 }
-bpm_calculate_synergy_subprocess_absolute = {
-    value = 0
 
+bpm_absolute_opinion_raw = {
+    value = scope:highest_opinion_char.bpm_character_law_stance_as_number_abs
+    subtract = scope:lowest_opinion_char.bpm_character_law_stance_as_number_abs
+}
+
+bpm_character_law_stance_as_number_abs = {
+    value = bpm_character_law_stance_as_number
+    add = 2
+}
+
+bpm_character_law_stance_as_number_negative = {
+    value = bpm_character_law_stance_as_number
+    multiply = -1
+}
+
+bpm_character_law_stance_as_number = { 
+    # we are in character scope
+    # we have a law saved as scope:bpm_law_to_check
+    value = 0
     if = {
         limit = {
-            bpm_calculate_synergy_subprocess < 0
-        }
-        subtract = bpm_calculate_synergy_subprocess
-    }
-    else = {
-        add = bpm_calculate_synergy_subprocess
-    }
-}
-
-bpm_calculate_synergy_subprocess = {
-    value = 0
-
-    if = {
-        limit = {
-            scope:BPM_CHAR_2.interest_group ?= {
-                trigger_if = {
-                    limit = {
-                        bpm_ig_enabled = yes
-                    }
-                    law_stance = {
-                        law = prev.type
-                        value = neutral
-                    }
-                }
-                trigger_else = {
-                    always = yes
-                }
+            law_stance = {
+                law = scope:bpm_law_to_check.type
+                value = strongly_approve
             }
         }
-        scope:BPM_CHAR_1 ?= {
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = strongly_approve
-                    }
-                }
-                add = 2
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = approve
-                    }
-                }
-                add = 1
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = disapprove
-                    }
-                }
-                add = -1
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = strongly_disapprove
-                    }
-                }
-                add = -2
-            }
-        }
+        add = 2
     }
     else_if = {
         limit = {
-            scope:BPM_CHAR_1.interest_group ?= { bpm_ig_enabled = yes }
-        }
-        scope:BPM_CHAR_1.interest_group ?= {
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = strongly_approve
-                    }
-                }
-                add = 2
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = approve
-                    }
-                }
-                add = 1
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = disapprove
-                    }
-                }
-                add = -1
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = strongly_disapprove
-                    }
-                }
-                add = -2
+            law_stance = {
+                law = scope:bpm_law_to_check.type
+                value = approve
             }
         }
-    }
-
-
-    if = {
-        limit = {
-            scope:BPM_CHAR_2.interest_group ?= {
-                trigger_if = {
-                    limit = {
-                        bpm_ig_enabled = yes
-                    }
-                    law_stance = {
-                        law = prev.type
-                        value = neutral
-                    }
-                }
-                trigger_else = {
-                    always = yes
-                }
-            }
-        }
-        scope:BPM_CHAR_2 = {
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = strongly_approve
-                    }
-                }
-                add = 2
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = approve
-                    }
-                }
-                add = 1
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = disapprove
-                    }
-                }
-                add = -1
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = strongly_disapprove
-                    }
-                }
-                add = -2
-            }
-        }
+        add = 1
     }
     else_if = {
         limit = {
-            scope:BPM_CHAR_2.interest_group ?= { bpm_ig_enabled = yes }
+            law_stance = {
+                law = scope:bpm_law_to_check.type
+                value = disapprove
+            }
         }
-        scope:BPM_CHAR_2.interest_group ?= {
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = strongly_approve
-                    }
-                }
-                add = -2
+        add = -1
+    }
+    else_if = {
+        limit = {
+            law_stance = {
+                law = scope:bpm_law_to_check.type
+                value = strongly_disapprove
             }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = approve
-                    }
-                }
-                add = -1
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = disapprove
-                    }
-                }
-                add = 1
-            }
-            if = {
-                limit = {
-                    law_stance = {
-                        law = prev.type
-                        value = strongly_disapprove
-                    }
-                }
-                add = 2
-            }
+        }
+        add = -2
+    }
+    else_if = {
+        interest_group = {
+            add = bpm_interest_group_law_stance_as_number
         }
     }
 }
 
-bpm_cab_synergy_value = {
-    value = 0
-
-    add = {
-        desc = "BPM_CABINET_SYNERGY_FROM_IDEOLOGY"
-        value = var:bpm_cab_synergy
+bpm_interest_group_law_stance_as_number = {
+        if = {
+        limit = {
+            law_stance = {
+                law = scope:bpm_law_to_check.type
+                value = strongly_approve
+            }
+        }
+        add = 2
     }
-
-    multiply = {
-        value = 1
-        add = modifier:country_synergy_mult
+    else_if = {
+        limit = {
+            law_stance = {
+                law = scope:bpm_law_to_check.type
+                value = approve
+            }
+        }
+        add = 1
     }
-
-    multiply = 100
-
-    round_to = 0.1
+    else_if = {
+        limit = {
+            law_stance = {
+                law = scope:bpm_law_to_check.type
+                value = disapprove
+            }
+        }
+        add = -1
+    }
+    else_if = {
+        limit = {
+            law_stance = {
+                law = scope:bpm_law_to_check.type
+                value = strongly_disapprove
+            }
+        }
+        add = -2
+    }
 }
-
 bpm_antagonism_cached = {
     value = var:bpm_cached_antagonism
 }

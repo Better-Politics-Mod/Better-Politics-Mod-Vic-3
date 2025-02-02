@@ -110,36 +110,36 @@
 								#		using = fontsize_medium
 								#	}
 								#}
-								hbox = {
-									layoutpolicy_horizontal = expanding
-									spacing = 10
-									tooltip = "[Party.MakeScope.GetScriptValueDesc('bpm_party_establishment_trend')]"
+								layoutpolicy_horizontal = expanding
+								spacing = 10
+								#hbox = {
+								#	tooltip = "[Party.MakeScope.GetScriptValueDesc('bpm_party_establishment_trend')]"
+								#	block "text" {
+								#		textbox = {
 
-									block "text" {
-										textbox = {
-											autoresize = yes
-											raw_text = "[Concept('concept_bpm_party_establishment', 'Establishment')]:"
-											align = left|nobaseline
-											elide = right
-										}
-										textbox = {
-											autoresize = yes
-											size = { 0 20 }
-											raw_text = "#variable [GetPlayer.MakeScope.Var(Concatenate('bpm_party_establishment_', Party.GetCustom('bpm_party_name'))).GetValue|v1] #!"
-											align = left|nobaseline
-											elide = right
-										}
-										textbox = {
-											layoutpolicy_horizontal = expanding
-											size = { 0 20 }
-											raw_text = "(#variable [GetPlayer.MakeScope.Var(Concatenate('bpm_party_establishment_cached_trend_', Party.GetCustom('bpm_party_name'))).GetValue|+=d1] #!/month)"
-											align = left|nobaseline
-											elide = right
-										}
-									}
-								}
+								#			autoresize = yes
+								#			raw_text = "[Concept('concept_bpm_party_establishment', 'Establishment')]:"
+								#			align = left|nobaseline
+								#			elide = right
+								#		}
+								#		textbox = {
+								#			autoresize = yes
+								#			size = { 0 20 }
+								#			raw_text = "#variable [GetPlayer.MakeScope.Var(Concatenate('bpm_party_establishment_', Party.GetCustom('bpm_party_name'))).GetValue|v1] #!"
+								#			align = left|nobaseline
+								#			elide = right
+								#		}
+								#		textbox = {
+								#			layoutpolicy_horizontal = expanding
+								#			size = { 0 20 }
+								#			raw_text = "(#variable [GetPlayer.MakeScope.Var(Concatenate('bpm_party_establishment_cached_trend_', Party.GetCustom('bpm_party_name'))).GetValue|+=d1] #!/month)"
+								#			align = left|nobaseline
+								#			elide = right
+								#		}
+								#	}
+								#}
 
-								#expand = {}
+								##expand = {}
 
 								#expand = {
 								#	size = { 60% 100% }
@@ -387,6 +387,31 @@
 									blend_mode = alphamultiply
 								}
 							}
+
+							widget = {
+								size = { 25 25 }
+								visible = "[Not(IsDataModelEmpty(InterestGroup.MakeScope.GetList('bpm_factions')))`]"
+
+								button = {
+									using = expand_arrow
+									size = { 100% 100% }
+									frame = 1
+									block "onclick_showmore" {}
+									visible = "[Not(GetVariableSystem.Exists(Concatenate('bpm_ig_expanded', InterestGroup.GetName)))]"
+									onclick = "[GetVariableSystem.Toggle(Concatenate('bpm_ig_expanded', InterestGroup.GetName))]"
+									tooltip = "SHOW_MORE"
+								}
+								button = {
+									using = expand_arrow_expanded
+									size = { 100% 100% }
+									frame = 2
+									block "onclick_showless" {}
+									visible = "[GetVariableSystem.Exists(Concatenate('bpm_ig_expanded', InterestGroup.GetName))]"
+									onclick = "[GetVariableSystem.Toggle(Concatenate('bpm_ig_expanded', InterestGroup.GetName))]"
+									tooltip = "SHOW_LESS"
+								}
+							}
+
 
 							widget = {
 								size = { 30 30 }
@@ -705,6 +730,17 @@
 					
 					widget = { size = { 5 5 }}
 				}
+				vbox = { 
+					visible = "[GetVariableSystem.Exists(Concatenate('bpm_ig_expanded', InterestGroup.GetName))]"
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = preferred
+					datamodel = "[InterestGroup.MakeScope.GetList('bpm_factions')]"
+
+					item = {
+						politics_panel_faction_item = {}
+					}
+					unaligned_faction_item = {}
+				}
 				bpm_law_sway_menu = {
 					visible = "[And(And(Country.IsEnactingLaw, Not(InterestGroup.IsMarginal)),GetVariableSystem.Exists(Concatenate('show_law_sways_', InterestGroup.GetName)))]"
 				}
@@ -724,6 +760,252 @@
 			}
 		}
 	}
+
+	type politics_panel_faction_item = flowcontainer {
+		direction = vertical
+
+		datacontext = "[Scope.GetPoliticalMovement]"
+		layoutpolicy_horizontal = expanding
+
+		###NORMAL NON-REVOLUTIONARY MOVEMENT###
+		widget = {
+			visible = "[Not(PoliticalMovement.IsInsurrectionary)]"
+			layoutpolicy_horizontal = expanding
+			size = { 758 60 }
+			hbox = { 
+				layoutpolicy_horizontal = expanding
+				margin_left = 100 
+				margin_right = 100
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					using = entry_bg_fancy_solid_bg
+
+					expand = { }
+					hbox = {
+						layoutpolicy_horizontal = expanding
+						margin_left = 10
+						spacing = 2
+
+						block "tooltip" {
+							tooltipwidget = {
+								FancyTooltip_PoliticalMovement = {}
+							}
+						}
+
+						icon = {
+							size = { 40 40 }
+							texture = "[PoliticalMovement.GetTexture]"
+
+							bolster_icon = {
+								visible = "[PoliticalMovement.IsBolstered]"
+								size = { 30 30 }
+								position = { -18 -15 }
+								blockoverride "tooltip" {}
+							}
+
+							suppress_icon = {
+								visible = "[PoliticalMovement.IsSuppressed]"
+								parentanchor = bottom
+								size = { 30 30 }
+								position = { -18 15 }
+								blockoverride "tooltip" {}
+							}
+
+							icon = {
+								texture = "gfx/interface/icons/generic_icons/information.dds"
+								parentanchor = top|left
+								visible = "[GetScriptedGui('bpm_movement_is_significant_faction_sg').IsShown(GuiScope.SetRoot(InterestGroup.MakeScope).AddScope('polmov', PoliticalMovement.MakeScope).End)]"
+								tooltip = "bpm_movement_is_significant_tooltip"
+								size = { 20 20 }
+								#alpha = 1
+							}		
+						}
+
+						textbox = {
+							layoutpolicy_horizontal = expanding
+							size = { 0 20 }
+							align = nobaseline
+							elide = right
+							fontsize_min = 12
+							text = "[InterestGroup.GetCustom(PoliticalMovement.GetCustom('bpm_faction_cusloc'))]"	
+						}
+					}
+					hbox = {
+						layoutpolicy_horizontal = expanding
+						margin_left = 10
+						spacing = 2
+						visible = "[GetScriptedGui('bpm_ig_is_institutional_sg').IsValid(GuiScope.SetRoot(InterestGroup.MakeScope).End)]"
+
+						icon = {
+							size = { 25 25 }
+							texture = "gfx/interface/icons/generic_icons/government_building_icon.dds"
+						}
+
+						textbox = {
+							layoutpolicy_horizontal = expanding
+							size = { 0 20 }
+							align = nobaseline
+							elide = right
+							fontsize_min = 12
+							raw_text = "#tooltippable [SelectLocalization(GreaterThan_CFixedPoint(InterestGroup.GetFractionOfCloutSupportingMovement(PoliticalMovement.Self), '(CFixedPoint)0.1'), 'Pressured', 'Influenced')]#! (#v [InterestGroup.GetFractionOfCloutSupportingMovement(PoliticalMovement.Self)|%0]#!)"	
+						}
+					}
+					hbox = {
+						layoutpolicy_horizontal = expanding
+						margin_left = 10
+						spacing = 2
+						visible = "[Not(GetScriptedGui('bpm_ig_is_institutional_sg').IsValid(GuiScope.SetRoot(InterestGroup.MakeScope).End))]"
+
+						icon = {
+							size = { 25 25 }
+							texture = "gfx/interface/icons/generic_icons/government_building_icon.dds"
+						}
+
+						textbox = {
+							layoutpolicy_horizontal = expanding
+							size = { 0 20 }
+							align = nobaseline
+							elide = right
+							fontsize_min = 12
+							raw_text = "#tooltippable [SelectLocalization(GreaterThan_CFixedPoint(InterestGroup.GetFractionOfCloutSupportingMovement(PoliticalMovement.Self), '(CFixedPoint)0.1'), 'Pressured', 'Influenced')]#! (#v [Multiply_CFixedPoint(InterestGroup.MakeScope.ScriptValue('bpm_influenced_clout_sv_div'), InterestGroup.GetFractionOfCloutSupportingMovement(PoliticalMovement.Self))|%0]#!)"	
+						}
+					}
+					expand = {}
+
+					hbox = {
+						layoutpolicy_horizontal = expanding
+						margin_right = 10
+
+						block "right_text_max_width" {
+							max_width = 135
+						}
+
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = preferred
+							margin = { 0 5 }
+
+							hbox = {
+								layoutpolicy_horizontal = expanding
+
+								icon = {
+									size = { 25 25 }
+									texture = "gfx/interface/icons/generic_icons/population.dds"
+								}
+
+								block "additional_support_label" {}
+
+								expand = {}
+
+								textbox = {
+									layoutpolicy_horizontal = expanding
+									size = { 0 20 }
+									align = right|nobaseline
+									elide = right
+									fontsize_min = 12
+
+									block "support_label_text" {
+										text = "POLITICAL_MOVEMENT_SUPPORT"
+									}
+								}
+							}
+
+							hbox = {
+								layoutpolicy_horizontal = expanding
+
+								icon = {
+									visible = "[GreaterThanOrEqualTo_CFixedPoint(PoliticalMovement.GetRadicalism, '(CFixedPoint)0.5')]"
+									size = { 25 25 }
+									texture = "gfx/interface/icons/political_movement_icons/political_activism_red.dds"
+								}
+
+								icon = {
+									visible = "[Not(GreaterThanOrEqualTo_CFixedPoint(PoliticalMovement.GetRadicalism, '(CFixedPoint)0.5'))]"
+									size = { 25 25 }
+									texture = "gfx/interface/icons/political_movement_icons/political_activism.dds"
+								}
+
+								block "additional_activism_label" {}
+
+								expand = {}
+
+								textbox = {
+									layoutpolicy_horizontal = expanding
+									size = { 0 20 }
+									align = right|nobaseline
+									elide = right
+									fontsize_min = 12
+
+									block "activism_label_text" {
+										text = "POLITICAL_MOVEMENT_RADICALISM"
+									}
+								}
+							}
+						}
+					}
+					expand = { }
+				}
+			}
+		}
+	}
+
+	type unaligned_faction_item = widget  {
+		layoutpolicy_horizontal = expanding
+		size = { 758 70 }
+		visible = "[GreaterThan_CFixedPoint(InterestGroup.MakeScope.ScriptValue('bpm_unaligned_clout'), '(CFixedPoint)0.01')]"
+		hbox = { 
+			layoutpolicy_horizontal = expanding
+			margin_left = 100 
+			margin_right = 100
+			margin_bottom = 10
+			maximumsize = { 758 -1 }
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				using = entry_bg_fancy_solid_bg
+				minimumsize = { -1 60 }
+
+				expand = { }
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					margin_left = 10
+					spacing = 2
+
+					icon = {
+						size = { 40 40 }
+						texture = "gfx/interface/icons/political_movement_icons/movement_ideological.dds"
+					}
+
+					textbox = {
+						layoutpolicy_horizontal = expanding
+						size = { 0 20 }
+						align = nobaseline
+						elide = right
+						fontsize_min = 12
+						text = "Unaligned Faction"	
+					}
+				}
+				hbox = {
+					margin_left = 10
+					spacing = 2
+
+					icon = {
+						size = { 25 25 }
+						texture = "gfx/interface/icons/generic_icons/government_building_icon.dds"
+					}
+
+					textbox = {
+						size = { 0 20 }
+						align = nobaseline
+						elide = right
+						fontsize_min = 12
+						raw_text = "#v [InterestGroup.MakeScope.ScriptValue('bpm_unaligned_clout')|%1]#!"	
+					}
+				}
+				expand = {}
+			}
+		}
+	}
+
 
 	type interest_group_filter = hbox {
 		spacing = 5

@@ -1,0 +1,136 @@
+﻿namespace = sa_migration
+# South America Migration events
+
+# SA migration button event
+sa_migration.1 = {
+	type = country_event
+	placement = scope:migration_target_state
+	
+	title = sa_migration.1.t
+	desc = sa_migration.1.d
+	flavor = sa_migration.1.f
+	
+	event_image = {
+		video = "southamerica_factory_opening"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_map.dds"
+	
+	duration = 3
+	
+	trigger = {
+		# triggered by southamerica_migration_button
+	}
+
+	immediate = {
+		# Note that this closely reflects triggers in the button. Do not change one without changing both
+		random_country = {
+			limit = {
+				country_rank <= rank_value:major_power
+				custom_tooltip = {
+					text = is_in_europe_tt
+					country_is_in_europe = yes
+				}
+				OR = {
+					custom_tooltip = {
+						text = same_state_religion
+						religion = root.religion
+					}
+					ROOT = { has_law = law_type:law_total_separation }
+				}
+				average_sol <= root.average_sol
+				any_primary_culture = {
+					culture_can_have_mass_migration_to_country = ROOT
+				}
+				any_scope_state = {
+					is_incorporated = yes
+					custom_tooltip = {
+						text = is_in_europe_tt
+						state_is_in_europe = yes
+					}
+					count >= 3
+				}
+			}
+			save_scope_as = migration_country
+			random_scope_state = {
+				limit = {
+					is_incorporated = yes
+					state_is_in_europe = yes
+					any_scope_culture = {
+						has_homeland = PREV
+						culture_can_have_mass_migration_to_country = ROOT
+					}
+				}
+				save_scope_as = migration_state
+				random_scope_culture = {
+					limit = {
+						has_homeland = PREV
+						culture_can_have_mass_migration_to_country = ROOT
+					}
+					save_scope_as = migration_culture
+				}
+			}
+		}
+		ordered_scope_state = {
+			limit = {
+				trigger_if = {
+					limit = { 
+						ROOT = { 
+							has_journal_entry = je_central_america_migration
+						}
+					}
+					OR = {
+						region = sr:region_mexico
+						region = sr:region_central_america
+					}
+				}
+				trigger_else_if = {
+					limit = {
+						ROOT = {
+							has_journal_entry = je_south_america_migration
+						}
+					}
+					state_is_in_south_america = yes
+				}
+				trigger_else_if = {
+					limit = {
+						ROOT = {
+							has_journal_entry = je_american_west_migration
+						}
+						OR = {
+							region = sr:region_pacific_coast
+							region = sr:region_great_plains
+						}
+					}
+				}
+				state_is_eligible_as_mass_migration_target = yes
+			}
+			order_by = migration_pull
+			save_scope_as = migration_target_state
+		}
+		scope:migration_target_state = {
+			create_mass_migration = {
+				origin = scope:migration_country
+				culture = scope:migration_culture
+			}
+		}			
+	}
+
+	option = {
+		name = sa_migration.1.a
+		add_modifier = {
+			name = sa_migration_cost
+			months = normal_modifier_time
+		}
+		show_as_tooltip = {
+			scope:migration_target_state = {
+				create_mass_migration = {
+					origin = scope:migration_country
+					culture = scope:migration_culture
+				}
+			}	
+		}		
+	}
+}

@@ -1,0 +1,221 @@
+﻿movement_cultural_majority = {
+	category = movement_category_cultural
+	
+	ideology = ideology_ethno_nationalist
+	character_ideologies = {	
+		ideology_ethno_nationalist
+	}
+	
+	creation_trigger = {}
+	creation_weight = {
+		value = 100
+	}
+	on_created = {}
+	
+	culture_selection_trigger = {
+		is_primary_culture_of = ROOT.owner
+	}	
+	culture_selection_weight = {
+		value = 100
+	}
+	
+	character_support_trigger = {
+		culture = scope:culture
+	}
+	character_support_weight = {
+		value = 100
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_ethno_nationalist
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_fascist
+					has_ideology = ideology:ideology_jingoist_leader
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_progressive_ideology = yes
+					has_socialist_ideology = yes
+				}
+			}
+			multiply = 0.05
+		}
+	}
+	
+	pop_support_trigger = {
+		culture = scope:culture
+	}
+	pop_support_weight = {
+		if = {
+			limit = {
+				culture = {
+					is_primary_culture_of = root
+				}
+			}
+			add = {
+				value = 50
+				desc = "POP_BASE_SUPPORT"
+			}
+		}
+	}
+	
+	revolution = {
+		possible = {
+			political_movement_support >= 0.05
+		}
+	
+		weight = {
+			value = 100
+		}
+
+		state_weight = {
+			value = 1		
+		}
+	}
+	
+	additional_radicalism_factors = {
+		if = {
+			limit = {
+				owner.ruler ?= {
+					NOT = { culture = { is_primary_culture_of = root.owner } }
+				}
+			}		
+			
+			add = {
+				value = 0.1
+				desc = "RULER_NOT_PRIMARY_CULTURE"
+			}			
+		}
+	}	
+}
+
+movement_cultural_minority = {
+	category = movement_category_cultural
+		
+	ideology = ideology_reformer
+	character_ideologies = {
+		ideology_reformer
+	}
+	
+	creation_trigger = {}
+	creation_weight = {
+		value = 100
+	}
+	on_created = {}
+	
+	culture_selection_trigger = {
+		NOT = { is_primary_culture_of = ROOT.owner }
+	}	
+	culture_selection_weight = {
+		value = 100
+	}
+	
+	character_support_trigger = {
+		culture = scope:culture
+	}
+	character_support_weight = {
+		value = 200
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_sovereignist
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_humanitarian
+					has_ideology = ideology:ideology_reformer
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
+	}
+	
+	pop_support_trigger = {
+		culture = scope:culture
+	}	
+	pop_support_weight = {
+		add = {
+			value = 50
+			desc = "POP_BASE_SUPPORT"
+		}	
+		
+		if = {
+			limit = { 
+				standard_of_living < 15
+			}
+			
+			add = {
+				value =	standard_of_living
+				subtract = 15
+				multiply = -5
+				desc = "POP_POVERTY"
+			}
+		}	
+
+		if = {
+			limit = {
+				state = {
+					state_cultural_acceptance = {  
+						target = PREV.culture
+						value < acceptance_status_5
+					}	
+				}
+			}
+			
+			add = {
+				desc = "POP_DISCRIMINATED"	
+				value = 100
+				subtract = pop_acceptance							
+			}			
+		}
+	}	
+	
+	secession = {
+		possible = {
+			political_movement_identity_support >= 0.25
+		}
+	
+		weight = {
+			value = 1000		
+		}	
+		
+		state_weight = {
+			value = 0
+		
+			if = {
+				limit = { 
+					is_capital = no
+					state_region = { is_homeland = scope:political_movement.culture }
+				}
+				
+				add = 100
+			}				
+		}
+
+		target_fraction_of_states = {
+			value = political_movement_identity_support
+			add = scope:clout
+			multiply = 3
+			min = 0.25
+			max = 0.75
+		}
+	}
+}

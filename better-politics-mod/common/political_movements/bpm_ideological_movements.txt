@@ -1664,6 +1664,30 @@ movement_socialist = {
 			divide = 2
 			add = 1
 		}
+		multiply = 0.125
+		if = {
+			limit = {
+				owner = {
+					has_variable = bpm_strong_labor 
+				}
+			}
+			multiply = {
+				desc = "BPM_STRONG_LABOR"
+				value = 6
+			}
+		}
+		else_if = {
+			limit = {
+				owner = {
+					has_variable = bpm_average_labor 
+				}
+			}
+			multiply = {
+				desc = "BPM_AVERAGE_LABOR"
+				value = 4
+			}
+		}
+
 	}
 	
 	revolution = {
@@ -1970,11 +1994,13 @@ movement_anarchist = {
 			value = literacy_rate
 			add = 0.10
 		}
-
-		multiply = { # Multiplied by 2x max
+		# non-radicals don't support anarchists
+		multiply = 0.25
+		multiply = { # Multiplied by 4x max
 			desc = "POP_RADICALS"
 			value = pop_radical_fraction
 			add = 1
+			multiply = 16
 		}
 	}
 	
@@ -2052,8 +2078,10 @@ movement_communist = {
 	}
 	
 	creation_trigger = {
-		has_technology_researched = socialism
-		has_global_variable = first_intl_chain_complete_var
+		OR = {
+			has_technology_researched = socialism
+			has_global_variable = first_intl_chain_complete_var
+		}
 		average_sol <= 16 
 	}	
 	creation_weight = {
@@ -2234,6 +2262,30 @@ movement_communist = {
 			value = pop_radical_fraction
 			add = 1
 		}
+		multiply = 0.25
+		if = {
+			limit = {
+				owner = {
+					has_variable = bpm_strong_labor 
+				}
+			}
+			multiply = {
+				desc = "BPM_STRONG_LABOR"
+				value = 12
+			}
+		}
+		else_if = {
+			limit = {
+				owner = {
+					has_variable = bpm_average_labor 
+				}
+			}
+			multiply = {
+				desc = "BPM_AVERAGE_LABOR"
+				value = 8
+			}
+		}
+
 	}
 	
 	revolution = {
@@ -4323,7 +4375,8 @@ movement_labor = { # Explicitly non-socialist labour movement
 		has_technology_researched = labor_movement
 	}	
 	creation_weight = {
-		value = 100
+		# this should always spawn basically
+		value = 10000
 	}	
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
@@ -4400,7 +4453,7 @@ movement_labor = { # Explicitly non-socialist labour movement
 	pop_support_weight = {	
 		add = {
 			desc = "URBAN_STATE"
-			value = 10
+			value = 20
 			multiply = state.state_urbanization_rate
 		}	
 
@@ -4418,15 +4471,19 @@ movement_labor = { # Explicitly non-socialist labour movement
 				strata = middle
 			}
 			multiply = {
-				value = 0.5
+				value = 0.75
 				desc = "MIDDLE_NO_ICON"
 			}
+			# this includes lawyers, etc..
+			# who may be part of a sort of 
+			# advanced section of the labour movement
+
 			if = {
 				limit = {
 					is_pop_type = engineers
 				}
 				add = {
-					value = 3
+					value = 24
 					desc = "POP_ENGINEERS"
 				}
 			}
@@ -4435,8 +4492,17 @@ movement_labor = { # Explicitly non-socialist labour movement
 					is_pop_type = academics
 				}
 				add = {
-					value = 6
+					value = 12
 					desc = "POP_ACADEMICS"
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = shopkeepers
+				}
+				add = {
+					value = 12
+					desc = "POP_SHOPKEEPERS"
 				}
 			}
 		}
@@ -4458,7 +4524,7 @@ movement_labor = { # Explicitly non-socialist labour movement
 					is_pop_type = machinists
 				}
 				add = {
-					value = 30
+					value = 36
 					desc = "POP_MACHINISTS"
 				}
 			}
@@ -5855,12 +5921,14 @@ movement_reformist_socialist = {
 	}
 	
 	creation_trigger = {
-		has_technology_researched = socialism
-		has_global_variable = first_intl_chain_complete_var
+		OR = { 
+			has_technology_researched = socialism
+			has_global_variable = first_intl_chain_complete_var
+		}
 		average_sol >= 12
 	}	
 	creation_weight = {
-		value = 100
+		value = 500
 	}	
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
@@ -5930,7 +5998,7 @@ movement_reformist_socialist = {
 				strata = middle
 			}
 			multiply = {
-				value = 0.10
+				value = 0.50
 				desc = "MIDDLE_NO_ICON"
 			}
 			if = {
@@ -5940,6 +6008,16 @@ movement_reformist_socialist = {
 				add = {
 					value = 3
 					desc = "POP_ACADEMICS"
+				}
+			}
+			if = {
+				limit = {
+					is_pop_type = shopkeepers
+				}
+				add = {
+					# they love them this reformist shi ykwim
+					value = 12
+					desc = "POP_SHOPKEEPERS"
 				}
 			}
 		}
@@ -5998,17 +6076,6 @@ movement_reformist_socialist = {
 				max = 10
 			}
 		}
-		else_if = {
-			limit = {
-				standard_of_living > state.average_expected_sol
-				strata = lower
-			}
-			add = { # Decreases likelihood of support if well-off
-				desc = "IS_ABOVE_EXPECTED_SOL"
-				value = state.average_expected_sol
-				subtract = standard_of_living
-			}
-		}
 
 		multiply = { # Illiterate pops participate at 1/10 the rate of fully literate pops
 			desc = "POP_LITERACY"
@@ -6021,6 +6088,30 @@ movement_reformist_socialist = {
 			value = pop_radical_fraction
 			divide = 2
 			add = 1
+		}
+
+		multiply = 0.5
+		if = {
+			limit = {
+				owner = {
+					has_variable = bpm_strong_labor 
+				}
+			}
+			multiply = {
+				desc = "BPM_STRONG_LABOR"
+				value = 6
+			}
+		}
+		else_if = {
+			limit = {
+				owner = {
+					has_variable = bpm_average_labor 
+				}
+			}
+			multiply = {
+				desc = "BPM_AVERAGE_LABOR"
+				value = 4
+			}
 		}
 	}
 	

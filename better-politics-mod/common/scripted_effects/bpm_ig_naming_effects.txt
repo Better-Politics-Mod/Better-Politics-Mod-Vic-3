@@ -17,19 +17,43 @@ bpm_rename_trade_unions_ig = {
 	}
 	else_if = {
 		limit = {
-			OR = {
-				has_law = law_type:law_illegal_labor_unions
-				AND = {
-					has_law = law_type:law_all_labor_unions_allowed
-					NOT = { has_variable = union_law_introduced_var }
-				}
-			}
+			has_law = law_type:law_illegal_labor_unions
 		}
 		ig:ig_trade_unions ?= { set_interest_group_name = ig_labor_radicals }
 	}
 	else_if = {
 		limit = { ig:ig_trade_unions ?= { has_ideology = ideology:ideology_dop_syndical_unionist } }
 		ig:ig_trade_unions ?= { set_interest_group_name = ig_syndicalists }
+	}
+	else_if = {
+		limit = { has_variable = bpm_solidarity_knights_of_labor }
+		ig:ig_trade_unions ?= { set_interest_group_name = ig_knights_of_labor }
+	}
+	else_if = {
+		limit = {
+			has_law = law_type:law_all_labor_unions_allowed
+			NOT = { has_variable = union_law_introduced_var }
+		}
+		ig:ig_trade_unions ?= { set_interest_group_name = ig_urban_workers }
+	}
+	else_if = {
+		limit = { has_variable = bpm_solidarity_national_grange }
+		ig:ig_trade_unions ?= { set_interest_group_name = ig_national_grange }
+	}
+	else_if = {
+		limit = {
+			ig:ig_trade_unions = {
+				has_variable = bpm_largest_faction
+				var:bpm_largest_faction = {
+					OR = { 
+						is_political_movement_type = movement_religious_majority
+						is_political_movement_type = movement_cultural_majority 
+						is_political_movement_type = movement_national_liberal
+					}
+				}
+			}
+		}
+		ig:ig_trade_unions ?= { set_interest_group_name = ig_conservative_unions }
 	}
 	else = {
 		ig:ig_trade_unions ?= { set_interest_group_name = ig_trade_unions }
@@ -38,6 +62,23 @@ bpm_rename_trade_unions_ig = {
 
 bpm_rename_rural_folk_ig = {
 	if = {
+		limit = {
+			AND = {
+				has_variable = bpm_solidarity_knights_of_labor
+				has_variable = bpm_solidarity_national_grange
+			}
+		}
+		ig:ig_rural_folk ?= {
+			set_interest_group_name = ig_national_grange
+		}
+	} else_if = {
+		limit = {
+			has_variable = bpm_solidarity_national_grange
+		}
+		ig:ig_rural_folk ?= {
+			set_interest_group_name = ig_greenbackers
+		}
+	} else_if = {
 		limit = {
 			OR = {
 				country_has_primary_culture = cu:yankee
@@ -98,6 +139,18 @@ bpm_rename_rural_folk_ig = {
 		}
 	} else = {
 		ig:ig_rural_folk ?= { set_interest_group_name = ig_rural_folk }
+	}
+}
+
+bpm_rename_industrialists_ig = {
+	if = {
+		limit = {
+			NOT = { exists = ig:ig_liberals }
+		}
+		ig:ig_industrialists ?= { set_interest_group_name = ig_bourgeoisie }
+	}
+	else = { 
+		ig:ig_industrialists ?= { set_interest_group_name = ig_industrialists }
 	}
 }
 
@@ -174,6 +227,19 @@ bpm_rename_agpop_ig = {
 		}
 		ig:ig_agrarian_populists ?= { set_interest_group_name = ig_radical_abolitionists }
 	}
+	else_if = {
+		limit = {
+			OR = {
+				country_has_primary_culture = cu:north_german
+				country_has_primary_culture = cu:south_german
+			}
+			NOR = {
+				this = c:SWI
+				has_variable = peoples_springtime_fully_ended
+			}
+		}
+		ig:ig_agrarian_populists ?= { set_interest_group_name = ig_bauernbewegung }
+	}
 	else = {
 		ig:ig_agrarian_populists ?= { set_interest_group_name = ig_agrarian_populists }
 	}
@@ -201,7 +267,12 @@ bpm_rename_anarchists_ig = {
 }
 
 bpm_rename_refsoc_ig = {
+
 	if = {
+		limit = { has_variable = bpm_solidarity_geoists }
+		ig:ig_reformist_socialists ?= { set_interest_group_name = ig_geoist_movement }
+	}
+	else_if = {
 		limit = { has_variable = communists_renamed_var }
 		ig:ig_reformist_socialists ?= { set_interest_group_name = ig_social_democrats }
 	}
@@ -237,6 +308,10 @@ bpm_rename_revsoc_ig = {
 		ig:ig_socialists ?= { set_interest_group_name = ig_narodniks_urban } # Shares name with pre-split socialists
 	}
 	else_if = {
+		limit = { has_variable = bpm_solidarity_socialistic_laborers }
+		ig:ig_revolutionist_socialists ?= { set_interest_group_name = ig_socialist_laborers }
+	}
+	else_if = {
 		limit = { has_variable = communists_renamed_var }
 		ig:ig_revolutionist_socialists ?= { set_interest_group_name = ig_communists }
 	}
@@ -257,7 +332,12 @@ bpm_rename_revsoc_ig = {
 
 bpm_rename_socialist_ig = {
 	if = {
-		limit = { ig:ig_revolutionist_socialists ?= { bpm_ig_enabled = yes } }
+		limit = { 
+			OR = {
+				ig:ig_revolutionist_socialists ?= { bpm_ig_enabled = yes } 
+				ig:ig_reformist_socialists ?= { bpm_ig_enabled = yes }
+			}
+		}
 		ig:ig_socialists ?= { set_interest_group_name = ig_independent_socialists }
 	}
 	else_if = {
@@ -324,13 +404,36 @@ bpm_rename_radlib_ig = {
 			limit = {
 				OR = {
 					NOT = { has_global_variable = american_civil_war }
-					ig:ig_radicals ?= {
-						has_party = yes
-						party = { is_party_type = liberal_party }
+					AND = {
+						NOT = { has_variable = bpm_reconstruction_aftermath }
+						ig:ig_radicals ?= {
+							has_party = yes
+							party = { is_party_type = liberal_party }
+						}
 					}
 				}
 			}
 			ig:ig_radicals ?= { set_interest_group_name = ig_radical_republicans }
+		}
+		else_if = {
+			limit = {
+				NOT = { has_variable = bpm_spoils_stalwart }
+				ig:ig_radicals ?= {
+					has_party = yes
+					party = { is_party_type = liberal_party }
+				}
+			}
+			ig:ig_radicals ?= { set_interest_group_name = ig_stalwarts }
+		}
+		else_if = {
+			limit = {
+				has_variable = bpm_spoils_aftermath
+				ig:ig_radicals ?= {
+					has_party = yes
+					party = { is_party_type = conservative_party }
+				}
+			}
+			ig:ig_radicals ?= { set_interest_group_name = ig_silverite_democrats }
 		}
 		else = {
 			ig:ig_radicals ?= { set_interest_group_name = ig_progressive_liberals }
@@ -388,15 +491,36 @@ bpm_rename_radlib_ig = {
 			limit = {
 				OR = {
 					has_law = law_type:law_council_republic
-					country_has_primary_culture = cu:north_german
-					country_has_primary_culture = cu:south_german
-				}
+					AND = {
+						country_has_primary_culture = cu:north_german
+						has_variable = peoples_springtime_fully_ended
+					}
+					AND = {
+						country_has_primary_culture = cu:south_german
+						has_variable = peoples_springtime_fully_ended
+						NOT = { this = c:SWI }
+					}
+				}	
 			}
 			ig:ig_radicals ?= { set_interest_group_name = ig_left_liberals }
 		}
 		else = {
 			ig:ig_radicals ?= { set_interest_group_name = ig_progressive_liberals }
 		}
+	}
+	# Demokraten
+	else_if = {
+		limit = {
+			OR = {
+				country_has_primary_culture = cu:north_german
+				country_has_primary_culture = cu:south_german
+			}
+			NOR = { 
+				has_variable = peoples_springtime_fully_ended 
+				this = c:SWI
+			}
+		}
+		ig:ig_radicals ?= { set_interest_group_name = ig_demokraten }
 	}
 	# Below: still-radical radicals
 	else = {
@@ -466,13 +590,45 @@ bpm_rename_liberal_ig = {
 			limit = {
 				OR = {
 					NOT = { has_global_variable = american_civil_war }
-					ig:ig_liberals ?= {
-						has_party = yes
-						party = { is_party_type = liberal_party }
+					AND = {
+						NOT = { has_variable = bpm_reconstruction_aftermath }
+						ig:ig_liberals ?= {
+							has_party = yes
+							party = { is_party_type = liberal_party }
+						}
+					}
+					AND = {
+						has_variable = bpm_spoils_aftermath
+						NOT = { has_variable = bpm_spoils_stalwart }
+						ig:ig_liberals ?= {
+							has_party = yes
+							party = { is_party_type = liberal_party }
+						}
 					}
 				}
 			}
 			ig:ig_liberals ?= { set_interest_group_name = ig_moderate_republicans }
+		}
+		else_if = {
+			limit = {
+				NOT = { has_variable = bpm_spoils_aftermath }
+				ig:ig_liberals ?= {
+					has_party = yes
+					party = { is_party_type = liberal_party }
+				}
+			}
+			ig:ig_liberals ?= { set_interest_group_name = ig_half_breeds }
+		}
+		else_if = {
+			limit = {
+				has_variable = bpm_spoils_aftermath
+				has_variable = bpm_spoils_stalwart
+				ig:ig_liberals ?= {
+					has_party = yes
+					party = { is_party_type = liberal_party }
+				}
+			}
+			ig:ig_liberals ?= { set_interest_group_name = ig_readjusters }
 		}
 		else = {
 			ig:ig_liberals ?= { set_interest_group_name = ig_moderate_liberals }
@@ -497,6 +653,32 @@ bpm_rename_liberal_ig = {
 			has_journal_entry = je_bpm_modernizers
 		}
 		ig:ig_liberals ?= { set_interest_group_name = ig_westernizers_moderate }
+	}
+	#Parlamentarisch-Liberale
+	else_if = {
+		limit = {
+			OR = {
+				country_has_primary_culture = cu:north_german
+				country_has_primary_culture = cu:south_german
+			}
+			NOR = { 
+				has_variable = peoples_springtime_fully_ended 
+				this = c:SWI
+			}
+		}
+		ig:ig_liberals ?= { set_interest_group_name = ig_parlamentarisch_liberale }
+	}
+	# Generic/non-country-specific
+	else_if = {
+		limit = {
+			ig:ig_liberals = {
+				has_variable = bpm_largest_faction
+				var:bpm_largest_faction = {
+					is_political_movement_type = movement_religious_majority
+				}
+			}
+		}
+		ig:ig_liberals ?= { set_interest_group_name = ig_moralist_liberals }
 	}
 	else_if = {
 		limit = {
@@ -527,17 +709,40 @@ bpm_rename_natlib_ig = {
 		limit = { this = c:USA }
 		if = {
 			limit = {
-				ig:ig_national_liberals ?= {
-					has_party = yes
-					party = {
-						is_party_type = conservative_party
-					}
-				}
+				NOT = { has_variable = bpm_rec_libreps }
 			}
 			ig:ig_national_liberals ?= { set_interest_group_name = ig_war_democrats }
 		}
-		else = {
-			ig:ig_national_liberals ?= { set_interest_group_name = ig_national_liberals }
+		else_if = {
+			limit = {
+				ig:ig_national_liberals ?= {
+					has_party = yes
+					party = { is_party_type = liberal_party }
+				}
+			}
+			ig:ig_national_liberals ?= { set_interest_group_name = ig_liberal_republicans }
+		}
+		else_if = {
+			limit = {
+				has_variable = bpm_spoils_aftermath
+				NOT = { has_variable = bpm_spoils_stalwart }
+				ig:ig_national_liberals ?= {
+					has_party = yes
+					party = { is_party_type = conservative_party }
+				}
+			}
+			ig:ig_national_liberals ?= { set_interest_group_name = ig_mugwumps }
+		}
+		else_if = {
+			limit = {
+				has_variable = bpm_spoils_aftermath
+				NOT = { has_variable = bpm_spoils_liberal }
+				ig:ig_national_liberals ?= {
+					has_party = yes
+					party = { is_party_type = conservative_party }
+				}
+			}
+			ig:ig_national_liberals ?= { set_interest_group_name = ig_reformist_democrats }
 		}
 	}
 	else_if = {
@@ -623,20 +828,44 @@ bpm_rename_conservative_ig = {
 		ig:ig_conservatives ?= { set_interest_group_name = ig_slavophiles_moderate }
 	}
 	else_if = { 
-		limit = {
-			this = c:USA
-			has_variable = bpm_2nd_party_system
-			OR = {
-				game_date <= 1836.1.1
-				ig:ig_conservatives ?= {
-					has_party = yes
-					party = {
-						is_party_type = liberal_party
+		limit = { this = c:USA }
+		if = {
+			limit = {
+				has_variable = bpm_2nd_party_system
+				OR = {
+					game_date <= 1836.1.1
+					ig:ig_conservatives ?= {
+						has_party = yes
+						party = {
+							is_party_type = liberal_party
+						}
 					}
 				}
 			}
+			ig:ig_conservatives ?= { set_interest_group_name = ig_cotton_whigs }
 		}
-		ig:ig_conservatives ?= { set_interest_group_name = ig_cotton_whigs }
+		else_if = {
+			limit = {
+				has_variable = bpm_spoils_aftermath
+				NOT = { has_variable = bpm_spoils_stalwart }
+				NOT = { has_variable = bpm_spoils_liberal }
+			}
+			ig:ig_conservatives ?= { set_interest_group_name = ig_progressive_conservatives }
+		}
+	}
+	# Konstitutionell-Liberale
+	else_if = {
+		limit = {
+			OR = {
+				country_has_primary_culture = cu:north_german
+				country_has_primary_culture = cu:south_german
+			}
+			NOR = { 
+				has_variable = peoples_springtime_fully_ended 
+				this = c:SWI
+			}
+		}
+		ig:ig_conservatives ?= { set_interest_group_name = ig_konstitutionell_liberale }
 	}
 	else_if = {
 		limit = {
@@ -739,6 +968,20 @@ bpm_rename_reactionary_ig = {
 		}
 		ig:ig_reactionaries ?= { set_interest_group_name = ig_integralists }
 	}
+	# Konservative
+	else_if = {
+		limit = {
+			OR = {
+				country_has_primary_culture = cu:north_german
+				country_has_primary_culture = cu:south_german
+			}
+			NOR = { 
+				has_variable = peoples_springtime_fully_ended 
+				this = c:SWI
+			}
+		}
+		ig:ig_reactionaries ?= { set_interest_group_name = ig_konservative }
+	}
 	else_if = {
 		limit = {
 			bpm_country_is_pre_constitutional = yes
@@ -750,7 +993,7 @@ bpm_rename_reactionary_ig = {
 			bpm_country_is_republic = yes
 			ig:ig_reactionaries ?= { bpm_ig_is_monarchist = yes }
 		}
-		ig:ig_reactionaries ?= { set_interest_group_name = ig_monarchists }
+		ig:ig_reactionaries ?= { set_interest_group_name = ig_restorationists }
 	}
 	else_if = {
 		limit = {
@@ -781,6 +1024,7 @@ bpm_rename_igs = {
 		bpm_rename_trade_unions_ig = yes
 		bpm_rename_rural_folk_ig = yes
 		bpm_rename_intelligentsia_ig = yes
+		bpm_rename_industrialists_ig = yes
 		bpm_rename_agpop_ig = yes
 		bpm_rename_anarchists_ig = yes
 		bpm_rename_refsoc_ig = yes

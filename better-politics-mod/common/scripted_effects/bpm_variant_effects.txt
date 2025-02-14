@@ -14,49 +14,83 @@ bpm_update_variants = {
 			has_law = law_type:law_advisory_body
 		}
 		every_interest_group = {
-			limit = {
-				OR = {
-					bpm_ig_is_institutional = yes
-					is_interest_group_type = ig_trade_unions
-					is_interest_group_type = ig_conservatives
-				}
-				NOR = {
-					is_interest_group_type = ig_landowners
-					is_interest_group_type = ig_armed_forces
-					AND = { 
-						exists = c:CHI
-						c:CHI ?= owner
-						is_interest_group_type = ig_petty_bourgeoisie
+			if = { 
+				limit = {
+					OR = {
+						bpm_ig_is_institutional = yes
+						is_interest_group_type = ig_trade_unions
+						is_interest_group_type = ig_conservatives
 					}
-				}
-			}
-			bpm_add_constitutionalist_trait = yes
-		}
-		every_interest_group = {
-			limit = {
-				OR = {
-					is_interest_group_type = ig_landowners
-					is_interest_group_type = ig_armed_forces
-					AND = { 
-						exists = c:CHI
-						c:CHI ?= owner
-						is_interest_group_type = ig_petty_bourgeoisie
+					NOR = {
+						is_interest_group_type = ig_landowners
+						is_interest_group_type = ig_armed_forces
+						AND = { 
+							exists = c:CHI
+							c:CHI ?= owner
+							is_interest_group_type = ig_petty_bourgeoisie
+						}
 					}
-				}
-				has_ideology = ideology:ideology_movement_constitutionalist
+				} 
+				bpm_add_constitutionalist_trait = yes 
 			}
-			remove_ideology = ideology_movement_constitutionalist
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_bpm_movement_constitutionalist
+				}
+				remove_ideology = ideology_bpm_movement_constitutionalist
+			}
 		}
 	}
 	else = { 
 		every_interest_group = {
 			limit = {
-				has_ideology = ideology:ideology_movement_constitutionalist
+				has_ideology = ideology:ideology_bpm_movement_constitutionalist
 			}
-			remove_ideology = ideology_movement_constitutionalist
+			remove_ideology = ideology_bpm_movement_constitutionalist
 		}
 
 	}
+
+	if = {
+		limit = {
+			has_law = law_type:law_monarchy
+			NAND = {
+				exists = c:CHI
+				c:CHI = this
+			}
+		}
+		every_interest_group = {
+			if = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_trade_unions
+						is_interest_group_type = ig_intelligentsia
+						is_interest_group_type = ig_petty_bourgeoisie
+						is_interest_group_type = ig_liberals
+						is_interest_group_type = ig_rural_folk
+						is_interest_group_type = ig_industrialists
+					}
+				}
+				bpm_add_republican_trait = yes
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_bpm_movement_republican
+				}
+				remove_ideology = ideology_bpm_movement_republican
+			}
+		}
+	} 
+	else = { 
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_bpm_movement_republican
+			}
+			remove_ideology = ideology_bpm_movement_republican
+		}
+
+	}
+
 }
 
 bpm_update_liberal_variant = {
@@ -121,23 +155,33 @@ bpm_update_trade_unions_variant = {
 }
 
 bpm_add_constitutionalist_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_monarchist_progressive
+		ideology = ideology_bpm_movement_constitutionalist
+	}
+}
+
+bpm_add_republican_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_anti_monarchy
+		ideology = ideology_bpm_movement_republican
+	}
+}
+
+bpm_add_trait = {
 	if = {
 		limit = {
 			has_variable = bpm_largest_faction
 			var:bpm_largest_faction = {
-				OR = { 
-					is_political_movement_type = movement_liberal
-					is_political_movement_type = movement_royalist_constitutional
-					is_political_movement_type = movement_modernizer
-				}
+				$condition$ = yes
 			}
 		}
-		add_ideology = ideology_movement_constitutionalist
+		add_ideology = $ideology$
 	}
 	else_if = {
 		limit = { 
-			has_ideology = ideology:ideology_movement_constitutionalist
+			has_ideology = ideology:$ideology$
 		}
-		remove_ideology = ideology_movement_constitutionalist
+		remove_ideology = $ideology$
 	}
 }

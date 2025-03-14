@@ -216,6 +216,12 @@ movement_anti_slavery = {
 			value = literacy_rate
 			add = 0.10
 		}
+		if = {
+			limit = {
+				c:USA ?= THIS
+			}
+			multiply = 10
+		}
 	}
 
 	revolution = {
@@ -548,6 +554,13 @@ movement_pro_slavery = {
 			desc = "POP_LITERACY"
 			value = literacy_rate
 			add = 0.10
+		}
+
+		if = {
+			limit = {
+				c:USA ?= THIS
+			}
+			multiply = 10
 		}
 	}
 	
@@ -1057,6 +1070,23 @@ movement_royalist_absolutist = {
 			max = 0.7 # Starts more powerful but caps out early
 		}
 
+		if = {
+			limit = {
+				exists = ig:ig_reactionaries
+				ig:ig_reactionaries ?= {
+					ig_clout > 0.15
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_reactionaries.ig_approval
+					divide = 20
+				}
+				divide = 2
+			}
+		}
+
 		multiply = BPM_REACTIONARY_STRENGTH
 	}
 
@@ -1065,6 +1095,9 @@ movement_royalist_absolutist = {
 	}
 	
 	revolution = {
+		possible = {
+			political_movement_support >= 0.1
+		}
 		weight = {
 			value = 100
 		}	
@@ -1089,7 +1122,7 @@ movement_royalist_absolutist = {
 	
 	secession = {
 		possible = {
-			political_movement_support >= 0.05
+			political_movement_support >= 0.1
 			scope:clout <= 0
 		}
 		
@@ -1143,7 +1176,7 @@ movement_royalist_absolutist = {
 					}
 					
 					add = {
-						value = 0.25
+						value = 0.5
 						desc = "MONARCHY_BEING_ABOLISHED"
 					}					
 				}
@@ -1506,7 +1539,7 @@ movement_socialist = {
 	}	
 	creation_weight = {
 		# significant movement that definitely should spawn
-		value = 10000
+		value = 100000
 	}	
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
@@ -1745,6 +1778,39 @@ movement_socialist = {
 				desc = "BPM_AVERAGE_LABOR"
 				value = 4
 			}
+		}
+		if = {
+			limit = {
+				exists = ig:ig_socialists
+				ig:ig_socialists ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_socialists.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
+		}
+
+		if = {
+			limit = {
+				NOT = {
+					owner = {
+						any_political_movement = {
+							is_political_movement_type = movement_reformist_social
+							is_political_movement_type = movement_anarchist
+							is_political_movement_type = movement_communist
+						}
+					} 
+				}
+			}
+			multiply = 2.5
 		}
 
 		multiply = BPM_SOCIALIST_STRENGTH
@@ -2092,6 +2158,26 @@ movement_anarchist = {
 			add = 1
 			multiply = 8
 		}
+
+		if = {
+			limit = {
+				exists = ig:ig_anarchists
+				ig:ig_anarchists ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_anarchists.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
+		}
+
 		multiply = BPM_SOCIALIST_STRENGTH
 	}
 	
@@ -2398,6 +2484,26 @@ movement_communist = {
 				value = 8
 			}
 		}
+
+		if = {
+			limit = {
+				exists = ig:ig_revolutionist_socialists
+				ig:ig_revolutionist_socialists ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_revolutionist_socialists.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
+		}
+
 		multiply = BPM_SOCIALIST_STRENGTH
 
 	}
@@ -2727,6 +2833,26 @@ movement_fascist = {
 			multiply = pop_acceptance
 			desc = "ACCEPTANCE"
 		}
+
+		if = {
+			limit = {
+				exists = ig:ig_fascists
+				ig:ig_fascists ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_fascists.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
+		}
+
 		multiply = BPM_REACTIONARY_STRENGTH
 
 	}
@@ -2747,7 +2873,7 @@ movement_fascist = {
 	
 	secession = {
 		possible = {
-			political_movement_support >= 0.05
+			political_movement_support >= 0.1
 			scope:clout <= 0
 		}
 		
@@ -3106,7 +3232,42 @@ movement_liberal = {
 			add = 0.10
 		}
 		min = 0
-
+		# Hub-movement
+		# If the country is not liberal democratic,
+		# then other liberal movements are weaker
+		# and the main liberal movement is stronger
+		# this is because liberals will only diversify
+		# their support if their basic demands are met
+		#
+		# Under an illiberal regime, liberals are 
+		# primarily considered about regime change
+		# rather than national or market liberal flavors
+		if = {
+			limit = {
+				owner = {
+					bpm_country_laws_are_moderately_liberal_democratic = yes
+				}
+				multiply = 2
+			}
+		}
+		if = {
+			limit = {
+				exists = ig:ig_liberals
+				ig:ig_liberals ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_liberals.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
+		}
 		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
 	}
 	
@@ -3433,6 +3594,33 @@ movement_radical = {
 			value = 1.5
 			add = pop_radical_fraction
 			desc = "POP_RADICALS"
+		}
+		if = {
+			limit = {
+				owner = {
+					bpm_country_laws_are_moderately_liberal_democratic = yes
+				}
+				multiply = 1.5
+			}
+		}
+
+		if = {
+			limit = {
+				exists = ig:ig_radicals
+				ig:ig_radicals ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_radicals.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
 		}
 		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
 	}
@@ -3774,6 +3962,25 @@ movement_reactionary = {
 			desc = "ACCEPTANCE"
 		}
 
+		if = {
+			limit = {
+				exists = ig:ig_reactionaries
+				ig:ig_reactionaries ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_reactionaries.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
+		}
+
 		multiply = BPM_REACTIONARY_STRENGTH
 	}
 	
@@ -4052,21 +4259,14 @@ movement_modernizer = {
 		}
 	}	
 	creation_weight = {
-		value = 100
+		value = 10000
 	}	
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
 	}
 	disband_trigger = {
-		AND = {
-			has_law = law_type:law_protectionism
-			OR = {
-				has_law = law_type:law_interventionism
-				has_law = law_type:law_command_economy
-				has_law = law_type:law_laissez_faire
-			}
-			has_law = law_type:law_compulsory_primary_school
-		}
+		bpm_country_laws_are_moderately_liberal_democratic = yes
+		bpm_country_is_pre_modern = no
 	}
 	
 	character_support_trigger = {
@@ -4182,7 +4382,7 @@ movement_modernizer = {
 					is_pop_type = capitalists
 				}
 				add = {
-					value = 15
+					value = 750
 					desc = "POP_CAPITALISTS"
 				}
 			}
@@ -4197,7 +4397,7 @@ movement_modernizer = {
 						}
 					}
 					add = {
-						value = 25
+						value = 250
 						desc = "POP_ARISTOCRATS"
 					}
 				}
@@ -4227,7 +4427,7 @@ movement_modernizer = {
 					is_pop_type = academics
 				}
 				add = {
-					value = 25
+					value = 750
 					desc = "POP_ACADEMICS"
 				}
 			}
@@ -4247,6 +4447,15 @@ movement_modernizer = {
 				add = {
 					value = 25
 					desc = "POP_BUREAUCRATS"
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = shopkeepers
+				}
+				add = {
+					value = 150
+					desc = "POP_SHOPKEEPERS"
 				}
 			}
 			else = {
@@ -5557,10 +5766,6 @@ movement_market_liberal = {
 		ig:ig_liberals ?= {
 			is_marginal = no
 		}
-		NOR = {
-			exists = ig:ig_national_liberals
-			exists = ig:ig_market_liberals
-		}
 	}	
 	creation_weight = {
 		value = 1000
@@ -5828,7 +6033,32 @@ movement_market_liberal = {
 			value = literacy_rate
 			add = 0.10
 		}
-		multiply = 0.1
+		if = {
+			limit = {
+				owner = {
+					bpm_country_laws_are_moderately_liberal_democratic = no
+				}
+				multiply = 0.1
+			}
+		}
+		if = {
+			limit = {
+				exists = ig:ig_market_liberals
+				ig:ig_market_liberals ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_market_liberals.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
+		}
 		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
 	}
 	
@@ -5908,10 +6138,6 @@ movement_national_liberal = {
 		exists = ig:ig_liberals
 		ig:ig_liberals ?= {
 			is_marginal = no
-		}
-		NOR = {
-			exists = ig:ig_national_liberals
-			exists = ig:ig_market_liberals
 		}
 	}	
 	creation_weight = {
@@ -6199,6 +6425,33 @@ movement_national_liberal = {
 			multiply = pop_acceptance
 			desc = "ACCEPTANCE"
 		}
+		if = {
+			limit = {
+				owner = {
+					bpm_country_laws_are_moderately_liberal_democratic = no
+				}
+				multiply = 0.1
+			}
+		}
+
+		if = {
+			limit = {
+				exists = ig:ig_national_liberals
+				ig:ig_national_liberals ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_national_liberals.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
+		}
 		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
 	}
 	
@@ -6426,6 +6679,25 @@ movement_reformist_socialist = {
 			multiply = {
 				desc = "BPM_AVERAGE_LABOR"
 				value = 4
+			}
+		}
+
+		if = {
+			limit = {
+				exists = ig:ig_reformist_socialists
+				ig:ig_reformist_socialists ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_reformist_socialists.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
 			}
 		}
 		multiply = BPM_SOCIALIST_STRENGTH
@@ -6660,7 +6932,7 @@ movement_kaikoku = {
 	}
 
 	can_pressure_interest_group = {
-		always = noTHIS = c:JAP 
+		THIS = c:JAP 
 	}
 
 	pop_support_trigger = {
@@ -6702,8 +6974,10 @@ movement_kaikoku = {
 					is_pop_type = capitalists
 				}
 				add = {
-					# this mfers LOVE liberalism bro
-					value = 200
+					# they HATED that the country was closed
+					# no business and they were just overall 
+					# an underclass
+					value = 9999
 					desc = "POP_CAPITALISTS"
 				}
 			}
@@ -6813,7 +7087,7 @@ movement_kaikoku = {
 			value = literacy_rate
 			add = 0.10
 		}
-		multiply = 0.1
+		multiply = 0.5
 		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
 	}
 	

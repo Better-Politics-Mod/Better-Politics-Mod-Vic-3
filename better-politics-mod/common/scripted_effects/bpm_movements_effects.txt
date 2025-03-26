@@ -46,6 +46,7 @@ bpm_do_agpop_split = {
 bpm_do_socialist_split = { 
 	bpm_add_movement_interaction = { int = socialist_split }
 	trigger_event = { id = bpm_movement_splits.6 days = 31 }
+	create_socialist_start_characters = yes
 }
 
 bpm_do_market_liberal_split = { 
@@ -56,19 +57,36 @@ bpm_do_market_liberal_split = {
 bpm_do_national_liberal_split = { 
 	bpm_add_movement_interaction = { int = national_liberal_split }
 	trigger_event = { id = bpm_movement_splits.8 days = 31 }
+	if = {
+		limit = {
+			exists = c:FRA
+			this = c:FRA
+		}
+		trigger_event = { id = bpm_natlib_split.4 }
+	}
+	create_natlib_start_characters = yes
 }
 
 bpm_do_anarchist_split = { 
 	bpm_add_movement_interaction = { int = anarchist_split }
 	trigger_event = { id = bpm_movement_splits.9 days = 31 }
+	create_anarchist_start_characters = yes
 }
 
 bpm_do_revsoc_split = { 
+	ig:ig_socialists ?= {
+		set_interest_group_name = ig_independent_socialists
+	}
+	trigger_event = { id = bpm_socialist_split.3 days = 180 }
 	bpm_add_movement_interaction = { int = revsoc_split }
 	trigger_event = { id = bpm_movement_splits.10 days = 31 }
 }
 
 bpm_do_refsoc_split = { 
+	ig:ig_socialists ?= {
+		set_interest_group_name = ig_independent_socialists
+	}
+	trigger_event = { id = bpm_socialist_split.3 days = 180 }
 	bpm_add_movement_interaction = { int = refsoc_split }
 	trigger_event = { id = bpm_movement_splits.11 days = 31 }
 }
@@ -424,6 +442,17 @@ bpm_do_ai_splits = {
 		}
 		bpm_do_national_liberal_split = yes
 	}
+	if = {
+		limit = {
+			ig:ig_national_liberals = {
+				ig_clout > 0.05
+			}
+			NOT = {
+				bpm_has_movement_interaction = { int = national_liberal_split }
+			}
+		}
+		bpm_do_national_liberal_split = yes
+	}
 	# Anarchist Split
 	if = {
 		limit = {
@@ -491,4 +520,80 @@ bpm_do_ai_splits = {
 		}
 		bpm_do_conservative_paternalist_takeover = yes
 	}
+}
+
+bpm_create_necessary_movements = {
+	if = {
+		limit = {
+			bpm_country_laws_are_moderately_liberal_democratic = yes
+		}
+		create_political_movement = {
+			type = movement_liberal
+		}
+		create_political_movement = {
+			type = movement_national_liberal
+		}
+		create_political_movement = {
+			type = movement_market_liberal
+		}
+		create_political_movement = {
+			type = movement_reactionary
+		}
+		create_political_movement = {
+			type = movement_labor
+		}
+	}
+
+	if = {
+		limit = {
+			bpm_country_is_pre_modern = no
+			bpm_country_is_republic = no
+		}
+		create_political_movement = {
+			type = movement_royalist
+		}
+		create_political_movement = {
+			type = movement_radical
+		}
+		create_political_movement = {
+			type = movement_labor
+		}
+	}
+
+	if = {
+		limit = {
+			bpm_country_is_pre_modern = yes
+		}
+		create_political_movement = {
+			type = movement_liberal
+		}
+		create_political_movement = {
+			type = movement_modernizer
+		}
+	}
+
+	if = {
+		limit = {
+			has_global_variable = second_intl_chain_complete_var
+		}
+		create_political_movement = {
+			type = movement_communist
+		}
+		create_political_movement = {
+			type = movement_reformist_socialist
+		}
+		create_political_movement = {
+			type = movement_anarchist
+		}
+	}
+
+	else_if = {
+		limit = {
+			has_global_variable = first_intl_chain_complete_var
+		}
+		create_political_movement = {
+			type = movement_socialist
+		}
+	}
+
 }

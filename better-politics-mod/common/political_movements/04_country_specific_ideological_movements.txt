@@ -664,3 +664,336 @@ movement_legitimist = {
 	}
 }
 
+
+# Japan
+
+movement_kaikoku = {
+	category = movement_category_ideological
+	
+	ideology = ideology_eco_kaikoku_ha
+	character_ideologies = {
+		ideology_market_liberal
+		ideology_liberal_leader
+		ideology_republican_leader
+		ideology_radical
+		ideology_humanitarian
+	} 
+	
+	creation_trigger = {
+		exists = c:JAP
+		c:JAP = this
+	}
+
+	creation_weight = {
+		value = 9999999
+	}	
+	on_created = {
+		add_movement_enthusiasm_modifier = yes
+	}
+
+	disband_trigger = {
+		has_variable = meiji_var
+	}
+	
+	character_support_trigger = {
+		trigger_if = {
+			limit = {
+				is_in_exile_pool = yes
+			}
+			OR = {
+				has_ideology = ideology:ideology_market_liberal
+				has_ideology = ideology:ideology_liberal_leader
+				has_ideology = ideology:ideology_republican_leader
+				has_ideology = ideology:ideology_radical
+				has_ideology = ideology:ideology_humanitarian				
+			}
+		}
+		trigger_else = {
+			OR = {
+				has_ideology = ideology:ideology_market_liberal
+				has_ideology = ideology:ideology_liberal_leader
+				has_ideology = ideology:ideology_republican_leader
+				has_ideology = ideology:ideology_radical
+				has_ideology = ideology:ideology_humanitarian
+				interest_group ?= {
+					OR = {
+						has_ideology = ideology:ideology_liberal
+						has_ideology = ideology:ideology_liberal_modern
+					}
+				}
+			}
+		}
+	}
+	character_support_weight = {
+		value = 200
+		if = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_republican_leader
+					has_ideology = ideology:ideology_liberal_leader
+					has_ideology = ideology:ideology_market_liberal
+				}
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		else_if = {
+			limit = {
+				has_ideology = ideology:ideology_radical
+				NOT = {
+					owner ?= {
+						any_political_movement = {
+							is_political_movement_type = movement_radical
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		else_if = {
+			limit = {
+				has_ideology = ideology:ideology_humanitarian
+				NOT = {
+					interest_group = { is_interest_group_type = ig_trade_unions }
+				}
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		if = { # Liberal agitators just inherently love liberalism
+			limit = {
+				interest_group ?= {
+					OR = {
+						has_ideology = ideology:ideology_liberal
+						has_ideology = ideology:ideology_liberal_modern
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
+	}
+
+	can_pressure_interest_group = {
+		c:JAP ?= owner
+	}
+
+	pop_support_trigger = {
+		NOT = {
+			is_pop_type = slaves
+		}
+	}
+
+	pop_support_factors = {
+		movement_support_high_urbanization
+		movement_support_high_literacy
+		movement_support_capitalists
+		movement_support_aristocrats
+		movement_support_shopkeepers
+		movement_support_academics
+		movement_support_bureaucrats
+		movement_support_clerks
+		movement_support_peasants
+	}
+	
+	pop_support_weight = {	
+		add = {
+			value = 6
+			desc = "POP_BASE_SUPPORT"
+		}
+
+		add = {
+			desc = "URBAN_STATE"
+			value = 24
+			multiply = state.state_urbanization_rate
+		}
+
+		if = {
+			limit = {
+				strata = upper
+			}
+			if = {
+				limit = {
+					is_pop_type = capitalists
+				}
+				add = {
+					# they HATED that the country was closed
+					# no business and they were just overall 
+					# an underclass
+					value = 9999
+					desc = "POP_CAPITALISTS"
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = aristocrats
+				}
+				add = {
+					value = 6
+					desc = "POP_ARISTOCRATS"
+				}
+			}
+			else = {
+				add = {
+					value = 9
+					desc = "UPPER_NO_ICON"
+				}
+			}
+			if = {
+				limit = {
+					owner = {
+						NOT = {
+							exists = ig:ig_liberals
+						}
+					}
+				}
+				multiply = 4
+			}
+			if = {
+				limit = {
+					owner.ruler ?= {
+						interest_group = { NOR = { 
+							is_interest_group_type = ig_industrialists
+							is_interest_group_type = ig_liberals
+							is_interest_group_type = ig_market_liberals
+							is_interest_group_type = ig_national_liberals
+						} }
+					}
+				}
+				multiply = 2
+			}
+		}
+		else_if = {
+			limit = {
+				strata = middle
+			}
+			if = {
+				limit = {
+					is_pop_type = shopkeepers
+				}
+				add = {
+					value = 96
+					desc = "POP_SHOPKEEPERS"
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = academics
+				}
+				add = {
+					value = 48
+					desc = "POP_ACADEMICS"
+				}
+			}
+			else = {
+				add = {
+					value = 9
+					desc = "MIDDLE_NO_ICON"
+				}
+			}
+			if = {
+				limit = {
+					owner = {
+						NOT = {
+							exists = ig:ig_market_liberals
+						}
+					}
+				}
+				multiply = 6
+			}
+			if = {
+				limit = {
+					owner.ruler ?= {
+						interest_group = { NOR = { 
+							is_interest_group_type = ig_industrialists
+							is_interest_group_type = ig_liberals
+							is_interest_group_type = ig_market_liberals
+							is_interest_group_type = ig_national_liberals
+						} }
+					}
+				}
+				multiply = 2
+			}
+		}
+		else_if = {
+			limit = {
+				strata = lower
+			}
+			add = {
+				value = 3
+				desc = "LOWER_NO_ICON"
+			}
+		}
+
+		multiply = { # Illiterate pops participate at 1/10 the rate of fully literate pops
+			desc = "POP_LITERACY"
+			value = literacy_rate
+			add = 0.10
+		}
+		multiply = 0.5
+		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
+	}
+	
+	revolution = {
+		possible = {
+			political_movement_support >= 0.15
+		}
+		
+		weight = {
+			value = 100
+		}	
+	
+		state_weight = {
+			value = state_urbanization_rate	
+		}
+	}
+	
+	secession = {
+		possible = {
+			always = no
+		}
+		
+		weight = {
+			value = 1000
+		}
+
+		state_weight = {
+			value = state_urbanization_rate	
+		}		
+	}	
+	
+	additional_radicalism_factors = {
+		owner = {
+			if = {
+				limit = { has_institution = institution_schools }
+				
+				add = {
+					value = 3
+					subtract = "institution_investment_level(institution_schools)"
+					multiply = 0.05
+					desc = "INSTITUTION_FUNDING_LEVEL_schools"
+				}
+			}
+			else = {
+				add = {
+					value = 0.1
+					desc = "NO_INSTITUTION_schools"
+				}		
+			}	
+			if = {
+				limit = {
+					bpm_country_is_pre_modern_absolutist = yes
+				}
+				add = {
+					value = 0.1
+					desc = "IS_PRE_MODERN_ABSOLUTIST"
+				}
+			}			
+		}
+	}		
+}

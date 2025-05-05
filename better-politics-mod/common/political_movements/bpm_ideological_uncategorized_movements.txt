@@ -142,7 +142,6 @@ movement_anti_slavery = {
 					desc = "MIDDLE_NO_ICON"
 				}
 			}
-			multiply = 1.5
 		}
 		else_if = {
 			limit = {
@@ -209,7 +208,7 @@ movement_anti_slavery = {
 			}
 			
 			multiply = {
-				value = 3.0
+				value = 1.5
 				desc = "je_bpm_guilty_land"
 			}
 		}
@@ -218,12 +217,6 @@ movement_anti_slavery = {
 			desc = "POP_LITERACY"
 			value = literacy_rate
 			add = 0.10
-		}
-		if = {
-			limit = {
-				c:USA ?= owner
-			}
-			multiply = 10
 		}
 	}
 
@@ -511,10 +504,17 @@ movement_pro_slavery = {
 	}
 
 	pop_support_weight = {	
-		add = {
-			value = 10
-			desc = "SLAVE_STATE"
-		}	
+		if = {
+			limit = {
+				state = {
+					is_slave_state = yes
+				}
+			}
+			add = {
+				value = 40
+				desc = "SLAVE_STATE"
+			}	
+		}
 	
 		if = {
 			limit = {
@@ -523,6 +523,18 @@ movement_pro_slavery = {
 			add = {
 				value = 30
 				desc = "POP_ARISTOCRATS"
+			}
+			if = {
+				limit = {
+					state = {
+						is_slave_state = yes
+					}
+				}
+				# Slave owners!
+				multiply = {
+					value = 5
+					desc = "POP_ARISTOCRAT_SLAVE_OWNER"
+				}
 			}
 		}	
 		else_if = {
@@ -553,21 +565,6 @@ movement_pro_slavery = {
 			}
 		}
 
-		if = {
-			limit = {
-				strata = upper 
-			}
-			multiply = 1.5
-		}
-		else_if = {
-			limit = {
-				strata = middle
-			}
-			multiply = 0.5
-		}
-		else = {
-			multiply = 0.1
-		}
 		min = 0
 		if = {
 			limit = { 
@@ -575,7 +572,7 @@ movement_pro_slavery = {
 			}
 			
 			multiply = {
-				value = 3.0
+				value = 1.5
 				desc = "je_bpm_guilty_land"
 			}		
 		}
@@ -584,13 +581,6 @@ movement_pro_slavery = {
 			desc = "POP_LITERACY"
 			value = literacy_rate
 			add = 0.10
-		}
-
-		if = {
-			limit = {
-				c:USA ?= owner
-			}
-			multiply = 10
 		}
 	}
 	
@@ -1455,6 +1445,306 @@ movement_utilitarian = {
 					desc = "NO_INSTITUTION_schools"
 				}		
 			}				
+		}
+	}
+}
+
+
+# Completed: RSKHM (1 cookie point)
+movement_land_reform = {
+	category = movement_category_ideological
+	
+	ideology = ideology_eco_land_reform
+	character_ideologies = {
+		ideology_land_reformer
+		ideology_luddite
+	}
+	
+	creation_trigger = {
+		has_technology_researched = enclosure
+		NOR = {
+			has_law = law_type:law_homesteading
+			has_law = law_type:law_collectivized_agriculture
+		}
+		pop_type_percent_country = {
+			pop_type = peasants
+			percent > 0.25
+		}
+	}	
+	creation_weight = {
+		value = 100
+	}	
+	on_created = {
+		add_movement_enthusiasm_modifier = yes
+	}
+	
+	character_support_trigger = {
+		OR = {
+			has_ideology = ideology:ideology_land_reformer
+			has_ideology = ideology:ideology_luddite
+			has_ideology = ideology:ideology_anarchist
+			has_ideology = ideology:ideology_communist
+			has_ideology = ideology:ideology_vanguardist
+			has_ideology = ideology:ideology_abolitionist
+		}
+	}
+	character_support_weight = {
+		value = 200
+		if = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_land_reformer
+					has_ideology = ideology:ideology_luddite
+				}
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		if = {
+			limit = {
+				interest_group ?= {
+					is_interest_group_type = ig_rural_folk 
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
+	}
+
+	pop_support_trigger = {
+		NOR = {
+			is_pop_type = aristocrats
+			is_pop_type = slaves
+		}
+	}
+
+	pop_support_factors = {
+		movement_support_low_urbanization
+		movement_support_high_literacy
+		movement_support_below_expected_sol
+		movement_support_farmers
+		movement_support_laborers
+		movement_support_peasants
+	}
+	
+	pop_support_weight = {	
+		add = {
+			desc = "URBAN_STATE" # Increases support in rural states, decreases in urban
+			value = 0.5
+			subtract = state.state_urbanization_rate
+			multiply = 10
+		}
+	
+		if = {
+			limit = {
+				strata = middle
+			}
+			multiply = {
+				value = 0.5
+				desc = "MIDDLE_NO_ICON"
+			}
+			if = {
+				limit = {
+					is_pop_type = farmers
+				}
+				add = {
+					value = 6
+					desc = "POP_FARMERS"
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				strata = lower
+			}
+			if = {
+				limit = {
+					is_pop_type = laborers
+				}
+				add = {
+					value = 6
+					desc = "POP_LABORERS"
+				}
+			}		
+			else_if = {
+				limit = {
+					is_pop_type = peasants 
+				}
+				add = {
+					value = 25
+					desc = "POP_PEASANTS"
+				}
+			}
+			else = {
+				add = {
+					value = 6
+					desc = "LOWER_NO_ICON"
+				}
+			}
+			if = {
+				limit = {
+					OR = {
+						pop_employment_building_group = bg_agriculture
+						pop_employment_building_group = bg_ranching
+						pop_employment_building_group = bg_plantations
+						pop_employment_building_group = bg_logging
+						pop_employment_building_group = bg_fishing
+						pop_employment_building_group = bg_whaling
+						pop_employment_building_group = bg_manor_houses
+					}
+				}
+				multiply = {
+					value = 2
+					desc = "RURAL_POP"
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				standard_of_living < state.average_expected_sol
+			}
+			add = { # Increases likelihood of support if impoverished
+				desc = "IS_BELOW_EXPECTED_SOL"
+				value = state.average_expected_sol
+				subtract = standard_of_living
+				max = 10
+			}
+		}
+		else_if = {
+			limit = {
+				standard_of_living > state.average_expected_sol
+			}
+			add = { # Decreases likelihood of support if well-off
+				desc = "IS_ABOVE_EXPECTED_SOL"
+				value = state.average_expected_sol
+				subtract = standard_of_living
+				min = -5
+			}
+		}
+
+		min = 0
+
+		multiply = { # Illiterate pops participate at 1/4 the rate of fully literate pops
+			desc = "POP_LITERACY"
+			value = literacy_rate
+			add = 0.25
+			min = 0
+			max = 1.1 # Needs a less high literacy rate to get started, but caps out the same as other movements
+		}
+
+		multiply = { # Multiplied by 1.25x max
+			desc = "POP_RADICALS"
+			value = pop_radical_fraction
+			min = 0
+			divide = 4
+			add = 1
+		}
+
+		multiply = {
+			value = BPM_LABOR_STRENGTH
+			desc = "BPM_PEASANT_AND_LABOR"
+		}
+	}
+	
+	revolution = {
+		possible = {
+			political_movement_support >= 0.15
+		}
+		
+		weight = {
+			value = 100
+		}	
+	
+		state_weight = {
+			value = 1
+			add = {
+				value = 0.5
+				subtract = state_urbanization_rate
+				multiply = 10
+			}
+			multiply = {
+				value = 1
+				add = political_movement_support 
+			}	
+		}
+	}
+	
+	secession = {
+		possible = {
+			always = no
+			# political_movement_support >= 0.15
+			# OR = {
+			# 	scope:clout <= 0
+			# 	AND = {
+			# 		scope:clout > 0
+			# 		scope:clout < 0.15
+			# 		owner ?= {
+			# 			country_has_voting_franchise = no
+			# 			NOT = {
+			# 				any_interest_group = {
+			# 					is_in_government = yes
+			# 					law_stance = {
+			# 						law = law_type:law_homesteading
+			# 						value > neutral
+			# 					}
+			# 				}
+			# 			}
+			# 		}
+			# 	}
+			# }		
+		}
+		
+		weight = {
+			value = 1000
+		}		
+	}	
+
+	additional_radicalism_factors = {
+		if = {
+			limit = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value = approve
+				}
+			}
+			add = {
+				value = 0.1
+				desc = "BPM_EMBOLDENED_BY_LAW"
+			}
+		}
+		else_if = {
+			limit = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value = strongly_approve
+				}
+			}
+			add = {
+				value = 0.2
+				desc = "BPM_EMBOLDENED_BY_LAW"
+			}
+		}
+
+		if = {
+			limit = {
+				owner = { has_law = law_type:law_serfdom }
+			}
+			add = {
+				value = 0.15
+				desc = "BPM_COUNTRY_HAS_SERFDOM"
+			}
+		}
+		if = {
+			limit = {
+				owner = { has_law = law_type:law_ad_hoc_centralization }
+			}
+			add = {
+				value = 0.1
+				desc = "BPM_COUNTRY_HAS_AD_HOC"
+			}
 		}
 	}
 }

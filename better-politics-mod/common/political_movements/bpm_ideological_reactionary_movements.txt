@@ -1,0 +1,1117 @@
+# Completed: RSKHM (1 cookie point)
+movement_royalist_absolutist = {
+	category = movement_category_ideological
+	
+	law_enactment_radicalism_multiplier = 2.0 # Feel especially strongly about having their core laws enacted
+	
+	ideology = ideology_gov_absolutist_royalist
+	character_ideologies = {
+		ideology_royalist
+		ideology_humanitarian_royalist
+	}
+	
+	disband_trigger = {
+		OR = {
+			country_has_voting_franchise = yes
+			has_variable = monarchy_stamped_out_var
+		}
+	}
+
+	can_pressure_interest_group = {
+		bpm_ig_is_left_wing = no
+	}
+
+	on_disbanded = {
+		if = {
+			limit = {
+				owner ?= {
+					country_has_voting_franchise = yes
+					NOT = {
+						has_variable = monarchy_stamped_out_var
+					}
+					NOT = {
+						any_political_movement = {
+							is_political_movement_type = movement_royalist_constitutional
+						}
+					}
+				}
+			}
+			owner ?= {
+				create_political_movement = { type = movement_royalist_constitutional }
+			}
+		}
+	}
+	
+	creation_trigger = {
+		has_law = law_type:law_monarchy
+		country_has_voting_franchise = no
+		NOT = { c:FRA ?= this }
+	}	
+	creation_weight = {
+		value = 100
+	}	
+	on_created = {
+		add_movement_enthusiasm_modifier = yes
+	}
+	
+	character_support_trigger = {
+		trigger_if = {
+			limit = {
+				is_in_exile_pool = yes
+			}
+			has_ideology = ideology:ideology_royalist
+		}
+		trigger_else = {
+			OR = {
+				has_ideology = ideology:ideology_royalist
+				AND = {
+					has_ideology = ideology:ideology_authoritarian
+					interest_group ?= {
+						law_stance = {
+							law = law_type:law_monarchy
+							value > neutral
+						}
+					}
+				}
+				AND = {
+					interest_group ?= {
+						law_stance = {
+							law = law_type:law_monarchy
+							value > neutral
+						}
+					}
+					NOT = {
+						law_stance = {
+							law = law_type:law_monarchy
+							value < approve
+						}
+						law_stance = {
+							law = law_type:law_autocracy
+							value < approve
+						}
+					}
+				}
+			}			
+		}
+	}
+	character_support_weight = {
+		value = 300
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_royalist
+			}
+			multiply = {
+				value = 5
+			}
+		}
+	}
+	
+	pop_support_trigger = {
+		NOT = {
+			is_pop_type = slaves
+		}
+	}
+
+	pop_support_factors = {
+		movement_support_ruler_popularity
+		movement_support_low_urbanization
+		movement_support_high_literacy
+		movement_support_aristocrats
+		movement_support_farmers
+		movement_support_peasants
+		movement_support_clergymen
+		movement_support_officers
+	}
+	
+	pop_support_weight = {	
+		add = {
+			desc = "URBAN_STATE" # Increases support in rural states, decreases in urban
+			value = 1
+			subtract = state.state_urbanization_rate
+			multiply = 10
+		}
+
+		add = {
+			value = 5
+			desc = "POP_BASE_SUPPORT"
+		}
+
+		if = {
+			limit = {
+				is_pop_type = aristocrats
+			}
+			add = {
+				value = 12
+				desc = "POP_ARISTOCRATS"
+			}
+		}	
+		else_if = {
+			limit = {
+				is_pop_type = farmers
+			}
+			add = {
+				value = 12
+				desc = "POP_FARMERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_shopkeepers_farmers_capitalists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = capitalists
+			}
+			add = {
+				value = 6
+				desc = "POP_CAPITALISTS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_shopkeepers_farmers_capitalists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = shopkeepers
+			}
+			add = {
+				value = 6
+				desc = "POP_SHOPKEEPERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_shopkeepers_farmers_capitalists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = peasants
+			}
+			add = {
+				value = 6
+				desc = "POP_PEASANTS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_others
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+
+		}			
+		else_if = {
+			limit = {
+				is_pop_type = clergymen
+			}
+			add = {
+				value = 12
+				desc = "POP_CLERGYMEN"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_others
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = officers
+			}
+			add = {
+				value = 12
+				desc = "POP_OFFICERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_others
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+
+
+		min = 0
+
+		if = {
+			limit = {
+				owner ?= {
+					has_law = law_type:law_monarchy
+				}
+				owner.ruler ?= {
+					NOT = { has_trait = trait_child }
+					law_stance = {
+						law = law_type:law_autocracy
+						value > neutral
+					}					
+				}
+			}
+			multiply = { # Absolutist are more reliant on the monarchs popularity than constitutionalists
+				add = owner.ruler.popularity
+				multiply = 0.01
+				add = 1
+				min = 0.2
+				max = 1.8
+				desc = "RULER_POPULARITY"
+			}
+		}
+		else_if = {
+			limit = {
+				owner ?= {
+					has_law = law_type:law_monarchy
+				}
+				owner.ruler ?= {
+					has_trait = trait_child
+					law_stance = {
+						law = law_type:law_autocracy
+						value > neutral
+					}					
+				}
+			}
+			multiply = {
+				value = 0.75
+				desc = "RULER_IS_CHILD"
+			}			
+		}
+		else_if = {
+			limit = {
+				owner ?= {
+					has_law = law_type:law_monarchy
+				}
+				owner.ruler ?= {
+					law_stance = {
+						law = law_type:law_autocracy
+						value <= neutral
+					}					
+				}
+			}
+			multiply = {
+				value = 0.75
+				desc = "RULER_IS_LIBERAL"
+			}			
+		}
+
+		multiply = { # Illiterate pops participate at 1/10 the rate of fully literate pops
+			desc = "POP_LITERACY"
+			value = literacy_rate
+			add = 0.2
+			max = 0.7 # Starts more powerful but caps out early
+		}
+
+		if = {
+			limit = {
+				exists = ig:ig_reactionaries
+				ig:ig_reactionaries ?= {
+					ig_clout > 0.15
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = owner.ig:ig_reactionaries.ig_approval
+					divide = 20
+				}
+				divide = 2
+			}
+		}
+
+		multiply = BPM_REACTIONARY_STRENGTH
+	}
+
+	can_pressure_interest_group = {
+		bpm_ig_is_left_wing = no
+	}
+	
+	revolution = {
+		possible = {
+			political_movement_support >= 0.15
+		}
+		weight = {
+			value = 100
+		}	
+	
+		state_weight = {
+			value = 1
+			
+			subtract = state_urbanization_rate
+			
+			if = {
+				limit = { is_capital = yes }
+				if = {
+					limit = { owner ?= { has_law = law_type:law_monarchy } }
+					multiply = 10.0
+				}
+				else = {
+					multiply = 0.1
+				}
+			}			
+		}
+	}
+	
+	secession = {
+		possible = {
+			always = no
+		}
+		
+		weight = {
+			value = 1000
+		}
+
+		state_weight = {
+			value = 1
+			
+			subtract = state_urbanization_rate
+			
+			if = {
+				limit = { is_capital = yes }
+				if = {
+					limit = { owner ?= { has_law = law_type:law_monarchy } }
+					multiply = 10.0
+				}
+				else = {
+					multiply = 0.1
+				}
+			}			
+		}	
+		
+		forced_tags = {
+			BHT = {
+				trigger = {
+					owner ?= { c:BIC ?= this }
+				}
+				weight = 1000
+			}
+		}
+	}
+	
+	additional_radicalism_factors = {
+		owner ?= {
+			if = {
+				limit = {		
+					has_law = law_type:law_monarchy
+				}
+				
+				if = {
+					limit = {
+						OR = {
+							is_enacting_law = law_type:law_presidential_republic
+							is_enacting_law = law_type:law_parliamentary_republic
+							is_enacting_law = law_type:law_corporate_state
+							is_enacting_law = law_type:law_theocracy
+							is_enacting_law = law_type:law_council_republic	
+						}					
+					}
+					
+					add = {
+						value = 0.5
+						desc = "MONARCHY_BEING_ABOLISHED"
+					}					
+				}
+				else = {
+					add = { # Only care about legitimacy in the context of a monarchy that isn't under direct threat
+						value = 50
+						subtract = legitimacy
+						multiply = 0.005
+						desc = "concept_legitimacy"
+					}				
+				}
+			}		
+		}
+	}	
+}
+
+# Completed: RSKHM (1 cookie point)
+movement_reactionary = {
+	category = movement_category_ideological
+	
+	ideology = ideology_cit_reactionary
+	character_ideologies = {
+		ideology_traditionalist
+		ideology_authoritarian
+	}
+	
+	creation_trigger = {
+		NOT = {
+			has_law = law_type:law_traditionalism
+			has_law = law_type:law_serfdom
+		}
+		has_law = law_type:law_slavery_banned
+		country_has_voting_franchise = yes
+	}	
+	creation_weight = {
+		value = 100
+	}	
+	on_created = {
+		add_movement_enthusiasm_modifier = yes
+	}
+
+	can_pressure_interest_group = {
+		bpm_ig_is_socialist = no
+	}
+	
+	character_support_trigger = {
+		trigger_if = {
+			limit = {
+				is_in_exile_pool = yes
+			}
+			OR = {
+				has_ideology = ideology:ideology_traditionalist
+				has_ideology = ideology:ideology_protectionist
+				has_ideology = ideology:ideology_authoritarian
+				has_ideology = ideology:ideology_luddite				
+			}
+		}
+		trigger_else = {
+			OR = {
+				has_ideology = ideology:ideology_traditionalist
+				has_ideology = ideology:ideology_protectionist
+				has_ideology = ideology:ideology_authoritarian
+				has_ideology = ideology:ideology_luddite
+				interest_group ?= {
+					OR = {
+						has_ideology = ideology:ideology_reactionary
+						has_ideology = ideology:ideology_patriarchal
+					}
+				}
+			}
+		}
+	}
+	character_support_weight = {
+		value = 200
+		if = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_protectionist
+					has_ideology = ideology:ideology_traditionalist
+					has_ideology = ideology:ideology_luddite
+				}
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		else_if = {
+			limit = {
+				AND = {
+					has_ideology = ideology:ideology_authoritarian
+					interest_group ?= {
+						OR = {
+							is_interest_group_type = ig_intelligentsia 
+							is_interest_group_type = ig_trade_unions 
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
+		if = {
+			limit = {
+				interest_group ?= {
+					OR = {
+						has_ideology = ideology:ideology_reactionary
+						has_ideology = ideology:ideology_patriarchal
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
+	}
+
+	pop_support_trigger = {
+		NOT = {
+			is_pop_type = slaves
+		}
+	}
+
+	pop_support_factors = {
+		movement_support_high_literacy
+		movement_support_aristocrats
+		movement_support_clergymen
+		movement_support_shopkeepers
+		movement_support_farmers
+		movement_support_clerks
+		movement_support_laborers
+		movement_support_soldiers
+		movement_support_peasants
+	}
+	
+	pop_support_weight = {	
+		add = {
+			value = 1
+			desc = "POP_BASE_SUPPORT"
+		}
+
+		if = {
+			limit = {
+				is_pop_type = aristocrats
+			}
+			add = {
+				value = 12
+				desc = "POP_ARISTOCRATS"
+			}
+		}	
+		else_if = {
+			limit = {
+				is_pop_type = laborers
+			}
+			add = {
+				value = 12
+				desc = "POP_LABORERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_laborers_machinists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = machinists
+			}
+			add = {
+				value = 12
+				desc = "POP_MACHINISTS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_laborers_machinists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = farmers
+			}
+			add = {
+				value = 12
+				desc = "POP_FARMERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_shopkeepers_farmers_capitalists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = capitalists
+			}
+			add = {
+				value = 6
+				desc = "POP_CAPITALISTS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_shopkeepers_farmers_capitalists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = shopkeepers
+			}
+			add = {
+				value = 6
+				desc = "POP_SHOPKEEPERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_shopkeepers_farmers_capitalists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = peasants
+			}
+			add = {
+				value = 6
+				desc = "POP_PEASANTS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_others
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+
+		}			
+		else_if = {
+			limit = {
+				is_pop_type = clergymen
+			}
+			add = {
+				value = 12
+				desc = "POP_CLERGYMEN"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_others
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = officers
+			}
+			add = {
+				value = 12
+				desc = "POP_OFFICERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_others
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = academics
+			}
+			add = {
+				value = 6
+				desc = "POP_ACADEMICS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_reactionary_movement_academics
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+
+		
+		min = 0
+
+		multiply = { # Illiterate pops participate at 1/10 the rate of fully literate pops
+			desc = "POP_LITERACY"
+			value = literacy_rate
+			add = 0.10
+		}
+
+		multiply = {
+			value = 0.012
+			multiply = pop_acceptance
+			desc = "ACCEPTANCE"
+		}
+
+		if = {
+			limit = {
+				exists = ig:ig_reactionaries
+				ig:ig_reactionaries ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = owner.ig:ig_reactionaries.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
+		}
+
+		multiply = BPM_REACTIONARY_STRENGTH
+	}
+	
+	revolution = {
+		possible = {
+			political_movement_support >= 0.15
+		}
+		
+		weight = {
+			value = 100
+		}	
+	
+		state_weight = {
+			value = 1		
+		}
+	}
+	
+	secession = {
+		possible = {
+			always = no
+		}
+		
+		weight = {
+			value = 1000
+		}		
+	}
+
+	additional_radicalism_factors = {
+	}
+}
+
+# Completed: RSKHM (1 cookie point)
+movement_fascist = {
+	category = movement_category_ideological
+	
+	ideology = ideology_cit_fascist
+	character_ideologies = {
+		ideology_fascist
+		ideology_integralist
+		ideology_corporatist_leader
+	}
+	
+	creation_trigger = {
+		has_technology_researched = political_agitation
+	}	
+	creation_weight = {
+		value = 100
+	}	
+	on_created = {
+		add_movement_enthusiasm_modifier = yes
+	}
+
+	can_pressure_interest_group = {
+		bpm_ig_is_right_wing = yes
+	}
+	
+	character_support_trigger = {
+		OR = {
+			has_ideology = ideology:ideology_fascist
+			has_ideology = ideology:ideology_integralist
+			has_ideology = ideology:ideology_corporatist_leader
+			has_ideology = ideology:ideology_ethno_nationalist
+		}
+	}
+	character_support_weight = {
+		if = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_fascist
+					has_ideology = ideology:ideology_integralist
+				}
+			}
+			multiply = {
+				value = 5
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_corporatist_leader
+					has_ideology = ideology:ideology_ethno_nationalist
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
+	}
+	
+	pop_support_trigger = {
+		NOT = {
+			is_pop_type = slaves
+		}
+	}
+
+	pop_support_factors = {
+		movement_support_high_literacy
+		movement_support_middle_below_expected_sol
+		movement_support_radicalization
+		movement_support_unemployed
+		movement_support_capitalists
+		movement_support_aristocrats
+		movement_support_shopkeepers
+		movement_support_officers
+		movement_support_farmers
+		movement_support_clerks
+		movement_support_soldiers
+		movement_support_number_of_claims
+	}
+	
+	pop_support_weight = {	
+		add = {
+			value = 3
+			desc = "POP_BASE_SUPPORT"
+		}
+
+		if = {
+			limit = {
+				is_pop_type = aristocrats
+			}
+			add = {
+				value = 12
+				desc = "POP_ARISTOCRATS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_fascist_movement_others
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}	
+		else_if = {
+			limit = {
+				is_pop_type = laborers
+			}
+			add = {
+				value = 12
+				desc = "POP_LABORERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_fascist_movement_laborers_machinists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = machinists
+			}
+			add = {
+				value = 12
+				desc = "POP_MACHINISTS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_fascist_movement_laborers_machinists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = farmers
+			}
+			add = {
+				value = 12
+				desc = "POP_FARMERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_fascist_movement_shopkeepers_farmers_capitalists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = capitalists
+			}
+			add = {
+				value = 6
+				desc = "POP_CAPITALISTS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_fascist_movement_shopkeepers_farmers_capitalists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = shopkeepers
+			}
+			add = {
+				value = 6
+				desc = "POP_SHOPKEEPERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_fascist_movement_shopkeepers_farmers_capitalists
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = peasants
+			}
+			add = {
+				value = 6
+				desc = "POP_PEASANTS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_fascist_movement_others
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+
+		}			
+		else_if = {
+			limit = {
+				is_pop_type = clergymen
+			}
+			add = {
+				value = 12
+				desc = "POP_CLERGYMEN"
+			}
+			multiply = {
+				value = var:bpm_consciousness_fascist_movement_others
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = officers
+			}
+			add = {
+				value = 12
+				desc = "POP_OFFICERS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_fascist_movement_others
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = academics
+			}
+			add = {
+				value = 6
+				desc = "POP_ACADEMICS"
+			}
+			multiply = {
+				value = var:bpm_consciousness_fascist_movement_academics
+				desc = "BPM_LABOR_CONSCIOUSNESS"
+			}
+		}
+
+		if = {
+			limit = {
+				strata = upper
+			}
+			if = {
+				limit = {
+					owner ?= {
+						any_political_movement = {
+							OR = {
+								is_political_movement_type = movement_socialist
+								is_political_movement_type = movement_anarchist
+								is_political_movement_type = movement_communist
+							}
+							political_movement_support >= 0.15 # (chuckles) im in danger
+						}
+					}
+				}
+				multiply = {
+					value = 1.5
+					desc = "STRONG_SOCIALIST_MOVEMENT"
+				}
+			}
+		}
+
+		
+		owner = {
+			if = {
+				limit = {
+					number_of_claims > 0
+				}
+
+				add = {
+					value = 5 # Add a base value for having claims at all
+					add = number_of_claims
+					multiply = 5
+					max = 50
+					desc = "NUMBER_OF_CLAIMS"
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				standard_of_living < state.average_expected_sol
+				strata = middle
+			}
+			add = { # Increases likelihood of support if impoverished
+				desc = "IS_BELOW_EXPECTED_SOL"
+				value = state.average_expected_sol
+				subtract = standard_of_living
+				max = 10
+			}
+		}
+
+		if = {
+			limit = {
+				is_employed = no
+			}
+			multiply = { 
+				value = 1.5
+				desc = "UNEMPLOYED"
+			}
+		}
+
+		multiply = { # Illiterate pops participate at 1/10 the rate of fully literate pops
+			desc = "POP_LITERACY"
+			value = literacy_rate
+			add = 0.10
+		}
+
+		multiply = {
+			value = 0.006
+			multiply = pop_acceptance
+			desc = "ACCEPTANCE"
+		}
+
+		if = {
+			limit = {
+				exists = ig:ig_fascists
+				ig:ig_fascists ?= {
+					ig_clout > 0.15
+					bpm_ig_is_establishment = yes
+				}
+			}
+			multiply = {
+				value = 2
+				subtract = {
+					value = ig:ig_fascists.ig_approval
+					divide = 20
+				}
+				divide = 2
+				desc = "BPM_INSTITUTIONAL_ALTERNATIVE"
+			}
+		}
+
+		multiply = BPM_REACTIONARY_STRENGTH
+
+	}
+	
+	revolution = {
+		possible = {
+			political_movement_support >= 0.15
+		}
+		
+		weight = {
+			value = 100
+		}	
+	
+		state_weight = {
+			value = 1		
+		}
+	}
+	
+	secession = {
+		possible = {
+			always = no
+		}
+		
+		weight = {
+			value = 1000
+		}		
+	}	
+	
+	additional_radicalism_factors = {
+		if = {
+			limit = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value = approve
+				}
+			}
+			add = {
+				value = 0.3
+				desc = "BPM_EMBOLDENED_BY_LAW"
+			}
+		}
+		else_if = {
+			limit = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value = strongly_approve
+				}
+			}
+			add = {
+				value = 0.6
+				desc = "BPM_EMBOLDENED_BY_LAW"
+			}
+		}
+		owner = {
+			if = {
+				limit = {
+					owner.number_of_claims > 0
+				}
+				
+				add = {
+					value = 5 # Add a base value for having claims at all
+					add = owner.number_of_claims
+					multiply = 0.025
+					max = 0.3
+					desc = "NUMBER_OF_CLAIMS"
+				}				
+			}
+		}
+	}	
+}

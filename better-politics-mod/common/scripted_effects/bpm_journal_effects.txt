@@ -144,7 +144,7 @@ bpm_socialist_electoralism_update_baseline_target = {
 		if = {
 			limit = {
 				ig_approval >= happy
-				is_marginal = no
+				bpm_ig_is_marginal = no
 			}
 			ROOT = { change_variable = { name = bpm_je_socialist_electoralism_from_happy_socialists add = 5 } }
 		}
@@ -153,7 +153,7 @@ bpm_socialist_electoralism_update_baseline_target = {
 		# if = {
 		# 	limit = {
 		# 		is_being_suppressed = yes
-		# 		is_marginal = no
+		# 		bpm_ig_is_marginal = no
 		# 	}
 		# 	ROOT = { change_variable = { name = bpm_je_socialist_electoralism_from_suppressed_socialists subtract = 10 } }
 		# }
@@ -281,7 +281,7 @@ bpm_je_march_to_radicalism_progress_update = {
 					}
 				}
 				interest_group = {
-					is_marginal = no
+					bpm_ig_is_marginal = no
 				}
 			}
 			change_global_variable = {
@@ -293,7 +293,7 @@ bpm_je_march_to_radicalism_progress_update = {
 			name = bpm_je_march_to_radicalism_progress
 			add = {
 				value = bpm_country_fraction_below_expected_sol
-				multiply = 8
+				multiply = 6
 			}
 		}
 	}
@@ -307,15 +307,36 @@ bpm_je_second_intl_progress_rate_update = {
 	set_global_variable = { name = bpm_je_second_intl_progress_from_powerful_igs value = 0 }
 	set_global_variable = { name = bpm_je_second_intl_progress_from_influential_igs value = 0 }
 	set_global_variable = { name = bpm_je_second_intl_progress_from_agitators value = 0 }
+	set_global_variable = { name = bpm_je_second_intl_progress_from_socialist_movements value = 0 }
+
 	every_country = {
 		limit = {
 			country_rank = rank_value:great_power
 		}
 
+		every_political_movement = {
+			limit = {
+				bpm_movement_is_socialist = yes
+				NOT = { is_political_movement_type = movement_labor }
+			}
+			if = {
+				limit = {
+					political_movement_support >= 0.2
+				}
+				change_global_variable = { name = bpm_je_second_intl_progress_from_socialist_movements add = 0.4 }
+			}
+			else_if = {
+				limit = {
+					political_movement_support >= 0.1
+				}
+				change_global_variable = { name = bpm_je_second_intl_progress_from_socialist_movements add = 0.2 }
+			}
+		}
+
 		every_interest_group = {
 			limit = {
 				bpm_ig_is_socialist = yes
-				is_marginal = no
+				bpm_ig_is_marginal = no
 			}
 
 			if = {
@@ -351,6 +372,7 @@ bpm_je_second_intl_progress_rate_update = {
 	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_powerful_igs }
 	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_influential_igs }
 	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_agitators }
+	change_global_variable = { name = bpm_je_second_intl_progress_rate add = global_var:bpm_je_second_intl_progress_from_socialist_movements }
 }
 
 bpm_potd_pick_bombing_target = {
@@ -467,20 +489,39 @@ bpm_abolish_russian_estate_de_facto = {
 bpm_calculate_frankfurt_parliament_seats = {
 	set_global_variable = {
 		name = bpm_frankfurt_parliament_left_population
-		value = 0
+		value = 0.05
 	}
 	set_global_variable = {
 		name = bpm_frankfurt_parliament_center_population
-		value = 0
+		value = 0.1
 	}
 	set_global_variable = {
 		name = bpm_frankfurt_parliament_right_population
 		value = 0
 	}
+
+	set_global_variable = {
+		name = bpm_frankfurt_parliament_left_bonus
+		value = 0
+	}
+	set_global_variable = {
+		name = bpm_frankfurt_parliament_center_bonus
+		value = 0
+	}
+	set_global_variable = {
+		name = bpm_frankfurt_parliament_right_bonus
+		value = 0
+	}
 	every_state = {
 		limit = {
 			owner = {
+				OR = {
+					country_has_primary_culture = cu:north_german
+					country_has_primary_culture = cu:south_german
+				}
+				country_rank >= rank_value:major_power
 				NOT = { has_variable = boycotting_frankfurt }
+				# c:PRU ?= THIS
 			}
 			OR = {
 				culture_percent_state = {
@@ -525,6 +566,11 @@ bpm_calculate_frankfurt_parliament_seats = {
 								OR = {
 									leader = { bpm_leader_is_moderate_liberal = yes }
 									bpm_ig_is_moderate_liberal = yes
+									AND = {
+										is_interest_group_type = ig_intelligentsia
+										bpm_leader_is_traditional_right = no
+										bpm_leader_is_radical_leftist = no
+									}
 								}
 							}
 							add = ig_clout
@@ -586,5 +632,26 @@ bpm_calculate_frankfurt_parliament_seats = {
 				add = global_var:bpm_frankfurt_parliament_right_population
 			}
 		}
+	}
+
+	set_global_variable = {
+		name = bpm_frankfurt_parliament_liberal_power
+		value = {
+			add = global_var:bpm_frankfurt_parliament_center_percent
+			add = global_var:bpm_frankfurt_parliament_left_percent
+		}
+	}
+
+	change_global_variable = {
+		name = bpm_frankfurt_parliament_left_percent
+		add = global_var:bpm_frankfurt_parliament_left_bonus
+	}
+	change_global_variable = {
+		name = bpm_frankfurt_parliament_center_percent
+		add = global_var:bpm_frankfurt_parliament_center_bonus
+	}
+	change_global_variable = {
+		name = bpm_frankfurt_parliament_right_percent
+		add = global_var:bpm_frankfurt_parliament_right_bonus
 	}
 }

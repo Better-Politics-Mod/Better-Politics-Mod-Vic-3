@@ -1,0 +1,465 @@
+
+bpm_update_liberal_variant = {
+	ig:ig_liberals ?= {
+		if = {
+			limit = {
+				has_variable = bpm_largest_faction
+				var:bpm_largest_faction = {
+					is_political_movement_type = movement_religious_majority
+				}
+			}
+			bpm_stash_rel_ideology = yes
+			add_ideology = ideology_rel_moralist
+			bpm_reorder_ideologies = yes	
+		}
+		else = {
+			bpm_unstash_rel_ideology = yes
+			bpm_reorder_ideologies = yes	
+		}
+	}
+}
+
+bpm_update_trade_unions_variant = {
+	ig:ig_trade_unions ?= {
+		if = {
+			limit = {
+				has_variable = bpm_largest_faction
+				var:bpm_largest_faction = {
+					OR = { 
+						is_political_movement_type = movement_religious_majority
+						is_political_movement_type = movement_cultural_majority 
+						is_political_movement_type = movement_national_liberal
+					}
+				}
+
+			}
+			if = {
+				limit = { 
+					NOT = { 
+						has_variable = bpm_conservative_unions
+					}
+				}
+				bpm_stash_sta_ideology = yes
+				bpm_stash_dop_ideology = yes
+				add_ideology = ideology_sta_powerful_state
+				add_ideology = ideology_dop_authoritarian_democrat
+				bpm_reorder_ideologies = yes	
+	
+				set_variable = bpm_conservative_unions
+			}
+		}
+		else = {
+			bpm_unstash_sta_ideology = yes
+			bpm_unstash_dop_ideology = yes
+			
+			bpm_reorder_ideologies = yes	
+
+			remove_variable = bpm_conservative_unions
+		}
+	}
+}
+
+bpm_add_constitutionalist_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_monarchist_progressive
+		ideology = ideology_bpm_movement_constitutionalist
+	}
+}
+
+bpm_add_liberal_nationalist_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_liberal_nationalist
+		ideology = ideology_bpm_movement_liberal_nationalist
+	}
+}
+
+bpm_add_modernizer_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_modernizer
+		ideology = ideology_bpm_movement_modernizer
+	}
+}
+
+bpm_add_republican_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_anti_monarchy
+		ideology = ideology_bpm_movement_republican
+	}
+}
+
+bpm_add_slaver_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_slaver
+		ideology = ideology_bpm_movement_slaver
+	}
+}
+
+bpm_add_restorationist_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_restorationist
+		ideology = ideology_bpm_movement_restorationist
+	}
+}
+
+bpm_add_abolitionist_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_abolitionist
+		ideology = ideology_bpm_movement_abolitionist
+	}
+}
+
+bpm_add_nationalist_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_nationalist
+		ideology = ideology_bpm_movement_nationalist
+	}
+}
+
+bpm_add_internationalist_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_internationalist
+		ideology = ideology_bpm_movement_internationalist
+	}
+}
+
+bpm_add_paternalist_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_socialist
+		ideology = ideology_bpm_movement_paternalist
+	}
+}
+
+bpm_add_laissez_faire_trait = {
+	bpm_add_trait = {
+		condition = bpm_movement_is_laissez_faire
+		ideology = ideology_bpm_movement_laissez_faire
+	}
+}
+
+bpm_add_trait = {
+	if = {
+		limit = {
+			has_variable = bpm_largest_faction
+			var:bpm_largest_faction = {
+				$condition$ = yes
+			}
+		}
+		add_ideology = $ideology$
+	}
+	else_if = {
+		limit = { 
+			has_ideology = ideology:$ideology$
+		}
+		remove_ideology = $ideology$
+	}
+}
+
+bpm_update_variants = {
+	every_interest_group = {
+		set_variable = {
+			name = bpm_cached_largest_faction
+			value = var:bpm_largest_faction
+		}
+	}
+	if = {
+		limit = {
+			NOT = {
+				THIS = c:USA
+			}
+		}
+		bpm_update_liberal_variant = yes
+		bpm_update_trade_unions_variant = yes
+	}
+	if = {
+		limit = {
+			has_law = law_type:law_monarchy 
+			has_law = law_type:law_advisory_body
+		}
+		every_interest_group = {
+			if = { 
+				limit = {
+					OR = {
+						bpm_ig_is_institutional = yes
+						is_interest_group_type = ig_trade_unions
+						is_interest_group_type = ig_conservatives
+					}
+					NOR = {
+						is_interest_group_type = ig_landowners
+						is_interest_group_type = ig_armed_forces
+					}
+					NAND = {
+						is_interest_group_type = ig_petty_bourgeoisie
+						owner = { 
+							has_journal_entry = je_bpm_confucian_state
+						}
+					}
+				} 
+				bpm_add_constitutionalist_trait = yes 
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_bpm_movement_constitutionalist
+				}
+				remove_ideology = ideology_bpm_movement_constitutionalist
+			}
+		}
+	}
+	else = { 
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_bpm_movement_constitutionalist
+			}
+			remove_ideology = ideology_bpm_movement_constitutionalist
+		}
+
+	}
+
+	if = {
+		limit = {
+			NOT = {
+				has_law = law_type:law_monarchy
+			}
+			NOT = {
+				c:USA ?= THIS 
+			}
+		}
+		every_interest_group = {
+			if = {
+				limit = {
+					OR = {
+						#is_interest_group_type = ig_trade_unions
+						is_interest_group_type = ig_intelligentsia
+						is_interest_group_type = ig_petty_bourgeoisie
+						is_interest_group_type = ig_liberals
+						is_interest_group_type = ig_rural_folk
+						is_interest_group_type = ig_industrialists
+						is_interest_group_type = ig_conservatives
+						is_interest_group_type = ig_landowners
+						is_interest_group_type = ig_reactionaries
+						is_interest_group_type = ig_armed_forces
+						is_interest_group_type = ig_devout
+					}
+				}
+				bpm_add_restorationist_trait = yes
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_bpm_movement_restorationist
+				}
+				remove_ideology = ideology_bpm_movement_restorationist
+			}
+		}
+	}
+	else = {
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_bpm_movement_restorationist
+			}
+			remove_ideology = ideology_bpm_movement_restorationist
+		}
+	}
+
+	if = {
+		limit = {
+			has_law = law_type:law_monarchy
+			NAND = {
+				exists = c:CHI
+				c:CHI = this
+			}
+		}
+		every_interest_group = {
+			if = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_trade_unions
+						is_interest_group_type = ig_intelligentsia
+						is_interest_group_type = ig_petty_bourgeoisie
+						is_interest_group_type = ig_liberals
+						is_interest_group_type = ig_rural_folk
+						is_interest_group_type = ig_industrialists
+					}
+				}
+				bpm_add_republican_trait = yes
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_bpm_movement_republican
+				}
+				remove_ideology = ideology_bpm_movement_republican
+			}
+		}
+	} 
+	else = { 
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_bpm_movement_republican
+			}
+			remove_ideology = ideology_bpm_movement_republican
+		}
+
+	}
+
+	if = {
+		limit = {
+			NOR = {
+				has_law = law_type:law_slavery_banned
+				has_law = law_type:law_debt_slavery
+			}
+		}
+		every_interest_group = {
+			if = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_trade_unions
+						is_interest_group_type = ig_intelligentsia
+						is_interest_group_type = ig_petty_bourgeoisie
+						is_interest_group_type = ig_rural_folk
+						is_interest_group_type = ig_industrialists
+					}
+				}
+				bpm_add_abolitionist_trait = yes
+				bpm_add_slaver_trait = yes
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_bpm_movement_abolitionist
+				}
+				remove_ideology = ideology_bpm_movement_abolitionist
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_bpm_movement_slaver
+				}
+				remove_ideology = ideology_bpm_movement_slaver
+			}
+		}
+
+	}
+	else = { 
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_bpm_movement_abolitionist
+				has_ideology = ideology:ideology_bpm_movement_slaver
+			}
+			remove_ideology = ideology_bpm_movement_abolitionist
+			remove_ideology = ideology_bpm_movement_slaver
+		}
+
+	}
+
+	if = {
+		limit = {
+			bpm_country_is_pre_modern = yes
+		}
+		every_interest_group = {
+			if = {
+				limit = {
+					NOR = {
+						is_interest_group_type = ig_devout
+						is_interest_group_type = ig_armed_forces
+						is_interest_group_type = ig_landowners
+					}
+					NAND = {
+						is_interest_group_type = ig_petty_bourgeoisie
+						owner = { 
+							has_journal_entry = je_bpm_confucian_state
+						}
+					}
+				}
+				bpm_add_modernizer_trait = yes
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_bpm_movement_modernizer
+				}
+				remove_ideology = ideology_bpm_movement_modernizer
+			}
+		}
+
+	}
+	else = { 
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_bpm_movement_modernizer
+			}
+			remove_ideology = ideology_bpm_movement_modernizer
+		}
+
+	}
+
+	every_interest_group = {
+		if = {
+			limit = {
+				bpm_ig_is_socialist = no
+			}
+			bpm_add_liberal_nationalist_trait = yes
+		}
+		else = {
+			remove_ideology = ideology_bpm_movement_liberal_nationalist
+		}
+
+		if = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_trade_unions
+					is_interest_group_type = ig_intelligentsia
+					is_interest_group_type = ig_petty_bourgeoisie
+					is_interest_group_type = ig_rural_folk
+					is_interest_group_type = ig_industrialists
+					# liberals are sort of malleable on this
+					is_interest_group_type = ig_liberals
+					is_interest_group_type = ig_market_liberals
+				}
+			}
+			bpm_add_nationalist_trait = yes
+			bpm_add_internationalist_trait = yes
+			if = {
+				limit = {
+					NOT = {
+						is_interest_group_type = ig_market_liberals
+						is_interest_group_type = ig_trade_unions
+					}
+				}
+				bpm_add_paternalist_trait = yes
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_bpm_movement_nationalist
+					has_ideology = ideology:ideology_bpm_movement_internationalist
+					has_ideology = ideology:ideology_bpm_movement_paternalist
+				}
+			}
+			remove_ideology = ideology_bpm_movement_nationalist
+			remove_ideology = ideology_bpm_movement_internationalist
+			remove_ideology = ideology_bpm_movement_paternalist
+
+		}
+
+		if = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_trade_unions
+					is_interest_group_type = ig_intelligentsia
+					is_interest_group_type = ig_petty_bourgeoisie
+					is_interest_group_type = ig_rural_folk
+					is_interest_group_type = ig_industrialists
+					is_interest_group_type = ig_liberals
+					is_interest_group_type = ig_conservatives
+					is_interest_group_type = ig_landowners
+					is_interest_group_type = ig_national_liberals
+				}
+			}
+			bpm_add_laissez_faire_trait = yes
+		}
+		else_if = {
+			limit = {
+				has_ideology = ideology:ideology_bpm_movement_laissez_faire
+			}
+			remove_ideology = ideology_bpm_movement_laissez_faire
+		}
+	}
+
+
+}

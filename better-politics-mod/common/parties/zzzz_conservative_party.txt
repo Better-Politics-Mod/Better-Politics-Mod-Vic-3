@@ -1,4 +1,4 @@
-﻿# Bastion of the Landowners
+# Bastion of the Landowners
 # Can also appeal to the Devout, PB, and Industrialists
 
 conservative_party = {
@@ -17,6 +17,17 @@ conservative_party = {
 				trigger = {
 					exists = c:WUR
 					THIS = c:WUR
+				}
+			}
+			triggered_desc = {
+				desc = party_the_right
+				trigger = {
+					OR = {
+						THIS ?= c:FRM
+						THIS ?= c:HAM
+						THIS ?= c:LUB
+						THIS ?= c:BRE
+					}
 				}
 			}
 			triggered_desc = {
@@ -57,7 +68,7 @@ conservative_party = {
 				}
 			}
 			triggered_desc = {
-				desc = party_us_democrats
+				desc = party_conservative_usa
 				trigger = {
 					exists = c:USA
 					THIS = c:USA
@@ -75,6 +86,28 @@ conservative_party = {
 				trigger = {
 					exists = c:FSA
 					THIS = c:FSA
+				}
+			}
+			triggered_desc = {
+				desc = party_conservative_que
+				trigger = {
+					OR = {
+						AND = {
+							exists = c:QUE
+							THIS = c:QUE
+						}
+						AND = {
+							exists = c:QUP
+							THIS = c:QUP
+						}
+					}
+				}
+			}
+			triggered_desc = {
+				desc = party_tory_can
+				trigger = {
+					exists = c:ONT
+					THIS = c:ONT
 				}
 			}
 			triggered_desc = {
@@ -119,10 +152,12 @@ conservative_party = {
 					THIS = c:LUX
 				}
 			}
+			
 			triggered_desc = {
 				desc = party_conservative_ast
 				trigger = {
 					country_has_primary_culture = cu:australian
+					exists = c:NZL
 					NOT = {THIS = c:NZL}
 				}
 			}
@@ -280,9 +315,10 @@ conservative_party = {
 				}
 			}
 			triggered_desc = {
-				desc = party_liberal_conservative_party
+				desc = party_conservative_can
 				trigger = {
-					country_has_primary_culture = cu:anglo_canadian
+					exists = c:CAN
+					THIS = c:CAN
 				}
 			}
 			triggered_desc = {
@@ -325,7 +361,7 @@ conservative_party = {
 		always = yes
 	}
 	available_for_interest_group = {
-		bpm_ig_enabled = yes
+		bpm_interest_group_is_activated = yes
 		NOT = { bpm_is_party_banned = { PARTY = conservative_party } }
 		owner = {
 			country_has_voting_franchise = yes
@@ -354,7 +390,10 @@ conservative_party = {
 		}
 		if = {
 			limit = {
-				owner = { has_variable = bpm_party_establishment_conservative }
+				owner = {
+					is_player = yes
+					has_variable = bpm_party_establishment_conservative
+				}
 				NOR = {
 					bpm_ig_is_radical_opposition = yes
 					bpm_ig_is_very_radical_opposition = yes
@@ -852,6 +891,15 @@ conservative_party = {
 				desc = "bpm_from_absent_conservatives"
 			}
 		}
+		if = { # Colonial gov economy in colony
+			limit = {
+				bpm_ig_is_colonialist = yes
+			}
+			add = {
+				value = 20
+				desc = "bpm_from_colonialist"
+			}
+		}
 
 		# ===========================================================================
 		# Hardcoded party affiliation
@@ -882,7 +930,9 @@ conservative_party = {
 				limit = {
 					OR = {
 						is_interest_group_type = ig_reactionaries
-						is_interest_group_type = ig_trade_unions
+					}
+					NOT = {
+						owner = { has_law = law_type:law_council_republic }
 					}
 				}
 				add = {
@@ -912,6 +962,12 @@ conservative_party = {
 					if = { 
 						limit = {
 							OR = {
+								AND = {
+									is_interest_group_type = ig_trade_unions
+									NOT = {
+										owner = { has_law = law_type:law_council_republic }
+									}
+								}
 								is_interest_group_type = ig_market_liberals
 								is_interest_group_type = ig_socialists
 								is_interest_group_type = ig_petty_bourgeoisie
@@ -948,9 +1004,16 @@ conservative_party = {
 				if = {
 					limit = { 
 						OR = {
+							AND = {
+								is_interest_group_type = ig_trade_unions
+								NOT = {
+									owner = { has_law = law_type:law_council_republic }
+								}
+							}
 							is_interest_group_type = ig_rural_folk
 							is_interest_group_type = ig_market_liberals
 							is_interest_group_type = ig_petty_bourgeoisie
+							is_interest_group_type = ig_national_liberals
 						}
 					}
 					add = {
@@ -959,10 +1022,81 @@ conservative_party = {
 					}
 				}
 			}
+			# Third Party System, from Civil War to Reconstruction
+			else_if = {
+				limit = {
+					owner = { 
+						NOT = { has_variable = bpm_2nd_party_system }
+						has_global_variable = american_civil_war
+						NOT = { has_variable = bpm_spoils_aftermath }
+					}
+				}
+				if = {
+					limit = { 
+						OR = {
+							AND = {
+								is_interest_group_type = ig_trade_unions
+								NOT = {
+									owner = { has_law = law_type:law_council_republic }
+								}
+							}
+							is_interest_group_type = ig_rural_folk
+							is_interest_group_type = ig_market_liberals
+							is_interest_group_type = ig_petty_bourgeoisie
+							AND = {
+								owner = { has_variable = bpm_rec_libparty }
+								is_interest_group_type = ig_national_liberals
+							}
+						}
+					}
+					add = {
+						value = 25
+						desc = "bpm_third_party_system"
+					}
+				}
+			}
+			# Third Party System, after Spoils Debate
+			else_if = {
+				limit = {
+					owner = { 
+						NOT = { has_variable = bpm_2nd_party_system }
+						has_variable = bpm_spoils_aftermath
+					}
+				}
+				if = {
+					limit = { 
+						OR = {
+							AND = {
+								is_interest_group_type = ig_trade_unions
+								NOT = { owner = { has_law = law_type:law_council_republic } }
+								NOT = { owner = { has_variable = bpm_solidarity_knights_of_labor } }
+							}
+							AND = {
+								is_interest_group_type = ig_rural_folk
+								NOT = { owner = { has_variable = bpm_solidarity_national_grange } }
+							}
+							is_interest_group_type = ig_market_liberals
+							is_interest_group_type = ig_petty_bourgeoisie
+							AND = {
+								owner = { NOT = { has_variable = bpm_spoils_stalwart } }
+								is_interest_group_type = ig_radicals
+							}
+							AND = {
+								owner = { NOT = { has_variable = bpm_spoils_liberal } }
+								is_interest_group_type = ig_national_liberals
+							}
+						}
+					}
+					add = {
+						value = 25
+						desc = "bpm_third_party_system"
+					}
+				}
+			}
 		}
-
+		
 		# FRA
-		else_if = {
+		if = {
 			limit = { owner = { country_has_primary_culture = cu:french } }
 			if = { # arbitrary weight for Bonapartists to be in the right party
 				limit = { is_interest_group_type = ig_national_liberals }
@@ -1022,6 +1156,29 @@ conservative_party = {
 				add = {
 					value = -50
 					desc = "from_monarchist"
+				}
+			}
+		}
+		# BIC
+		else_if = {
+			limit = { owner = { owner = c:BIC } }
+			if = {
+				limit = {
+					owner = {
+						any_primary_culture = { 
+							cu:british = this
+						}
+					}
+					OR = {
+						is_interest_group_type = ig_industrialists
+						is_interest_group_type = ig_market_liberals
+						is_interest_group_type = ig_armed_forces
+						is_interest_group_type = ig_reactionaries
+					}
+				}
+				add = {
+					value = 50
+					desc = "bpm_from_colonialist"
 				}
 			}
 		}

@@ -17,40 +17,37 @@
 		ideology_land_reformer
 		ideology_reformer
 		ideology_positivist
+		ideology_utilitarian_leader
 	}
 
 	enable = {
-		owner = {
-			NOT = { is_country_type = decentralized }
-			has_variable = local_marlib_split_var
-		}	
+		always = yes
 	}
 	
 	on_enable = {
 		ig:ig_market_liberals ?= {
-			# set_ig_trait = ig_trait:ig_trait_urban_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_urban_well_oiled_machine
-			set_ig_trait = ig_trait:ig_trait_urban_systematic_opposition
+			# #set_ig_trait = ig_trait:ig_trait_urban_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_urban_well_oiled_machine
+			#set_ig_trait = ig_trait:ig_trait_urban_systematic_opposition
 		}
-		if = {
-			limit = {
-				ig:ig_market_liberals ?= { has_ideology = ideology:ideology_nonexistent }
+
+	}
+	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
 			}
-			bpm_initialize_marlibs = yes
-			if = {
-				limit = {
-					exists = c:GBR
-					this = c:GBR
-				}
-				ig:ig_industrialists ?= { 
-					leader = {
-						remove_variable = conservative_party_leader
-					}
-				}
+			cultures = {
+				british scottish irish
 			}
 		}
 	}
-	on_disable = {}
+
 	on_character_ig_membership = {}
 	
 	pop_potential = {
@@ -64,6 +61,7 @@
 					NOT = {
 						has_ideology = ideology:ideology_nonexistent
 					}
+					bpm_interest_group_is_activated = yes
 				}
 			}
 		}
@@ -90,7 +88,7 @@
 			limit = { is_pop_type = capitalists }
 			add = {
 				desc = "POP_CAPITALISTS"
-				value = 195
+				value = 150
 			}
 		}
 		else_if = {
@@ -119,15 +117,79 @@
 					NOT = { is_pop_type = clergymen }
 				}
 				add = {
-					value = 80
+					value = 50
 					desc = "URBAN_MIDDLE_CLASS"
 				}
 			}
 			else_if = {
 				limit = { strata = upper }
 				add = {
-					value = 60
+					value = 30
 					desc = "URBAN_UPPER_CLASS"
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					c:BIC ?= this
+				}
+				culture = {
+					has_discrimination_trait = european_heritage
+				}
+				OR = {
+					strata = upper
+					strata = middle
+				}
+				NOT = {
+					is_pop_type = officers
+				}
+			}
+			add = {
+				desc = "POP_INDIA_EUROPEAN_ADMINISTRATORS"
+				value = 1000 #250
+			}
+		}
+		
+		if = {
+			limit = {
+				owner = {
+					c:BIC ?= this
+				}
+			}
+			if = {
+				limit = {
+					NOT = {
+						culture = {
+							has_discrimination_trait = european_heritage
+						}
+					}
+					OR = {
+						is_pop_type = bureaucrats
+						is_pop_type = clerks
+					}
+				}
+				add = {
+					desc = "POP_INDIA_NATIVE_ADMINISTRATORS"
+					value = 100 #25
+				}
+			}
+			else_if = {
+				limit = {
+					NOT = {
+						culture = {
+							has_discrimination_trait = european_heritage
+						}
+					}
+					NOR = {
+						is_pop_type = bureaucrats
+						is_pop_type = clerks
+					}
+				}
+				multiply = {
+					desc = "POP_INDIA_ADMINISTRATION_PRIVILEGES"
+					value = 0.5 #0.05
 				}
 			}
 		}
@@ -144,7 +206,7 @@
 							state = { is_slave_state = no }
 						}
 					}
-					value = 100
+					value = 50
 				}
 			}
 			multiply = {
@@ -216,6 +278,18 @@
 		value = 1.0
 		multiply = bpm_female_character_spawn_chance		
 	}
+
+	agitator_weight = {
+		value = 1.0
+		multiply = owner.ig:ig_market_liberals.bpm_base_agitator_weight
+		if ={
+			limit = {
+				owner.ig:ig_market_liberals = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}
+	
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes
 	# scope:character is the most popular commander in the IG

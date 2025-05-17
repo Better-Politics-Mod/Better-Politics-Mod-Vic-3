@@ -68,18 +68,15 @@ grant_leadership_to_agitator = {
 		interest_group = {
 			is_in_government = yes
 		}
+		character_acceptance = { target = scope:actor value >= acceptance_status_3 }
 		trigger_if = {
 			limit = { owner = { has_law = law_type:law_state_atheism } }
-			NOT = { culture = { culture_is_discriminated_in = root.owner } }
 			NOR = {
 				has_ideology = ideology:ideology_theocrat
 				has_ideology = ideology:ideology_integralist
 				has_ideology = ideology:ideology_traditionalist
 			}
 		}
-		trigger_else = {
-			character_is_discriminated = no
-		}		
 		OR = {
 			is_female = no
 			scope:actor ?= { has_law = law_type:law_womens_suffrage }
@@ -235,7 +232,7 @@ exile_character = {
 		OR = {
 			has_role = agitator
 			interest_group = {
-				is_marginal = no
+				bpm_ig_is_marginal = no
 				is_in_government = no
 				is_insurrectionary = no
 			}
@@ -330,7 +327,7 @@ exile_character = {
 				remove_character_role = politician
 			}
 		}
-		owner = {
+		owner ?= {
 			custom_tooltip = exiling_dissident_radicals_factors
 		}
 		# Extra radical from exiling a popular character
@@ -338,7 +335,7 @@ exile_character = {
 			limit = {
 				popularity >= 50
 			}
-			owner = {
+			owner ?= {
 				add_radicals = {
 					value = small_radicals
 					interest_group = scope:relevant_ig
@@ -348,9 +345,9 @@ exile_character = {
 		# Standard radicals from having Right of Assembly
 		if = {
 			limit = {
-				owner = { has_law = law_type:law_right_of_assembly }
+				owner ?= { has_law = law_type:law_right_of_assembly }
 			}
-			owner = {
+			owner ?= {
 				add_radicals = {
 					value = medium_radicals
 					interest_group = scope:relevant_ig
@@ -360,9 +357,9 @@ exile_character = {
 		# Fewer radicals from Censorship
 		else_if = {
 			limit = {
-				owner = { has_law = law_type:law_censorship }
+				owner ?= { has_law = law_type:law_censorship }
 			}
-			owner = {
+			owner ?= {
 				add_radicals = {
 					value = small_radicals
 					interest_group = scope:relevant_ig
@@ -509,19 +506,33 @@ invite_exile = {
 	# icon = ""
 	clicksound = "event:/SFX/DLC/1.3_ip1/UI/character_invite"
 
+	should_ai_evaluate = {
+		bpm_performance_significant_country = yes
+		empty_agitator_slots >= 1
+	}
+
 	potential = {
 		is_in_exile_pool = yes
 	}
 
 	show_requirements = yes
 
+	ai_considers_exiles = yes
+
 	possible = {
+		# scope:actor ?= {
+		# 	empty_agitator_slots >= 1
+		# 	bpm_performance_significant_country = yes
+		# 	NOT = { has_law = law_type:law_closed_borders }
+		# }
 		scope:actor ?= {
 			bpm_performance_significant_country = yes
-			NOT = { has_law = law_type:law_closed_borders }
 			empty_agitator_slots >= 1
+			NOT = { has_law = law_type:law_closed_borders }
 		}
-		NOT = { has_variable = bpm_untouchable_char }
+		hidden_trigger = {
+			NOT = { has_variable = bpm_untouchable_char }
+		}
 
 		# Only popular individuals need apply
 		popularity > 15
@@ -549,12 +560,12 @@ invite_exile = {
 			}
 		}
 
-		# cannot invite culturally discriminated exiles
-		NOT = {
-			culture = {
-				culture_is_discriminated_in = scope:actor
-			}
-		}
+		# # cannot invite culturally discriminated exiles
+		# NOT = {
+		# 	culture = {
+		# 		culture_is_discriminated_in = scope:actor
+		# 	}
+		# }
 
 		trigger_if = {
 			limit = { is_interest_group_type = ig_socialists }
@@ -584,6 +595,12 @@ invite_exile = {
 			limit = { is_interest_group_type = ig_fascists }
 			scope:actor ?= { exists = ig:ig_fascists }
 		}
+
+		# cannot invite culturally discriminated exiles
+		character_acceptance = { target = scope:actor value >= acceptance_status_3 }
+
+		# Agitator must be able to start or join a movement
+		can_agitate = scope:actor
 	}
 
 	effect = {
@@ -742,7 +759,7 @@ arrange_accident = {
 			has_law = law_type:law_secret_police
 		}
 		interest_group = {
-			is_marginal = no
+			bpm_ig_is_marginal = no
 		}
 	}
 
@@ -792,7 +809,7 @@ arrange_accident = {
 					owner = {
 						random_political_movement = {
 							limit = {
-								any_supporting_interest_group = {
+								any_influenced_interest_group = {
 									this = scope:relevant_ig
 								}
 							}
@@ -934,7 +951,7 @@ resign_from_office = {
 				ig_approval <= angry
 			}
 			interest_group = {
-				is_marginal = yes
+				bpm_ig_is_marginal = yes
 			}
 			popularity <= -50
 			OR = {
@@ -987,7 +1004,7 @@ resign_from_office = {
 		if = {
 			limit = {
 				interest_group = {
-					is_marginal = yes
+					bpm_ig_is_marginal = yes
 				}				
 			}
 			add = 25

@@ -1,4 +1,88 @@
-﻿bpm_law_sway_maneuvers_value = {
+﻿bpm_law_enactment_movement_pressure = {
+	value = 0
+	add = bpm_law_enactment_movement_pressure_support
+	round = yes
+}
+
+# Total Support
+bpm_law_enactment_movement_pressure_support = {
+	value = 0
+	every_political_movement = {
+		if = {
+			limit = { bpm_movement_supports_enacting_current_law = yes }
+			add = bpm_law_enactment_movement_pressure_value
+		}
+	}
+}
+
+bpm_adjusted_movement_radicalism = {
+	value = political_movement_radicalism
+	if = {
+		limit = {
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value = approve
+			}
+		}
+		add = 0.2
+	}
+	else_if = {
+		limit = {
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value = strongly_approve
+			}
+		}
+		add = 0.4
+	}
+}
+
+bpm_law_enactment_movement_pressure_value = {
+	value = {
+		value = political_movement_support
+		multiply = 100
+		desc = "bpm_from_movement_support"
+	}
+	if = {
+		limit = {
+			bpm_adjusted_movement_radicalism > define:NPolitics|RADICALISM_AGITATING_THRESHOLD
+		}
+		multiply = {
+			value = 2
+			desc = "bpm_from_movement_activism"
+		}
+	}
+	else_if = {
+		limit = {
+			bpm_adjusted_movement_radicalism > define:NPolitics|RADICALISM_PROTESTING_THRESHOLD
+		}
+		multiply = {
+			value = 3
+			desc = "bpm_from_movement_activism"
+		}
+	}
+	else_if = {
+		limit = {
+			bpm_adjusted_movement_radicalism > define:NPolitics|RADICALISM_MILITANT_THRESHOLD
+		}
+		multiply = {
+			value = 5
+			desc = "bpm_from_movement_activism"
+		}
+	}
+	round = yes
+}
+
+bpm_number_of_supporting_movements = {
+	value = 0
+	every_political_movement = {
+		limit = { bpm_movement_supports_enacting_current_law = yes }
+		add = 1
+	}
+}
+
+
+bpm_law_sway_maneuvers_value = {
 	value = 0
 	if = {
 		limit = { has_variable = bpm_law_sway_maneuvers }
@@ -19,7 +103,7 @@ bpm_ig_law_support_total_value = {
 				NOT = {
 					owner = {
 						any_political_movement = {
-							is_revolutionary_movement = yes
+							is_revolutionary = yes
 							law_stance = {
 								law = prev.currently_enacting_law.type
 								value > approve
@@ -49,18 +133,9 @@ bpm_ig_law_support_total_value = {
 			}
 		}
 
-		if = {
-			limit = {
-				owner = { 
-					any_political_movement = { movement_supports_enaction = yes }
-				 }
-				has_variable = bpm_ig_enacting_law_change_steps
-				var:bpm_ig_enacting_law_change_steps > 0
-			}
-			add = {
-				value = 20
-				desc = "bpm_ig_law_support_from_movement"
-			}
+		add = {
+			value = owner.bpm_law_enactment_movement_pressure
+			desc = "bpm_ig_law_support_from_movement"
 		}
 		else_if = {
 			limit = {
@@ -383,22 +458,21 @@ bpm_law_enactment_hog_approval = {
 			}
 		}
 	}
+
+
 	# Insurrection: 20
 	# Movement: 10
+	add = {
+		value = owner.bpm_law_enactment_movement_pressure
+		desc = "bpm_ig_law_support_from_movement"
+	}
 	if = {
-		limit = { any_political_movement = { movement_supports_enaction = yes } }
-		add = {
-			value = 10
-			desc = "bpm_ruler_law_support_from_movement"
+		limit = {
+			has_variable = bpm_law_enactment_desired_by_revolution
 		}
-		if = {
-			limit = {
-				has_variable = bpm_law_enactment_desired_by_revolution
-			}
-			add = {
-				desc = "bpm_ruler_law_support_from_insurrection"
-				value = 15
-			}
+		add = {
+			desc = "bpm_ruler_law_support_from_insurrection"
+			value = 15
 		}
 	}
 	ruler ?= {
@@ -550,12 +624,12 @@ bpm_law_enactment_ruler_approval = {
 	}
 	# Insurrection: 20
 	# Movement: 10
+	add = {
+		value = owner.bpm_law_enactment_movement_pressure
+		desc = "bpm_ig_law_support_from_movement"
+	}
 	if = {
 		limit = { any_political_movement = { movement_supports_enaction = yes } }
-		add = {
-			value = 10
-			desc = "bpm_ruler_law_support_from_movement"
-		}
 		if = {
 			limit = {
 				has_variable = bpm_law_enactment_desired_by_revolution
@@ -812,7 +886,7 @@ bpm_law_enactment_non_marginal_votes = {
 		limit = { is_player = yes }
 		every_interest_group = {
 			limit = {
-				is_marginal = no
+				bpm_ig_is_marginal = no
 			}
 			add = {
 				value = ig_clout
@@ -828,7 +902,7 @@ bpm_law_enactment_yea_votes = {
 		limit = { is_player = yes }
 		every_interest_group = {
 			limit = {
-				is_marginal = no
+				bpm_ig_is_marginal = no
 				bpm_ig_law_support_total_value > 0
 			}
 			add = {
@@ -845,7 +919,7 @@ bpm_law_enactment_nay_votes = {
 		limit = { is_player = yes }
 		every_interest_group = {
 			limit = {
-				is_marginal = no
+				bpm_ig_is_marginal = no
 				bpm_ig_law_support_total_value <= 0
 			}
 			add = {

@@ -469,6 +469,227 @@
 		}
 	}
 
+	### PARTIES AND IG LIST DETAILS
+	type parties_and_ig_list_details_government = vbox {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = preferred
+		name = "tutorial_highlight_interest_group"
+		margin_top = 5
+		spacing = 15
+
+		### PARTIES
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+			block "datamodel" {}
+			spacing = 0
+			
+			item = {
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = preferred
+					
+					background = {
+						using = simple_frame
+					}
+					
+					block "move_to_government_button_party" {
+						button_icon_move_left = {
+							enabled = "[Party.CanJoinGovernment]"
+							visible = "[GetVariableSystem.Exists('reform_government')]"
+							layoutpolicy_vertical = expanding
+							size = { 35 0 }
+							onclick = "[ReformGovernment.StageParty(Party.AccessSelf)]"
+							tooltip = "[Party.GetCanJoinGovernmentDesc]"
+							
+							blockoverride "icon_size" {
+								size = { 35 90 }
+							}
+						}
+					}
+					
+					vbox = {
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = preferred
+					
+						# party header
+						hbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = preferred
+							spacing = 0
+							margin = { 10 0 }
+							
+							background = {
+								texture = "gfx/interface/tooltip/tooltip_title_bg.dds"
+								color = "[Party.GetColor]"
+								alpha = 0.45
+								mirror = horizontal
+								
+								modify_texture = {
+									using = texture_velvet
+								}
+							}
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								#hbox = {
+								#	size = { 100 -1 }
+								#	textbox = {
+								#		#margin = { 10 0 }
+								#		#size = { 0 40 }
+								#		raw_text = "#bold Establishment #! #v [GetPlayer.MakeScope.Var(Concatenate('bpm_party_establishment_', Party.GetCustom('bpm_party_name'))).GetValue]#! ([GetPlayer.MakeScope.Var(Concatenate('bpm_party_establishment_cached_trend_', Party.GetCustom('bpm_party_name'))).GetValue])"
+								#		layoutpolicy_horizontal = expanding
+								#		align = left|nobaseline
+								#		block "highlight_name" {}
+								#		#elide = right
+								#		using = fontsize_medium
+								#	}
+								#}
+								layoutpolicy_horizontal = expanding
+								spacing = 10
+								#hbox = {
+								#	tooltip = "[Party.MakeScope.GetScriptValueDesc('bpm_party_establishment_trend')]"
+								#	block "text" {
+								#		textbox = {
+
+								#			autoresize = yes
+								#			raw_text = "[Concept('concept_bpm_party_establishment', 'Establishment')]:"
+								#			align = left|nobaseline
+								#			elide = right
+								#		}
+								#		textbox = {
+								#			autoresize = yes
+								#			size = { 0 20 }
+								#			raw_text = "#variable [GetPlayer.MakeScope.Var(Concatenate('bpm_party_establishment_', Party.GetCustom('bpm_party_name'))).GetValue|v1] #!"
+								#			align = left|nobaseline
+								#			elide = right
+								#		}
+								#		textbox = {
+								#			layoutpolicy_horizontal = expanding
+								#			size = { 0 20 }
+								#			raw_text = "(#variable [GetPlayer.MakeScope.Var(Concatenate('bpm_party_establishment_cached_trend_', Party.GetCustom('bpm_party_name'))).GetValue|+=d1] #!/month)"
+								#			align = left|nobaseline
+								#			elide = right
+								#		}
+								#	}
+								#}
+
+								##expand = {}
+
+								#expand = {
+								#	size = { 60% 100% }
+								#}
+								
+								textbox = {
+									margin = { 10 0 }
+									#layoutpolicy_horizontal = expanding
+									size = { 0 40 }
+									raw_text = "#v [Party.GetName]#!"
+									layoutpolicy_horizontal = expanding
+									align = right|nobaseline
+									block "highlight_name" {}
+									#elide = right
+									using = fontsize_large
+								}
+							}
+
+							icon = {
+								texture = "[Party.GetIcon]"
+								size = { 32 32 }
+							}
+						}
+						
+						# igs inside the party
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = preferred
+							datamodel = "[Party.GetMembers]"
+							
+							item = {
+								ig_item_details = {
+									visible = "[InterestGroup.IsInGovernment]"
+									blockoverride "move_to_government_button" {}
+									blockoverride "move_to_opposition_button" {}
+								}
+							}
+						}
+					}
+				
+					block "move_to_opposition_button_party" {
+						button_icon_move_right = {
+							visible = "[GetVariableSystem.Exists('reform_government')]"
+							layoutpolicy_vertical = expanding
+							size = { 35 0 }
+							onclick = "[ReformGovernment.UnstageParty(Party.AccessSelf)]"
+							
+							blockoverride "icon_size" {
+								size = { 35 90 }
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		### IGs without parties
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+			block "datamodel_independent_igs" {}
+			
+			item = {
+				ig_item_details = {
+					visible = "[InterestGroup.IsInGovernment]"
+				}
+			}
+		}
+		
+		block "marginal_igs" {
+			### MARGINAL IGs
+			section_header_button = {
+				name = "tutorial_highlight_marginalized_title"
+				visible = "[Not(IsDataModelEmpty(AccessPlayer.AccessMarginalInterestGroups))]"
+				
+				blockoverride "layout" {
+					size = { 0 38 }
+					layoutpolicy_horizontal = expanding
+				}
+				blockoverride "left_text" {
+					text = "MARGINAL_TITLE_ACCORDION"
+				}
+
+				blockoverride "onclick" {
+					onclick = "[GetVariableSystem.Toggle('marginalized_igs_expanded')]"
+				}
+				
+				blockoverride "onclick_showmore" {
+					visible = "[Not(GetVariableSystem.Exists('marginalized_igs_expanded'))]"
+				}
+
+				blockoverride "onclick_showless" {
+					visible = "[GetVariableSystem.Exists('marginalized_igs_expanded')]"
+				}
+			}
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = preferred
+				visible = "[GetVariableSystem.Exists('marginalized_igs_expanded')]"
+				datamodel = "[AccessPlayer.AccessMarginalInterestGroups]"
+				
+				item = {
+					ig_item_details = {
+						visible = "[InterestGroup.IsInGovernment]"
+					}
+				}
+			}
+		}
+		
+		widget = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+		}
+	}
+
 	### IG ITEM DETAILS
 	type ig_item_details = vbox {
 		layoutpolicy_horizontal = expanding
@@ -891,10 +1112,91 @@
 								}
 							}
 							hbox = {
+								visible = "[And(Country.MakeScope.Var('bpm_negotiation_banner_visible').IsSet, Not(InterestGroup.IsMarginal))]"
+								tooltip = "[InterestGroup.MakeScope.GetScriptValueDesc('bpm_negotiation_support')]"
+								textbox = {
+									margin_right = 5
+									autoresize = yes
+									align = nobaseline|left
+									text = "#v Support#!"
+								}
+								icon = {
+									#visible = "[GreaterThan_CFixedPoint(InterestGroup.MakeScope.ScriptValue('bpm_ig_law_support_total_value'), '(CFixedPoint)0')]"
+									texture = "gfx/interface/icons/generic_icons/approval_icon.dds"
+									size = { 24 24 }
+								}
+								#icon = {
+								#	visible = "[LessThanOrEqualTo_CFixedPoint(InterestGroup.MakeScope.ScriptValue('bpm_ig_law_support_total_value'), '(CFixedPoint)0')]"
+								#	texture = "gfx/interface/icons/generic_icons/disapproval_icon.dds"
+								#	size = { 24 24 }
+								#}
+								widget = {
+									size = { 5 5 }
+								}
+								textbox = {
+									# margin_left = 5
+									autoresize = yes
+									minimumsize = { 40 0 }
+									layoutpolicy_horizontal = growing
+									align = nobaseline|right
+									tooltip = "[InterestGroup.MakeScope.GetScriptValueDesc('bpm_negotiation_support_raw')]"
+									raw_text = "#v ([InterestGroup.MakeScope.ScriptValue('bpm_negotiation_support')|v0=+])#!"
+								}
+								widget = {
+									parentanchor = top
+									size = { 100 23 }
+									button_icon_square = {
+										parentanchor = center
+										tooltip = "bpm_show_hide_law_sways_tooltip"
+										size = { 90 30 }
+										hbox = {
+											visible = "[Not(GetVariableSystem.Exists(Concatenate('show_law_sways_', InterestGroup.GetName)))]"
+											parentanchor = center
+											expand = {}
+											icon = {
+												texture = "gfx/interface/buttons/button_icons/plus.dds"
+												size = { 23 23 }
+												# parentanchor = left
+											}
+											textbox = {
+												autoresize = yes
+												text = "Sway"
+												# parentanchor = center
+												align = nobaseline
+												margin_right = 5
+											}
+											expand = {}
+										}
+										hbox = {
+											visible = "[GetVariableSystem.Exists(Concatenate('show_law_sways_', InterestGroup.GetName))]"
+											parentanchor = center
+											expand = {}
+											icon = {
+												texture = "gfx/interface/buttons/button_icons/minus.dds"
+												size = { 23 23 }
+												# parentanchor = left
+											}
+											textbox = {
+												autoresize = yes
+												text = "bpm_button_sways"
+												# parentanchor = center
+												align = nobaseline
+												margin_right = 5
+											}
+											expand = {}
+										}
+										blockoverride "frame_visible" {
+											visible = no
+										}
+										onclick = "[GetVariableSystem.Toggle(Concatenate('show_law_sways_', InterestGroup.GetName))]"
+									}
+								}
+							}
+							hbox = {
 								spacing = 5
+								visible = "[Or(Not(Or(Country.IsEnactingLaw, Country.MakeScope.Var('bpm_negotiation_banner_visible').IsSet)), InterestGroup.IsMarginal)]"
 								hbox = {
 									spacing = 5
-									visible = "[Or(Not(Country.IsEnactingLaw), InterestGroup.IsMarginal)]"
 									direction = horizontal
 									name = "ideologies_box1"
 									datamodel = "[InterestGroup.AccessIntrinsicIdeologies]"
@@ -1028,7 +1330,6 @@
 								### IDEOLOGIES
 								hbox = {
 									spacing = 5
-									visible = "[Or(Not(Country.IsEnactingLaw), InterestGroup.IsMarginal)]"
 									name = "ideologies_box2"
 									datamodel = "[InterestGroup.AccessIntrinsicIdeologies]"
 									item = {

@@ -1,329 +1,79 @@
 ig_christian_democrats = {
 	color = hsv{ 0.52 0.85 1.0 }
-	texture = "gfx/interface/icons/ig_icons/conservatives.dds"	
+	texture = "gfx/interface/icons/ig_icons/christian_democrats.dds"	
 	layer = "revolution_dynamic_rural_folk"
 	index = 8
 
 	ideologies = {
 		ideology_nonexistent
 	}
-
-	character_ideologies = {
-		ideology_center_leader
-		ideology_positivist
-		ideology_protectionist
-		ideology_sovereignist_leader
-		ideology_liberal_leader
-		ideology_corporatist_leader
-		ideology_reformer
-	}
 	
 	enable = {
-		always = yes
+		owner = {
+			trigger_if = {
+				limit = {
+					OR = {
+						is_secessionist = yes
+						is_revolutionary = yes
+					}
+				}
+				civil_war_origin_country = {
+					exists = ig:ig_christian_democrats
+				}
+			}
+			trigger_else = {
+				NOT = { is_country_type = decentralized }
+				has_variable = local_christ_dems
+			}
+		}
 	}
 	
 	on_enable = {
 		ig:ig_christian_democrats ?= {
-			# set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
-			set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
+			# #set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_right_bastion_of_freedom
+			#set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
 		}
-		if = {
-			limit = {
-				NOT = {
-					country_has_state_religion = rel:catholic
-				}	
-			}
-			ig:ig_christian_democrats ?= {
-				set_interest_group_name = ig_catholic_interests
-			}
-		}
+        if = { 
+            limit = { 
+                ig:ig_christian_democrats ?= { has_ideology = ideology:ideology_nonexistent }
+            }
+            bpm_initialize_christdems = yes
+        }
 	}
-
-	on_character_ig_membership = {
-		if = {
-			limit = {
-				owner = { 
-					religion_percent_country = { 
-						target = rel:catholic
-						value <= 1.0
-					}
-				}
-			}
-			change_character_religion = rel:catholic
-		}
-		else_if = {
-			limit = {
-				NOT = {
-					owner = {
-						has_law = law_type:law_state_atheism
-					}
-				}
-			}
-			change_character_religion = scope:interest_group.owner.religion
-		}
-		else = {
-			change_character_religion = scope:interest_group.owner.country_definition.religion
-		}
-	}
-
 	on_disable = {}	
+	on_character_ig_membership = {}
 	
 	pop_potential = {
-		has_pop_religion = catholic
-		owner = {
-			ig:ig_christian_democrats = {
-				bpm_interest_group_is_activated = yes
-			}
+		NOT = {
+            has_pop_religion = atheist
 		}
-		custom_tooltip = {
-			text = BPM_VALID_POP_FOR_IG
-			owner = {
-				NOT = { is_country_type = decentralized }
-				exists = ig:ig_christian_democrats
-				ig:ig_christian_democrats ?= { NOT = { has_ideology = ideology:ideology_nonexistent } }
-				ig:ig_christian_democrats = { bpm_interest_group_is_activated = yes }
+		owner = {
+			ig:ig_christian_democrats ?= {
+				NOT = { has_ideology = ideology:ideology_nonexistent }
 			}
 		}
 	}
 	
 	pop_weight = {
-		value = 35
+		value = 10	
 
-        # Attraction from being Catholic
+        #Attraction from being Catholic
         if = {
             limit = { 
                 has_pop_religion = catholic
-				owner = {
-					NOT = {
-						country_has_state_religion = rel:catholic
-					}
-				}
             }
             add = { 
                 desc = "Catholic"
-                value = 500
+                value = 100
             }
         }
-
-		else_if = {
-			limit = { 
-                has_pop_religion = catholic
-				owner = {
-					country_has_state_religion = rel:catholic
-				}
-            }
-
-			add = { 
-                desc = "Catholic"
-                value = 250
-            }
-		}
-		
-		if = {
-			limit = { is_pop_type = peasants }
-			add = {
-				desc = "POP_INCLUSIONS"
-				value = 25
-			}
-		}
-
-		else_if = {
-			limit = { 
-				is_pop_type = clergymen 
-			}
-			add = {
-				desc = "POP_CLERGYMEN"
-				value = 100
-			}
-		}
-
-		# URBAN EMPLOYMENT
-		if = {
-			limit = {
-				bpm_pop_employment_is_rural = no
-			}
-			add = {
-				value = 25
-				desc = "URBAN"
-			}
-			if = {
-				limit = {
-					strata = middle
-					NOT = { is_pop_type = clergymen }
-				}
-				add = {
-					value = 25
-					desc = "URBAN_MIDDLE_CLASS"
-				}
-			}
-			else_if = {
-				limit = { strata = upper }
-				add = {
-					value = 25
-					desc = "URBAN_UPPER_CLASS"
-				}
-			}
-		}
-
-		else_if = {
-			limit = {
-				owner = {
-					has_technology_researched = corporatism
-				}
-			}
-			if = {
-				limit = { 
-					OR = {
-						is_pop_type = laborers
-						is_pop_type = clerks
-						is_pop_type = machinists
-					}
-				}
-				add = {
-					desc = "POP_PROLETARIAT"
-					value = 25
-				}
-				add = {
-					desc = "POP_EDUCATED_PROLETARIAT"
-					value = literacy_rate
-					multiply = 20
-				}
-			}
-		}
-
-		if = {
-			limit = { 
-				bpm_pop_employment_is_rural = yes
-			}
-			add = {
-				desc = "RURAL"
-				value = 25
-			}
-			if = {
-				limit = {
-					owner = {
-						pop_type_percent_country = { 
-							pop_type = peasant
-							percent >= 0.4
-						}
-					}
-				}
-				multiply = {
-					desc = "BPM_RURAL_STATE"
-					value = 5
-				}
-			}
-		}
-
-		multiply = {
-			desc = "EDUCATED"
-			value = literacy_rate
-			multiply = 1.5
-			max = 1.0
-		}
-
-		if = {
-			limit = {
-				total_size > 1000
-				owner = { bpm_performance_significant_country = yes }
-			}
-			multiply = 0.125
-			if = {
-				limit = {
-					owner = {
-						has_variable = bpm_strong_labor 
-					}
-				}
-				multiply = {
-					desc = "BPM_STRONG_LABOR"
-					value = 6
-				}
-			}
-			else_if = {
-				limit = {
-					owner = {
-						has_variable = bpm_average_labor 
-					}
-				}
-				multiply = {
-					desc = "BPM_AVERAGE_LABOR"
-					value = 4
-				}
-			}
-
-			add = ig_attraction_tmp_bpm_non_rural_socialist
-			multiply = {
-				desc = "LEADER_POPULARITY"
-				scope:interest_group = {
-					leader = {
-						value = popularity
-						multiply = 0.01
-						add = 1
-						max = 2.0
-						min = 0.5
-					}
-				}
-			}	
-			multiply = bpm_ig_agitators_popularity
-			multiply = bpm_ig_ruler_popularity
-			multiply = {
-				desc = "DEVASTATED"	
-				value = 1.0
-	
-				if = {
-					limit = { 
-						state = {
-							devastation > 5
-						}
-					}
-					value = 1.5
-				}		
-			}
-			multiply = ig_attraction_from_radicals_and_loyalists
-		}
-		owner = {
-			#multiply = {
-			#	desc = "WEAK_UNIONS"
-			#	value = 1.0
-			#
-			#	if = {
-			#		limit = { 
-			#			NOT = { has_variable = bpm_country_has_established_unions_history_var }
-			#		}
-			#		value = 0.5
-			#	}		
-			#}
-			multiply = {
-				desc = "ESTABLISHED_UNIONS"	
-				value = 1.0
-
-				if = {
-					limit = { 
-						has_variable = bpm_country_has_powerful_unions_var
-					}
-					value = 1.25
-				}		
-			}
-			multiply = {
-				desc = "SPLIT_MORALISTS"
-				value = 1.0
-
-				if = {
-					limit = {
-						has_variable = local_christdem_split_var
-						has_variable = local_patcon_split_var
-					}
-					value = 0.9
-				}			
-			}
-		}
         #Attraction from being discriminated (see the efforts by Zentrum under Poles etc)
         add = {
 			desc = "POP_DISCRIMINATED"
 			if = {
 				limit = { 
-					pop_is_discriminated = yes
+					pop_acceptance >= acceptance_status_4
 				}
 				value = 20
 			}
@@ -342,7 +92,7 @@ ig_christian_democrats = {
                         }
                     }
                 }
-                value = 2.0
+                value = 1.8
             }
         }
         multiply = { #has researched corporatism
@@ -357,23 +107,23 @@ ig_christian_democrats = {
                 value = 1.2
             }
         }
-        #if = {
-		#	limit = { owner = { bpm_performance_significant_country = yes } }
-		#	multiply = {
-		#		desc = "LEADER_POPULARITY"
-		#		scope:interest_group = {
-		#			leader = {
-		#				value = popularity
-		#				multiply = 0.01
-		#				add = 1
-		#				max = 2.0
-		#				min = 0.5
-		#			}
-		#		}
-		#	}	
-		#	multiply = bpm_ig_agitators_popularity
-		#	multiply = bpm_ig_ruler_popularity
-        #}
+        if = {
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.01
+						add = 1
+						max = 2.0
+						min = 0.5
+					}
+				}
+			}	
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+        }
 	}
 	
 	monarch_weight = {

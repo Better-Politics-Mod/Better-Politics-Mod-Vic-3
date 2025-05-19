@@ -72,14 +72,11 @@ religious_party = {
 				}
 			}
 			triggered_desc = {
-				desc = party_zentrum
+				desc = party_centre_party
 				trigger = {
-					AND = {
-						OR = {
-							country_has_primary_culture = cu:north_german
-							country_has_primary_culture = cu:south_german
-						}
-						country_has_state_religion = rel:catholic
+					OR = {
+						country_has_primary_culture = cu:north_german
+						country_has_primary_culture = cu:south_german
 					}
 				}
 			}
@@ -165,10 +162,10 @@ religious_party = {
 	}
 	# THIS IS RUN ONLY ONCE AT GAME START
 	valid_for_country = {
-		always = no
+		always = yes
 	}
 	available_for_interest_group = {
-		always = no
+		always = yes
 	}
 	join_weight = {
 		value = {
@@ -349,20 +346,70 @@ religious_party = {
 				desc = "bpm_from_weak_conservative_ig"
 			}
 		}
-		if = { # devout more likely to join conservatives with total separation
+
+		if = {
 			limit = {
-				law_stance = {
-					law = law_type:law_total_separation
-					value < neutral
-				}
-				OR = {
-					owner = { has_law = law_type:law_total_separation }
-					owner = { has_law = law_type:law_state_atheism }
+				is_interest_group_type = ig_trade_unions
+				owner = {
+					country_has_state_religion = rel:catholic
 				}
 			}
 			add = {
-				value = 4
-				desc = "from_devout_separation"
+				value = 2
+				desc = "bpm_from_common_interests"
+			}
+		}
+
+		if = { # Christian Democrats don't like being with people who want them gone
+			limit = {
+				is_interest_group_type = ig_christian_democrats
+				owner = {
+					OR = {
+						NOT = {
+							country_has_state_religion = rel:catholic
+						}
+						AND = {
+							any_interest_group = {
+								OR = {
+									has_ideology = ideology:ideology_rel_moralist
+									has_ideology = ideology:ideology_rel_radical_moralist
+								}
+								OR = {
+									is_in_government = yes
+									is_powerful = yes
+								}
+							}
+							ig:ig_christian_democrats = {
+								has_ideology = ideology_rel_pragmatic_moralist
+							}
+						}
+					}
+				}
+			}
+			add = {
+				value = 50
+				desc = "bpm_from_being_oppresed"
+			}
+		}
+
+		if = { # nobody will join if the christdems don't join
+			limit = {
+				NOT = { is_interest_group_type = ig_christian_democrats }
+				OR = {
+					NOT = { exists = owner.py:religious_party }
+					AND = {
+						exists = owner.py:religious_party
+						owner = {
+							ig:ig_christian_democrats ?= {
+								NOT = { is_member_of_party = owner.py:religious_party }
+							}
+						}
+					}
+				}
+			}
+			add = {
+				value = -50
+				desc = "from_no_christdems_in_party" # this should probably never actually display in game because the party won't exist
 			}
 		}
 	}

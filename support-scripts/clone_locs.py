@@ -11,7 +11,6 @@ languages = [
     "japanese",
     "korean",
     "polish",
-    "russian",
     "simp_chinese",
     "spanish",
     "turkish",

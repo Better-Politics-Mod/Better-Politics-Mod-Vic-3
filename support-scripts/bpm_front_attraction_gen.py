@@ -8,7 +8,6 @@ def read_front_data():
 
 # map over each row
 def map_over_rows(df):
-    print("Mapping over rows")
     t = []
     t2 = []
     for index, row in df.iterrows():
@@ -38,7 +37,7 @@ bpm_front_attraction_dispatch_XXX = {
 """
         t.append(base_text)
 
-    with open("support-scripts/bpm_front_attraction_dispatch.txt", "w") as f:
+    with open("better-politics-mod/common/script_values/bpm_front_valgen.txt", "w") as f:
         f.write("\n".join(t))
 
 def handle_pair(key, value, isif=False):

@@ -1,44 +1,76 @@
 ﻿bpm_law_enactment_movement_pressure = {
 	value = 0
 	add = bpm_law_enactment_movement_pressure_support
-	add = bpm_law_enactment_movement_pressure_activism
-	multiply = 24
 	round = yes
 }
 
+# Total Support
 bpm_law_enactment_movement_pressure_support = {
 	value = 0
 	every_political_movement = {
 		if = {
 			limit = { bpm_movement_supports_enacting_current_law = yes }
-			add = {
-				value = political_movement_support
+			add = bpm_law_enactment_movement_pressure_value
+		}
+	}
+}
+
+bpm_adjusted_movement_radicalism = {
+	value = political_movement_radicalism
+	if = {
+		limit = {
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value = approve
 			}
 		}
+		add = 0.2
 	}
-	multiply = 3
+	else_if = {
+		limit = {
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value = strongly_approve
+			}
+		}
+		add = 0.4
+	}
 }
 
-bpm_law_enactment_movement_pressure_activism = {
-	value = bpm_law_enactment_movement_pressure_activism_total
+bpm_law_enactment_movement_pressure_value = {
+	value = {
+		value = political_movement_support
+		multiply = 100
+		desc = "bpm_from_movement_support"
+	}
 	if = {
-		limit = { bpm_number_of_movements > 0 }
-		divide = {
-			value = bpm_number_of_movements
-			min = 1
+		limit = {
+			bpm_adjusted_movement_radicalism > define:NPolitics|RADICALISM_AGITATING_THRESHOLD
+		}
+		multiply = {
+			value = 2
+			desc = "bpm_from_movement_activism"
 		}
 	}
-	divide = 2
-}
-
-bpm_law_enactment_movement_pressure_activism_total = {
-	value = 0
-	every_political_movement = {
-		limit = { bpm_movement_supports_enacting_current_law = yes }
-		add = {
-			value = political_movement_radicalism
+	else_if = {
+		limit = {
+			bpm_adjusted_movement_radicalism > define:NPolitics|RADICALISM_PROTESTING_THRESHOLD
+		}
+		multiply = {
+			value = 3
+			desc = "bpm_from_movement_activism"
 		}
 	}
+	else_if = {
+		limit = {
+			bpm_adjusted_movement_radicalism > define:NPolitics|RADICALISM_MILITANT_THRESHOLD
+		}
+		multiply = {
+			value = 5
+			desc = "bpm_from_movement_activism"
+		}
+	}
+	round = yes
 }
 
 bpm_number_of_supporting_movements = {
@@ -71,7 +103,7 @@ bpm_ig_law_support_total_value = {
 				NOT = {
 					owner = {
 						any_political_movement = {
-							is_revolutionary_movement = yes
+							is_revolutionary = yes
 							law_stance = {
 								law = prev.currently_enacting_law.type
 								value > approve
@@ -426,22 +458,21 @@ bpm_law_enactment_hog_approval = {
 			}
 		}
 	}
+
+
 	# Insurrection: 20
 	# Movement: 10
+	add = {
+		value = owner.bpm_law_enactment_movement_pressure
+		desc = "bpm_ig_law_support_from_movement"
+	}
 	if = {
-		limit = { any_political_movement = { movement_supports_enaction = yes } }
-		add = {
-			value = 10
-			desc = "bpm_ruler_law_support_from_movement"
+		limit = {
+			has_variable = bpm_law_enactment_desired_by_revolution
 		}
-		if = {
-			limit = {
-				has_variable = bpm_law_enactment_desired_by_revolution
-			}
-			add = {
-				desc = "bpm_ruler_law_support_from_insurrection"
-				value = 15
-			}
+		add = {
+			desc = "bpm_ruler_law_support_from_insurrection"
+			value = 15
 		}
 	}
 	ruler ?= {
@@ -855,7 +886,7 @@ bpm_law_enactment_non_marginal_votes = {
 		limit = { is_player = yes }
 		every_interest_group = {
 			limit = {
-				is_marginal = no
+				bpm_ig_is_marginal = no
 			}
 			add = {
 				value = ig_clout
@@ -871,7 +902,7 @@ bpm_law_enactment_yea_votes = {
 		limit = { is_player = yes }
 		every_interest_group = {
 			limit = {
-				is_marginal = no
+				bpm_ig_is_marginal = no
 				bpm_ig_law_support_total_value > 0
 			}
 			add = {
@@ -888,7 +919,7 @@ bpm_law_enactment_nay_votes = {
 		limit = { is_player = yes }
 		every_interest_group = {
 			limit = {
-				is_marginal = no
+				bpm_ig_is_marginal = no
 				bpm_ig_law_support_total_value <= 0
 			}
 			add = {

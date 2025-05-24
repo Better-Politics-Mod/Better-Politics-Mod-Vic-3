@@ -1,0 +1,236 @@
+bpm_update_government_and_opposition = {
+	bpm_add_ig_to_their_desired_party = yes
+	if = {
+		limit = {
+			has_variable = bpm_caretaker_government
+		}
+		remove_variable = bpm_caretaker_government
+	}
+	if = {
+		limit = {
+			OR = {
+				bpm_country_has_executive_dictatorial_system = yes
+				bpm_country_has_executive_electoral_system = yes
+			}
+		}
+		bpm_form_government_exef_systems = yes
+	}
+	else_if = {
+		limit = {
+			bpm_country_has_parliamentary_oligarchic_system = yes
+		}
+		bpm_form_government_oligarchic_systems = yes
+	}
+	else = {
+		bpm_form_government_parliamentary_electoral_systems = yes
+	}
+}
+
+bpm_form_government_parliamentary_electoral_systems = {
+	if = {
+		limit = {
+			has_variable_list = bpm_in_gov_party_sel
+		}
+		every_active_party = {
+			every_member = {
+				remove_ruling_interest_group = yes
+			}
+		}
+		every_interest_group = {
+			limit = {
+				NOT = {
+					exists = party
+				}
+				is_in_government = yes
+			}
+			remove_ruling_interest_group = yes
+		}
+		every_in_list = {
+			variable = bpm_in_gov_party_sel
+			every_member = {
+				add_ruling_interest_group = yes
+			}
+		}
+	}
+	else = {
+		set_variable = bpm_caretaker_government
+		bpm_form_government_exef_systems = yes
+	}
+	update_party_support = yes
+}
+
+bpm_add_ig_to_their_desired_party = {
+	update_party_support = yes
+	every_interest_group = {
+		limit = {
+			NOT = {
+				exists = party
+			}
+			is_marginal = no
+		}
+		add_ruling_interest_group = yes
+	}
+	update_party_support = yes
+	every_interest_group = {
+		limit = {
+			NOT = {
+				exists = party
+			}
+			is_marginal = no
+		}
+		remove_ruling_interest_group = yes
+	}
+	update_party_support = yes
+}
+
+bpm_form_government_exef_systems = {
+	every_interest_group = {
+		add_ruling_interest_group = yes
+	}
+
+	if = {
+		limit = {
+			any_active_party = {
+				count > 0
+			}
+		}
+		if = {
+			limit = {
+				exists = ruler.interest_group.party
+			}
+			ruler.interest_group.party = {
+				set_ruling_party = yes
+			}
+			every_interest_group = {
+				limit = {
+					NOT = {
+						THIS.party = owner.ruler.interest_group.party
+					}
+				}
+				remove_ruling_interest_group = yes
+			}
+		}
+		else = {
+			every_interest_group = {
+				limit = {
+					NOR = {
+						THIS = owner.ruler.interest_group
+					}
+				}
+				remove_ruling_interest_group = yes
+			}
+		}
+	}
+	else = {
+		every_interest_group = {
+			limit = {
+				NOR = {
+					THIS = owner.ruler.interest_group
+					bpm_ig_is_state_institutional = yes
+				}
+			}
+			remove_ruling_interest_group = yes
+		}
+	}
+
+	update_party_support = yes
+}
+
+
+bpm_form_government_oligarchic_systems = {
+	every_interest_group = {
+		add_ruling_interest_group = yes
+	}
+	every_interest_group = {
+		limit = {
+			NOR = {
+				THIS = owner.var:bpm_minister_of_schools.interest_group
+				THIS = owner.var:bpm_miniuster_of_centralization.interest_group
+				THIS = owner.var:bpm_minister_of_police.interest_group
+				THIS = owner.var:bpm_minister_of_colonial_affairs.interest_group
+				THIS = owner.var:bpm_minister_of_social_security.interest_group
+				THIS = owner.var:bpm_minister_of_workplace_safety.interest_group
+				THIS = owner.var:bpm_minister_of_health_system.interest_group
+				THIS = owner.var:bpm_minister_of_home_affairs.interest_group
+				THIS = owner.var:bpm_minister_of_suffrage.interest_group
+				THIS = owner.var:bpm_minister_of_culture.interest_group
+				THIS = owner.var:bpm_minister_of_diplomacy.interest_group
+				THIS = owner.var:bpm_minister_of_economy.interest_group
+				THIS = owner.var:bpm_headofgov.interest_group
+			}
+		}
+		remove_ruling_interest_group = yes
+	}
+	if = { 
+		limit = { 
+			NOT = { any_interest_group = {
+				is_in_government = yes
+			} }
+		}
+		ruler.interest_group = {
+			add_ruling_interest_group = yes
+		}
+		set_variable = bpm_caretaker_government
+	}
+}
+
+
+bpm_calculate_selected_government_interparty_hostility = {
+	clear_variable_list = bpm_synergy_calculation_charset
+
+    every_in_list = {
+		variable = bpm_in_gov_party_sel
+		every_member = {
+			leader = {
+				owner = {
+					add_to_variable_list = {
+						name = bpm_synergy_calculation_charset
+						target = prev
+					}
+				}
+			}
+		}
+	}
+	clear_variable_list = bpm_hostility_disagreements
+
+    bpm_calculate_synergy = yes
+
+    set_variable = {
+        name = bpm_selected_government_interparty_hostility
+        value = var:bpm_temp_synergy_calculation
+    }
+
+	if = {
+		limit = {
+			variable_list_size = {
+				name = bpm_in_gov_party_sel
+				value < 2
+			}
+		}
+		set_variable = {
+			name = bpm_selected_government_interparty_hostility
+			value = 0 
+		}
+	}
+	else = {
+		bpm_disagreements_visualizing_helper = { tag = hostility }
+	}
+}
+
+bpm_get_picked_pm_util = {
+	save_scope_value_as = { name = counter value = 0 }
+	every_in_list = {
+		variable = bpm_potential_headofgov
+		if = { 
+			limit = { scope:counter = owner.var:bpm_choose_headofgov_carousel }
+			save_scope_as = result 
+		}
+		save_scope_value_as = {
+			name = counter
+			value = {
+				value = 1
+				add = scope:counter
+			}
+		}
+	}
+}

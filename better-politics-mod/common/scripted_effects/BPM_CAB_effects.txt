@@ -70,8 +70,8 @@ bpm_clear_cabinet_pool = {
 bpm_pick_cabinet_minister = {
     every_interest_group = {
         limit = {
-            bpm_ig_enabled = yes
-            is_marginal = no
+            bpm_interest_group_is_activated = yes
+            bpm_ig_is_marginal = no
         }
         if = {
             limit = {
@@ -91,8 +91,8 @@ bpm_pick_cabinet_minister = {
     }
     ordered_interest_group = {
         limit = {
-            bpm_ig_enabled = yes
-            is_marginal = no
+            bpm_interest_group_is_activated = yes
+            bpm_ig_is_marginal = no
             is_in_government = yes
         }
         min = 0
@@ -186,7 +186,7 @@ bpm_choose_hog_parlelec = {
     random_interest_group = {
         limit = {
             bpm_is_strongest_ig_in_government = yes
-            bpm_ig_enabled = yes
+            bpm_interest_group_is_activated = yes
         }
         save_scope_as = ranig
     }
@@ -249,6 +249,24 @@ bpm_choose_hog_parlelec = {
 }
 bpm_choose_hog = {
     if = {
+        limit = {
+            has_variable = bpm_hog_heir
+            has_law = law_type:law_advisory_body
+            has_law = law_type:law_answers_to_legislature
+            OR = {
+                NOT = { exists = var:bpm_headofgov }
+                var:bpm_headofgov = {
+                    is_character_alive = no
+                }
+            }
+        }
+        var:bpm_hog_heir ?= {
+            # handle scripted heirs
+            bpm_set_headofgov_sticky = yes
+        }
+        bpm_create_hog_heir_hook = yes
+    }
+    else_if = {
         limit = {
             bpm_is_hoshog = yes
         }
@@ -512,6 +530,8 @@ bpm_fire_cabinet_minister = {
         bpm_remove_character_from_cabinet = yes
     }
 
+    hidden_effect ={ owner = { bpm_update_government_and_opposition = yes } }
+
     if = {
         limit = {
             popularity > 0
@@ -530,7 +550,7 @@ bpm_fire_cabinet_minister = {
             value = {
                 value = prev.popularity
                 divide = 100
-                multiply = -0.2
+                multiply = -0.05
             }
         } }
     }
@@ -554,8 +574,8 @@ bpm_fill_leader_pool = {
     }
     every_interest_group = {
         limit = {
-            bpm_ig_enabled = yes
-            is_marginal = no
+            bpm_interest_group_is_activated = yes
+            bpm_ig_is_marginal = no
         }
         leader = {
             save_scope_as = ig_leader
@@ -600,6 +620,7 @@ bpm_add_to_cabinet_interaction_shared_effect = {
         }
         bpm_add_character_to_cabinet = yes
     }
+    hidden_effect ={ owner = { bpm_update_government_and_opposition = yes } }
     bpm_add_character_to_cabinet_shared_effect_extra = yes
 }
 
@@ -799,6 +820,7 @@ bpm_appoint_as_hog = {
             name = bpm_headofgov
             value = prev
         }
+        bpm_cab_update_hoshog_synergy = yes
     }
     set_variable = {
         name = bpm_headofgov_sticky
@@ -818,7 +840,10 @@ bpm_appoint_as_hog = {
 bpm_unappoint_as_hog = {
     remove_variable = bpm_headofgov_sticky
     remove_variable = bpm_appointed_headofgov
-    owner = { set_variable = { name = bpm_headofgov value = ruler } }
+    owner = { 
+        bpm_cab_update_hoshog_synergy = yes
+        set_variable = { name = bpm_headofgov value = ruler } 
+    }
     owner = { bpm_choose_hog = yes }
 }
 

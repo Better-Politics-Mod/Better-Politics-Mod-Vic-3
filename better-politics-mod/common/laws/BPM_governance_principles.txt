@@ -30,6 +30,7 @@ law_monarchy = {
 		country_aristocrats_pol_str_mult = 0.25
 		country_rigidity_baseline_add = 10
 		country_legitimacy_ideological_incoherence_mult = 0.3
+		country_labor_consciousness_change_add = -0.05
 	}
 	
 	pop_support = {
@@ -190,6 +191,8 @@ law_presidential_republic = {
 		country_bureaucrats_voting_power_add = 5
 		# country_authority_add = 100
 		country_legitimacy_ideological_incoherence_mult = 0.75
+		state_pop_pol_str_add = 1
+		country_liberal_consciousness_change_add = 0.05
 	}
 	
 	pop_support = {
@@ -317,6 +320,8 @@ law_parliamentary_republic = {
 		country_legitimacy_govt_total_votes_add = 10
 		country_legitimacy_govt_size_add = 1
 		country_legitimacy_ideological_incoherence_mult = 0.3
+		state_pop_pol_str_add = 1
+		country_liberal_consciousness_change_add = 0.05
 	}
 
 	ai_will_do = {
@@ -513,6 +518,7 @@ law_council_republic = {
 		country_legitimacy_govt_size_add = 1
 		state_political_strength_from_wealth_mult = -0.1
 		country_legitimacy_ideological_incoherence_mult = 0.5
+		state_pop_pol_str_add = 2
 	}
 	
 	pop_support = {
@@ -594,6 +600,166 @@ law_council_republic = {
 			
 			add = base_impose_law_weight
 			multiply = 5.0
+		}
+	}
+}
+
+law_corporate_state = {
+	group = lawgroup_governance_principles
+	
+	icon = "gfx/interface/icons/law_icons/corporate_state.dds"
+	
+	progressiveness = 50
+
+	unlocking_technologies = {
+		corporatism
+	}
+
+	is_visible = {
+		always = no
+	}
+	
+	on_activate = {
+		if = {
+			limit = {
+				any_interest_group = {
+					has_ideology = ideology:ideology_constitutionalist
+				}
+			}
+			every_interest_group = {
+				limit = {
+					has_ideology = ideology:ideology_constitutionalist
+				}
+				remove_ideology = ideology_constitutionalist
+				add_ideology = ideology_republican
+			}
+		}	
+		if = {
+			limit = {
+				var:corporatist_nominating_body_var ?= 1
+			}
+			add_modifier = { name = modifier_corporate_state_trade_unions_bias }
+		}
+		if = {
+			limit = {
+				var:corporatist_nominating_body_var ?= 2
+			}
+			add_modifier = { name = modifier_corporate_state_industrialists_bias }
+		}
+		if = {
+			limit = {
+				var:corporatist_nominating_body_var ?= 3
+			}
+			add_modifier = { name = modifier_corporate_state_intelligentsia_bias }
+		}
+	}		
+
+	on_enact = {
+		if = {
+			limit = {
+				var:corporatist_nominating_body_var ?= 1
+			}
+			custom_tooltip = corporate_state_trade_unions_bias_tt
+		}
+		if = {
+			limit = {
+				var:corporatist_nominating_body_var ?= 2
+			}
+			custom_tooltip = corporate_state_industrialists_bias_tt
+		}
+		if = {
+			limit = {
+				var:corporatist_nominating_body_var ?= 3
+			}
+			custom_tooltip = corporate_state_intelligentsia_bias_tt
+		}
+	}
+
+	on_deactivate = {
+		if = {
+			limit = {
+				has_modifier = modifier_corporate_state_trade_unions_bias
+			}
+			remove_modifier = modifier_corporate_state_trade_unions_bias
+		}
+		if = {
+			limit = {
+				has_modifier = modifier_corporate_state_industrialists_bias
+			}
+			remove_modifier = modifier_corporate_state_industrialists_bias
+		}
+		if = {
+			limit = {
+				has_modifier = modifier_corporate_state_intelligentsia_bias
+			}
+			remove_modifier = modifier_corporate_state_intelligentsia_bias
+		}
+	}
+
+	can_impose = {
+		OR = {
+			AND = {
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_governance_principles_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			can_impose_law_default = yes
+		}
+	}
+	
+	modifier = {
+		country_legitimacy_govt_size_add = 2
+		country_legitimacy_ideological_incoherence_mult = -0.25
+		country_authority_add = 100
+		interest_group_ig_petty_bourgeoisie_pol_str_mult = 0.25
+	}
+	
+	ai_will_do = {
+		exists = ruler
+		ruler = {
+			OR = {
+				has_ideology = ideology:ideology_fascist
+				has_ideology = ideology:ideology_corporatist_leader
+			}
+		}
+	}
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+		
+		if = {
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
+			add = 750
+		}
+	}
+	
+	ai_impose_chance = {
+		value = 0
+		
+		if = {
+			limit = {
+				has_law = law_type:law_corporate_state
+				has_strategy = ai_strategy_nationalist_agenda				
+			}
+			
+			add = base_impose_law_weight
+			multiply = 5.0
+		}
+			
+		if = {
+			limit = {
+				scope:target_country = {
+					c:BIC ?= this
+					OR = {	
+						has_journal_entry = je_british_dictate_plantations
+						has_journal_entry = je_british_dictate_military
+						has_journal_entry = je_british_dictate_universities
+					}
+				}
+			}
+			multiply = 0
 		}
 	}
 }

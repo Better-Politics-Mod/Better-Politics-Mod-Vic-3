@@ -1,0 +1,642 @@
+bpm_choose_fronts = {
+	bpm_choose_front_ig_subp = { ig = agrarian_populists }
+	bpm_choose_front_ig_subp = { ig = anarchists }
+	bpm_choose_front_ig_subp = { ig = armed_forces }
+	bpm_choose_front_ig_subp = { ig = petty_bourgeoisie }
+	bpm_choose_front_ig_subp = { ig = conservatives }
+	bpm_choose_front_ig_subp = { ig = devout }
+	bpm_choose_front_ig_subp = { ig = fascists }
+	bpm_choose_front_ig_subp = { ig = industrialists }
+	bpm_choose_front_ig_subp = { ig = landowners }
+	bpm_choose_front_ig_subp = { ig = liberals }
+	bpm_choose_front_ig_subp = { ig = market_liberals }
+	bpm_choose_front_ig_subp = { ig = national_liberals }
+	bpm_choose_front_ig_subp = { ig = intelligentsia }
+	bpm_choose_front_ig_subp = { ig = radicals }
+	bpm_choose_front_ig_subp = { ig = reactionaries }
+	bpm_choose_front_ig_subp = { ig = reformist_socialists }
+	bpm_choose_front_ig_subp = { ig = revolutionist_socialists }
+	bpm_choose_front_ig_subp = { ig = rural_folks }
+	bpm_choose_front_ig_subp = { ig = socialists }
+	bpm_choose_front_ig_subp = { ig = trade_unions }
+		#
+	bpm_choose_front_mov_subp = { mov = labor }
+	bpm_choose_front_mov_subp = { mov = socialist }
+	bpm_choose_front_mov_subp = { mov = anarchist }
+	bpm_choose_front_mov_subp = { mov = communist }
+	bpm_choose_front_mov_subp = { mov = reformist_socialist }
+	bpm_choose_front_mov_subp = { mov = liberal }
+	bpm_choose_front_mov_subp = { mov = market_liberal }
+	bpm_choose_front_mov_subp = { mov = national_liberal }
+	bpm_choose_front_mov_subp = { mov = modernizer }
+	bpm_choose_front_mov_subp = { mov = radical }
+	bpm_choose_front_mov_subp = { mov = reactionary }
+	bpm_choose_front_mov_subp = { mov = cultural_majority }
+	bpm_choose_front_mov_subp = { mov = royalist_absolutist }
+	bpm_choose_front_mov_subp = { mov = royalist_constitutional }
+	bpm_choose_front_mov_subp = { mov = fascist }
+	bpm_choose_front_mov_subp = { mov = land_reform }
+	# fix 10 mov fronts
+	bpm_fix_front = { name = urban_movs }
+	bpm_fix_front = { name = popular_movs }
+	bpm_fix_front = { name = liberal_movs }
+	bpm_fix_front = { name = republican_movs }
+	bpm_fix_front = { name = labor_movs }
+	bpm_fix_front = { name = socialist_movs }
+	bpm_fix_front = { name = reactionary_movs }
+	bpm_fix_front = { name = fascist_movs }
+	bpm_fix_front = { name = nationalist_movs }
+	bpm_fix_front = { name = peasant_movs }
+}
+
+bpm_fix_front = {
+	clear_variable_list = bpm_front_$name$_temp
+	every_in_list = {
+	variable = bpm_front_$name$
+	owner = { add_to_variable_list = { 
+	name =  bpm_front_$name$_temp
+	target = prev }
+	} }
+	clear_variable_list = bpm_front_$name$
+	every_in_list = {
+	variable = bpm_front_$name$_temp
+	owner = { add_to_variable_list = { 
+	name =  bpm_front_$name$
+	target = prev }
+	} }
+	clear_variable_list = bpm_front_$name$_temp
+}
+bpm_choose_front_ig_subp = {
+	ig:ig_$ig$ = {
+		save_scope_as = selected_ig
+	}
+	if = {
+		limit = {
+			scope:selected_ig ?= {
+				bpm_interest_group_is_activated = yes
+			}
+		}
+		ordered_in_global_list = {
+			variable = bpm_existing_front_names
+			position = 0
+			order_by = bpm_front_attraction_dispatch_$ig$
+			if = { 
+				limit = {
+					bpm_front_attraction_dispatch_$ig$ > 0
+				}
+				save_scope_as = selected_front_name
+				save_scope_as = sel_POINT_$ig$
+			}
+		}
+		if = {
+			limit = {
+				exists = scope:selected_front_name
+				exists = scope:sel_POINT_$ig$
+			}
+			bpm_add_ig_to_front = yes
+		}
+		else = {
+			bpm_remove_ig_from_all_fronts = yes
+		}
+
+	}
+}
+
+bpm_choose_front_mov_subp = {
+	random_political_movement = {
+		limit = {
+			is_political_movement_type = movement_$mov$
+		}
+		save_scope_as = selected_mov
+	}
+	if = {
+		limit = {
+			any_political_movement = {
+				is_political_movement_type = movement_$mov$
+				count > 0
+			}
+		}
+		ordered_in_global_list = {
+			variable = bpm_existing_front_names
+			position = 0
+			order_by = bpm_front_attraction_dispatch_$mov$
+			if = { 
+				limit = {
+					bpm_front_attraction_dispatch_$mov$ > 0
+				}
+				save_scope_as = selected_front_name
+				save_scope_as = sel_POINT_$mov$
+			}
+		}
+		if = {
+			limit = {
+				exists = scope:selected_front_name
+				exists = scope:sel_POINT_$mov$
+			}
+			bpm_add_mov_to_front = yes
+		}
+		else = {
+			bpm_remove_mov_from_all_fronts = yes
+		}
+	}
+}
+
+bpm_add_ig_to_front = {
+	bpm_remove_ig_from_all_fronts = yes
+	if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_liberal
+		}
+		add_to_variable_list = {
+			name = bpm_front_liberal_members
+			target = scope:selected_ig
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_urban
+		}
+		add_to_variable_list = {
+			name = bpm_front_urban_members
+			target = scope:selected_ig
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_popular
+		}
+		add_to_variable_list = {
+			name = bpm_front_popular_members
+			target = scope:selected_ig
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_republican
+		}
+		add_to_variable_list = {
+			name = bpm_front_republican_members
+			target = scope:selected_ig
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_labor
+		}
+		add_to_variable_list = {
+			name = bpm_front_labor_members
+			target = scope:selected_ig
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_socialist
+		}
+		add_to_variable_list = {
+			name = bpm_front_socialist_members
+			target = scope:selected_ig
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_reactionary
+		}
+		add_to_variable_list = {
+			name = bpm_front_reactionary_members
+			target = scope:selected_ig
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_fascist
+		}
+		add_to_variable_list = {
+			name = bpm_front_fascist_members
+			target = scope:selected_ig
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_nationalist
+		}
+		add_to_variable_list = {
+			name = bpm_front_nationalist_members
+			target = scope:selected_ig
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_peasant
+		}
+		add_to_variable_list = {
+			name = bpm_front_peasant_members
+			target = scope:selected_ig
+		}
+	}
+}
+
+bpm_add_mov_to_front = {
+	bpm_remove_mov_from_all_fronts = yes
+	if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_liberal
+		}
+		add_to_variable_list = {
+			name = bpm_front_liberal_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_urban
+		}
+		add_to_variable_list = {
+			name = bpm_front_urban_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_popular
+		}
+		add_to_variable_list = {
+			name = bpm_front_popular_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_republican
+		}
+		add_to_variable_list = {
+			name = bpm_front_republican_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_labor
+		}
+		add_to_variable_list = {
+			name = bpm_front_labor_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_socialist
+		}
+		add_to_variable_list = {
+			name = bpm_front_socialist_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_reactionary
+		}
+		add_to_variable_list = {
+			name = bpm_front_reactionary_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_fascist
+		}
+		add_to_variable_list = {
+			name = bpm_front_fascist_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_nationalist
+		}
+		add_to_variable_list = {
+			name = bpm_front_nationalist_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			scope:selected_front_name = flag:bpm_front_peasant
+		}
+		add_to_variable_list = {
+			name = bpm_front_peasant_movs
+			target = scope:selected_mov
+		}
+	}
+}
+
+bpm_remove_ig_from_all_fronts = {
+	if = {
+		limit = {
+			is_target_in_variable_list = {
+				name = bpm_front_liberal_members
+				target = scope:selected_ig
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_liberal_members
+			target = scope:selected_ig
+		}
+	}
+	if = {
+		limit = {
+			has_variable_list = bpm_front_urban_members
+			is_target_in_variable_list = {
+				name = bpm_front_urban_members
+				target = scope:selected_ig
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_urban_members
+			target = scope:selected_ig
+		}
+	}
+	if = {
+		limit = {
+			has_variable_list = bpm_front_popular_members
+			is_target_in_variable_list = {
+				name = bpm_front_popular_members
+				target = scope:selected_ig
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_popular_members
+			target = scope:selected_ig
+		}
+	}
+	if = {
+		limit = {
+			has_variable_list = bpm_front_republican_members
+			is_target_in_variable_list = {
+				name = bpm_front_republican_members
+				target = scope:selected_ig
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_republican_members
+			target = scope:selected_ig
+		}
+	}
+	if = {
+		limit = {
+			has_variable_list = bpm_front_labor_members
+			is_target_in_variable_list = {
+				name = bpm_front_labor_members
+				target = scope:selected_ig
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_labor_members
+			target = scope:selected_ig
+		}
+	}
+	if = {
+		limit = {
+			has_variable_list = bpm_front_socialist_members
+			is_target_in_variable_list = {
+				name = bpm_front_socialist_members
+				target = scope:selected_ig
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_socialist_members
+			target = scope:selected_ig
+		}
+	}
+	if = {
+		limit = {
+			is_target_in_variable_list = {
+				name = bpm_front_reactionary_members
+				target = scope:selected_ig
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_reactionary_members
+			target = scope:selected_ig
+		}
+	}
+	if = {
+		limit = {
+			has_variable_list = bpm_front_fascist_members
+			is_target_in_variable_list = {
+				name = bpm_front_fascist_members
+				target = scope:selected_ig
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_fascist_members
+			target = scope:selected_ig
+		}
+
+	}
+	if = {
+		limit = {
+			has_variable_list = bpm_front_nationalist_members
+			is_target_in_variable_list = {
+				name = bpm_front_nationalist_members
+				target = scope:selected_ig
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_nationalist_members
+			target = scope:selected_ig
+		}
+
+	}
+	if = {
+		limit = {
+			has_variable_list = bpm_front_peasant_members
+			is_target_in_variable_list = {
+				name = bpm_front_peasant_members
+				target = scope:selected_ig
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_peasant_members
+			target = scope:selected_ig
+		}
+
+	}
+}
+
+bpm_remove_mov_from_all_fronts = {
+	if = {
+		limit = {
+			has_variable_list = bpm_front_liberal_movs
+			is_target_in_variable_list = {
+				name = bpm_front_liberal_movs
+				target = scope:selected_mov
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_liberal_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable_list = bpm_front_urban_movs
+			is_target_in_variable_list = {
+				name = bpm_front_urban_movs
+				target = scope:selected_mov
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_urban_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable_list = bpm_front_popular_movs
+			is_target_in_variable_list = {
+				name = bpm_front_popular_movs
+				target = scope:selected_mov
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_popular_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable_list = bpm_front_republican_movs
+			is_target_in_variable_list = {
+				name = bpm_front_republican_movs
+				target = scope:selected_mov
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_republican_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable_list = bpm_front_labor_movs
+			is_target_in_variable_list = {
+				name = bpm_front_labor_movs
+				target = scope:selected_mov
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_labor_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable_list = bpm_front_socialist_movs
+			is_target_in_variable_list = {
+				name = bpm_front_socialist_movs
+				target = scope:selected_mov
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_socialist_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable_list = bpm_front_reactionary_movs
+			is_target_in_variable_list = {
+				name = bpm_front_reactionary_movs
+				target = scope:selected_mov
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_reactionary_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable_list = bpm_front_fascist_movs
+			is_target_in_variable_list = {
+				name = bpm_front_fascist_movs
+				target = scope:selected_mov
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_fascist_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable_list = bpm_front_nationalist_movs
+			is_target_in_variable_list = {
+				name = bpm_front_nationalist_movs
+				target = scope:selected_mov
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_nationalist_movs
+			target = scope:selected_mov
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable_list = bpm_front_peasant_movs
+			is_target_in_variable_list = {
+				name = bpm_front_peasant_movs
+				target = scope:selected_mov
+			}
+		}
+		remove_list_variable = {
+			name = bpm_front_peasant_movs
+			target = scope:selected_mov
+		}
+	}
+}
+
+bpm_setup_global_front_names = {
+	add_to_global_variable_list = {
+		name = bpm_existing_front_names
+		target = flag:bpm_front_urban
+	}
+	add_to_global_variable_list = {
+		name = bpm_existing_front_names
+		target = flag:bpm_front_popular
+	}
+	add_to_global_variable_list = {
+		name = bpm_existing_front_names
+		target = flag:bpm_front_liberal
+	}
+	add_to_global_variable_list = {
+		name = bpm_existing_front_names
+		target = flag:bpm_front_republican
+	}
+	# new
+	add_to_global_variable_list = {
+		name = bpm_existing_front_names
+		target = flag:bpm_front_labor
+	}
+	add_to_global_variable_list = {
+		name = bpm_existing_front_names
+		target = flag:bpm_front_socialist
+	}
+	add_to_global_variable_list = {
+		name = bpm_existing_front_names
+		target = flag:bpm_front_reactionary
+	}
+	add_to_global_variable_list = {
+		name = bpm_existing_front_names
+		target = flag:bpm_front_fascist
+	}
+	add_to_global_variable_list = {
+		name = bpm_existing_front_names
+		target = flag:bpm_front_nationalist
+	}
+	add_to_global_variable_list = {
+		name = bpm_existing_front_names
+		target = flag:bpm_front_peasant
+	}
+}
+

@@ -389,7 +389,7 @@ types political_situation_types {
                         #visible = "Not(IsDataModelEmpty(GetJournalEntryGroup('je_group_bpm_dissent').GetInactiveJournalEntryTypes(GetPlayer.Self)))"
                         item = {
                             dynamicgridbox = {
-                                spacing = 10
+                                spacing = 20
                                 #parentanchor = hcenter
                                 visible = "[ObjectsEqual(MakeScopeFlag(GetJournalEntryGroup('je_group_bpm_dissent').GetName), MakeScopeFlag(JournalEntryGroup.GetName))]"
                                 datamodel = "[JournalEntryGroup.GetInactiveJournalEntryTypes(GetPlayer.Self)]"
@@ -399,7 +399,7 @@ types political_situation_types {
                                     datamodel_wrap = 5
                                 }
                                 item = {
-                                    bpm_political_situation_subversive_actions = { }
+                                    bpm_political_situation_subversive_actions = {}
                                 }
                             }
                         }
@@ -829,10 +829,11 @@ types political_situation_types {
 	}
 
     type bpm_political_situation_subversive_actions = widget {
-        size = { 475 380 }
+        size = { 500 400 }
         margin = { 10 0 }
         datacontext = "[AccessPlayer.GetJournalEntry(JournalEntryType.Self)]"
         vbox = {
+            maximumsize = { 475 380 }
             using = entry_bg_fancy_solid_bg
             background = {
                 using = fade_right_entry_fancy_header_colored
@@ -866,17 +867,40 @@ types political_situation_types {
                 expand = {} 
             }
             divider_decorative = {}
+            expand = {}
             hbox = {
                 margin = { 15 0 }
                 visible = "[Not(JournalEntry.MakeScope.Var('bpm_front_currently_planning').IsSet)]"
                 layoutpolicy_horizontal = expanding
-                textbox = {
-                    size = { 445 40 }
-                    text = "#header_tooltip Nobody's planning a revolution mate.#!"
-                    fontsize = 24
-                    align = hcenter|vcenter
-                    parentanchor = left|top
-                    #multiline = yes
+                container = {
+                    textbox = {
+                        visible = "[IsDataModelEmpty(JournalEntry.MakeScope.GetList('bpm_planning_subversive_action_ig'))]"
+                        size = { 445 40 }
+                        text = "#header_tooltip Nobody's planning a revolution mate.#!"
+                        fontsize = 24
+                        align = hcenter|vcenter
+                        parentanchor = left|top
+                        #multiline = yes
+                    }
+                    textbox = {
+                        visible = "[And(Not(IsDataModelEmpty(JournalEntry.MakeScope.GetList('bpm_planning_subversive_action_ig'))), Not(JournalEntry.IsActive))]"
+                        size = { 445 40 }
+                        text = "#bold;N The Following IGs are Planning this Action:#!"
+                        fontsize = 18
+                        align = hcenter|vcenter
+                        parentanchor = left|top
+                        #multiline = yes
+                    }
+                    textbox = {
+                        visible = "[And(Not(IsDataModelEmpty(JournalEntry.MakeScope.GetList('bpm_planning_subversive_action_ig'))), JournalEntry.IsActive)]"
+                        size = { 445 40 }
+                        text = "#bold;N The Following IGs are Executing this Action:#!"
+                        fontsize = 18
+                        align = hcenter|vcenter
+                        parentanchor = left|top
+                        #multiline = yes
+                    }
+
                 }
                 expand = {} 
             }
@@ -900,11 +924,27 @@ types political_situation_types {
                     }
                 }
             }
+            container = {
+                visible = "[Not(JournalEntry.IsActive)]"
+                container = {
+                    visible = "[Not(IsDataModelEmpty(JournalEntry.MakeScope.GetList('bpm_planning_subversive_action_ig')))]"
+                    textbox = {
+                        size = { 445 80 }
+                        text = "[JournalEntry.GetActivationTooltip]"
+                        fontsize = 18
+                        align = hcenter|hcenter
+                        parentanchor = left|top
+                        multiline = yes
+                    }
+
+                }
+            }
             expand = {}
             container = { 
                 visible = "[Not(JournalEntry.IsActive)]"
                 participating_movs = { }
             }
+
 
                 #expand = {}
             expand = {}
@@ -917,7 +957,7 @@ types political_situation_types {
     }
 
     type bpm_political_action_texter = vbox {
-        visible = "[JournalEntry.IsActive]"
+        visible = "[And(JournalEntry.IsActive, Not(IsDataModelEmpty(GetPlayer.MakeScope.GetList(Concatenate(JournalEntry.MakeScope.Var('bpm_front_currently_planning').GetFlagName, '_members')))))]"
         layoutpolicy_vertical = expanding
         hbox = {
             margin_top = 15
@@ -936,7 +976,15 @@ types political_situation_types {
             margin = { 5 0 }
             layoutpolicy_horizontal = expanding
             textbox = {
-                size = { 425 160 }
+                size = { 225 160 }
+                # [JournalEntry.MakeScope.Var('bpm_last_delta')|v-=2]
+                text = "bpm_dissent_revolution_desc"
+                fontsize = 16
+                align = hcenter|nobaseline
+                multiline = yes
+            }
+            textbox = {
+                size = { 225 160 }
                 # [JournalEntry.MakeScope.Var('bpm_last_delta')|v-=2]
                 text = "bpm_dissent_revolution_outcomes"
                 fontsize = 16

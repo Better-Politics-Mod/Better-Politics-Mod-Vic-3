@@ -1,5 +1,5 @@
 je_bpm_dissent_no_confidence = {
-	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	icon = "gfx/interface/icons/generic_icons/cohesion.dds"
 
 	group = je_group_bpm_dissent
 
@@ -22,8 +22,80 @@ je_bpm_dissent_no_confidence = {
 	}
 
 	possible = {
-		has_variable = bpm_doing_no_confidence
-		# some triggers here 
+		scope:journal_entry = {
+			custom_tooltip = {
+				text = "bpm_dissent_no_confidence_activate_tooltip"
+				bpm_supporting_members_clout > 0.4
+			}
+		}
+	}
+
+	immediate = {
+		every_interest_group = {
+			limit = {
+				bpm_interest_group_is_activated = yes
+			}
+			if = {
+				limit = {
+					scope:journal_entry = {
+						is_target_in_variable_list = {
+							name = bpm_planning_subversive_action_ig
+							target = prev
+						}
+					}
+				}
+				add_ideology = ideology_no_confidence_supporter
+			}
+			else_if = {
+				limit = {
+					is_in_government = yes
+				}
+				add_ideology = ideology_no_confidence_government
+			}
+			else_if = {
+				limit = {
+					is_in_government = no
+				}
+				add_ideology = ideology_no_confidence_opponent
+			}
+		}
+		add_modifier = bpm_enacting_no_confidence
+		start_enactment = law_type:law_repeatable_politics_motion_of_no_confidence
+		add_enactment_phase = 2
+		add_enactment_modifier = { name = bpm_law_voting_guarantee_success }
+	}
+
+	invalid = {
+		OR = {
+			has_law = law_type:law_repeatable_politics_motion_of_no_confidence
+			NOT = { 
+				exists = currently_enacting_law.type
+			}
+		}
+	}
+
+	on_invalid = {
+		every_interest_group = {
+			if = {
+				limit = {
+					has_ideology = ideology:ideology_no_confidence_government
+				}
+				remove_ideology = ideology_no_confidence_government
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_no_confidence_opponent
+				}
+				remove_ideology = ideology_no_confidence_opponent
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_no_confidence_supporter
+				}
+				remove_ideology = ideology_no_confidence_supporter
+			}
+		}
+		remove_modifier = bpm_enacting_no_confidence
 	}
 
 	should_be_pinned_by_default = no
@@ -230,7 +302,7 @@ je_bpm_dissent_government_shutdown = {
 }
 
 je_bpm_dissent_revolution = {
-	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	icon = "gfx/interface/icons/politics_icons/revolution.dds"
 
 	group = je_group_bpm_dissent
 
@@ -249,13 +321,79 @@ je_bpm_dissent_revolution = {
 
 	possible = {
 		# some triggers here
-		je:je_bpm_dissent_revolution = {
+		scope:journal_entry= {
+			has_variable = bpm_current_front_organization
 			var:bpm_current_front_organization >= 90
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					scope:journal_entry= {
+						var:bpm_revolution_resource_amount > 400
+						var:bpm_left_alone_counter <= 6
+					}
+				}
+				scope:journal_entry= {
+					change_variable = {
+						name = bpm_revolution_resource_amount
+						subtract = 100
+					}
+					set_variable = {
+						name = bpm_left_alone_counter
+						value = 0
+					}
+				}
+				random_list = {
+					5 = {
+						bpm_auth_add_exhaustion_normal = yes
+					}
+					2 = {
+						bpm_auth_add_exhaustion_large = yes
+					}
+					1 = {
+						bpm_auth_add_exhaustion_huge = yes
+					}
+				}
+			}
+			scope:journal_entry = {
+				change_variable = {
+					name = bpm_left_alone_counter
+					add = 1
+				}
+			}
+			if = {
+				limit = {
+					scope:journal_entry.var:bpm_left_alone_counter >= 2
+				}
+				scope:journal_entry = {
+					change_variable = {
+						name = bpm_revolution_resource_amount
+						add = {
+							value = 50
+							multiply = var:bpm_left_alone_counter
+						}
+					}
+				}
+			}
+			scope:journal_entry = {
+				clamp_variable = {
+					name = bpm_revolution_resource_amount
+					min = 0
+					max = var:bpm_revolution_resource_amount_max
+				}
+			}
 		}
 	}
 	
 	immediate = {
-		je:je_bpm_dissent_revolution = {
+		scope:journal_entry= {
+			set_variable = {
+				name = bpm_left_alone_counter
+				value = 0
+			}
 			save_scope_value_as = {
 				name = current_organization_value
 				value = var:bpm_current_front_organization
@@ -275,7 +413,7 @@ je_bpm_dissent_revolution = {
 	}
 
 	on_invalid = {
-		je:je_bpm_dissent_revolution = {
+		scope:journal_entry= {
 			remove_variable = bpm_front_currently_planning
 			remove_variable = bpm_revolution_resource_amount
 			remove_variable = bpm_revolution_resource_amount_max
@@ -292,7 +430,7 @@ je_bpm_dissent_revolution = {
 }
 
 je_bpm_dissent_revolution1 = {
-	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+	icon = "gfx/interface/icons/politics_icons/revolution.dds"
 
 	group = je_group_bpm_dissent
 
@@ -311,13 +449,74 @@ je_bpm_dissent_revolution1 = {
 
 	possible = {
 		# some triggers here
-		je:je_bpm_dissent_revolution1 = {
+		scope:journal_entry= {
+			has_variable = bpm_current_front_organization
 			var:bpm_current_front_organization >= 90
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					scope:journal_entry= {
+						var:bpm_revolution_resource_amount > 400
+					}
+				}
+				scope:journal_entry= {
+					change_variable = {
+						name = bpm_revolution_resource_amount
+						subtract = 100
+					}
+				}
+			}
+			random_list = {
+				5 = {
+					bpm_auth_add_exhaustion_normal = yes
+				}
+				2 = {
+					bpm_auth_add_exhaustion_large = yes
+				}
+				1 = {
+					bpm_auth_add_exhaustion_huge = yes
+				}
+			}
+			if = {
+				limit = {
+					scope:journal_entry = {
+						change_variable = {
+							name = bpm_left_alone_counter
+							add = 1
+						}
+					}
+					scope:journal_entry.var:bpm_left_alone_counter >= 2
+					scope:journal_entry = {
+						change_variable = {
+							name = bpm_revolution_resource_amount
+							add = {
+								value = 50
+								multiply = var:bpm_left_alone_counter
+							}
+						}
+					}
+				}
+			}
+			scope:journal_entry = {
+				clamp_variable = {
+					name = bpm_revolution_resource_amount
+					min = 0
+					max = var:bpm_revolution_resource_amount_max
+				}
+			}
 		}
 	}
 	
 	immediate = {
-		je:je_bpm_dissent_revolution1 = {
+		scope:journal_entry= {
+			set_variable = {
+				name = bpm_left_alone_counter
+				value = 0
+			}
 			save_scope_value_as = {
 				name = current_organization_value
 				value = var:bpm_current_front_organization
@@ -337,7 +536,7 @@ je_bpm_dissent_revolution1 = {
 	}
 
 	on_invalid = {
-		je:je_bpm_dissent_revolution1 = {
+		scope:journal_entry= {
 			remove_variable = bpm_front_currently_planning
 			remove_variable = bpm_revolution_resource_amount
 			remove_variable = bpm_revolution_resource_amount_max

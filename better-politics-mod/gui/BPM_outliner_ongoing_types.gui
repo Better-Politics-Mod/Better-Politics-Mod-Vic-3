@@ -681,17 +681,38 @@ types ongoing_outliner_items {
 
 	### REVOLUTIONARY POLITICAL MOVEMENT ITEM
 	type outliner_revolutionary_political_movement_item = flowcontainer {
+		#visible = "[GetScriptedGui('bpm_revolution_going_on').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		direction = horizontal
+		spacing = 5
+		datamodel = "[AccessPlayer.GetGroupsForActiveJournalEntries]"
+		item = {
+			flowcontainer = {
+				direction = vertical
+				spacing = 10
+				visible = "[ObjectsEqual(MakeScopeFlag(GetJournalEntryGroup('je_group_bpm_dissent').GetName), MakeScopeFlag(JournalEntryGroup.GetName))]"
+				datamodel = "[JournalEntryGroup.GetActiveJournalEntryTypes(GetPlayer.Self)]"
+				item = {
+					outliner_revolutionary_political_movement_item_ind = {
+						datacontext = "[AccessPlayer.GetJournalEntry(JournalEntryType.Self)]"
+					}
+				}
+			}
+		}
+	}
+
+	type outliner_revolutionary_political_movement_item_ind = flowcontainer {
 		direction = vertical
 
-		datacontext = "[AccessPlayer.GetGrowingCivilWar.AccessPoliticalMovement]"
-		visible = "[AccessPlayer.GetGrowingCivilWar.IsValid]"
+		block "datacontext" {
+			datacontext = "[AccessPlayer.GetJournalEntry(JournalEntryType.Self)]"
+		} 
+		#visible = "[JournalEntry.MakeScope.Var('bpm_front_currently_planning').IsSet]"
 
-		onmousehierarchyenter = "[AccessHighlightManager.HighlightPoliticalMovement(PoliticalMovement.Self)]"
-		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
-
-		tooltipwidget = {
-			FancyTooltip_PoliticalMovement = {}
-		}
+		# MARK: todo
+		#
+		#tooltipwidget = {
+		#	FancyTooltip_PoliticalMovement = {}
+		#}
 
 		state = {
 			name = _show
@@ -735,8 +756,8 @@ types ongoing_outliner_items {
 				button = {
 					size = { 0 10 }
 					name = revolution_button
-					onclick = "[InformationPanelBar.OpenPoliticalMovementPanel(PoliticalMovement.AccessSelf)]"
-					onrightclick = "[RightClickMenuManager.ShowForPoliticalMovement(PoliticalMovement.AccessSelf)]"
+					#onclick = "[InformationPanelBar.OpenPoliticalMovementPanel(PoliticalMovement.AccessSelf)]"
+					#onrightclick = "[RightClickMenuManager.ShowForPoliticalMovement(PoliticalMovement.AccessSelf)]"
 					using = default_button
 					parentanchor = top|right
 
@@ -786,10 +807,10 @@ types ongoing_outliner_items {
 						alpha = 0.2
 					}
 
-					icon = {
-						visible = "[PoliticalMovement.IsBeingHighlighted]"
-						using = highlighted_square_selection
-					}
+					# icon = {
+					# 	visible = "[PoliticalMovement.IsBeingHighlighted]"
+					# 	using = highlighted_square_selection
+					# }
 
 					hbox = {
 						layoutpolicy_horizontal = expanding
@@ -843,7 +864,7 @@ types ongoing_outliner_items {
 								round_progress_bad = {
 									size = { 80% 80% }
 									position = { 0 7 }
-									value = "[FixedPointToFloat(AccessPlayer.GetGrowingCivilWar.GetClockTime)]"
+									value = "[FixedPointToFloat(JournalEntry.MakeScope.ScriptValue('bpm_revclockc'))]"
 									parentanchor = center
 								}
 								
@@ -856,7 +877,7 @@ types ongoing_outliner_items {
 									parentanchor = center
 									position = { 0 5 }
 									size = { 50 50 }
-									texture = "[PoliticalMovement.GetTexture]"
+									texture = "gfx/interface/icons/politics_icons/revolution.dds"
 								}
 							}
 						}
@@ -870,9 +891,11 @@ types ongoing_outliner_items {
 							widget = {
 								size = { 230 25 }
 
-								revolution_progress_bar = {
-									blockoverride "datacontext" {
-										datacontext = "[AccessPlayer.GetGrowingCivilWar]"
+								bpm_revolution_progress_bar = {
+									blockoverride "values" {
+										value = "[FixedPointToFloat( JournalEntry.MakeScope.ScriptValue('bpm_resource_percentage') )]"
+										min = 0
+										max = 1
 									}
 								}
 							}
@@ -895,10 +918,10 @@ types ongoing_outliner_items {
 								textbox = {
 									layoutpolicy_horizontal = expanding
 									size = { 0 20 }
-									align = right|nobaseline
+									align = hcenter|nobaseline
 									elide = right
 									fontsize_min = 12
-									text = "[PoliticalMovement.GetNameNoFormatting]"	
+									text = "[Localize(Concatenate(JournalEntry.MakeScope.Var('bpm_front_currently_planning').GetFlagName, '_name'))]"	
 								}
 							}
 
@@ -906,10 +929,10 @@ types ongoing_outliner_items {
 								layoutpolicy_horizontal = expanding
 								spacing = 2
 
-								widget = {
-									size = { 30 30 }
-									visible = "[IsDataModelEmpty(PoliticalMovement.GetTopSupportingCharacters)]"
-								}
+								#widget = {
+								#	size = { 30 30 }
+								#	visible = "[IsDataModelEmpty(PoliticalMovement.GetTopSupportingCharacters)]"
+								#}
 
 								hbox = {
 									layoutpolicy_horizontal = expanding
@@ -918,8 +941,8 @@ types ongoing_outliner_items {
 									expand = {}
 									
 									icon = {
-										size = { 30 30 }
-										texture = "gfx/interface/icons/generic_icons/battalions.dds"
+										size = { 18 18 }
+										texture = "gfx/interface/icons/military_icons/attrition.dds"
 									}
 
 									textbox = {
@@ -928,16 +951,17 @@ types ongoing_outliner_items {
 										elide = right
 										fontsize_min = 12
 										default_format = "#v"
-										text = "[PoliticalMovement.GetCivilWar.GetNumUprisingBattalions]"
+										text = "[JournalEntry.MakeScope.Var('bpm_revolution_resource_amount').GetValue|v0]"
 									}
 
 									widget = {
 										size = { 5 5 }
-									}									
+									}		
+									expand = {}												
 
 									icon = {
-										size = { 30 30 }
-										texture = "gfx/interface/icons/generic_icons/flotillas.dds"
+										size = { 18 18 }
+										texture = "gfx/interface/icons/topbar/authority_icon.dds"
 									}
 
 									textbox = {
@@ -946,26 +970,9 @@ types ongoing_outliner_items {
 										elide = right
 										fontsize_min = 12
 										default_format = "#v"
-										text = "[PoliticalMovement.GetCivilWar.GetNumUprisingFlotillas]"
-									}	
-
-									widget = {
-										size = { 5 5 }
-									}									
-
-									icon = {
-										size = { 30 30 }
-										texture = "gfx/interface/icons/generic_icons/state.dds"
+										text = "[GetPlayer.MakeScope.ScriptValue('bpm_state_capacity')|v0]"
 									}
-
-									textbox = {
-										autoresize = yes
-										align = nobaseline
-										elide = right
-										fontsize_min = 12
-										default_format = "#v"
-										text = "[PoliticalMovement.GetCivilWar.GetNumUprisingStates]"
-									}
+									expand = {}
 								}
 							}
 						}
@@ -976,9 +983,9 @@ types ongoing_outliner_items {
 			
 			### Interest Groups
 			flowcontainer = {
-				datacontext = "[AccessPlayer.GetGrowingCivilWar]"
-				visible = "[Not(IsDataModelEmpty(CivilWar.AccessInsurrectionaryIGs(GetPlayer)))]"
-				datamodel = "[CivilWar.AccessInsurrectionaryIGs(GetPlayer)]"
+				#datacontext = "[AccessPlayer.GetGrowingCivilWar]"
+				visible = "[Not(IsDataModelEmpty(GetPlayer.MakeScope.GetList(Concatenate(JournalEntry.MakeScope.Var('bpm_front_currently_planning').GetFlagName, '_members'))))]"
+				datamodel = "[GetPlayer.MakeScope.GetList(Concatenate(JournalEntry.MakeScope.Var('bpm_front_currently_planning').GetFlagName, '_members'))]"
 				parentanchor = hcenter
 				alpha = 0
 				name = "interest_group_top"
@@ -992,17 +999,73 @@ types ongoing_outliner_items {
 				}
 				item = {
 					ig_button = {
+						datacontext = "[Scope.GetInterestGroup]"
 						visible = "[GreaterThanOrEqualTo_CFixedPoint(InterestGroup.GetClout,'(CFixedPoint)0.001')]"
 						size = { 26 26 }
 						
 						tooltipwidget = {
-						 	FancyTooltip_IG = {}
+							FancyTooltip_IG = {}
 						}
 					}
 				}
 			}
 		}
 
-		outliner_revolutionary_movement_events = {}
+		#outliner_revolutionary_movement_events = {}
 	}
+
+	type bpm_revolution_progress_bar = bad_progressbar_horizontal {
+		size = { 100% 100% }
+
+		block "datacontext" {
+			datacontext = "[PoliticalMovement.GetCivilWar]"
+		}
+
+		tooltip = "BPM_REVOLUTION_PROGRESS_TT"
+
+		blockoverride "values" {
+			value = "[FixedPointToFloat( JournalEntry.MakeScope.ScriptValue('bpm_resource_percentage') )]"
+			min = 0
+			max = 1
+		}
+
+		blockoverride "inbetween_progress_and_frame" {
+			icon = {
+				size = { 100% 100% }
+				using = look_at_me_animation_weak
+				texture = "gfx/interface/progressbar/progressbar_bad_glow.dds"
+			}
+		}
+
+		flowcontainer = {
+			parentanchor = hcenter|vcenter
+			margin_right = 35
+			spacing = 5
+
+			textbox = {
+				parentanchor = vcenter
+				autoresize = yes
+				align = nobaseline
+				text = "#yellow;bold Resources#!: #red [JournalEntry.MakeScope.Var('bpm_revolution_resource_amount').GetValue|0v]#!"
+			}
+
+			textbox = {
+				block "next_checkpoint_progress_text_visibility" {}
+				parentanchor = vcenter
+				autoresize = yes
+				align = nobaseline
+				raw_text = "(#v [JournalEntry.MakeScope.ScriptValue('bpm_will_change_nw')|-=0]#!)"
+			}
+		}
+		
+		blockoverride "in_government_icon"{}
+
+		icon = {
+			parentanchor = right|vcenter
+			size = { 25 25 }
+			texture = "gfx/interface/icons/politics_icons/radicalized.dds"
+			position = { -5 0 }
+		}
+	}
+
 }

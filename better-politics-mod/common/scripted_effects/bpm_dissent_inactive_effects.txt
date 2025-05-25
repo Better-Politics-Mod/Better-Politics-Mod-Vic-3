@@ -1,3 +1,9 @@
+
+bpm_dissent_inactive_je_effects = {
+	bpm_dissent_je_no_confidence_inactive_effect = yes
+	bpm_dissent_je_revolution_inactive_effect = yes
+}
+
 bpm_dissent_je_no_confidence_inactive_effect = {
 	je:je_bpm_dissent_no_confidence = {
 			clear_variable_list = bpm_planning_subversive_action_ig
@@ -38,4 +44,178 @@ bpm_dissent_je_no_confidence_inactive_effect = {
 		}
 			
 
+}
+
+bpm_dissent_je_revolution_inactive_effect = {
+	#set_variable = WAS_CALLED
+	if = {
+		limit = {
+			has_inactive_journal_entry = je_bpm_dissent_revolution
+		}
+		je:je_bpm_dissent_revolution = {
+			save_scope_as = selected_je
+		}
+		scope:selected_je = {
+			set_variable = {
+				name = bpm_last_delta
+				value = 0
+			}	
+		}
+		if = { 
+			limit = {
+				scope:selected_je = {
+					NOT = { 
+						has_variable = bpm_front_currently_planning
+					}
+				}
+			}
+			scope:selected_je = {
+				set_variable = {
+					name = bpm_je_counter 
+					value = 0
+				}
+			}
+			bpm_dissent_je_revolution_inactive_effect_create_from_ig = { n = 0 }
+			bpm_dissent_je_revolution_inactive_effect_create_from_ig = { n = 1}
+			bpm_dissent_je_revolution_inactive_effect_create_from_mov = { n = 0 }
+			bpm_dissent_je_revolution_inactive_effect_create_from_mov = { n = 1}
+			bpm_dissent_je_revolution_inactive_effect_create_from_ig = { n = 2}
+			bpm_dissent_je_revolution_inactive_effect_create_from_ig = { n = 3}
+			bpm_dissent_je_revolution_inactive_effect_create_from_ig = { n = 4}
+			bpm_dissent_je_revolution_inactive_effect_create_from_mov = { n = 2}
+	
+		}
+		else = {
+			scope:selected_je.var:bpm_front_currently_planning = {
+				save_scope_as = selected_front_name
+			}
+			save_scope_value_as = {
+				name = change_delta
+				value = bpm_front_organization_change
+			}
+			scope:selected_je = { set_variable = {
+				name = bpm_last_delta
+				value = scope:change_delta
+			} }
+			bpm_update_front_organization = { v = scope:change_delta }
+			bpm_save_front_organization_to_je = yes
+		}
+		if = {
+			limit = {
+				scope:selected_je = {
+					var:bpm_last_delta = 0
+				}
+			}
+			if = {
+				limit = {
+					scope:selected_je = {
+						var:bpm_je_counter >= 5
+					}
+				}
+				scope:selected_je = {
+					remove_variable = bpm_front_currently_planning
+				}
+			}
+			else = {
+				scope:selected_je = {
+					change_variable = {
+						name = bpm_je_counter
+						add = 1
+					}
+				}
+			}
+
+		}
+		else = {
+			scope:selected_je = {
+				set_variable = {
+					name = bpm_je_counter
+					value = 0
+				}
+			}
+		}
+	}
+}
+
+bpm_dissent_je_revolution_inactive_effect_create_from_mov = {
+	if = {
+		limit = {
+			# check if this already has a revolution being prepared
+			scope:selected_je = {
+				NOT = { 
+					has_variable = bpm_front_currently_planning
+				}
+			}
+		}
+		# find a movement that wants to start a revolution
+		ordered_political_movement = {
+			limit = {
+				bpm_mov_wants_to_revolution = yes
+			}
+			position = $n$
+			order_by = political_movement_radicalism
+			save_scope_as = selected_mov
+		}
+		# find a front theyre in
+		if = {
+			limit = {
+				exists = scope:selected_mov
+			}
+			bpm_get_mov_front = yes
+			if = {
+				limit = {
+					exists = scope:member_front_name
+				}
+				scope:selected_je = {
+					set_variable = {
+						name = bpm_front_currently_planning
+						value = scope:member_front_name
+					}
+				}
+			}
+			clear_saved_scope = selected_mov
+		}
+	}
+	
+}
+
+bpm_dissent_je_revolution_inactive_effect_create_from_ig = {
+	if = {
+		limit = {
+			# check if this already has a revolution being prepared
+			scope:selected_je = {
+				NOT = { 
+					has_variable = bpm_front_currently_planning
+				}
+			}
+		}
+			# find a movement that wants to start a revolution
+		ordered_interest_group = {
+			limit = {
+				bpm_ig_wants_to_revolution = yes
+			}
+			position = $n$
+			order_by = bpm_ig_revoluwant
+			save_scope_as = selected_ig
+		}
+		# find a front theyre in
+		if = {
+			limit = {
+				exists = scope:selected_ig
+			}
+			bpm_get_ig_front = yes
+			if = {
+				limit = {
+					exists = scope:member_front_name
+				}
+				scope:selected_je = {
+					set_variable = {
+						name = bpm_front_currently_planning
+						value = scope:member_front_name
+					}
+				}
+			}
+			clear_saved_scope = selected_ig
+		}
+	}
 }

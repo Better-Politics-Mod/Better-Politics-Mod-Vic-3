@@ -444,7 +444,11 @@ je_bpm_christian_or_democrat = {
 
 	group = je_group_crises
 
-	scripted_progress_bar = je_bpm_split_christdem_progress_bar
+	is_progressing = {
+		government_legitimacy >= 10
+	}
+
+	#scripted_progress_bar = je_bpm_split_christdem_progress_bar
 	scripted_progress_bar = je_bpm_christian_democrat_ideology_progress_bar
 	scripted_progress_bar = je_bpm_christian_democrats_economy_progress_bar
 	scripted_progress_bar = je_bpm_christian_democrats_welfare_progress_bar
@@ -573,119 +577,6 @@ je_bpm_christian_or_democrat = {
 	}
 
 	immediate = {
-		#if = {
-		#	limit = {
-		#		OR = {
-		#			country_has_primary_culture = cu:north_german
-		#			country_has_primary_culture = cu:south_german
-		#		}
-		#	}
-		#	set_global_variable = {
-		#		name = bpm_frankfurt_parliament_progress
-		#		value = 0
-		#	}
-		#	bpm_calculate_frankfurt_parliament_seats = yes
-		#
-		#	c:LUX = {
-		#		if = {
-		#			limit = { is_subject = yes }
-		#			set_variable = boycotting_frankfurt
-		#		}
-		#	}
-		#	c:SCH = {
-		#		if = {
-		#			limit = { is_subject = yes }
-		#			set_variable = boycotting_frankfurt
-		#		}
-		#	}
-		#	c:HOL = {
-		#		if = {
-		#			limit = { is_subject = yes }
-		#			set_variable = boycotting_frankfurt
-		#		}
-		#	}
-		#	# c:UBD = {
-		#	# 	if = {
-		#	# 		limit = { is_subject = yes }
-		#	# 		set_variable = boycotting_frankfurt
-		#	# 	}
-		#	# }
-		#}
-
-		#every_country = {
-		#	limit = {
-		#		OR = {
-		#			country_has_primary_culture = cu:north_german
-		#			country_has_primary_culture = cu:south_german
-		#		}
-		#		NOT = { has_variable = boycotting_frankfurt }
-		#	}
-		#	add_to_global_variable_list = {name = frankfurt_participant target = THIS}
-		#}
-
-		# trigger_event = { id = bpm_frankfurt_parliament_events.200 }
-	}
-
-	#scripted_button = je_frankfurt_button
-	#scripted_button = je_frankfurt_boycott_button
-
-	on_monthly_pulse = {
-		effect = {
-			change_variable = {
-				name = independence_from_church_variable
-
-				add = {
-					desc = "BPM_BASE_VALUE"
-					value = 0.1
-				}
-
-				add = {
-					if = {
-						limit = {
-							NOT = {
-								country_has_state_religion = rel:catholic
-							}
-						}
-						value = -0.2
-					}
-				}
-
-				add = {
-					if = {
-						limit = { 
-							OR = { 
-								ig:ig_christian_democrats.var:bpm_movement_liberal_pressure > 0.1
-								OR = {
-									var:bpm_liberal_movement.political_movement_support >= 0.1
-									var:bpm_liberal_movement.political_movement_radicalism >= 0.2
-								}
-							}
-						}
-						value = 20
-						multiply = ig:ig_christian_democrats.var:bpm_movement_liberal_pressure
-						divide = 20
-					}
-				}
-			}
-		}
-		events = {
-			bpm_christdem_split.6 # Religion
-			bpm_christdem_split.4 # Decentralization
-			bpm_christdem_split.9 # Democracy
-			bpm_christdem_split.5 # Economy
-			bpm_christdem_split.7 # Welfare
-			bpm_christdem_split.8 # Citizenship/Nationalizm
-			bpm_christdem_split.10 # Military
-			bpm_christdem_split.11 # Women's Rights
-
-
-
-			
-			bpm_frankfurt_parliament_events.23
-		}
-	}
-
-	immediate = {
 		set_variable = {
 			name = independence_from_church_variable
 			value = 0
@@ -693,6 +584,89 @@ je_bpm_christian_or_democrat = {
 		set_variable = {
 			name = christian_democrats_ideology_change
 			value = 0
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					scope:journal_entry = {
+						is_progressing = yes
+					}
+				}
+				change_variable = {
+					name = independence_from_church_variable
+					add = {
+						value = 0.1
+					}
+				}
+
+				if = {
+					limit = {
+						NOT = {
+							country_has_state_religion = rel:catholic
+						}
+					}
+					change_variable = {
+						name = independence_from_church_variable
+						add = -0.2
+					}
+				}
+
+				#if = {
+				#	limit = {
+				#		this = c:FRA
+				#	}
+				#	change_variable = {
+				#		name = independence_from_church_variable
+				#		add = 0.1
+				#	}
+				#}
+				
+				#if = {
+				#	limit = { 
+				#		owner = {
+				#			OR = {
+				#				ig:ig_christian_democrats.var:bpm_movement_liberal_pressure > 0.1
+				#				OR = {
+				#					var:bpm_liberal_movement.political_movement_support >= 0.1
+				#					var:bpm_liberal_movement.political_movement_radicalism >= 0.2
+				#				}
+				#			}
+				#		}
+				#	}
+				#	change_variable = {
+				#		name = independence_from_church_variable
+				#		add = 20
+				#		multiply = ig:ig_christian_democrats.var:bpm_movement_liberal_pressure
+				#		divide = 20
+				#	}
+				#}
+				clamp_variable = {
+					name = independence_from_church_variable
+					max = 100
+					min = 0
+				}
+			}
+		}
+		events = {
+			bpm_christdem_split.6 # Religion
+			bpm_christdem_split.4 # Decentralization
+			bpm_christdem_split.8 # Citizenship/Nationalism
+			bpm_christdem_split.9 # Democracy
+
+			######## Post-Rerum Novarum:
+
+			bpm_christdem_split.5 # Economy
+			bpm_christdem_split.7 # Welfare
+			bpm_christdem_split.10 # Military
+			bpm_christdem_split.11 # Women's Rights
+			bpm_christdem_split.12 # The IG becomes even more independent and is able to create official programmes/proper organizations/party whatever
+
+
+			
+			#bpm_frankfurt_parliament_events.23
 		}
 	}
 
@@ -715,7 +689,7 @@ je_bpm_christian_or_democrat = {
 	}
 
 	complete = {
-		custom_tooltip ={
+		custom_tooltip = {
 			text = frankfurt_win_tt
 			has_global_variable = bpm_frankfurt_complete
 		}
@@ -726,17 +700,6 @@ je_bpm_christian_or_democrat = {
 			id = bpm_christdem_split.3
 		}
 	}
-
-	# on_complete = {
-	# 	random_country = {
-	# 		limit = { has_variable = frankfurt_leader }
-	# 		trigger_event = { id = bpm_frankfurt_parliament_events.13 }
-	# 	}
-	#}
-
-	# invalid = {
-	# 	has_variable = completed_peoples_springtime_je
-	# }
 
 	progressbar = yes
 

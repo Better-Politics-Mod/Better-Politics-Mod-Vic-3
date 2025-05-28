@@ -1,5 +1,29 @@
-types event_window_types {
 
+##############################
+# COMMUNITY GUI EVENT WINDOW #
+##############################
+
+# Modified by Alexedishi for the Community GUI Framework
+# This modification is to sidestep the vanilla event window's reliance on the default_popup_two_lines type
+
+####################
+
+# Copied over from default window
+@panel_width_minus_10 = 530			# used to be 450
+@panel_width = 540  				# used to be 460
+@panel_width_half = 270				# used to be 230
+@panel_width_plus_10 = 550  		# used to be 470
+@panel_width_plus_14 = 554			# used to be 474
+@panel_width_plus_14_half = 277		# used to be 237
+@panel_width_plus_20 = 560			# used to be 480
+@panel_width_plus_30 = 570			# used to be 490
+@panel_width_plus_70 = 610			# used to be 530
+
+####################
+
+#### Default Event Window Types ####
+
+types event_window_types {
 	### USED FOR SMALL FLAGS / ICONS / PORTRAITS IN TOP HEADER
 	type event_icon = widget {
 		visible = "[EventIcon.IsVisible]"
@@ -26,116 +50,33 @@ types event_window_types {
 			size = { 55 55 }
 		}
 	}
-
+	
 	### EVENT WINDOW BASE TYPE
-	type event_window = default_popup_two_lines {
-		datacontext = "[EventWindow.GetEvent]"
-
-		alpha = 0
-
-		blockoverride "minimize" {
-			minimize_button_large = {
-				onclick = "[PopupManager.HideOpenEvent(Event.Self)]"
+	type event_window = widget {
+		size = { 100% 100% }
+		
+		block "event_window_full_block" {
+			window = {
 				parentanchor = center
-				shortcut = "close_window"
-			}
-		}
-		blockoverride "header_close_button_visibility" {
-			visible = yes
-		}
+				movable = yes
+				layer = popups
+				allow_outside = yes
+				
+				datacontext = "[EventWindow.GetEvent]"
 
-		blockoverride "window_header_name" {
-			raw_text = "#BOLD [EventWindow.GetTitle]#!"
-		}
-		blockoverride "content" {}
+				alpha = 0
 
-		blockoverride "second_text" {
-			text = "EVENT_WINDOW_EVENT_LOCATION"
-		}
+				block "behind_window" {}
 
-		blockoverride "goto_visibility" {
-			visible = yes
-		}
+				widget = {
+					size = { 100% 100% }
 
-		blockoverride "goto_properties" {
-			onclick = "[EventWindow.AccessEvent.AccessState.ZoomToCapital]"
-			tooltip = "ZOOM_TO_EVENT_WINDOW_STATE"
-			enabled = "[Not( EventWindow.AccessEvent.AccessState.IsZoomingToCapital )]"
-		}
-
-		state = {
-			trigger_on_create = yes
-			name = 1
-			duration = 0.3
-			using = Animation_Curve_EaseOut
-			alpha = 1
-			using = Snapshot_Mute_World_100
-			using = Snapshot_Mute_Vfx_War_100
-			start_sound = {
-				soundeffect = "[Event.GetOnOpenedSoundEvent]"
-			}
-		}
-
-		### SETTING SIZE OF WINDOW
-		flowcontainer = {
-			resizeparent = yes
-			margin = { 35 0 }
-			margin_bottom = 25
-
-			### VIDEO/IMAGE + TEXT/OPTIONS
-			container = {
-				### HEADER FLAGS / PORTRAITS / ICONS
-				event_icon = {
-					position = { 20 0 }
-					datacontext = "[Event.GetIcon('minor_left_icon')]"
-				}
-				event_icon = {
-					parentanchor = right
-					position = { -25 0 }
-					datacontext = "[Event.GetIcon('minor_right_icon')]"
-				}
-
-				container = {
-					minimumsize = { 1120 -1 }
-					position = { 0 90 }
-
-					### EVENT IMAGE / CONTENT
-					widget = {
-						position = { 3 3 }
-						size = { 850 600 }
-
-						block "event_content" {
-
-							# image in case we have no video?
-							icon = {
-								visible = "[Event.HasTexture]"
-								texture = "[Event.GetTexture]"
-								alwaystransparent = yes
-								size = { 100% 100% }
-							}
-
-							# animated video ( most images should have this )
-							video_icon = {
-								visible = "[Event.HasVideo]"
-								video = "[Event.GetVideo]"
-								size = { 100% 100% }
-								alwaystransparent = yes
-								loop = no
-							}
-						}
-					}
-
-					### INNER FRAME + FADE OVER THE IMAGE
-					icon = {
-						texture = "gfx/interface/event_window/event_inner_frame.dds"
-						size = { 100% 100% }
-						spriteType = Corneredtiled
-						spriteborder = { 25 25 }
-						spriteborder_right = 610
-						spriteborder_top = 600
+					background = {
+						texture = "gfx/interface/backgrounds/popup_bg.dds"
+						spriteType = Corneredstretched
+						spriteborder = { 90 90 }
 						texture_density = 2
-						#visible = no
-					
+
 						modify_texture = {
 							texture = "gfx/interface/backgrounds/default_bg_shading.dds"
 							spriteType = Corneredstretched
@@ -146,192 +87,402 @@ types event_window_types {
 							using = texture_velvet
 						}
 					}
-					
-					### CONTENT DESIGNATION ICON
-					flowcontainer = {
-						visible = "[Event.IsDLCContent]"
-						tooltip = "EVENT_DLC_TOOLTIP"
-						spacing = 10
-						parentanchor = bottom|left
-						position = { 10 -10 }
+				}
 
-						icon = {
-							size = { 40 40 }
-							texture = "gfx/interface/backgrounds/round_frame_dec.dds"
-							parentanchor = bottom|left
-
-							icon = {
-								size = { 40 40 }
-								position = { 3 -3 }
-
-								texture = "[Event.GetDLCIcon]"
-								parentanchor = center
-
-							}
-						}
-
-						textbox = {
-							size = { 150 20 }
-							align = left|vcenter
-							parentanchor = left|vcenter
-							elide = right
-							using = fontsize_large
-							fontsize_min = 12
-							alpha = 0.7
-
-							text = "[Event.GetDLCName]"
+				block "sound" {
+					state = {
+						name = sound
+						trigger_on_create = yes
+						start_sound = {
+							using = ui_sfx_global_popup
 						}
 					}
+				}
 
-					### TITLE / TEXT / OPTIONS
-					flowcontainer = {
-						minimumsize = { -1 606 }
-						direction = vertical
-						spacing = 20
-						parentanchor = right|vcenter
-						margin = { 25 40 }
+				### HEADER
+				block "header" {
+					widget = {
+						size = { 100% 82 }
 
-						background = {
-							using = entry_bg_simple_solid
-							margin = { -15 -20 }
-						}
+						popup_top_header = {}
 
 						textbox = {
-							name = "description"
-							multiline = yes
-							autoresize = yes
-							minimumsize = { 480 -1 }
-							maximumsize = { 520 -1 }
-							parentanchor = top|hcenter
+							block "first_line_position" {
+								position = { 0 14 }
+							}
+							size = { 75% 40 }
+							block "window_header_name" {
+								raw_text = "#BOLD [EventWindow.GetTitle]#!"
+							}
+							elide = right
+							fontsize_min = 14
+							parentanchor = hcenter
 							align = hcenter|nobaseline
-							raw_text = "#bold [EventWindow.GetDescription]#!"
-							margin = { 10 0 }
-							using = fontsize_large
+							using = header_font
+							using = header_font_size
+							default_format = "#header"
 						}
 
-						divider_decorative = {}
-
-						textbox = {
-							name = "flavortext"
-							multiline = yes
-							autoresize = yes
-							minimumsize = { 480 -1 }
-							maximumsize = { 480 -1 }
-							parentanchor = top|hcenter
-							align = top|left
-							raw_text = "#lore [EventWindow.GetFlavor]#!"
-							margin = { 30 10 }
+						block "second_line" {
+							textbox = {
+								block "second_text" {
+									text = "EVENT_WINDOW_EVENT_LOCATION"
+								}
+								position = { 0 49 }
+								parentanchor = hcenter
+								autoresize = yes
+								align = nobaseline
+								block "second_text_properties" {}
+							}
 						}
+					}
+				}
 
-						widget = { size = { 20 10 }}
+				### FRAME
+				block "frame" {
+					popup_bg_frame = {}
+				}
 
-						flowcontainer = {
-							direction = vertical
-							using = default_list_position
-							datamodel = "[EventWindow.GetOptions]"
-							spacing = 5
+				### BACK
+				container = {
+					position = { 3 10 }
+					block "header_back_button_visibility" {
+						visible = no
+					}
 
-							item = {
-								container = {
-									
-									widget = {
-										visible = "[EventOption.IsHighlightedOption]"
-										
-										button = {
-											size = { 96% 100% }
-											parentanchor = hcenter
-											using = default_button_primary_action
-											onclick = "[EventOption.Select]"
-											tooltip = "[EventOption.GetDesc]"
-											using = tooltip_ws
-											enabled = "[EventOption.IsEnabled]"
-											using = confirm_button_sound
-										}
+					icon = {
+						size = { 53 53 }
+						texture = "gfx/interface/backgrounds/round_button_bg.dds"
+					}
+					back_button_large = {
+						block "header_back_button" {}
+						parentanchor = center
+					}
+				}
 
-										textbox = {
-											resizeparent = yes
-											minimumsize = { 500 42 }
-											maximumsize = { 500 -1 }
-											text = "[EventOption.GetText]"
-											multiline = yes
-											align = hcenter|nobaseline
-											autoresize = yes
-											margin = { 30 10 }
-										}
+				### CLOSE
+				container = {
+					parentanchor = right
+					position = { -3 10 }
+					block "header_close_button_visibility" {
+						visible = yes
+					}
+
+					icon = {
+						size = { 53 53 }
+						texture = "gfx/interface/backgrounds/round_button_bg.dds"
+					}
+					block "minimize" {
+						minimize_button_large = {
+							onclick = "[PopupManager.HideOpenEvent(Event.Self)]"
+							parentanchor = center
+							shortcut = "close_window"
+						}
+					}
+				}
+
+				widget = {
+					block "goto_visibility" {
+						visible = yes
+					}
+					size = { 30 30 }
+					position = { -48 16 }
+					parentanchor = right
+
+					button_icon_zoom = {
+						size = { 100% 100% }
+						block "goto_properties" {
+							onclick = "[EventWindow.AccessEvent.AccessState.ZoomToCapital]"
+							tooltip = "ZOOM_TO_EVENT_WINDOW_STATE"
+							enabled = "[Not( EventWindow.AccessEvent.AccessState.IsZoomingToCapital )]"
+						}
+					}
+				}
+				
+				state = {
+					trigger_on_create = yes
+					name = 1
+					duration = 0.3
+					using = Animation_Curve_EaseOut
+					alpha = 1
+					using = Snapshot_Mute_World_100
+					using = Snapshot_Mute_Vfx_War_100
+					start_sound = {
+						soundeffect = "[Event.GetOnOpenedSoundEvent]"
+					}
+				}
+
+				### CONTENT
+				
+				block "event_content" {
+				
+					### SETTING SIZE OF WINDOW
+					flowcontainer = {
+						resizeparent = yes
+						margin = { 35 0 }
+						margin_bottom = 25
+
+						### VIDEO/IMAGE + TEXT/OPTIONS
+						container = {
+							### HEADER FLAGS / PORTRAITS / ICONS
+							event_icon = {
+								position = { 20 0 }
+								datacontext = "[Event.GetIcon('minor_left_icon')]"
+							}
+							event_icon = {
+								parentanchor = right
+								position = { -25 0 }
+								datacontext = "[Event.GetIcon('minor_right_icon')]"
+							}
+
+							container = {
+								minimumsize = { 1120 -1 }
+								position = { 0 90 }
+
+								### EVENT IMAGE / CONTENT
+								widget = {
+									block "event_image_size" {
+										position = { 3 3 }
+										size = { 850 600 }
 									}
 
-									widget = {
-										visible = "[Not(EventOption.IsHighlightedOption)]"
-										
-										button = {
-											size = { 96% 100% }
-											parentanchor = hcenter
-											using = default_button_action
-											onclick = "[EventOption.Select]"
-											tooltip = "EVENT_OPTION_TOOLTIP"
-											using = tooltip_ws
-											enabled = "[EventOption.IsEnabled]"
-											using = confirm_button_sound
+									block "event_image_content" {
+
+										# image in case we have no video?
+										icon = {
+											visible = "[Event.HasTexture]"
+											texture = "[Event.GetTexture]"
+											alwaystransparent = yes
+											size = { 100% 100% }
+										}
+
+										# animated video ( most images should have this )
+										video_icon = {
+											visible = "[Event.HasVideo]"
+											video = "[Event.GetVideo]"
+											size = { 100% 100% }
+											alwaystransparent = yes
+											loop = no
+										}
+									}
+								}
+
+								### INNER FRAME + FADE OVER THE IMAGE
+								block "event_inner_shading" {
+									icon = {
+										texture = "gfx/interface/event_window/event_inner_frame.dds"
+										size = { 100% 100% }
+										spriteType = Corneredtiled
+										spriteborder = { 25 25 }
+										spriteborder_right = 610
+										spriteborder_top = 600
+										texture_density = 2
+										#visible = no
+									
+										modify_texture = {
+											texture = "gfx/interface/backgrounds/default_bg_shading.dds"
+											spriteType = Corneredstretched
+											spriteborder = { 0 0 }
+											blend_mode = overlay
+										}
+										modify_texture = {
+											using = texture_velvet
+										}
+									}
+								}
+								
+								### CONTENT DESIGNATION ICON
+								block "event_dlc_icon" {
+									flowcontainer = {
+										visible = "[Event.IsDLCContent]"
+										tooltip = "EVENT_DLC_TOOLTIP"
+										spacing = 10
+										parentanchor = bottom|left
+										position = { 10 -10 }
+
+										icon = {
+											size = { 40 40 }
+											texture = "gfx/interface/backgrounds/round_frame_dec.dds"
+											parentanchor = bottom|left
+
+											icon = {
+												size = { 40 40 }
+												position = { 3 -3 }
+
+												texture = "[Event.GetDLCIcon]"
+												parentanchor = center
+
+											}
 										}
 
 										textbox = {
-											resizeparent = yes
-											minimumsize = { 500 42 }
-											maximumsize = { 500 -1 }
-											text = "[EventOption.GetText]"
+											size = { 150 20 }
+											align = left|vcenter
+											parentanchor = left|vcenter
+											elide = right
+											using = fontsize_large
+											fontsize_min = 12
+											alpha = 0.7
+
+											text = "[Event.GetDLCName]"
+										}
+									}
+								}
+
+								### TITLE / TEXT / OPTIONS
+								block "event_title_text_options" {
+									flowcontainer = {
+										minimumsize = { -1 606 }
+										direction = vertical
+										spacing = 20
+										parentanchor = right|vcenter
+										margin = { 25 40 }
+
+										background = {
+											using = entry_bg_simple_solid
+											margin = { -15 -20 }
+										}
+
+										textbox = {
+											name = "description"
 											multiline = yes
-											align = hcenter|nobaseline
 											autoresize = yes
+											minimumsize = { 480 -1 }
+											maximumsize = { 520 -1 }
+											parentanchor = top|hcenter
+											align = hcenter|nobaseline
+											raw_text = "#bold [EventWindow.GetDescription]#!"
+											margin = { 10 0 }
+											using = fontsize_large
+										}
+
+										divider_decorative = {}
+
+										textbox = {
+											name = "flavortext"
+											multiline = yes
+											autoresize = yes
+											minimumsize = { 480 -1 }
+											maximumsize = { 480 -1 }
+											parentanchor = top|hcenter
+											align = top|left
+											raw_text = "#lore [EventWindow.GetFlavor]#!"
 											margin = { 30 10 }
 										}
 
-										### Time until the default option will be picked
-										round_progress_default = {
-											visible = "[EventOption.IsDefaultOption]"
-											parentanchor = right|vcenter
-											position = { 0 0.5 }
-											size = { 27 27 }
-											tooltip = "DEFAULT_EVENT_OPTION"
-											value = "[Event.GetPercentageRemainingDays]"
+										widget = { size = { 20 10 }}
 
-											icon = {
-												size = { 26 26 }
-												position = { -0.2 -0.2 }
-												parentanchor = center
-												texture = "gfx/interface/icons/generic_icons/event_default_option.dds"
+										flowcontainer = {
+											direction = vertical
+											using = default_list_position
+											datamodel = "[EventWindow.GetOptions]"
+											spacing = 5
+
+											item = {
+												container = {
+													
+													widget = {
+														visible = "[EventOption.IsHighlightedOption]"
+														
+														button = {
+															size = { 96% 100% }
+															parentanchor = hcenter
+															using = default_button_primary_action
+															onclick = "[EventOption.Select]"
+															tooltip = "[EventOption.GetDesc]"
+															using = tooltip_ws
+															enabled = "[EventOption.IsEnabled]"
+															using = confirm_button_sound
+														}
+
+														textbox = {
+															resizeparent = yes
+															minimumsize = { 500 42 }
+															maximumsize = { 500 -1 }
+															text = "[EventOption.GetText]"
+															multiline = yes
+															align = hcenter|nobaseline
+															autoresize = yes
+															margin = { 30 10 }
+														}
+													}
+
+													widget = {
+														visible = "[Not(EventOption.IsHighlightedOption)]"
+														
+														button = {
+															size = { 96% 100% }
+															parentanchor = hcenter
+															using = default_button_action
+															onclick = "[EventOption.Select]"
+															tooltip = "EVENT_OPTION_TOOLTIP"
+															using = tooltip_ws
+															enabled = "[EventOption.IsEnabled]"
+															using = confirm_button_sound
+														}
+
+														textbox = {
+															resizeparent = yes
+															minimumsize = { 500 42 }
+															maximumsize = { 500 -1 }
+															text = "[EventOption.GetText]"
+															multiline = yes
+															align = hcenter|nobaseline
+															autoresize = yes
+															margin = { 30 10 }
+														}
+
+														### Time until the default option will be picked
+														round_progress_default = {
+															visible = "[EventOption.IsDefaultOption]"
+															parentanchor = right|vcenter
+															position = { 0 0.5 }
+															size = { 27 27 }
+															tooltip = "DEFAULT_EVENT_OPTION"
+															value = "[Event.GetPercentageRemainingDays]"
+
+															icon = {
+																size = { 26 26 }
+																position = { -0.2 -0.2 }
+																parentanchor = center
+																texture = "gfx/interface/icons/generic_icons/event_default_option.dds"
+															}
+														}
+													}
+												}
 											}
+										}
+
+										button = {
+											parentanchor = hcenter
+											visible = "[InDebugMode]"
+											size = { 480 62 }
+											using = default_button
+											raw_text = "DEBUG: Open Event in text editor"
+											onclick = "[EventWindow.AccessEvent.OpenInEditor]"
+										}
+
+										textbox = {
+											background = {
+												using = default_background
+											}
+											parentanchor = hcenter
+											size = { 480 62 }
+											visible = "[InDebugMode]"
+											raw_text = "DEBUG: Trigger description"
+											tooltip = "[Event.GetTriggerDesc]"
+											align = hcenter|nobaseline
+										}
+
+										textbox = {
+											visible = [InDebugMode]
+											parentanchor = hcenter
+											align = hcenter
+											raw_text = "Event ID: [Event.GetKey|v]"
 										}
 									}
 								}
 							}
-						}
-
-						button = {
-							parentanchor = hcenter
-							visible = "[InDebugMode]"
-							size = { 480 62 }
-							using = default_button
-							raw_text = "DEBUG: Open Event in text editor"
-							onclick = "[EventWindow.AccessEvent.OpenInEditor]"
-						}
-
-						textbox = {
-							background = {
-								using = default_background
-							}
-							parentanchor = hcenter
-							size = { 480 62 }
-							visible = "[InDebugMode]"
-							raw_text = "DEBUG: Trigger description"
-							tooltip = "[Event.GetTriggerDesc]"
-							align = hcenter|nobaseline
-						}
-
-						textbox = {
-							visible = [InDebugMode]
-							parentanchor = hcenter
-							align = hcenter
-							raw_text = "Event ID: [Event.GetKey|v]"
 						}
 					}
 				}
@@ -339,6 +490,9 @@ types event_window_types {
 		}
 	}
 }
+
+########################################
+
 
 ### DEFAULT WINDOW (with video image)
 event_window = {
@@ -600,3 +754,30 @@ event_window = {
 
 event_window_form_government = {}
 event_window_choose_pm = {}
+
+
+#### CMF Character Window Variants
+event_window_1char_adventure = {}
+event_window_2char_adventure = {}
+event_window_2char_duel = {}
+event_window_2char_discussion = {}
+event_window_highlander = {}
+event_window_3char = {}
+event_window_3char_selection = {}
+
+#### CMF Superevent Window Variants
+event_window_superevent_newspaper = {}
+event_window_superevent_newspaper_full = {}
+event_window_superevent_classic = {}
+event_window_superevent_classic_full = {}
+event_window_superevent_modern = {}
+event_window_superevent_modern_full = {}
+event_window_superevent_crisis = {}
+
+#### CMF Widescreen Window Variants
+event_window_widescreen_classic = {}
+event_window_widescreen_newspaper = {}
+
+#### CMF Special Window Variants
+event_window_special = {} # placeholder
+event_window_ethics = {}

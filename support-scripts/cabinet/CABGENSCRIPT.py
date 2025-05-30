@@ -161,14 +161,25 @@ bpm_reload_institution_modifiers_XXX = {
 """
 
     add_fstr += """
-            add_modifier = {
-                name = bpm_XXX_attraction_modifier
-                multiplier = owner.institution:institution_XXX.investment
+            owner.institution:institution_schools = {
+                save_scope_as = inst_scope
             }
+            switch = {
+                trigger = scope:inst_scope.investment
+"""
+    for inv_ind in range(1,7):
+        add_fstr += """
+                {inv_ind} = {
+                    add_modifier = {
+                        name = bpm_XXX_attraction_modifier
+                        multiplier = {inv_ind}
+                    }
+                }
+""".replace('XXX', nm)
+    add_fstr += """            }
             add_modifier = bpm_number_of_cabinet_picks
         }
-""".replace('XXX', nm)
-    add_fstr += """    }
+    }
 }
 """
     return add_fstr

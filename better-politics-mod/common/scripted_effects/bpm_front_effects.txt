@@ -1146,3 +1146,88 @@ bpm_update_front_organization = {
 		}
 	}
 }
+
+bpm_front_create_revolution_tag = {
+	if = {
+		limit = {
+			scope:journal_entry = {
+				var:bpm_front_currently_planning = flag:bpm_front_peasant
+			}
+		}
+		bpm_front_create_revolutionary_tag_subp = { tag = PEASANT_FRONT }
+	}
+}
+
+bpm_front_create_revolutionary_tag_subp = {
+	scope:journal_entry = {
+		var:bpm_front_currently_planning = {
+			save_scope_as = selected_front_name
+		}
+	}
+	ordered_scope_state = {
+		limit = {
+			is_capital = no
+		}
+		position = 0
+		order_by = bpm_state_front_weight
+		save_scope_as = new_capital_state
+	}
+	create_country = {
+		tag = $tag$
+		origin = this
+		state = scope:new_capital_state
+		on_created = {
+			set_variable = bpm_country_mark_rev
+		}
+	}
+	random_country = {
+		limit = {
+			has_variable = bpm_country_mark_rev
+		}
+		remove_variable = bpm_country_mark_rev
+		save_scope_as = new_country
+	}
+	ordered_scope_state = {
+		limit = {
+			is_capital = no
+			#bpm_state_front_weight > 25
+		}
+		min = 1
+		max = 4
+		order_by = bpm_state_front_weight
+		set_state_owner = scope:new_country
+	}
+	ordered_scope_state = {
+		limit = {
+			is_capital = no
+			bpm_state_front_weight > 25
+		}
+		order_by = bpm_state_front_weight
+		set_state_owner = scope:new_country
+	}
+	create_diplomatic_play = {  
+		name = war_between_states
+		target_country = scope:new_country
+		type = dp_revolution
+		annex_as_civil_war = yes
+	} 
+		
+}
+
+bpm_front_create_revolutionary_tag__debug = {
+
+	every_country = {
+		limit = {
+			NOT = {
+				is_country_type = decentralized
+			}
+		}
+		je:je_bpm_dissent_revolution = {
+			save_scope_as = journal_entry
+		}
+		while = {
+			count = 5
+			bpm_front_create_revolutionary_tag_subp = { tag = PEASANT_FRONT }
+		}
+	}
+}

@@ -440,7 +440,7 @@ je_bpm_second_international = {
 #}
 
 je_bpm_christian_or_democrat = {
-	icon = "gfx/interface/icons/event_icons/church_and_state.dds"
+	icon = "gfx/interface/icons/invention_icons/unused/secularism.dds"
 
 	group = je_group_crises
 
@@ -451,7 +451,7 @@ je_bpm_christian_or_democrat = {
 	#scripted_progress_bar = je_bpm_split_christdem_progress_bar
 	scripted_progress_bar = je_bpm_christian_democrat_ideology_progress_bar
 	scripted_progress_bar = je_bpm_christian_democrats_economy_progress_bar
-	scripted_progress_bar = je_bpm_christian_democrats_welfare_progress_bar
+	#scripted_progress_bar = je_bpm_christian_democrats_welfare_progress_bar
 
 	status_desc = {
 		first_valid = {
@@ -506,22 +506,13 @@ je_bpm_christian_or_democrat = {
 				}
 			}
 			triggered_desc = {
-				desc = je_debating_the_cit_stance
-				trigger = {
-					has_variable = bpm_christian_democrats_sta_ideology
-					has_variable = bpm_christian_democrats_rel_ideology
-					has_variable = bpm_christian_democrats_dop_ideology
-					has_variable = bpm_christian_democrats_eco_ideology
-					has_variable = bpm_christian_democrats_wel_ideology
-				}
-			}
-			triggered_desc = {
 				desc = je_debating_the_wel_stance
 				trigger = {
 					has_variable = bpm_christian_democrats_sta_ideology
 					has_variable = bpm_christian_democrats_rel_ideology
 					has_variable = bpm_christian_democrats_dop_ideology
 					has_variable = bpm_christian_democrats_eco_ideology
+					has_variable = bpm_christian_democrats_cit_ideology
 				}
 			}
 			triggered_desc = {
@@ -530,10 +521,19 @@ je_bpm_christian_or_democrat = {
 					has_variable = bpm_christian_democrats_sta_ideology
 					has_variable = bpm_christian_democrats_rel_ideology
 					has_variable = bpm_christian_democrats_dop_ideology
+					has_variable = bpm_christian_democrats_cit_ideology
 				}
 			}
 			triggered_desc = {
 				desc = je_debating_the_dop_stance
+				trigger = {
+					has_variable = bpm_christian_democrats_sta_ideology
+					has_variable = bpm_christian_democrats_rel_ideology
+					has_variable = bpm_christian_democrats_cit_ideology
+				}
+			}
+			triggered_desc = {
+				desc = je_debating_the_cit_stance
 				trigger = {
 					has_variable = bpm_christian_democrats_sta_ideology
 					has_variable = bpm_christian_democrats_rel_ideology
@@ -566,14 +566,71 @@ je_bpm_christian_or_democrat = {
 	}
 
 	possible = {
-		always = yes
-		# has_journal_entry = je_springtime_of_the_peoples
-		# OR = {
-		#	country_has_primary_culture = cu:north_german
-		#	country_has_primary_culture = cu:south_german
-		#}
-		# NOT = { this ?= c:UBD }
-		# exists = c:PRU
+		OR = {
+			custom_tooltip = {
+				text = "Catholic Interests already exist."
+				ig:ig_christian_democrats = {
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
+			}
+			AND = {
+				custom_tooltip = {
+					text = "has_wealth_voting_or_higher"
+					OR = {
+						has_law = law_type:law_wealth_voting
+						has_law = law_type:law_census_voting
+						has_law = law_type:law_universal_suffrage
+					}
+				}
+				
+				custom_tooltip = {
+					text = "People's Springtime has fully ended."
+					has_variable = peoples_springtime_fully_ended
+				}
+				
+				OR = {
+					any_interest_group = {
+						OR = {
+							OR = {
+								has_ideology = ideology:ideology_rel_secularist
+								has_ideology = ideology:ideology_rel_radical_secularist
+							}
+							bpm_ig_is_socialist = yes
+						}
+						is_powerful = yes
+					}
+					AND = {
+						any_interest_group = {
+							OR = {
+								bpm_ig_is_religious = yes
+							}
+							is_powerful = yes
+						}
+						NOT = {
+							country_has_state_religion = rel:catholic
+						}
+					}
+				}
+
+				custom_tooltip = {
+					text = "Country is in Mainland Europe"
+					bpm_country_is_in_europe = yes
+					NOT = {
+						this = c:BRI
+					}
+				}
+
+				custom_tooltip = {
+					text = "Country has more than or equal to 25% Catholics"
+					religion_percent_country = { 
+						target = rel:catholic
+						value >= 0.25
+					}
+				}
+			}
+		}
 	}
 
 	immediate = {
@@ -583,7 +640,11 @@ je_bpm_christian_or_democrat = {
 		}
 		set_variable = {
 			name = christian_democrats_ideology_change
-			value = 0
+			value = 1
+		}
+
+		trigger_event = {
+			id = bpm_christdem_split.1
 		}
 	}
 
@@ -598,7 +659,7 @@ je_bpm_christian_or_democrat = {
 				change_variable = {
 					name = independence_from_church_variable
 					add = {
-						value = 0.1
+						value = 0.5
 					}
 				}
 
@@ -613,6 +674,24 @@ je_bpm_christian_or_democrat = {
 						add = -0.2
 					}
 				}
+
+				#if = {
+				#	limit = {
+				#		OR = { 
+				#			ig:ig_christian_democrats.var:bpm_movement_liberal_pressure > 0.1
+				#			OR = {
+				#				var:bpm_liberal_movement.political_movement_support >= 0.1
+				#				var:bpm_liberal_movement.political_movement_radicalism >= 0.2
+				#			}
+				#		}
+				#	}
+				#	change_variable = {
+				#		name = independence_from_church_variable
+				#		add = 20
+				#		multiply = ROOT.ig:ig_christian_democrats.var:bpm_movement_liberal_pressure
+				#		divide = 20
+				#	}
+				#}
 
 				#if = {
 				#	limit = {
@@ -697,7 +776,7 @@ je_bpm_christian_or_democrat = {
 
 	on_complete = {
 		trigger_event = {
-			id = bpm_christdem_split.3
+			id = bpm_christdem_split.12
 		}
 	}
 

@@ -1,31 +1,51 @@
 bpm_je_christian_democrat_ideology_rate = {
 	value = 0
-	#subtract = {
-	#	desc = "BPM_VALUE_FROM_HIGH_STABILITY"
-	#	if = {
-	#		limit = {
-	#			owner = { var:bpm_political_stability >= 66 }
-	#		}
-	#		add = var:bpm_political_stability
-	#	}
-	#	multiply = 0.005
-	#}
 
-	#add = {
-	#	desc = "BPM_VALUE_FROM_LOW_STABILITY"
-	#	if = {
-	#		limit = {
-	#			owner = { var:bpm_political_stability <= 66 }
-	#		}
-	#		add = var:bpm_political_stability
-	#	}
-	#	multiply = 0.005
-	#}
+	add = {
+		desc = "BPM_VALUE_FROM_PAPACY"
+		if = {
+			limit = {
+				c:PAP = {
+					ruler = {
+						has_ideology = ideology:ideology_theocrat
+					}
+				}
+			}
+			add = -1.0
+		}
+		else_if = {
+			limit = {
+				c:PAP = {
+					ruler = {
+						has_ideology = ideology:ideology_moderate
+					}
+				}
+			}
+			add = 0.3
+		}
+	}
 
 	add = {
 		desc = "BPM_VALUE_FROM_INCLINATION_TOWARDS_MODERATION"
-		add = -0.1
-		multiply = var:christian_democrats_ideology_change
+		
+		if = {
+			limit = {
+				scope:journal_entry = {
+					"scripted_bar_progress(je_bpm_christian_democrat_ideology_progress_bar)" > 50
+				}
+			}
+			add = -0.2
+			multiply = var:christian_democrats_ideology_change
+		}
+		else_if = {
+			limit = {
+				scope:journal_entry = {
+					"scripted_bar_progress(je_bpm_christian_democrat_ideology_progress_bar)" < 50
+				}
+			}
+			add = 0.2
+			multiply = var:christian_democrats_ideology_change
+		}
 	}
 
 	add = {
@@ -73,6 +93,81 @@ bpm_je_christian_democrat_ideology_rate = {
 			add = var:bpm_political_stability
 			multiply = 0.015
 		}
+		multiply = 0.5
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_STRONG_LABOR_LIBERAL_RADICAL_MOVEMENTS"
+
+		if = {
+			limit = { 
+				has_variable = bpm_labor_movement
+                ig:ig_christian_democrats = { 
+                	has_variable = bpm_movement_labor_pressure
+        		}
+				OR = { 
+					ig:ig_christian_democrats.var:bpm_movement_labor_pressure > 0.1
+					OR = {
+						var:bpm_labor_movement.political_movement_support >= 0.1
+						var:bpm_labor_movement.political_movement_radicalism >= 0.2
+					}
+				}
+			}
+			add = ig:ig_christian_democrats.var:bpm_movement_labor_pressure
+		}
+
+		if = {
+			limit = { 
+				has_variable = bpm_liberal_movement
+                ig:ig_christian_democrats = { 
+                	has_variable = bpm_movement_liberal_pressure
+        		}
+				OR = { 
+					ig:ig_christian_democrats.var:bpm_movement_liberal_pressure > 0.1
+					OR = {
+						var:bpm_liberal_movement.political_movement_support >= 0.1
+						var:bpm_liberal_movement.political_movement_radicalism >= 0.2
+					}
+				}
+			}
+			
+			add = ig:ig_christian_democrats.var:bpm_movement_liberal_pressure
+		}
+
+		if = {
+			limit = { 
+				has_variable = bpm_radical_movement
+                ig:ig_christian_democrats = { 
+                	has_variable = bpm_movement_radical_pressure
+        		}
+				OR = { 
+					ig:ig_christian_democrats.var:bpm_movement_radical_pressure > 0.1
+					OR = {
+						var:bpm_radical_movement.political_movement_support >= 0.1
+						var:bpm_radical_movement.political_movement_radicalism >= 0.2
+					}
+				}
+			}
+			add = ig:ig_christian_democrats.var:bpm_movement_labor_pressure
+		}
+
+		multiply = 0.75
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_NO_LABOR_UNIONS_LAW"
+		if = {
+			limit = {
+				has_law = law_type:law_all_labor_unions_allowed
+			}
+			add = 0.1
+		}
+		if = {
+			limit = {
+				has_law = law_type:law_limited_labor_unions
+			}
+			add = 0.2
+		}
 	}
 
 	add = {
@@ -83,14 +178,13 @@ bpm_je_christian_democrat_ideology_rate = {
 					has_ideology = ideology:ideology_dop_radical_democrat
 					bpm_ig_is_republican = yes
 				}
-				is_powerful = yes
 				NOT = {
 					has_ideology = ideology:ideology_nonexistent
 				}
 			}
 			add = ig_clout
 		}
-		multiply = 2
+		multiply = 1.2
 	}
 
 	add = {
@@ -105,7 +199,7 @@ bpm_je_christian_democrat_ideology_rate = {
 			}
 			add = ig_clout
 		}
-		multiply = 10
+		multiply = 3
 	}
 
 	add = {
@@ -137,11 +231,12 @@ bpm_je_christian_democrat_ideology_rate = {
 			limit = {
 				OR = {
 					bpm_ig_is_socialist = yes
-					bpm_ig_is_non_religious = yes
+					has_ideology = ideology:ideology_rel_secularist
+					has_ideology = ideology:ideology_rel_radical_secularist
 				}
 				is_powerful = yes
 			}
-			add = -0.5
+			add = 0.2
 		}
 	}
 
@@ -171,7 +266,7 @@ bpm_je_christian_democrat_ideology_rate = {
 					has_ideology = ideology:ideology_nonexistent
 				}
 			}
-			add = -0.02
+			add = -0.1
 		}
 	}
 
@@ -209,13 +304,44 @@ bpm_je_christian_democrat_economy_rate = {
 
 	add = {
 		desc = "BPM_VALUE_FROM_INCLINATION_TOWARDS_MODERATION"
-		add = -0.1
-		multiply = var:christian_democrats_ideology_change
+		
+		if = {
+			limit = {
+				scope:journal_entry = {
+					"scripted_bar_progress(je_bpm_christian_democrats_economy_progress_bar)" > 50
+				}
+			}
+			add = -0.2
+			multiply = var:christian_democrats_ideology_change
+		}
+		else_if = {
+			limit = {
+				scope:journal_entry = {
+					"scripted_bar_progress(je_bpm_christian_democrats_economy_progress_bar)" < 50
+				}
+			}
+			add = 0.2
+			multiply = var:christian_democrats_ideology_change
+		}
 	}
 
 	add = {
 		desc = "BPM_VALUE_FROM_LOW_SOL"
 		if = {
+			limit = {
+				average_sol <= 15
+				average_sol >= 10
+			}
+			add = total_population
+			#pop_type_percent_country = {
+			#	pop_type = peasants
+			#	percent < 0.35
+			#}
+			divide = average_sol
+			divide = total_population
+			multiply = 2.5
+		}
+		else_if = {
 			limit = {
 				average_sol <= 15
 			}
@@ -226,7 +352,7 @@ bpm_je_christian_democrat_economy_rate = {
 			#}
 			divide = average_sol
 			divide = total_population
-			multiply = 5
+			multiply = 1.5
 		}
 		else_if = {
 			subtract = total_population
@@ -321,6 +447,74 @@ bpm_je_christian_democrat_economy_rate = {
 				is_powerful = yes
 			}
 			add = -0.3
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_MARKET_WELFARE"
+		if = { 
+			limit = {
+				bpm_country_laws_has_market_welfare = yes
+			}
+			if = {
+				limit = {
+					has_law = law_type:law_private_health_insurance
+				}
+				add = 0.1
+			}
+			if = {
+				limit = {
+					has_law = law_type:law_no_workers_rights
+				}
+				add = 0.1
+			}
+			if = {
+				limit = {
+					has_law = law_type:law_private_schools
+				}
+				add = 0.1
+			}
+			if = {
+				limit = {
+					has_law = law_type:law_poor_laws
+				}
+				add = 0.1
+			}
+			if = {
+				limit = {
+					has_law = law_type:law_child_labor_allowed
+				}
+				add = 0.1
+			}
+			else_if = {
+				limit = {
+					has_law = law_type:law_no_social_security
+				}
+				add = 0.2
+			}
+			if = {
+				limit = {
+					has_law = law_type:law_unregulated_work_time
+				}
+				add = 0.1
+			}
+			if = {
+				limit = {
+					has_law = law_type:law_illegal_labor_unions
+				}
+				add = 0.1
+			}
+			multiply = 0.5
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_CORPORATISM_RESEARCHED"
+		if = { 
+			limit = {
+				has_technology_researched = corporatism
+			}
+			add = -0.5
 		}
 	}
 

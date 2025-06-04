@@ -116,6 +116,8 @@ bpm_reload_institution_modifiers_XXX = {
     if = {
         limit = {
             has_variable = bpm_minister_of_XXX
+            has_institution = institution_XXX
+            exists = var:bpm_minister_of_XXX.interest_group
         }
         var:bpm_minister_of_XXX.interest_group = {
 """.replace('XXX', nm)

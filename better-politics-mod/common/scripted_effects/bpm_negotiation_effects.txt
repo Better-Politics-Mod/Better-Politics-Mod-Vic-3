@@ -90,48 +90,67 @@ bpm_approve_draft_constitution = {
 			limit = {
 				bpm_draft_support >= 50
 			}
-			add_ideology = ideology_constitution_supporter
+			bpm_stash_constitutional_negotiation = { ideology = constitution_supporter }
 		}
 		else_if = {
 			limit = {
 				bpm_draft_support <= -50
 			}
-			add_ideology = ideology_constitution_opponent
+			bpm_stash_constitutional_negotiation = { ideology = constitution_opponent }
 		}
 		else_if = {
 			limit = {
 				bpm_draft_support > -50
 				bpm_draft_support < 0
 			}
-			add_ideology = ideology_constitution_wary
+			bpm_stash_constitutional_negotiation = { ideology = constitution_wary }
 		}
 		else_if = {
 			limit = {
 				bpm_draft_support >= 0
 				bpm_draft_support < 50
 			}
-			add_ideology = ideology_constitution_reluctant
+			bpm_stash_constitutional_negotiation = { ideology = constitution_reluctant }
 		}
 	}
 	start_enactment = law_type:law_repeatable_politics_approve_constitution
+	bpm_set_all_igs_law_support_cached_vars = yes
 }
+
+bpm_stash_constitutional_negotiation = {
+	leader.ideology = { save_scope_as = prev_leader_ideology }
+	set_variable = {
+		name = bpm_negotiation_constitution_pre_ideology
+		value = scope:prev_leader_ideology
+	}
+	leader = { set_ideology = ideology:ideology_$ideology$ }
+}
+
+bpm_unstash_constitutional_negotiation = {
+	if = {
+		limit = {
+			has_variable = bpm_negotiation_constitution_pre_ideology
+		}
+		leader = {
+			set_ideology = prev.var:bpm_negotiation_constitution_pre_ideology
+		}
+		remove_variable = bpm_negotiation_constitution_pre_ideology
+	}
+}
+
 
 bpm_constitution_failed = {
 	if = {
 		limit = {
-			NOT = {
-				exists = currently_enacting_law.type
-			}
-			any_interest_group = {
-				OR = {
-					has_ideology = ideology:ideology_constitution_opponent
-					has_ideology = ideology:ideology_constitution_supporter
-					has_ideology = ideology:ideology_constitution_wary
-					has_ideology = ideology:ideology_constitution_reluctant
+			OR = {
+				enacting_any_law = no
+				NOT = {
+					currently_enacting_law.type = law_repeatable_politics_approve_constitution
 				}
 			}
 		}
 		every_interest_group = {
+			bpm_unstash_constitutional_negotiation = yes
 			if = {
 				limit = {
 					has_ideology = ideology:ideology_constitution_supporter
@@ -164,6 +183,7 @@ bpm_end_draft_constitution_enactment = {
 	remove_modifier = bpm_block_law_cancel
 	save_scope_as = country
 	every_interest_group = {
+		bpm_unstash_constitutional_negotiation = yes
 		if = {
 			limit = {
 				has_ideology = ideology:ideology_constitution_supporter

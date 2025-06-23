@@ -504,17 +504,17 @@ je_bpm_christian_or_democrat = {
 				}
 			}
 			triggered_desc = {
-				desc = je_debating_the_wel_stance
+				desc = je_debating_the_eco_stance
 				trigger = {
 					has_variable = bpm_christian_democrats_sta_ideology
 					has_variable = bpm_christian_democrats_rel_ideology
 					has_variable = bpm_christian_democrats_dop_ideology
-					has_variable = bpm_christian_democrats_eco_ideology
+					has_variable = bpm_christian_democrats_wel_ideology
 					has_variable = bpm_christian_democrats_cit_ideology
 				}
 			}
 			triggered_desc = {
-				desc = je_debating_the_eco_stance
+				desc = je_debating_the_wel_stance
 				trigger = {
 					has_variable = bpm_christian_democrats_sta_ideology
 					has_variable = bpm_christian_democrats_rel_ideology
@@ -663,14 +663,16 @@ je_bpm_christian_or_democrat = {
 						is_progressing = yes
 					}
 				}
-				change_variable = {
-					name = independence_from_church_variable
-					add = {
-						value = 0.5
-					}
-				}
 
-				if = {
+				##### Base value from just simply things happening
+				#change_variable = {
+				#	name = independence_from_church_variable
+				#	add = {
+				#		value = 0.25
+				#	}
+				#}
+
+				if = { ##### Ironically this causes laymen to organize better without the church.
 					limit = {
 						NOT = {
 							country_has_state_religion = rel:catholic
@@ -678,7 +680,193 @@ je_bpm_christian_or_democrat = {
 					}
 					change_variable = {
 						name = independence_from_church_variable
-						add = -0.2
+						add = 0.1
+					}
+				}
+
+				if = { ##### Ironically the more intertwined the church and the state are the more independent the laymen are.
+					limit = {
+						country_has_state_religion = rel:catholic
+					}
+					if = {
+						limit = {
+							has_law = law_type:law_state_religion
+						}
+							
+						change_variable = {
+							name = independence_from_church_variable
+							add = 0.2
+						}
+					}
+					else_if = {
+						limit = {
+							OR = {
+								has_law = law_type:law_freedom_of_conscience
+								has_law = law_type:law_total_separation
+							}
+						}
+							
+						change_variable = {
+							name = independence_from_church_variable
+							add = 0.1
+						}
+					}
+					else_if = {
+						limit = {
+							has_law = law_type:law_state_religion
+						}
+							
+						change_variable = {
+							name = independence_from_church_variable
+							add = 0.05
+						}
+					}
+				}
+
+				every_political_movement = { ##### Socialism is dangerous, and the church not engaging in electoralism is dangerous, catholics should definitely join in.
+					limit = {
+						bpm_movement_is_socialist = yes
+						NOT = { is_political_movement_type = movement_labor }
+					}
+					if = {
+						limit = {
+							political_movement_support >= 0.2
+						}
+						change_variable = {
+							name = independence_from_church_variable
+							add = 0.2
+						}
+					}
+					else_if = {
+						limit = {
+							political_movement_support >= 0.1
+						}
+						change_variable = {
+							name = independence_from_church_variable
+							add = 0.1
+						}
+					}
+				}
+
+				every_political_movement = { ##### Secularisation, liberalism, they are dangerous.
+					limit = {
+						bpm_movement_is_liberal_bourgeois = yes
+						NOT = { is_political_movement_type = movement_labor }
+					}
+					if = {
+						limit = {
+							political_movement_support >= 0.2
+						}
+						change_variable = {
+							name = independence_from_church_variable
+							add = 0.15
+						}
+					}
+					else_if = {
+						limit = {
+							political_movement_support >= 0.1
+						}
+						change_variable = {
+							name = independence_from_church_variable
+							add = 0.10
+						}
+					}
+				}
+
+				if = { ##### Corporatism as a tool of interclass cooperation help to secure own cohesion and expand laymen influence.
+					limit = {
+						has_technology_researched = corporatism
+					}
+					change_variable = {
+						name = independence_from_church_variable
+						add = 0.05
+					}
+				}
+				if = { ##### Mass parties organised to combat hostile influence and defend your own.
+					limit = {
+						has_technology_researched = socialism
+					}
+					change_variable = {
+						name = independence_from_church_variable
+						add = 0.05
+					}
+				}
+
+				if = { ##### Population loves liberalism, why don't the catholics grow into the liberal democracy?
+					limit = {
+						has_variable = bpm_consciousness_liberal
+					}
+					change_variable = {
+						name = independence_from_church_variable
+						add = {
+							value = var:bpm_consciousness_liberal
+							multiply = 0.0025
+						}
+					}
+				}
+
+				if = { ##### The church's strength translates to slower laymen independence
+					limit = {
+						country_has_state_religion = rel:catholic
+					}
+					change_variable = {
+						name = independence_from_church_variable
+						subtract = {
+							value = ig:ig_devout.ig_clout
+							multiply = 2.5
+						}
+					}
+				}
+				if = { ##### Christian Democrats/Catholic Interests are rising, they got to break away from the church.
+					limit = {
+						country_has_state_religion = rel:catholic
+					}
+					change_variable = {
+						name = independence_from_church_variable
+						add = ig:ig_christian_democrats.ig_clout
+					}
+				}
+
+				if = { ##### Strong moralist can effectively combat any brave laymen.
+					limit = {
+						country_has_state_religion = rel:catholic
+					}
+					if = { ### Conservatives hate the gallant laymen!
+						limit = {
+							any_interest_group = {
+								has_ideology = ideology:ideology_rel_moralist
+								is_interest_group_type = ig_conservatives
+							}
+						}
+						change_variable = {
+							name = independence_from_church_variable
+							subtract = ROOT.ig:ig_conservatives.ig_clout
+						}
+					}
+					if = { ### Reactionaries even more!
+						limit = {
+							any_interest_group = {
+								is_interest_group_type = ig_reactionaries
+								has_ideology = ideology:ideology_rel_radical_moralist
+							}
+						}
+						change_variable = {
+							name = independence_from_church_variable
+							subtract = ROOT.ig:ig_reactionaries.ig_clout
+						}
+					}
+				}
+
+				if = {
+					limit = {
+						exists = ig:ig_trade_unions
+					}
+					change_variable = {
+						name = independence_from_church_variable
+						add = {
+							value = ROOT.ig:ig_trade_unions.ig_clout
+							multiply = 0.33
+						}
 					}
 				}
 
@@ -802,8 +990,8 @@ je_bpm_christian_or_democrat = {
 
 			######## Post-Rerum Novarum:
 
-			bpm_christdem_split.5 # Economy
 			bpm_christdem_split.7 # Welfare
+			bpm_christdem_split.5 # Economy
 			bpm_christdem_split.10 # Military
 			bpm_christdem_split.11 # Women's Rights
 			bpm_christdem_split.12 # The IG becomes even more independent and is able to create official programmes/proper organizations/party whatever
@@ -834,7 +1022,7 @@ je_bpm_christian_or_democrat = {
 
 	on_complete = {
 		trigger_event = {
-			id = bpm_christdem_split.12
+			id = bpm_christdem_split.13
 		}
 		custom_tooltip = ig_christian_democrats_distinct_tt
 	}

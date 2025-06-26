@@ -1,16 +1,29 @@
 permissions:
-  contents: write      # to allow pushing code, releasing, etc.
+  contents: write
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Publish GitHub Release?"
+        required: true
+        type: boolean
+        default: true
+      type:
+        description: "Version fragment (patch, minor, major)"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
 
 jobs:
   release:
     name: "Publish Release"
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
@@ -21,8 +34,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch --prune --unshallow --tags
 
-        # Get the latest tag from git
-        # Tag is used as the last version
       - name: Get Version
         id: project
         run: |
@@ -33,11 +44,8 @@ jobs:
         uses: christian-draeger/increment-semantic-version@1.2.1
         with:
           current-version: ${{ steps.project.outputs.last-version }}
-          version-fragment: patch
+          version-fragment: ${{ inputs.type }}
 
-        # Collect commits since the last tag
-        # Format them as a Markdown list and put them into the summary
-        # Report: Commit list
       - name: Collect Changes
         id: commits
         run: |
@@ -49,10 +57,8 @@ jobs:
           echo "# Commits" >> $GITHUB_STEP_SUMMARY
           echo "$(git log ${{ steps.project.outputs.last-version }}..HEAD --no-merges --pretty=format:' - %s')" >> $GITHUB_STEP_SUMMARY
 
-        # Create a GitHub release
-        # Includes the list of commits
-        # Includes the mod package
       - name: Publish GitHub Release
+        if: inputs.release == 'true'
         id: create_release
         uses: softprops/action-gh-release@v2.2.1
         with:
@@ -69,9 +75,8 @@ jobs:
 
       - name: Setup SteamCMD
         uses: buildalon/setup-steamcmd@v1.0.4
-        
+
       - name: Publish to Workshop
         shell: bash
         run: |
           ./update_bpm.sh better_politics_mod '${{ secrets.STEAM_PASSWORD }}'
-          

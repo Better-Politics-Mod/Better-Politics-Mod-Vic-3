@@ -24,12 +24,7 @@ fi
 title=$(grep -Po '(?<=\s\"name\"\s:\s\").+(?=\",)' "$mod_path/.metadata/metadata.json")
 
 # Read mod id
-if [ -n "$3" ]
-then
-  mod_id="$3"
-else
-  mod_id='0'
-fi
+mod_id='2932134122'
 
 # Clean up old file
 printf '' > workshop.vdf

@@ -1,0 +1,76 @@
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: "Version fragment (patch, minor, major)"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+
+jobs:
+  release:
+    name: "Publish Release"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Checkout Tags
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --prune --unshallow --tags
+
+      - name: Get Version
+        id: project
+        run: |
+          echo "last-version=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_OUTPUT
+
+      - name: Increment Version
+        id: increment-version
+        uses: christian-draeger/increment-semantic-version@1.2.1
+        with:
+          current-version: ${{ steps.project.outputs.last-version }}
+          version-fragment: ${{ inputs.type }}
+
+      - name: Collect Changes
+        id: commits
+        run: |
+          {
+            echo 'markdown<<EOF'
+            echo "$(git log ${{ steps.project.outputs.last-version }}..HEAD --no-merges --pretty=format:' - %s')"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+          echo "# Commits" >> $GITHUB_STEP_SUMMARY
+          echo "$(git log ${{ steps.project.outputs.last-version }}..HEAD --no-merges --pretty=format:' - %s')" >> $GITHUB_STEP_SUMMARY
+
+      - name: Publish GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2.2.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: false
+          prerelease: false
+          tag_name: ${{ steps.increment-version.outputs.next-version }}
+          name: ${{ steps.increment-version.outputs.next-version }}
+          body: |
+            New version of **BPM**.
+
+            ### Commits:
+            ${{ steps.commits.outputs.markdown }}
+
+      - name: Setup SteamCMD
+        uses: buildalon/setup-steamcmd@v1.0.4
+
+      - name: Publish to Workshop
+        shell: bash
+        run: |
+          ./update_bpm.sh better_politics_mod '${{ secrets.STEAM_PASSWORD }}'

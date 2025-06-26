@@ -21,7 +21,7 @@ else
   exit 1
 fi
 
-title=$(grep -Po '(?<=\s\"name\"\s:\s\").+(?=\",)' "$mod_path/.metadata/metadata.json")
+title='Better Politics Mod'
 
 # Read mod id
 mod_id='2932134122'

@@ -240,7 +240,7 @@ on_bpm_yearly_pulse_country = {
 					name = bpm_je_first_intl_progress
 					add = {
 						value = political_movement_support
-						multiply = 2
+						multiply = 6
 					}
 				}
 			}
@@ -554,149 +554,167 @@ bpm_on_actions_colonial_check = {
 
 on_bpm_law_activated = {
 	effect = {
-		owner = {
-			bpm_setup_country_stubbornness = yes
-			bpm_institution_workaround_effect = yes
-			bpm_cache_country_igs_radical_opposition_effect = yes
-		}
-
 		if = {
 			limit = {
-				game_date > 1836.1.1
-				owner = { is_revolutionary = no }
+				owner = {
+					NOT = {
+						has_variable = bpm_norec
+					}
+				}
+			}
+			owner = { 
+				set_variable = {
+					name = bpm_norec
+					days = 1
+				}
+			}
+			owner = {
+				bpm_setup_country_stubbornness = yes
+				bpm_institution_workaround_effect = yes
+				bpm_cache_country_igs_radical_opposition_effect = yes
+			}
+			type = {
+				save_scope_as = lawtype
+			}
+
+			if = {
+				limit = {
+					game_date > 1836.1.1
+					owner = { is_revolutionary = no }
+				}
+				if = {
+					limit = {
+						OR = {
+							scope:lawtype = law_type:law_presidential_republic
+							scope:lawtype = law_type:law_parliamentary_republic
+						}
+					}
+					trigger_event = bpm_send_notification.1
+				}
+				else_if = {
+					limit = {
+						scope:lawtype = law_type:law_council_republic
+					}
+					trigger_event = bpm_send_notification.2
+				}
+				else_if = {
+					limit = {
+						scope:lawtype = law_type:law_monarchy
+					}
+					trigger_event = bpm_send_notification.3
+				}
+			}
+
+			if = {
+				limit = { scope:lawtype = law_type:law_serfdom }
+				owner = { set_variable = bpm_country_has_serfdom }
+			}
+			else_if = {
+				limit = {
+					scope:lawtype = {
+						is_same_law_group_as = law_type:law_serfdom
+						NOT = { this = law_type:law_serfdom }
+					}
+					owner = { has_variable = bpm_country_has_serfdom }
+				}
+				owner = {
+					remove_variable = bpm_country_has_serfdom
+					if = {
+						limit = { is_player = no }
+						if = {
+							limit = {
+								OR = {
+									has_law = law_type:law_land_based_taxation
+									has_law = law_type:law_consumption_based_taxation
+								}
+							}
+							activate_law = law_type:law_per_capita_based_taxation
+						}
+						if = {
+							limit = {
+								has_law = law_type:law_traditionalism
+							}
+							activate_law = law_type:law_agrarianism	
+						}
+					}
+				}
 			}
 			if = {
 				limit = {
-					OR = {
-						this.type = law_type:law_presidential_republic
-						this.type = law_type:law_parliamentary_republic
+					scope:lawtype = {
+						is_same_law_group_as = law_type:law_isolationism
+						NOT = { this = law_type:law_isolationism }	
 					}
+					owner = { has_law = law_type:law_closed_borders }
 				}
-				trigger_event = bpm_send_notification.1
+				owner = { activate_law = law_type:law_migration_controls }
 			}
 			else_if = {
 				limit = {
-					this.type = law_type:law_council_republic
+					game_date > 1836.1.1
+					scope:lawtype = law_type:law_isolationism
 				}
-				trigger_event = bpm_send_notification.2
+				owner = { activate_law = law_type:law_closed_borders }
+			}
+			if = {
+				limit = {
+					scope:lawtype = {
+						is_same_law_group_as = law_type:law_closed_borders
+						NOT = { this = law_type:law_closed_borders}	
+					}
+					owner = { has_law = law_type:law_isolationism }
+				}
+				owner = { activate_law = law_type:law_mercantilism }
 			}
 			else_if = {
 				limit = {
-					this.type = law_type:law_monarchy
+					game_date > 1836.1.1
+					scope:lawtype = law_type:law_closed_borders
 				}
-				trigger_event = bpm_send_notification.3
+				owner = { activate_law = law_type:law_isolationism }
 			}
-		}
 
-		if = {
-			limit = { this.type = law_type:law_serfdom }
-			owner = { set_variable = bpm_country_has_serfdom }
-		}
-		else_if = {
-			limit = {
-				this.type = {
-					is_same_law_group_as = law_type:law_serfdom
-					NOT = { this = law_type:law_serfdom }
-				}
-				owner = { has_variable = bpm_country_has_serfdom }
-			}
-			owner = {
-				remove_variable = bpm_country_has_serfdom
-				if = {
-					limit = { is_player = no }
-					if = {
-						limit = {
-							OR = {
-								has_law = law_type:law_land_based_taxation
-								has_law = law_type:law_consumption_based_taxation
-							}
-						}
-						activate_law = law_type:law_per_capita_based_taxation
-					}
-					if = {
-						limit = {
-							has_law = law_type:law_traditionalism
-						}
-						activate_law = law_type:law_agrarianism	
-					}
-				}
-			}
-		}
-		if = {
-			limit = {
-				this.type = {
-					is_same_law_group_as = law_type:law_isolationism
-					NOT = { this = law_type:law_isolationism }	
-				}
-				owner = { has_law = law_type:law_closed_borders }
-			}
-			owner = { activate_law = law_type:law_migration_controls }
-		}
-		else_if = {
-			limit = {
-				game_date > 1836.1.1
-				this.type = law_type:law_isolationism
-			}
-			owner = { activate_law = law_type:law_closed_borders }
-		}
-		if = {
-			limit = {
-				this.type = {
-					is_same_law_group_as = law_type:law_closed_borders
-					NOT = { this = law_type:law_closed_borders}	
-				}
-				owner = { has_law = law_type:law_isolationism }
-			}
-			owner = { activate_law = law_type:law_mercantilism }
-		}
-		else_if = {
-			limit = {
-				game_date > 1836.1.1
-				this.type = law_type:law_closed_borders
-			}
-			owner = { activate_law = law_type:law_isolationism }
-		}
-
-		if = {
-			limit = {
-				owner = {
-					has_journal_entry = je_bpm_modernizers
-					ig:ig_conservatives ?= {
+			if = {
+				limit = {
+					owner = { has_journal_entry = je_bpm_modernizers }
+					owner.ig:ig_conservatives ?= {
 						law_stance = {
 							value >= approve
-							law = prev.type
+							law = scope:lawtype
 						}
 					}
 				}
+				owner = { 
+					change_variable = {
+						name = bpm_je_modernizers_conservative_laws_passed
+						add = 1
+					}
+				}
 			}
-			change_variable = {
-				name = bpm_je_modernizers_conservative_laws_passed
-				add = 1
-			}
-		}
-		if = {
-			limit = {
-				owner = {
+			if = {
+				limit = {
+					owner = { has_journal_entry = je_bpm_modernizers }
 					OR = {
-						ig:ig_liberals ?= {
+						owner.ig:ig_liberals ?= {
 							law_stance = {
 								value >= approve
-								law = prev.type
+								law = scope:lawtype
 							}
 						}
-						ig:ig_radicals ?= {
+						owner.ig:ig_radicals ?= {
 							law_stance = {
 								value >= approve
-								law = prev.type
+								law = scope:lawtype
 							}
 						}
 					}
 				}
-			}
-		
-			change_variable = {
-				name = bpm_je_modernizers_liberal_laws_passed
-				add = 1
+				owner = { 
+					change_variable = {
+						name = bpm_je_modernizers_liberal_laws_passed
+						add = 1
+					}
+				}
 			}
 		}
 	}
@@ -1090,9 +1108,14 @@ on_bpm_acquired_technology = {
 					NOT = { has_variable = bpm_intl_socialism_researched }
 				}
 				set_variable = bpm_intl_socialism_researched
-				change_global_variable = {
-					name = bpm_je_first_intl_progress
-					add = 10
+				if = {
+					limit = { 
+						has_global_variable = bpm_je_first_intl_progress
+					}
+					change_global_variable = {
+						name = bpm_je_first_intl_progress
+						add = 10
+					}
 				}
 			}
 
@@ -1102,9 +1125,14 @@ on_bpm_acquired_technology = {
 					NOT = { has_variable = bpm_intl_anarchism_researched }
 				}
 				set_variable = bpm_intl_anarchism_researched
-				change_global_variable = {
-					name = bpm_je_first_intl_progress
-					add = 10
+				if = {
+					limit = { 
+						has_global_variable = bpm_je_first_intl_progress
+					}
+					change_global_variable = {
+						name = bpm_je_first_intl_progress
+						add = 10
+					}
 				}
 			}
 
@@ -1114,9 +1142,14 @@ on_bpm_acquired_technology = {
 					NOT = { has_variable = bpm_intl_labor_movement_researched }
 				}
 				set_variable = bpm_intl_labor_movement_researched
-				change_global_variable = {
-					name = bpm_je_first_intl_progress
-					add = 5
+				if = {
+					limit = { 
+						has_global_variable = bpm_je_first_intl_progress
+					}
+					change_global_variable = {
+						name = bpm_je_first_intl_progress
+						add = 5
+					}
 				}
 			}
 		}

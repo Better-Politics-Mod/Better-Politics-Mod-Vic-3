@@ -31,26 +31,26 @@ jobs:
 
       - name: Get Version
         id: project
-        run: |
-          echo "last-version=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_OUTPUT
+        uses: actions-ecosystem/action-get-latest-tag@v1
 
       - name: Increment Version
         id: increment-version
         uses: christian-draeger/increment-semantic-version@1.2.1
         with:
-          current-version: ${{ steps.project.outputs.last-version }}
+          current-version: ${{ steps.project.outputs.tag }}
           version-fragment: ${{ inputs.type }}
+
 
       - name: Collect Changes
         id: commits
         run: |
           {
             echo 'markdown<<EOF'
-            echo "$(git log ${{ steps.project.outputs.last-version }}..HEAD --no-merges --pretty=format:' - %s (@%an)')"
+            echo "$(git log ${{ steps.project.outputs.tag }}..HEAD --no-merges --pretty=format:' - %s (@%an)')"
             echo EOF
           } >> "$GITHUB_OUTPUT"
           echo "# Commits" >> $GITHUB_STEP_SUMMARY
-          echo "$(git log ${{ steps.project.outputs.last-version }}..HEAD --no-merges --pretty=format:' - %s')" >> $GITHUB_STEP_SUMMARY
+          echo "$(git log ${{ steps.project.outputs.tag }}..HEAD --no-merges --pretty=format:' - %s')" >> $GITHUB_STEP_SUMMARY
 
       - name: Publish GitHub Release
         id: create_release
@@ -79,7 +79,7 @@ jobs:
         with:
           webhook-url: ${{ secrets.WEBHOOK_URL }}
           content: |
-            <&@1271322512063594547>
+            <@&1271322512063594547>
             New **BPM** ${{ inputs.type }} version released: ${{ steps.increment-version.outputs.next-version }}.
-            [Steam](<https://steamcommunity.com/sharedfiles/filedetails/?id=2932134122>)        [GitHub](https://github.com/Better-Politics-Mod/Better-Politics-Mod-Vic-3/releases/tag/${{ steps.increment-version.outputs.next-version }})
+            [Steam](<https://steamcommunity.com/sharedfiles/filedetails/?id=2932134122>)        [GitHub](<https://github.com/Better-Politics-Mod/Better-Politics-Mod-Vic-3/releases/tag/${{ steps.increment-version.outputs.next-version }}>)
             ${{ steps.commits.outputs.markdown }}

@@ -470,14 +470,14 @@ bpm_frankfurt_parliament_events.6 = {
 					}
 					c:AUS = {
 						NOT = { has_variable = boycotting_frankfurt }
-						NOR = {
-							any_interest_group = {
-								bpm_ig_is_left_wing = yes
-								is_powerful = yes
-								is_in_government = yes
-							}
-							bpm_country_is_republic = yes
-						}
+						# NOR = {
+						# 	any_interest_group = {
+						# 		bpm_ig_is_left_wing = yes
+						# 		is_powerful = yes
+						# 		is_in_government = yes
+						# 	}
+						# 	bpm_country_is_republic = yes
+						# }
 					}
 				}
 			}
@@ -579,87 +579,128 @@ bpm_frankfurt_parliament_events.8 = {
 	}
 
 	immediate = {
-		# if = { 
-		# 	limit = {
-		# 		global_var:bpm_frankfurt_parliament_left_percent >= global_var:bpm_frankfurt_parliament_center_percent 
-		# 		global_var:bpm_frankfurt_parliament_left_percent >= global_var:bpm_frankfurt_parliament_right_percent
-		# 		any_country = {
-		# 			country_rank = rank_value:minor_power
-		# 			is_subject = no
-		# 			bpm_country_is_republic = yes
-		# 			OR = {
-		# 				country_has_primary_culture = cu:north_german
-		# 				country_has_primary_culture = cu:south_german
-		# 			}
-		# 			NOT = { has_variable = boycotting_frankfurt }
-		# 		}
-		# 	}
-
-		# 	set_global_variable = {
-		# 		name = bpm_frankfurt_parliament_radical_win
-		# 	}
-
-		# 	every_country = {
-		# 		limit = {
-		# 			NOT = { has_variable = boycotting_frankfurt }
-		# 			is_subject = no
-		# 			OR = {
-		# 				country_has_primary_culture = cu:north_german
-		# 				country_has_primary_culture = cu:south_german
-		# 			}
-		# 			NOR = {
-		# 				has_law = law_type:law_presidential_republic
-		# 				has_law = law_type:law_parliamentary_republic
-		# 				any_interest_group = {
-		# 					OR = {
-		# 						bpm_ig_is_republican = yes
-		# 						bpm_ig_is_radical_left = yes
-		# 					}
-		# 					is_powerful = yes
-		# 				}
-		# 			}
-		# 			is_player = no
-		# 		}
-		# 		set_variable = boycotting_frankfurt
-
-		# 		# iterates through non boycotting to find the highest ranked german republic
-		# 		ordered_country = {
-		# 			limit = {
-		# 				country_rank = rank_value:minor_power
-		# 				is_subject = no
-		# 				bpm_country_is_republic = yes
-		# 				OR = {
-		# 					country_has_primary_culture = cu:north_german
-		# 					country_has_primary_culture = cu:south_german
-		# 				}
-		# 				NOT = { has_variable = boycotting_frankfurt }
-		# 			}
-		# 			order_by = country_rank
-		# 			save_scope_as = frankfurt_crown_candidate
-		# 			scope:frankfurt_crown_candidate = {
-		# 				trigger_event = { id = bpm_frankfurt_parliament_events.12 }
-		# 			}
-		# 		}
-		# 	}
-		# }
-		set_global_variable = {
-			name = bpm_frankfurt_parliament_moderate_win
-		}
-		ordered_country = {
+		if = { 
 			limit = {
-				NOT = { has_variable = boycotting_frankfurt }
-				has_law = law_type:law_monarchy
-				OR = {
-					country_has_primary_culture = cu:north_german
-					country_has_primary_culture = cu:south_german
+				global_var:bpm_frankfurt_parliament_left_percent >= global_var:bpm_frankfurt_parliament_center_percent 
+				global_var:bpm_frankfurt_parliament_left_percent >= global_var:bpm_frankfurt_parliament_right_percent
+				any_country = {
+					country_rank > rank_value:minor_power
+					is_subject = no
+					bpm_country_is_republic = yes
+					OR = {
+						country_has_primary_culture = cu:north_german
+						country_has_primary_culture = cu:south_german
+					}
+					NOT = { has_variable = boycotting_frankfurt }
 				}
 			}
-			order_by = country_rank
-        	save_scope_as = frankfurt_crown_candidate
+
+			set_global_variable = {
+				name = bpm_frankfurt_parliament_radical_win
+			}
+
+			every_country = {
+				limit = {
+					NOT = { has_variable = boycotting_frankfurt }
+					is_subject = no
+					OR = {
+						country_has_primary_culture = cu:north_german
+						country_has_primary_culture = cu:south_german
+					}
+					NOR = {
+						has_law = law_type:law_presidential_republic
+						has_law = law_type:law_parliamentary_republic
+						any_interest_group = {
+							OR = {
+								bpm_ig_is_republican = yes
+								bpm_ig_is_radical_left = yes
+							}
+							is_powerful = yes
+						}
+					}
+					is_player = no
+				}
+				set_variable = boycotting_frankfurt
+			}
+
+			set_variable = frankfurt_leader
+			every_country = {
+				limit = {
+					NOT = { has_variable = boycotting_frankfurt }
+					NOT = { has_law = law_type:law_autocracy }
+					is_subject = no
+					OR = {
+						country_has_primary_culture = cu:north_german
+						country_has_primary_culture = cu:south_german
+					}
+					relations:root >= relations_threshold:poor
+				}
+				trigger_event = { id = bpm_frankfurt_parliament_events.101 }
+			}
+			trigger_event = { id = bpm_frankfurt_parliament_events.12 days = 30 popup = yes }
 		}
-			
-		c:AUS = {
-			trigger_event = { id = bpm_frankfurt_parliament_events.9 days = 2 popup = yes }
+
+		else_if = {
+			limit = {
+				global_var:bpm_frankfurt_parliament_right_percent >= global_var:bpm_frankfurt_parliament_center_percent 
+				global_var:bpm_frankfurt_parliament_right_percent >= global_var:bpm_frankfurt_parliament_left_percent
+
+				c:AUS = {
+					NOT = { has_variable = boycotting_frankfurt }
+					has_law = law_type:law_monarchy
+				}
+			}
+
+			c:AUS = {
+				save_scope_as = frankfurt_crown_candidate
+			}
+
+			set_global_variable = {
+				name = bpm_frankfurt_parliament_conservative_win
+			}
+		}
+		
+		else = {
+			set_global_variable = {
+				name = bpm_frankfurt_parliament_moderate_win
+			}
+			if = {
+				limit = {
+					c:AUS = {
+						NOT = { has_variable = boycotting_frankfurt }
+					}
+				}
+				c:AUS = {
+					save_scope_as = frankfurt_crown_candidate
+				}
+			}
+			else_if = {
+				limit = {
+					c:AUS = {
+						has_variable = boycotting_frankfurt
+					}
+					c:PRU = {
+						NOT = { has_variable = boycotting_frankfurt }
+					}
+				}
+				c:PRU = {
+					save_scope_as = frankfurt_crown_candidate
+				}
+			}
+			else = {
+				ordered_country = {
+					limit = {
+						NOT = { has_variable = boycotting_frankfurt }
+						has_law = law_type:law_monarchy
+						OR = {
+							country_has_primary_culture = cu:north_german
+							country_has_primary_culture = cu:south_german
+						}
+					}
+					order_by = country_rank
+					save_scope_as = frankfurt_crown_candidate
+				}
+			}
 		}
 	}
 	option = {
@@ -671,6 +712,9 @@ bpm_frankfurt_parliament_events.8 = {
 			text = frankfurt_crown_candidate_tt
 		}
 		bpm_frankfurt_member_update = yes
+		scope:frankfurt_crown_candidate = {
+			trigger_event = { id = bpm_frankfurt_parliament_events.9 days = 2 popup = yes }
+		}
 	}
 	option = {
 		name = bpm_frankfurt_parliament_events.8.b
@@ -681,6 +725,20 @@ bpm_frankfurt_parliament_events.8 = {
 			text = frankfurt_republic_candidate_tt
 		}
 		bpm_frankfurt_member_update = yes
+	}
+
+	option = {
+		name = bpm_frankfurt_parliament_events.8.c
+		trigger = {
+			has_global_variable = bpm_frankfurt_parliament_conservative_win
+		}
+		custom_tooltip = {
+			text = frankfurt_crown_candidate_tt
+		}
+		bpm_frankfurt_member_update = yes
+		# c:AUS = {
+		# 	trigger_event = { id = bpm_frankfurt_parliament_events.32 days = 2 popup = yes }
+		# }
 	}
 }
 

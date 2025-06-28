@@ -13,6 +13,16 @@ on:
           - minor
           - major
         default: patch
+      notify-discord:
+        description: "Notify Discord about the release"
+        required: true
+        type: boolean
+        default: true
+      workshop:
+        description: "Publish to Steam Workshop"
+        required: true
+        type: boolean
+        default: true
 
 jobs:
   release:
@@ -27,40 +37,42 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch --prune --unshallow --tags
+          git fetch --prune --tags
 
       - name: Get Version
         id: project
-        run: |
-          echo "last-version=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_OUTPUT
+        uses: actions-ecosystem/action-get-latest-tag@v1
 
       - name: Increment Version
         id: increment-version
         uses: christian-draeger/increment-semantic-version@1.2.1
         with:
-          current-version: ${{ steps.project.outputs.last-version }}
+          current-version: ${{ steps.project.outputs.tag }}
           version-fragment: ${{ inputs.type }}
 
       - name: Collect Changes
         id: commits
         run: |
+          echo ${{ github.sha }}
           {
             echo 'markdown<<EOF'
-            echo "$(git log ${{ steps.project.outputs.last-version }}..HEAD --no-merges --pretty=format:' - %s (@%an)')"
+            echo "$(git log ${{ steps.project.outputs.tag }}..HEAD --no-merges --pretty=format:' - %s (@%an)')"
             echo EOF
           } >> "$GITHUB_OUTPUT"
           echo "# Commits" >> $GITHUB_STEP_SUMMARY
-          echo "$(git log ${{ steps.project.outputs.last-version }}..HEAD --no-merges --pretty=format:' - %s')" >> $GITHUB_STEP_SUMMARY
+          echo "$(git log ${{ steps.project.outputs.tag }}..HEAD --no-merges --pretty=format:' - %s')" >> $GITHUB_STEP_SUMMARY
 
       - name: Publish GitHub Release
         id: create_release
-        uses: softprops/action-gh-release@v2.2.1
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           draft: false
           prerelease: false
+          commitish: ${{ github.sha }}
           tag_name: ${{ steps.increment-version.outputs.next-version }}
-          name: ${{ steps.increment-version.outputs.next-version }}
+          release_name: ${{ steps.increment-version.outputs.next-version }}
           body: |
             New version of **BPM**.
 
@@ -71,15 +83,18 @@ jobs:
         uses: buildalon/setup-steamcmd@v1.0.4
 
       - name: Publish to Workshop
+        if: ${{ inputs.workshop }}
         shell: bash
         run: |
           ./update_bpm.sh better_politics_mod '${{ secrets.STEAM_PASSWORD }}'
+
       - name: Notify Discord
+        if: ${{ inputs.notify-discord }}
         uses: tsickert/discord-webhook@v7.0.0
         with:
           webhook-url: ${{ secrets.WEBHOOK_URL }}
           content: |
-            <&@1271322512063594547>
+            <@&1271322512063594547>
             New **BPM** ${{ inputs.type }} version released: ${{ steps.increment-version.outputs.next-version }}.
-            [Steam](<https://steamcommunity.com/sharedfiles/filedetails/?id=2932134122>)        [GitHub](https://github.com/Better-Politics-Mod/Better-Politics-Mod-Vic-3/releases/tag/${{ steps.increment-version.outputs.next-version }})
+            [Steam](<https://steamcommunity.com/sharedfiles/filedetails/?id=2932134122>)        [GitHub](<https://github.com/Better-Politics-Mod/Better-Politics-Mod-Vic-3/releases/tag/${{ steps.increment-version.outputs.next-version }}>)
             ${{ steps.commits.outputs.markdown }}

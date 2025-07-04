@@ -10,7 +10,10 @@ movement_labor = { # Explicitly non-socialist labour movement
 	}
 	
 	creation_trigger = {
-		has_technology_researched = labor_movement
+		OR = { 
+			bpm_consciousness_labor_percent > 0.15
+			has_technology_researched = labor_movement
+		}
 	}	
 	creation_weight = {
 		value = 100
@@ -118,6 +121,7 @@ movement_labor = { # Explicitly non-socialist labour movement
 	}
 	
 	pop_support_weight = {	
+
 		add = {
 			desc = "URBAN_STATE"
 			value = 20
@@ -130,91 +134,91 @@ movement_labor = { # Explicitly non-socialist labour movement
 				is_pop_type = laborers
 			}
 			add = {
-				value = 36 # bread and butter movement
-				desc = "POP_LABORERS"
-			}
-			multiply = {
+                        value = 36 # bread and butter movement
+                        multiply = {
 				value = owner.var:bpm_consciousness_labor_movement_laborers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_LABORERS"    
+                    }
 		}		
 		else_if = {
 			limit = {
 				is_pop_type = machinists
 			}
 			add = {
-				value = 18
-				desc = "POP_MACHINISTS"
-			}
-			multiply = {
+                        value = 18
+                        multiply = {
 				value = owner.var:bpm_consciousness_labor_movement_machinists
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_MACHINISTS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = academics
 			}
 			add = {
-				value = 12
-				desc = "POP_ACADEMICS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_labor_movement_academics_engineers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_ACADEMICS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = engineers
 			}
 			add = {
-				value = 12
-				desc = "POP_ENGINEERS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_labor_movement_academics_engineers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_ENGINEERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = clerks
 			}
 			add = {
-				value = 6
-				desc = "POP_CLERKS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_labor_movement_clerks_bureaucrats_shopkeepers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_CLERKS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = shopkeepers
 			}
 			add = {
-				value = 6
-				desc = "POP_SHOPKEEPERS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_labor_movement_clerks_bureaucrats_shopkeepers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_SHOPKEEPERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = bureaucrats
 			}
 			add = {
-				value = 6
-				desc = "POP_BUREAUCRATS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_labor_movement_clerks_bureaucrats_shopkeepers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_BUREAUCRATS"    
+                    }
 		}
 
 
@@ -235,11 +239,44 @@ movement_labor = { # Explicitly non-socialist labour movement
 		}
 
 		min = 0
-
 		multiply = {
 			value = BPM_LABOR_STRENGTH
 			desc = "BPM_PEASANT_AND_LABOR"
 		}
+		if = {
+			limit = {
+				owner ?= {
+					any_political_movement = {
+						is_political_movement_type = movement_labor
+						OR = {
+							is_being_suppressed = yes
+							is_being_bolstered = yes
+						}
+						save_temporary_scope_as = affected_movement
+					}
+				}
+			}
+			if = {
+				limit = {
+					scope:affected_movement = {
+						is_being_suppressed = yes
+					}
+				}
+				multiply = {
+					value = 1
+					subtract = owner.modifier:country_suppression_attraction_factor
+					desc = "concept_suppressed"
+				}
+			}
+			else = {
+				multiply = {
+					value = 1
+					add = owner.modifier:country_bolster_attraction_factor
+					desc = "concept_bolstered"
+				}
+			}
+		}
+
 	}
 	
 	revolution = {
@@ -348,7 +385,8 @@ movement_socialist = {
 	}
 	
 	creation_trigger = {
-		always = yes
+		year > 1836
+		bpm_consciousness_labor_percent > 0.25
 	}	
 	creation_weight = {
 		# significant movement that definitely should spawn
@@ -357,8 +395,16 @@ movement_socialist = {
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
 	}
+
+	disband_trigger = {
+		bpm_consciousness_labor_percent > 0.75
+	}
 	
-	on_disbanded = {}
+	on_disbanded = {
+		create_political_movement = {
+			type = movement_communist
+		}
+	}
 
 	can_pressure_interest_group = {
 		bpm_ig_is_left_wing = yes
@@ -524,117 +570,117 @@ movement_socialist = {
 				is_pop_type = laborers
 			}
 			add = {
-				value = 18 # bread and butter movement
-				desc = "POP_LABORERS"
-			}
-			multiply = {
+                        value = 18 # bread and butter movement
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_laborers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_LABORERS"    
+                    }
 		}		
 		else_if = {
 			limit = {
 				is_pop_type = machinists
 			}
 			add = {
-				value = 18
-				desc = "POP_MACHINISTS"
-			}
-			multiply = {
+                        value = 18
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_machinists
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_MACHINISTS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = academics
 			}
 			add = {
-				value = 12
-				desc = "POP_ACADEMICS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_academics_and_engineers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_ACADEMICS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = engineers
 			}
 			add = {
-				value = 12
-				desc = "POP_ENGINEERS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_academics_and_engineers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_ENGINEERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = clerks
 			}
 			add = {
-				value = 6
-				desc = "POP_CLERKS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_CLERKS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = shopkeepers
 			}
 			add = {
-				value = 6
-				desc = "POP_SHOPKEEPERS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_SHOPKEEPERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = bureaucrats
 			}
 			add = {
-				value = 6
-				desc = "POP_BUREAUCRATS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_BUREAUCRATS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = farmers
 			}
 			add = {
-				value = 6
-				desc = "POP_FARMERS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_FARMERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = soldiers
 			}
 			add = {
-				value = 6
-				desc = "POP_SOLDIERS"	
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_SOLDIERS"    
+                    }
 		}
 
 
@@ -655,11 +701,49 @@ movement_socialist = {
 				max = 12
 			}
 		}
+		multiply = {
+			value = owner.bpm_consciousness_beyond_liberal_percent
+			desc = "BPM_CONSCIOUSNESS_LABOR"
+		}
 		min = 0
 		multiply = {
 			value = BPM_SOCIALIST_STRENGTH
 			desc = "BPM_PEASANT_AND_LABOR"
 		}
+		if = {
+			limit = {
+				owner ?= {
+					any_political_movement = {
+						is_political_movement_type = movement_socialist
+						OR = {
+							is_being_suppressed = yes
+							is_being_bolstered = yes
+						}
+						save_temporary_scope_as = affected_movement
+					}
+				}
+			}
+			if = {
+				limit = {
+					scope:affected_movement = {
+						is_being_suppressed = yes
+					}
+				}
+				multiply = {
+					value = 1
+					subtract = owner.modifier:country_suppression_attraction_factor
+					desc = "concept_suppressed"
+				}
+			}
+			else = {
+				multiply = {
+					value = 1
+					add = owner.modifier:country_bolster_attraction_factor
+					desc = "concept_bolstered"
+				}
+			}
+		}
+
 	}
 	
 	revolution = {
@@ -811,11 +895,12 @@ movement_anarchist = {
 	}
 	
 	creation_trigger = {
+		game_date > 1836.1.2
+		has_technology_researched = anarchism
 		OR = {
-			has_technology_researched = anarchism
+			bpm_consciousness_labor_percent > 0.3
 			has_global_variable = first_intl_chain_complete_var
 		}
-		
 	}	
 	creation_weight = {
 		value = 100
@@ -950,6 +1035,7 @@ movement_anarchist = {
 	}
 	
 	pop_support_weight = {	
+
 		add = {
 			desc = "URBAN_STATE" # Increases support in rural states, decreases in urban
 			value = 0.5
@@ -962,117 +1048,117 @@ movement_anarchist = {
 				is_pop_type = laborers
 			}
 			add = {
-				value = 12 # bread and butter movement
-				desc = "POP_LABORERS"
-			}
-			multiply = {
+                        value = 12 # bread and butter movement
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_laborers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_LABORERS"    
+                    }
 		}		
 		else_if = {
 			limit = {
 				is_pop_type = machinists
 			}
 			add = {
-				value = 12
-				desc = "POP_MACHINISTS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_machinists
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_MACHINISTS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = academics
 			}
 			add = {
-				value = 12
-				desc = "POP_ACADEMICS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_academics_and_engineers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_ACADEMICS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = engineers
 			}
 			add = {
-				value = 12
-				desc = "POP_ENGINEERS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_academics_and_engineers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_ENGINEERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = clerks
 			}
 			add = {
-				value = 6
-				desc = "POP_CLERKS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_CLERKS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = shopkeepers
 			}
 			add = {
-				value = 18
-				desc = "POP_SHOPKEEPERS"
-			}
-			multiply = {
+                        value = 18
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_SHOPKEEPERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = bureaucrats
 			}
 			add = {
-				value = 6
-				desc = "POP_BUREAUCRATS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_BUREAUCRATS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = farmers
 			}
 			add = {
-				value = 18
-				desc = "POP_FARMERS"
-			}
-			multiply = {
+                        value = 18
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_FARMERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = soldiers
 			}
 			add = {
-				value = 6
-				desc = "POP_SOLDIERS"	
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_SOLDIERS"    
+                    }
 		}
 		if = {
 			limit = {
@@ -1105,11 +1191,48 @@ movement_anarchist = {
 			multiply = 6
 			add = 2
 		}
-
+		multiply = {
+			value = owner.bpm_consciousness_beyond_liberal_percent
+			desc = "BPM_CONSCIOUSNESS_LABOR"
+		}
 		multiply = {
 			value = BPM_SOCIALIST_STRENGTH
 			desc = "BPM_PEASANT_AND_LABOR"
 		}
+		if = {
+			limit = {
+				owner ?= {
+					any_political_movement = {
+						is_political_movement_type = movement_anarchist
+						OR = {
+							is_being_suppressed = yes
+							is_being_bolstered = yes
+						}
+						save_temporary_scope_as = affected_movement
+					}
+				}
+			}
+			if = {
+				limit = {
+					scope:affected_movement = {
+						is_being_suppressed = yes
+					}
+				}
+				multiply = {
+					value = 1
+					subtract = owner.modifier:country_suppression_attraction_factor
+					desc = "concept_suppressed"
+				}
+			}
+			else = {
+				multiply = {
+					value = 1
+					add = owner.modifier:country_bolster_attraction_factor
+					desc = "concept_bolstered"
+				}
+			}
+		}
+
 	}
 	
 	revolution = {
@@ -1193,12 +1316,18 @@ movement_communist = {
 	}
 	
 	creation_trigger = {
-		has_technology_researched = socialism
-		has_global_variable = first_intl_chain_complete_var
+		game_date > 1836.1.2
+		OR = {
+			AND = {
+				has_technology_researched = socialism
+				has_global_variable = first_intl_chain_complete_var
+			}
+			bpm_consciousness_labor_percent > 0.6
+		}
 		#average_sol <= 16 
 	}	
 	creation_weight = {
-		value = 100
+		value = 1000
 	}	
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
@@ -1342,117 +1471,117 @@ movement_communist = {
 				is_pop_type = laborers
 			}
 			add = {
-				value = 18 # bread and butter movement
-				desc = "POP_LABORERS"
-			}
-			multiply = {
+                        value = 18 # bread and butter movement
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_laborers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_LABORERS"    
+                    }
 		}		
 		else_if = {
 			limit = {
 				is_pop_type = machinists
 			}
 			add = {
-				value = 18
-				desc = "POP_MACHINISTS"
-			}
-			multiply = {
+                        value = 18
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_machinists
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_MACHINISTS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = academics
 			}
 			add = {
-				value = 12
-				desc = "POP_ACADEMICS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_academics_and_engineers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_ACADEMICS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = engineers
 			}
 			add = {
-				value = 12
-				desc = "POP_ENGINEERS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_academics_and_engineers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_ENGINEERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = clerks
 			}
 			add = {
-				value = 12
-				desc = "POP_CLERKS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_CLERKS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = shopkeepers
 			}
 			add = {
-				value = 6
-				desc = "POP_SHOPKEEPERS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_SHOPKEEPERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = bureaucrats
 			}
 			add = {
-				value = 6
-				desc = "POP_BUREAUCRATS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_BUREAUCRATS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = farmers
 			}
 			add = {
-				value = 6
-				desc = "POP_FARMERS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_FARMERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = soldiers
 			}
 			add = {
-				value = 6
-				desc = "POP_SOLDIERS"	
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_SOLDIERS"    
+                    }
 		}
 		if = {
 			limit = {
@@ -1483,11 +1612,48 @@ movement_communist = {
 			multiply = 6
 			add = 2
 		}
-
+		multiply = {
+			value = owner.bpm_consciousness_beyond_liberal_percent
+			desc = "BPM_CONSCIOUSNESS_LABOR"
+		}
 		multiply = {
 			value = BPM_SOCIALIST_STRENGTH
 			desc = "BPM_PEASANT_AND_LABOR"
 		}
+		if = {
+			limit = {
+				owner ?= {
+					any_political_movement = {
+						is_political_movement_type = movement_communist
+						OR = {
+							is_being_suppressed = yes
+							is_being_bolstered = yes
+						}
+						save_temporary_scope_as = affected_movement
+					}
+				}
+			}
+			if = {
+				limit = {
+					scope:affected_movement = {
+						is_being_suppressed = yes
+					}
+				}
+				multiply = {
+					value = 1
+					subtract = owner.modifier:country_suppression_attraction_factor
+					desc = "concept_suppressed"
+				}
+			}
+			else = {
+				multiply = {
+					value = 1
+					add = owner.modifier:country_bolster_attraction_factor
+					desc = "concept_bolstered"
+				}
+			}
+		}
+
 	}
 	
 	revolution = {
@@ -1575,8 +1741,14 @@ movement_reformist_socialist = {
 	}
 	
 	creation_trigger = {
-		has_technology_researched = socialism
-		has_global_variable = first_intl_chain_complete_var
+		game_date > 1836.1.2
+		OR = { 
+			AND = { 
+				has_technology_researched = socialism
+				has_global_variable = first_intl_chain_complete_var
+			}
+			bpm_consciousness_labor_percent > 0.6
+		}
 		average_sol >= 12
 	}	
 	creation_weight = {
@@ -1684,117 +1856,117 @@ movement_reformist_socialist = {
 				is_pop_type = laborers
 			}
 			add = {
-				value = 12 # bread and butter movement
-				desc = "POP_LABORERS"
-			}
-			multiply = {
+                        value = 12 # bread and butter movement
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_laborers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_LABORERS"    
+                    }
 		}		
 		else_if = {
 			limit = {
 				is_pop_type = machinists
 			}
 			add = {
-				value = 12
-				desc = "POP_MACHINISTS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_machinists
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_MACHINISTS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = academics
 			}
 			add = {
-				value = 12
-				desc = "POP_ACADEMICS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_academics_and_engineers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_ACADEMICS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = engineers
 			}
 			add = {
-				value = 12
-				desc = "POP_ENGINEERS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_academics_and_engineers
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_ENGINEERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = clerks
 			}
 			add = {
-				value = 18
-				desc = "POP_CLERKS"
-			}
-			multiply = {
+                        value = 18
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_CLERKS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = shopkeepers
 			}
 			add = {
-				value = 12
-				desc = "POP_SHOPKEEPERS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_SHOPKEEPERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = bureaucrats
 			}
 			add = {
-				value = 12
-				desc = "POP_BUREAUCRATS"
-			}
-			multiply = {
+                        value = 12
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_BUREAUCRATS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = farmers
 			}
 			add = {
-				value = 6
-				desc = "POP_FARMERS"
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_FARMERS"    
+                    }
 		}
 		else_if = {
 			limit = {
 				is_pop_type = soldiers
 			}
 			add = {
-				value = 6
-				desc = "POP_SOLDIERS"	
-			}
-			multiply = {
+                        value = 6
+                        multiply = {
 				value = owner.var:bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen
 				desc = "BPM_LABOR_CONSCIOUSNESS"
 			}
+                        desc = "POP_SOLDIERS"    
+                    }
 		}
 		if = {
 			limit = {
@@ -1848,11 +2020,48 @@ movement_reformist_socialist = {
 			}
 			multiply = 0.2
 		}
-
+		multiply = {
+			value = owner.bpm_consciousness_beyond_liberal_percent
+			desc = "BPM_CONSCIOUSNESS_LABOR"
+		}
 		multiply = {
 			value = BPM_SOCIALIST_STRENGTH
 			desc = "BPM_PEASANT_AND_LABOR"
 		}
+		if = {
+			limit = {
+				owner ?= {
+					any_political_movement = {
+						is_political_movement_type = movement_reformist_socialist
+						OR = {
+							is_being_suppressed = yes
+							is_being_bolstered = yes
+						}
+						save_temporary_scope_as = affected_movement
+					}
+				}
+			}
+			if = {
+				limit = {
+					scope:affected_movement = {
+						is_being_suppressed = yes
+					}
+				}
+				multiply = {
+					value = 1
+					subtract = owner.modifier:country_suppression_attraction_factor
+					desc = "concept_suppressed"
+				}
+			}
+			else = {
+				multiply = {
+					value = 1
+					add = owner.modifier:country_bolster_attraction_factor
+					desc = "concept_bolstered"
+				}
+			}
+		}
+
 	}
 	
 	revolution = {

@@ -1,79 +1,91 @@
-bpm_consciousness_labor_floor = {
+bpm_consciousness_labor_target = {
 	value = 0
 	if = {
 		limit = {
 			has_technology_researched = urbanization
 		}
-		add = 5
+		add = {
+			value = 5
+			desc = "bpm_consciousness_labor_target_urbanization_tech_desc"
+		}
 	}
 	if = {
 		limit = {
 			has_technology_researched = dialectics
 		}
-		add = 5
+		add = {
+			value = 5
+			desc = "bpm_consciousness_labor_target_dialectics_tech_desc"
+		}
 	}
 	if = {
 		limit = {
 			has_technology_researched = labor_movement
 		}
-		add = 5
+		add = {
+			value = 5
+			desc = "bpm_consciousness_labor_target_labor_movement_tech_desc"
+		}
 	}
 	if = {
 		limit = {
 			has_technology_researched = organized_sports
 		}
-		add = 5
+		add = {
+			value = 5
+			desc = "bpm_consciousness_labor_target_organized_sports_tech_desc"
+		}
 	}
 	if = {
 		limit = {
 			has_technology_researched = socialism
 		}
-		add = 10
+		add = {
+			value = 10
+			desc = "bpm_consciousness_labor_target_socialism_tech_desc"
+		}
 	}
 	if = {
 		limit = {
 			has_technology_researched = anarchism
 		}
-		add = 10
-	}
-
-}
-
-bpm_consciousness_labor_ceiling = {
-	value = 50
-	if = {
-		limit = {
-			has_global_variable = first_intl_chain_complete_var
+		add = {
+			value = 10
+			desc = "bpm_consciousness_labor_target_anarchism_tech_desc"
 		}
-		add = 25
 	}
 	if = {
 		limit = {
-			has_global_variable = second_intl_chain_complete_var
+			NOT = { has_global_variable = first_intl_chain_complete_var }
 		}
-		add = 25
+		add = {
+			value = -25
+			desc = "bpm_consciousness_labor_target_first_intl_desc"
+		}
 	}
-}
-
-bpm_consciousness_labor_change = {
-	value = 0
-		# Roughly one hundred point per two hundred levels
-	 add = {
-	 	value = 0
-	 	every_scope_state = {
-	 		add = bpm_consciousness_labor_change_manufacturing
-	 	}
-		divide = 1000
-		round_to = 0.01
-	 	desc = bpm_consciousness_labor_change_manufacturing_desc
-	 }
+	if = {
+		limit = {
+			NOT = { has_global_variable = second_intl_chain_complete_var }
+		}
+		add = {
+			value = -25
+			desc = "bpm_consciousness_labor_target_second_intl_desc"
+		}
+	}
+	add = {
+		value = 0
+		every_scope_state = {
+			add = bpm_consciousness_labor_change_manufacturing
+		}
+		round = yes
+		desc = bpm_consciousness_labor_change_manufacturing_desc
+	}
 	add = {
 		value = 0
 		every_scope_state = {
 			add = bpm_consciousness_labor_change_service
 		}
-		divide = 1000
-		round_to = 0.01
+		round = yes
 		desc = bpm_consciousness_labor_change_service_desc
 	}
 	add = {
@@ -81,11 +93,9 @@ bpm_consciousness_labor_change = {
 		every_scope_state = {
 			add = bpm_consciousness_labor_change_extraction
 		}
-		divide = 1000
-		round_to = 0.01
+		round = yes
 		desc = bpm_consciousness_labor_change_extraction_desc
 	}
-	# One hundred points at full urbanization
 	add = {
 		value = 0
 		every_scope_state = {
@@ -96,63 +106,147 @@ bpm_consciousness_labor_change = {
 				divide = owner.total_population
 			}
 		}
-		divide = 1000
-		round_to = 0.01
+		divide = 5
+		round = yes
 		desc = bpm_consciousness_labor_change_urbanization_desc
 	}
-	add = {
-		value = 0
-		every_scope_character = {
+	multiply = {
+		value = 1
+		add = modifier:country_bpm_labor_consciousness_target_mult
+	}
+	min = 0
+	max = 100
+}
+
+building_levels_in_state = {
+	value = 0
+	every_scope_building = {
+		add = level
+	}
+	divide = 20
+}
+
+bpm_consciousness_labor_change = {
+
+	value = {
+		desc = "bpm_consciousness_change_stability_desc"
+		value = 2
+		multiply = {
+			value = 100
+			subtract = var:bpm_political_stability
+			divide = 100
+			min = 0
+		}
+		if = {
 			limit = {
-				has_role = agitator
-				interest_group = {
-					OR = {
-						is_interest_group_type = ig_socialists
-						is_interest_group_type = ig_trade_unions
-						is_interest_group_type = ig_anarchists
-						is_interest_group_type = ig_revolutionist_socialists
-						is_interest_group_type = ig_reformist_socialists
-					}
-				}
+				var:bpm_consciousness_labor > bpm_consciousness_labor_target
 			}
-			add = {
-				value = 1
-				multiply = popularity
-				divide = 1000
- 			} 
-		}
-		desc = bpm_consciousness_labor_change_agitator_desc
-	}
-	if = {
-		limit = {
-			has_law = law_type:law_limited_labor_unions
-		}
-		add = {
-			value = ig:ig_trade_unions.ig_clout
-			desc = bpm_consciousness_labor_change_limited_labor_unions_desc
-		}
-	}
-	else_if = {
-		limit = {
-			has_law = law_type:law_all_labor_unions_allowed
-		}
-		add = {
-			value = ig:ig_trade_unions.ig_clout
-			multiply = 0.5
-			desc = bpm_consciousness_labor_change_legalized_labor_unions_desc
+			multiply = -1
 		}
 	}
 	add = {
-		value = -1
+		value = bpm_consciousness_labor_target
+		subtract = var:bpm_consciousness_labor
+		divide = 20
+		desc = "bpm_consciousness_labor_change_target_desc"
+	}
+
+		# Roughly one hundred point per two hundred levels
+	#  add = {
+	#  	value = 0
+	#  	every_scope_state = {
+	#  		add = bpm_consciousness_labor_change_manufacturing
+	#  	}
+	# 	divide = 1000
+	# 	round_to = 0.01
+	#  	desc = bpm_consciousness_labor_change_manufacturing_desc
+	#  }
+	# add = {
+	# 	value = 0
+	# 	every_scope_state = {
+	# 		add = bpm_consciousness_labor_change_service
+	# 	}
+	# 	divide = 1000
+	# 	round_to = 0.01
+	# 	desc = bpm_consciousness_labor_change_service_desc
+	# }
+	# add = {
+	# 	value = 0
+	# 	every_scope_state = {
+	# 		add = bpm_consciousness_labor_change_extraction
+	# 	}
+	# 	divide = 1000
+	# 	round_to = 0.01
+	# 	desc = bpm_consciousness_labor_change_extraction_desc
+	# }
+	# # One hundred points at full urbanization
+	# add = {
+	# 	value = 0
+	# 	every_scope_state = {
+	# 		add = {
+	# 			value = total_urbanization
+	# 			divide = 20
+	# 			multiply = state_population
+	# 			divide = owner.total_population
+	# 		}
+	# 	}
+	# 	divide = 1000
+	# 	round_to = 0.01
+	# 	desc = bpm_consciousness_labor_change_urbanization_desc
+	# }
+	# add = {
+	# 	value = 0
+	# 	every_scope_character = {
+	# 		limit = {
+	# 			has_role = agitator
+	# 			interest_group = {
+	# 				OR = {
+	# 					is_interest_group_type = ig_socialists
+	# 					is_interest_group_type = ig_trade_unions
+	# 					is_interest_group_type = ig_anarchists
+	# 					is_interest_group_type = ig_revolutionist_socialists
+	# 					is_interest_group_type = ig_reformist_socialists
+	# 				}
+	# 			}
+	# 		}
+	# 		add = {
+	# 			value = 1
+	# 			multiply = popularity
+	# 			divide = 1000
+ 	# 		} 
+	# 	}
+	# 	desc = bpm_consciousness_labor_change_agitator_desc
+	# }
+	# if = {
+	# 	limit = {
+	# 		has_law = law_type:law_limited_labor_unions
+	# 	}
+	# 	add = {
+	# 		value = ig:ig_trade_unions.ig_clout
+	# 		desc = bpm_consciousness_labor_change_limited_labor_unions_desc
+	# 	}
+	# }
+	# else_if = {
+	# 	limit = {
+	# 		has_law = law_type:law_all_labor_unions_allowed
+	# 	}
+	# 	add = {
+	# 		value = ig:ig_trade_unions.ig_clout
+	# 		multiply = 0.5
+	# 		desc = bpm_consciousness_labor_change_legalized_labor_unions_desc
+	# 	}
+	# }
+	# add = {
+	# 	value = -1
 		
-		multiply = bpm_loyalist_population_fraction
-		multiply = bpm_loyalist_population_fraction
-		desc = bpm_consciousness_labor_change_loyalty_multiplier_desc
-	}
-	add = {
-		value = modifier:country_labor_consciousness_change_add
-		desc = bpm_consciousness_labor_change_modifier_desc
-	}
+	# 	multiply = bpm_loyalist_population_fraction
+	# 	multiply = bpm_loyalist_population_fraction
+	# 	desc = bpm_consciousness_labor_change_loyalty_multiplier_desc
+	# }
+	# add = {
+	# 	value = modifier:country_labor_consciousness_change_add
+	# 	desc = bpm_consciousness_labor_change_modifier_desc
+	# }
 }
 
 bpm_loyalist_population_fraction = {
@@ -174,10 +268,11 @@ bpm_consciousness_labor_change_manufacturing = {
 		}
 		add = bpm_consciousness_labor_change_manufacturing_building
 	}
+	divide = building_levels_in_state
 }
 
 bpm_consciousness_labor_change_manufacturing_building = {
-	value = 1
+	value = level
 	multiply = {
 		value = private_ownership_fraction
 		add = 0.5
@@ -193,10 +288,12 @@ bpm_consciousness_labor_change_service = {
 		}
 		add = bpm_consciousness_labor_change_service_building
 	}
+	divide = building_levels_in_state
 }
 
 bpm_consciousness_labor_change_service_building = {
-	value = 0.5
+	value = level
+	multiply = 0.5
 }
 
 bpm_consciousness_labor_change_extraction = {
@@ -208,10 +305,12 @@ bpm_consciousness_labor_change_extraction = {
 		}
 		add = bpm_consciousness_labor_change_extraction_building
 	}
+	divide = building_levels_in_state
 }
 
 bpm_consciousness_labor_change_extraction_building = {
-	value = 0.75
+	value = level
+	multiply = 0.75
 }
 
 bpm_consciousness_labor_percent = {
@@ -276,10 +375,10 @@ bpm_consciousness_labor_movement_clerks_bureaucrats_shopkeepers = {
 ### Socialist Movement ### 
 
 bpm_consciousness_socialist_movement_laborers = {
-	value = bpm_consciousness_labor_percent
+	value = bpm_consciousness_beyond_liberal_percent
 	subtract = 0.7
 	multiply = {
-		value = bpm_consciousness_labor_percent
+		value = bpm_consciousness_beyond_liberal_percent
 		subtract = 0.7
 	}
 	multiply = -8 
@@ -289,10 +388,10 @@ bpm_consciousness_socialist_movement_laborers = {
 }
 
 bpm_consciousness_socialist_movement_machinists = {
-	value = bpm_consciousness_labor_percent
+	value = bpm_consciousness_beyond_liberal_percent
 	subtract = 0.6
 	multiply = {
-		value = bpm_consciousness_labor_percent
+		value = bpm_consciousness_beyond_liberal_percent
 		subtract = 0.6
 	}
 	multiply = -12
@@ -302,10 +401,10 @@ bpm_consciousness_socialist_movement_machinists = {
 }
 
 bpm_consciousness_socialist_movement_academics_and_engineers = {
-	value = bpm_consciousness_labor_percent
+	value = bpm_consciousness_beyond_liberal_percent
 	subtract = 0.55
 	multiply = {
-		value = bpm_consciousness_labor_percent
+		value = bpm_consciousness_beyond_liberal_percent
 		subtract = 0.55
 	}
 	multiply = -24
@@ -315,10 +414,10 @@ bpm_consciousness_socialist_movement_academics_and_engineers = {
 }
 
 bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen = {
-	value = bpm_consciousness_labor_percent
+	value = bpm_consciousness_beyond_liberal_percent
 	subtract = 0.85
 	multiply = {
-		value = bpm_consciousness_labor_percent
+		value = bpm_consciousness_beyond_liberal_percent
 		subtract = 0.85
 	}
 	multiply = -5
@@ -330,54 +429,70 @@ bpm_consciousness_socialist_movement_clerks_bureaucrats_shopkeepers_farmers_serv
 ### Communist Movements ### 
 
 bpm_consciousness_communist_movement_laborers = {
-	value = bpm_consciousness_labor_percent
-	subtract = 1
+	value = bpm_consciousness_beyond_liberal_percent
+	subtract = 2
 	multiply = {
-		value = bpm_consciousness_labor_percent
-		subtract = 1
+		value = bpm_consciousness_beyond_liberal_percent
+		subtract = 2
 	}
-	multiply = -8 
+	divide = -3
 	add = 1
-	multiply = 6
+	multiply = 12
+	if = {
+		# When fully awakened, nothing can stand in the way of the struggle
+		limit = {
+			bpm_consciousness_beyond_liberal_percent >= 1
+			is_player = yes
+		}
+		multiply = 999
+	}
 	min = 0
 }
 
 bpm_consciousness_communist_movement_machinists = {
-	value = bpm_consciousness_labor_percent
-	subtract = 1
+	value = bpm_consciousness_beyond_liberal_percent
+	subtract = 2
 	multiply = {
-		value = bpm_consciousness_labor_percent
-		subtract = 1
+		value = bpm_consciousness_beyond_liberal_percent
+		subtract = 2
 	}
-	multiply = -6
+	divide = -4
 	add = 1
-	multiply = 6
+	multiply = 12
+	if = {
+		# When fully awakened, nothing can stand in the way of the struggle
+		limit = {
+			bpm_consciousness_beyond_liberal_percent >= 1
+			is_player = yes
+		}
+		multiply = 999
+	}
 	min = 0
 }
 
 bpm_consciousness_communist_movement_academics_and_engineers = {
-	value = bpm_consciousness_labor_percent
-	subtract = 0.8
+	value = bpm_consciousness_beyond_liberal_percent
+	subtract = 1.6
 	multiply = {
-		value = bpm_consciousness_labor_percent
-		subtract = 0.8
+		value = bpm_consciousness_beyond_liberal_percent
+		subtract = 1.6
 	}
-	multiply = -2
+	divide = -6
 	add = 0.75
-	multiply = 6
+	multiply = 12
 	min = 0
 }
 
 bpm_consciousness_communist_movement_clerks_bureaucrats_shopkeepers_farmers_servicemen = {
-	value = bpm_consciousness_labor_percent
-	subtract = 1
+	value = bpm_consciousness_beyond_liberal_percent
+	subtract = 2
 	multiply = {
-		value = bpm_consciousness_labor_percent
-		subtract = 1
+		value = bpm_consciousness_beyond_liberal_percent
+		subtract = 2
 	}
-	multiply = -24
+	multiply = -2
 	add = 0.75
-	multiply = 6
+	multiply = 12
 	min = 0
 }
 
@@ -508,51 +623,70 @@ bpm_consciousness_fascist_movement_others = {
 
 ### Liberal Consciousness ###
 
-bpm_consciousness_liberal_floor = {
+bpm_consciousness_liberal_target = {
 	if = {
 		limit = {
 			has_technology_researched = academia
 		}
-		add = 5
+		add = {
+			value = 5
+			desc = bpm_consciousness_liberal_target_academia_tech_desc
+		}
 	}
 	if = {
 		limit = {
 			has_technology_researched = democracy
 		}
-		add = 5
+		add = {
+			value = 5
+			desc = bpm_consciousness_liberal_target_democracy_tech_desc
+		}
 	}
 	if = {
 		limit = {
 			has_technology_researched = rationalism
 		}
-		add = 5
+		add = {
+			value = 5
+			desc = bpm_consciousness_liberal_target_rationalism_tech_desc
+		}
 	}
 	if = {
 		limit = {
 			has_technology_researched = empiricism
 		}
-		add = 5
+		add = {
+			value = 5
+			desc = bpm_consciousness_liberal_target_empiricism_tech_desc
+		}
 	}
 	if = {
 		limit = {
 			has_technology_researched = egalitarianism
 		}
-		add = 10
+		add = {
+			value = 5
+			desc = bpm_consciousness_liberal_target_egalitarianism_tech_desc
+		}
 	}
-
 	if = {
 		limit = {
 			has_technology_researched = human_rights
 		}
-		add = 10
+		add = {
+			value = 5
+			desc = bpm_consciousness_liberal_target_human_rights_tech_desc
+		}
 	}
 	if = {
 		limit = {
 			has_technology_researched = pan-nationalism
 		}
-		add = 10
+		add = {
+			value = 5
+			desc = bpm_consciousness_liberal_target_pan_nationalism_tech_desc
+		}
 	}
-
 	if = {
 		limit = {
 			OR = {
@@ -561,63 +695,162 @@ bpm_consciousness_liberal_floor = {
 				has_law = law_type:law_wealth_voting
 			}
 		}
-		add = 10
+		add = {
+			value = 5
+			desc = bpm_consciousness_liberal_target_suffrage_law_desc
+		}
 	}
-
 	if = {
 		limit = {
 			NOT = {
 				has_law = law_type:law_advisory_body
 			}
 		}
-		add = 10
+		add = {
+			value = 15
+			desc = bpm_consciousness_liberal_target_no_advisory_body_desc
+		}
 	}
 	if = {
 		limit = {
 			has_law = law_type:law_protected_speech
 		}
-		add = 15
+		add = {
+			value = 5
+			desc = bpm_consciousness_liberal_target_protected_speech_law_desc
+		}
 	}
-}
-
-bpm_consciousness_liberal_change = {
 	add = {
 		value = 0
 		every_scope_state = {
 			add = bpm_consciousness_liberal_change_universities
 		}
-	   divide = 1000
-	   round_to = 0.01
-	   desc = bpm_consciousness_liberal_change_universities_desc
+		divide = 5
+		round = yes
+		desc = bpm_consciousness_liberal_change_universities_desc
 	}
 	add = {
 		value = 0
 		every_scope_state = {
 			add = bpm_consciousness_liberal_change_trade_centers
 		}
-	   divide = 1000
-	   round_to = 0.01
-	   desc = bpm_consciousness_liberal_change_trade_centers_desc
+		divide = 5
+		round = yes
+		desc = bpm_consciousness_liberal_change_trade_centers_desc
 	}
 	add = {
 		value = 0
 		every_scope_state = {
 			add = bpm_consciousness_liberal_change_manor_houses
-		}
-	   divide = 1000
-	   round_to = 0.01
-	   desc = bpm_consciousness_liberal_change_manor_houses_desc
+	 	}
+	 	round = yes
+		desc = bpm_consciousness_liberal_change_manor_houses_desc
 	}
 	add = {
-		value = 1
+		value = 0
+		every_scope_state = {
+			add = bpm_consciousness_liberal_change_findist
+		}
+		multiply = 2
+		round = yes
+		desc = bpm_consciousness_liberal_change_findist_desc
+	}
+	add = {
+		value = 70
 		multiply = literacy_rate
-		divide = 10
 		desc = bpm_consciousness_liberal_change_literacy_rate_desc
 	}
+	min = 0
+	max = 100
+}
+
+bpm_consciousness_liberal_change = {
 	add = {
-		value = modifier:country_liberal_consciousness_change_add
-		desc = bpm_consciousness_liberal_change_modifier_desc
+		desc = "bpm_consciousness_change_stability_desc"
+		value = 2
+		multiply = {
+			value = 100
+			subtract = var:bpm_political_stability
+			divide = 100
+		}
+		if = {
+			limit = {
+				var:bpm_consciousness_liberal > bpm_consciousness_liberal_target
+			}
+			multiply = -1
+		}
 	}
+	add = {
+		value = bpm_consciousness_liberal_target
+		subtract = var:bpm_consciousness_liberal
+		divide = 20
+		desc = "bpm_consciousness_labor_change_target_desc"
+	}
+	# add = {
+	# 	value = 0
+	# 	every_scope_state = {
+	# 		add = bpm_consciousness_liberal_change_universities
+	# 	}
+	#    divide = 1000
+	#    round_to = 0.01
+	#    desc = bpm_consciousness_liberal_change_universities_desc
+	# }
+	# add = {
+	# 	value = 0
+	# 	every_scope_state = {
+	# 		add = bpm_consciousness_liberal_change_trade_centers
+	# 	}
+	#    divide = 1000
+	#    round_to = 0.01
+	#    desc = bpm_consciousness_liberal_change_trade_centers_desc
+	# }
+	# add = {
+	# 	value = 0
+	# 	every_scope_state = {
+	# 		add = bpm_consciousness_liberal_change_manor_houses
+	# 	}
+	#    divide = 1000
+	#    round_to = 0.01
+	#    desc = bpm_consciousness_liberal_change_manor_houses_desc
+	# }
+	# add = {
+	# 	value = 1
+	# 	multiply = literacy_rate
+	# 	divide = 10
+	# 	desc = bpm_consciousness_liberal_change_literacy_rate_desc
+	# }
+	# add = {
+	# 	value = modifier:country_liberal_consciousness_change_add
+	# 	desc = bpm_consciousness_liberal_change_modifier_desc
+	# }
+}
+
+bpm_consciousness_liberal_change_findist = {
+	every_scope_building = {
+		limit = {
+			is_building_type = building_financial_district
+		}
+		add = level
+	}
+	every_scope_building = {
+		limit = {
+			is_building_type = building_company_regional_headquarter
+		}
+		add = {
+			value = level
+			multiply = 2
+		}
+	}
+	every_scope_building = {
+		limit = {
+			is_building_type = building_company_headquarter
+		}
+		add = {
+			value = level
+			multiply = 2
+		}
+	}
+	divide = building_levels_in_state
 }
 
 bpm_consciousness_liberal_change_universities = {
@@ -625,8 +858,9 @@ bpm_consciousness_liberal_change_universities = {
 		limit = {
 			is_building_type = building_university
 		}
-		add = 10
+		add = level
 	}
+	divide = building_levels_in_state
 }
 
 bpm_consciousness_liberal_change_trade_centers = {
@@ -634,8 +868,9 @@ bpm_consciousness_liberal_change_trade_centers = {
 		limit = {
 			is_building_type = building_trade_center
 		}
-		add = 5
+		add = level
 	}
+	divide = building_levels_in_state
 }
 
 bpm_consciousness_liberal_change_manor_houses = {
@@ -643,8 +878,12 @@ bpm_consciousness_liberal_change_manor_houses = {
 		limit = {
 			is_building_type = building_manor_house
 		}
-		add = -1
+		add = {
+			value = level
+			multiply = -0.5
+		}
 	}
+	divide = building_levels_in_state
 }
 
 bpm_consciousness_liberal_percent = {
@@ -652,24 +891,53 @@ bpm_consciousness_liberal_percent = {
 	divide = 100
 }
 
-### Modernization Movement ###
-
-# x^4
-bpm_consciousness_modernizer_movement_others = {
-	value = bpm_consciousness_liberal_percent
-	multiply = bpm_consciousness_liberal_percent
-	multiply = bpm_consciousness_liberal_percent
-	multiply = bpm_consciousness_liberal_percent
-	multiply = 10
+bpm_consciousness_labor_min_lib = {
+	value = var:bpm_consciousness_labor
+	subtract = var:bpm_consciousness_liberal
+	divide = 100
 }
 
-# x^3 + 0.2 
+bpm_consciousness_beyond_liberal_percent = {
+	value = var:bpm_consciousness_labor
+	
+	multiply = {
+		value = 1.5
+		subtract = bpm_consciousness_labor_min_lib
+	}
+	multiply = {
+		value = 1.5
+		subtract = bpm_consciousness_labor_min_lib
+	}
+	divide = 100
+
+	min = bpm_consciousness_labor_percent
+}
+
+### Modernization Movement ###
+
+# 10(x+0.5)^4
+bpm_consciousness_modernizer_movement_others = {
+	value = {
+		value = bpm_consciousness_liberal_percent
+		add = 0.25
+	}
+	multiply = {
+		value = bpm_consciousness_liberal_percent
+		add = 0.25
+	}
+	multiply = {
+		value = bpm_consciousness_liberal_percent
+		add = 0.25
+	}
+	multiply = {
+		value = bpm_consciousness_liberal_percent
+		add = 0.25
+	}
+	multiply = 2
+}
+
 bpm_consciousness_modernizer_movement_capitalists_shopkeepers = {
-	value = bpm_consciousness_liberal_percent
-	multiply = bpm_consciousness_liberal_percent
-	multiply = bpm_consciousness_liberal_percent
-	add = 0.2
-	multiply = 10
+	value = 1000
 }
 
 # x^2 + 0.5
@@ -677,7 +945,7 @@ bpm_consciousness_modernizer_movement_academics_engineers = {
 	value = bpm_consciousness_liberal_percent
 	multiply = bpm_consciousness_liberal_percent
 	add = 0.5
-	multiply = 10
+	multiply = 4
 }
 
 ### Liberal & Radical Movements ###
@@ -691,7 +959,7 @@ bpm_consciousness_liberal_movement_capitalists_shopkeepers = {
 	}
 	multiply = -2
 	add = 1
-	multiply = 5
+	multiply = 2
 	min = 0
 }
 
@@ -704,16 +972,26 @@ bpm_consciousness_liberal_movement_academics_engineers = {
 	}
 	multiply = -1
 	add = 1
-	multiply = 5
+	multiply = 2
 	min = 0
 }
 
+# 6/(12(x-0.5)^2 + 1)
 bpm_consciousness_liberal_movement_others = {
-	value = bpm_consciousness_liberal_percent
-	multiply = bpm_consciousness_liberal_percent
-	multiply = 2
-	multiply = 5
-	divide = 3
+	value = 3
+	divide = {
+		value = 12
+		multiply = {
+			value = bpm_consciousness_liberal_percent
+			subtract = 0.5
+		}
+		multiply = {
+			value = bpm_consciousness_liberal_percent
+			subtract = 0.5
+		}
+		add = 1
+		min = 0.01
+	}
 }
 
 ### Marknat Movements ###
@@ -725,26 +1003,34 @@ bpm_consciousness_marknat_movement_capitalists_shopkeepers = {
 		value = bpm_consciousness_liberal_percent
 		subtract = 1
 	}
-	multiply = -2
+	multiply = -6
 	add = 1.5
-	multiply = 5
+	multiply = 3
 	min = 0
 }
 
 bpm_consciousness_marknat_movement_academics_engineers = {
+	value = bpm_consciousness_liberal_percent
+	subtract = 0.75
+	multiply = {
+		value = bpm_consciousness_liberal_percent
+		subtract = 0.75
+	}
+	multiply = -4
+	add = 1.5
+	multiply = 2
+	min = 0
+}
+
+bpm_consciousness_marknat_movement_others = {
 	value = bpm_consciousness_liberal_percent
 	subtract = 1
 	multiply = {
 		value = bpm_consciousness_liberal_percent
 		subtract = 1
 	}
-	multiply = -1
-	add = 0.9
-	multiply = 5
+	multiply = -24
+	add = 1.5
+	multiply = 2
 	min = 0
-}
-
-bpm_consciousness_marknat_movement_others = {
-	value = bpm_consciousness_liberal_percent
-	multiply = bpm_consciousness_liberal_percent
 }

@@ -427,10 +427,7 @@ bpm_frankfurt_parliament_events.6 = {
 		has_journal_entry = je_frankfurt_parliament
 		has_global_variable = bpm_frankfurt_parliament_progress
 		global_var:bpm_frankfurt_parliament_progress >= 60
-		NOR = { 
-			has_global_variable = bpm_frankfurt_parliament_lesser_germany
-			has_global_variable = bpm_frankfurt_parliament_greater_germany
-		}
+		NOT = { has_global_variable = bpm_frankfurt_parliament_german_size }
 		# has_global_variable = bpm_frankfurt_parliament_voting_law_chosen
 		# has_global_variable = bpm_frankfurt_parliament_bohemia_status
 		# has_global_variable = bpm_frankfurt_parliament_centralization_law_chosen
@@ -439,42 +436,37 @@ bpm_frankfurt_parliament_events.6 = {
 	}
 
 	immediate = {
-		if = {
-			limit = {
-				OR = {
-					AND = {
-						global_var:bpm_frankfurt_parliament_left_percent >= global_var:bpm_frankfurt_parliament_center_percent 
-						global_var:bpm_frankfurt_parliament_left_percent >= global_var:bpm_frankfurt_parliament_right_percent
-					}
-					c:AUS = {
-						NOT = { has_variable = boycotting_frankfurt }
-						# NOR = {
-						# 	any_interest_group = {
-						# 		bpm_ig_is_left_wing = yes
-						# 		is_powerful = yes
-						# 		is_in_government = yes
-						# 	}
-						# 	bpm_country_is_republic = yes
-						# }
-					}
-				}
-			}
-			set_global_variable = {
-				name = bpm_frankfurt_parliament_greater_germany
-			}
-		}
-
-		else = {
-			set_global_variable = {
-				name = bpm_frankfurt_parliament_lesser_germany
-			}
-		}
-
+		set_global_variable = bpm_frankfurt_parliament_german_size
 	}
 	option = {
 		name = bpm_frankfurt_parliament_events.6.a
 		default_option = yes
 		bpm_frankfurt_member_update = yes
+
+		set_global_variable = {
+			name = bpm_frankfurt_parliament_greater_germany
+		}
+		custom_tooltip = {
+			text = frankfurt_greater
+		}
+	}
+	option = {
+		name = bpm_frankfurt_parliament_events.6.b
+		default_option = yes
+		bpm_frankfurt_member_update = yes
+
+		set_global_variable = {
+			name = bpm_frankfurt_parliament_lesser_germany
+		}
+		custom_tooltip = {
+			text = frankfurt_lesser
+		}
+		custom_tooltip = {
+			text = austria_boycott_tt
+			c:AUS = {
+				set_variable = boycotting_frankfurt
+			}
+		}
 	}
 }
 
@@ -830,6 +822,18 @@ bpm_frankfurt_parliament_events.9 = {
 			}
 			order_by = country_rank
         	save_scope_as = frankfurt_crown_candidate
+		}
+
+		if = {
+			limit = { 
+				this ?= c:AUS 
+				has_global_variable = bpm_frankfurt_parliament_greater_germany
+			}
+			custom_tooltip = {
+				text = frankfurt_lesser
+				remove_global_variable = bpm_frankfurt_parliament_greater_germany
+				set_global_variable = bpm_frankfurt_parliament_lesser_germany
+			}
 		}
 
 		if = {
@@ -1893,7 +1897,8 @@ bpm_frankfurt_parliament_events.33 = {
 					activate_law = law_type:law_cultural_exclusion
 					bpm_setup_country = yes
 				}
-				if = {
+			}
+			if = {
 					limit = { has_law = law_type:law_monarchy }
 					create_diplomatic_pact = {
 						country = c:GAL
@@ -1907,8 +1912,93 @@ bpm_frankfurt_parliament_events.33 = {
 						country = c:LOM
 						type = protectorate
 					}
+			}
+	}
+	option = {
+		name = bpm_frankfurt_parliament_events.32.b
+		default_option = yes
+
+		if = {
+			limit = { NOT = { exists = c:HUN } }
+			create_country = {
+				tag = HUN
+				origin = c:GER
+				state = s:STATE_CENTRAL_HUNGARY.region_state:GER
+			}
+			s:STATE_TRANSDANUBIA.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			s:STATE_BEKES.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			s:STATE_BANAT.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			s:STATE_DELVIDEK.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			s:STATE_WEST_SLOVAKIA.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			s:STATE_EAST_SLOVAKIA.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			s:STATE_NORTHERN_TRANSYLVANIA.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			s:STATE_SOUTHERN_TRANSYLVANIA.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			s:STATE_SLAVONIA.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			s:STATE_CROATIA.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			if = { 
+				limit = { STMS_is_active_trigger = yes }
+				s:STATE_SOUTHERN_SLOVAKIA.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+				s:STATE_WEST_BANAT.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+				s:STATE_SYRMIA.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+				s:STATE_CARPATHIAN_RUTHENIA.region_state:GER = { set_state_owner = c:HUN set_state_type = incorporated }
+			}
+
+			c:HUN = {
+				activate_law = law_type:law_devolved
+				activate_law = law_type:law_monarchy
+				activate_law = law_type:law_appointed_bureaucrats
+				activate_law = law_type:law_wealth_voting
+				activate_law = law_type:law_freedom_of_conscience
+				activate_law = law_type:law_cultural_exclusion
+				activate_law = law_type:law_national_guard
+				activate_law = law_type:law_per_capita_based_taxation
+				activate_law = law_type:law_professional_army
+				activate_law = law_type:law_professional_officers
+				bpm_setup_country = yes
+
+			}
+		}
+			if = {
+				limit = { 
+					NOT = { exists = c:LOM }
+					c:GER = { owns_entire_state_region = STATE_LOMBARDY }
+				}
+				create_country = {
+					tag = LOM
+					origin = c:GER
+					state = s:STATE_LOMBARDY.region_state:GER
+				}
+				s:STATE_VENETIA.region_state:GER = { set_state_owner = c:LOM set_state_type = incorporated}
+				c:LOM = {
+					activate_law = law_type:law_unitary
+					activate_law = law_type:law_monarchy
+					activate_law = law_type:law_appointed_bureaucrats
+					activate_law = law_type:law_oligarchy
+					bpm_setup_country = yes
+
 				}
 			}
+			if = {
+				limit = { has_law = law_type:law_monarchy }
+				create_diplomatic_pact = {
+					country = c:HUN
+					type = protectorate
+				}
+				create_diplomatic_pact = {
+					country = c:LOM
+					type = protectorate
+				}
+			}
+	}
+	option = {
+		name = bpm_frankfurt_parliament_events.32.c
+
+		custom_tooltip = {
+			text = austria_boycott_tt
+			c:AUS = {
+				set_variable = boycotting_frankfurt
+			}
+		}
 	}
 
 }

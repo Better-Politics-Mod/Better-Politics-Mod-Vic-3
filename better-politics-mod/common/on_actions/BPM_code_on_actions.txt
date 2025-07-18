@@ -158,9 +158,6 @@ on_new_ruler = {
 	on_actions = {
 		on_bpm_new_ruler
 	}
-	events = {
-		bpm_scandinavia.1
-	}
 }
 
 # on_character_creation = {
@@ -288,6 +285,7 @@ on_bpm_monthly_pulse_country = {
 		bpm_france.3
 		bpm_france.4
 		bpm_clear_stubbornness_utils.3
+		bpm_china.1
 		bpm_china.3
 		bpm_colony_events.2
 		bpm_colony_events.3
@@ -589,19 +587,19 @@ on_bpm_law_activated = {
 							scope:lawtype = law_type:law_parliamentary_republic
 						}
 					}
-					trigger_event = bpm_send_notification.1
+					owner = { trigger_event = bpm_send_notification.1 }
 				}
 				else_if = {
 					limit = {
 						scope:lawtype = law_type:law_council_republic
 					}
-					trigger_event = bpm_send_notification.2
+					owner = { trigger_event = bpm_send_notification.2 }
 				}
 				else_if = {
 					limit = {
 						scope:lawtype = law_type:law_monarchy
 					}
-					trigger_event = bpm_send_notification.3
+					owner = { trigger_event = bpm_send_notification.3 }
 				}
 			}
 
@@ -611,7 +609,7 @@ on_bpm_law_activated = {
 			}
 			else_if = {
 				limit = {
-					scope:law_type = {
+					scope:lawtype = {
 						is_same_law_group_as = law_type:law_serfdom
 						NOT = { this = law_type:law_serfdom }
 					}
@@ -641,7 +639,7 @@ on_bpm_law_activated = {
 			}
 			if = {
 				limit = {
-					scope:law_type = {
+					scope:lawtype = {
 						is_same_law_group_as = law_type:law_isolationism
 						NOT = { this = law_type:law_isolationism }	
 					}
@@ -658,7 +656,7 @@ on_bpm_law_activated = {
 			}
 			if = {
 				limit = {
-					scope:law_type = {
+					scope:lawtype = {
 						is_same_law_group_as = law_type:law_closed_borders
 						NOT = { this = law_type:law_closed_borders}	
 					}
@@ -677,29 +675,31 @@ on_bpm_law_activated = {
 			if = {
 				limit = {
 					owner = { has_journal_entry = je_bpm_modernizers }
-					ig:ig_conservatives ?= {
+					owner.ig:ig_conservatives ?= {
 						law_stance = {
 							value >= approve
 							law = scope:lawtype
 						}
 					}
 				}
-				change_variable = {
-					name = bpm_je_modernizers_conservative_laws_passed
-					add = 1
+				owner = { 
+					change_variable = {
+						name = bpm_je_modernizers_conservative_laws_passed
+						add = 1
+					}
 				}
 			}
 			if = {
 				limit = {
-			
+					owner = { has_journal_entry = je_bpm_modernizers }
 					OR = {
-						ig:ig_liberals ?= {
+						owner.ig:ig_liberals ?= {
 							law_stance = {
 								value >= approve
 								law = scope:lawtype
 							}
 						}
-						ig:ig_radicals ?= {
+						owner.ig:ig_radicals ?= {
 							law_stance = {
 								value >= approve
 								law = scope:lawtype
@@ -707,10 +707,11 @@ on_bpm_law_activated = {
 						}
 					}
 				}
-			
-				change_variable = {
-					name = bpm_je_modernizers_liberal_laws_passed
-					add = 1
+				owner = { 
+					change_variable = {
+						name = bpm_je_modernizers_liberal_laws_passed
+						add = 1
+					}
 				}
 			}
 		}
@@ -787,6 +788,7 @@ on_bpm_new_ruler = {
 	# 	bpm_election_events.1
 	# }
 	effect = {
+		owner = { trigger_event = { id = bpm_scandinavia.1 days = 0 } }
 		owner = {
 			if = {
 				limit = {
@@ -802,8 +804,11 @@ on_bpm_new_ruler = {
 				limit = {
 					this = c:USA
 					has_variable = bpm_2nd_party_system
-					var:bpm_last_president = {
-						is_character_alive = no
+					OR = {
+						NOT = { is_set = var:bpm_last_president }
+						var:bpm_last_president ?= {
+							is_character_alive = no
+						}
 					}
 				}
 				trigger_event = { id = bpm_acw_events.25 days = 0 }
@@ -882,9 +887,9 @@ on_bpm_diplo_play_war_start = {
 					}
 				}
 				attacker_warleader = {
-					bpm_clear_upgradeable_country_modifier = { $MOD$ = bpm_repeatable_law_army_defunding_result_permanent }
+					bpm_clear_upgradeable_country_modifier = { MOD = bpm_repeatable_law_army_defunding_result_permanent }
 					every_cobelligerent_in_war = {
-						bpm_clear_upgradeable_country_modifier = { $MOD$ = bpm_repeatable_law_army_defunding_result_permanent }
+						bpm_clear_upgradeable_country_modifier = { MOD = bpm_repeatable_law_army_defunding_result_permanent }
 					}
 				}
 			}
@@ -1102,9 +1107,14 @@ on_bpm_acquired_technology = {
 					NOT = { has_variable = bpm_intl_socialism_researched }
 				}
 				set_variable = bpm_intl_socialism_researched
-				change_global_variable = {
-					name = bpm_je_first_intl_progress
-					add = 10
+				if = {
+					limit = { 
+						has_global_variable = bpm_je_first_intl_progress
+					}
+					change_global_variable = {
+						name = bpm_je_first_intl_progress
+						add = 10
+					}
 				}
 			}
 
@@ -1114,9 +1124,14 @@ on_bpm_acquired_technology = {
 					NOT = { has_variable = bpm_intl_anarchism_researched }
 				}
 				set_variable = bpm_intl_anarchism_researched
-				change_global_variable = {
-					name = bpm_je_first_intl_progress
-					add = 10
+				if = {
+					limit = { 
+						has_global_variable = bpm_je_first_intl_progress
+					}
+					change_global_variable = {
+						name = bpm_je_first_intl_progress
+						add = 10
+					}
 				}
 			}
 
@@ -1126,9 +1141,14 @@ on_bpm_acquired_technology = {
 					NOT = { has_variable = bpm_intl_labor_movement_researched }
 				}
 				set_variable = bpm_intl_labor_movement_researched
-				change_global_variable = {
-					name = bpm_je_first_intl_progress
-					add = 5
+				if = {
+					limit = { 
+						has_global_variable = bpm_je_first_intl_progress
+					}
+					change_global_variable = {
+						name = bpm_je_first_intl_progress
+						add = 5
+					}
 				}
 			}
 		}

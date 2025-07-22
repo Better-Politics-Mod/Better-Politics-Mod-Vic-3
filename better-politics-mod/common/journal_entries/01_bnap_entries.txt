@@ -193,8 +193,6 @@ je_bpm_bnap_between_lion_and_eagle = {
 	should_be_pinned_by_default = yes
 	
 	can_revolution_inherit = no
-
-
 }
 
 je_bpm_bnap_durham_report = {
@@ -233,7 +231,7 @@ je_bpm_bnap_durham_report = {
 }
 
 je_bpm_bnap_confederation_quest = {
-	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+	icon = "gfx/interface/icons/event_icons/waving_flag_canada.dds"
 
 	group = je_group_historical_content
 
@@ -254,11 +252,25 @@ je_bpm_bnap_confederation_quest = {
 
 	possible = {
 		bpm_is_bnap_player = yes
-        je:je_bpm_bnap_between_lion_and_eagle = {
-            "scripted_bar_progress(je_bpm_bnap_ble_nationalism)" > 40
-        }
+		trigger_if = {
+			limit = {
+				has_journal_entry = je_bpm_bnap_between_lion_and_eagle
+			}
+			custom_tooltip = {
+				text = bpm_bnap_je_bpm_bnap_ble_nationalism_greater_than_tt
+				je:je_bpm_bnap_between_lion_and_eagle = {
+					"scripted_bar_progress(je_bpm_bnap_ble_nationalism)" > 40
+				}
+			}
+		}
+		trigger_else = {
+			has_journal_entry = je_bpm_bnap_between_lion_and_eagle
+		}
         # Ensure the Charlottetown Conference has not already been held
-        NOT = { has_variable = bpm_bnap_charlottetown_conference }
+		custom_tooltip = {
+			text = bpm_bnap_charlottetown_conference_not_already_held_tt
+        	NOT = { has_variable = bpm_bnap_charlottetown_conference }
+		}
 	}
 
 	immediate = {
@@ -268,17 +280,38 @@ je_bpm_bnap_confederation_quest = {
 	timeout = 3095
 
 	complete = {
-		c:NBS.capital = {
-			any_scope_building = {
-				is_building_type = building_railway
-				level >= 2
+		trigger_if = {
+			limit = {
+				OR = {
+					exists = c:NBS
+					exists = c:NVS
+				}
+			}
+			trigger_if = {
+				limit = {
+					exists = c:NBS
+				}
+				c:NBS.capital = {
+					any_scope_building = {
+						is_building_type = building_railway
+						level >= 2
+					}
+				}
+			}
+			trigger_if = {
+				limit = {
+					exists = c:NVS
+				}
+				c:NVS.capital = {
+					any_scope_building = {
+						is_building_type = building_railway
+						level >= 1
+					}
+				}
 			}
 		}
-		c:NVS.capital = {
-			any_scope_building = {
-				is_building_type = building_railway
-				level >= 1
-			}
+		trigger_else = {
+			always = yes
 		}
 	}
 
@@ -294,7 +327,7 @@ je_bpm_bnap_confederation_quest = {
 				}
 				add_principle = principle_foreign_investment_3
 			}
-			c:NBS = {
+			c:NBS ?= {
 				if = {
 					limit = {
 						NOT = {
@@ -307,7 +340,7 @@ je_bpm_bnap_confederation_quest = {
 				}
 
 			}
-			c:NVS = {
+			c:NVS ?= {
 				if = {
 					limit = {
 						NOT = {
@@ -323,7 +356,7 @@ je_bpm_bnap_confederation_quest = {
 		}
 	}
 	on_timeout = {
-		je:je_bpm_bnap_the_patriots = {
+		je:je_bpm_bnap_the_patriots ?= {
 			add_progress = {
 				name = je_bpm_bnap_patriots_patriot_support
 				value = 15

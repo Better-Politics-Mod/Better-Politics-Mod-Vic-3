@@ -15,10 +15,16 @@
                 save_scope_as = bpm_reference_institution_type
             }
             bpm_reload_government_mandate = yes
-            every_interest_group = {
+            ordered_interest_group = {
                 limit = {
-                    var:bpm_ig_mandate > 0
+                    OR = {
+                        owner = { bpm_country_has_parliamentary_electoral_system = no }
+                        is_in_government = yes
+                    }
+                    ig_clout >= 0.01
                 }
+                order_by = ig_clout
+                min = 0
                 owner = { add_to_variable_list = {
                     name = bpm_CAB_ig_select_pool
                     target = prev
@@ -27,6 +33,7 @@
                     name = bpm_cost_ig_position_var
                     value = bpm_cost_ig_position
                 }
+
             }
             bpm_reset_mandate_used = yes
             
@@ -50,7 +57,24 @@
                         value = scope:bpm_selected_character.var:bpm_cab_char_synergy
                     }
                 }
+                owner = { 
+                    clear_variable_list = bpm_synergy_calculation_charset
+                    add_to_variable_list = {
+                        name = bpm_synergy_calculation_charset
+                        target = ruler
+                    }
+                    add_to_variable_list = {
+                        name = bpm_synergy_calculation_charset
+                        target = scope:bpm_selected_character
+                    }
+                    bpm_calculate_synergy = yes
+                    prev = { set_variable = {
+                        name = bpm_compatibility_with_ruler
+                        value = owner.var:bpm_temp_synergy_calculation
+                    } }        
+                }
             }
+            
         }
 	}
 }
@@ -142,10 +166,25 @@ bpm_newcab_select_ig = {
                 var:bpm_expert_characters > 0
             }
         }   
-        custom_tooltip = {
-            text = "bpm_cab_select_ig_enough_mandate_tt"
-            bpm_remaining_mandate >= var:bpm_cost_ig_position_var
+        # custom_tooltip = {
+        #     text = "bpm_cab_select_ig_enough_mandate_tt"
+        #     bpm_remaining_mandate >= var:bpm_cost_ig_position_var
+        # }
+        trigger_if = {
+            limit = {
+                owner = {
+                    OR = {
+                        bpm_country_has_executive_dictatorial_system = yes
+                        bpm_country_has_executive_electoral_system = yes
+                    }
+                }
+            }
+            custom_tooltip = {
+                text = "bpm_compatibility_with_ruler"
+                var:bpm_compatibility_with_ruler < 0.2
+            }
         }
+
     }
     effect = {
         save_scope_as = bpm_selected_ig

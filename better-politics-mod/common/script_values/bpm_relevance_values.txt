@@ -46,6 +46,34 @@ bpm_electoral_weight = {
 			value = 3
 		}
 	}
+	else_if = {
+		limit = {
+			owner = { 
+				has_law = law_type:law_autocracy
+				has_law = law_type:law_hereditary_bureaucrats
+			}
+		}
+		if = {
+			limit = {
+				is_pop_type = aristocrats
+			}
+			value = 1
+		}
+	}
+	else_if = {
+		limit = {
+			owner = { 
+				has_law = law_type:law_autocracy
+			}
+		}
+		if = {
+			limit = {
+				is_pop_type = officers
+			}
+			value = 1
+		}
+
+	}
 }
 
 bpm_total_electorate = {
@@ -55,6 +83,45 @@ bpm_total_electorate = {
 			value = total_size
 			multiply = bpm_electoral_weight
 		}
+	}
+}
+
+bpm_issue_interest = {
+	if = {
+		limit = {
+			this = flag:bpm_issue_sol
+		}
+		scope:country = {
+			value = bpm_issue_sol_interest
+		}
+	}
+	else_if = {
+		limit = {
+			this = flag:bpm_issue_anti_war
+		}
+		scope:country = {
+			value = bpm_issue_anti_war_interest
+		}
+	}
+	else_if = {
+		limit = {
+			this = flag:bpm_issue_anti_liberal
+		}
+		scope:country = {
+			value = bpm_issue_anti_liberal_interest
+		}
+	}
+}
+
+bpm_momentum_impact = {
+	if = {
+		limit = {
+			has_variable = bpm_party_issue_impact
+		}
+		value = var:bpm_party_issue_impact
+	}
+	else = {
+		value = 0
 	}
 }
 
@@ -81,8 +148,6 @@ bpm_issue_sol_interest = {
 		multiply = bpm_issue_sol_interest_soldiers_weight
 	}
 }
-
-
 
 # PEASANTRY
 bpm_issue_sol_interest_peasantry = { 
@@ -262,6 +327,318 @@ bpm_issue_sol_interest_soldiers_weight = {
 	every_scope_pop = {
 		limit = {
 			is_pop_type = soldiers
+		}
+		add = {
+			value = total_size
+			multiply = bpm_electoral_weight
+		}
+	}
+	divide = bpm_total_electorate
+}
+
+#+======================+
+#| bpm anti war issue  |
+#+=====================+
+
+bpm_issue_anti_war_interest = {
+	value = 0
+	add = {
+		value = bpm_issue_anti_war_interest_peasantry
+		multiply = bpm_issue_anti_war_interest_peasantry_weight
+	}
+	add = {
+		value = bpm_issue_anti_war_interest_workers
+		multiply = bpm_issue_anti_war_interest_workers_weight
+	}
+	add = {
+		value = bpm_issue_anti_war_interest_professionals
+		multiply = bpm_issue_anti_war_interest_professionals_weight
+	}
+	add = {
+		value = bpm_issue_anti_war_interest_soldiers
+		multiply = bpm_issue_anti_war_interest_soldiers_weight
+	}
+	if = {
+		limit = {
+			is_at_war = no
+		}
+		multiply = 0
+	}
+}
+
+# PEASANTRY
+bpm_issue_anti_war_interest_peasantry = { 
+	value = 0.5
+	every_diplomatic_play = {
+		limit = {
+			is_war = yes
+			war = {
+				has_war_exhaustion = {
+					target = prevprev
+					value > 30
+				}
+			}
+		}
+		add = 0.2
+	}
+	max = 1
+}
+
+bpm_issue_anti_war_interest_peasantry_weight = {
+	value = 0
+	every_scope_pop = {
+		limit = {
+			is_pop_type = peasants
+		}
+		add = {
+			value = total_size
+			multiply = bpm_electoral_weight
+		}
+	}
+	divide = bpm_total_electorate
+}
+
+# WORKERS
+bpm_issue_anti_war_interest_workers = {
+	value = 0.5
+	every_diplomatic_play = {
+		limit = {
+			is_war = yes
+			war = {
+				has_war_exhaustion = {
+					target = prevprev
+					value > 30
+				}
+			}
+		}
+		add = 0.2
+	}
+	max = 1
+}
+
+bpm_issue_anti_war_interest_workers_weight = {
+	value = 0
+	every_scope_pop = {
+		limit = {
+			OR = {					
+				is_pop_type = laborers
+				is_pop_type = machinists
+			}
+		}
+		add = {
+			value = total_size
+			multiply = bpm_electoral_weight
+		}
+	}
+	divide = bpm_total_electorate
+}
+
+# PROFESSIONALS
+bpm_issue_anti_war_interest_professionals = {
+	value = 0.3
+	every_diplomatic_play = {
+		limit = {
+			is_war = yes
+			war = {
+				has_war_exhaustion = {
+					target = prevprev
+					value > 30
+				}
+			}
+		}
+		add = 0.2
+	}
+	every_diplomatic_play = {
+		limit = {
+			is_war = yes
+			war = {
+				has_war_exhaustion = {
+					target = prevprev
+					value > 60
+				}
+			}
+		}
+		add = 0.1
+	}
+	max = 1
+}
+
+bpm_issue_anti_war_interest_professionals_weight = {
+	value = 0
+	every_scope_pop = {
+		limit = {
+			OR = {
+				is_pop_type = clerks
+				is_pop_type = engineers
+				is_pop_type = academics
+			}
+		}
+		add = {
+			value = total_size
+			multiply = bpm_electoral_weight
+		}
+	}
+	divide = bpm_total_electorate
+}
+
+# SOLDIERS
+bpm_issue_anti_war_interest_soldiers = {
+	value = 0
+	every_diplomatic_play = {
+		limit = {
+			is_war = yes
+			war = {
+				has_war_exhaustion = {
+					target = prevprev
+					value > 30
+				}
+			}
+		}
+		add = 0.2
+	}
+	every_diplomatic_play = {
+		limit = {
+			is_war = yes
+			war = {
+				has_war_exhaustion = {
+					target = prevprev
+					value > 60
+				}
+			}
+		}
+		add = 0.2
+	}
+	every_diplomatic_play = {
+		limit = {
+			is_war = yes
+			war = {
+				has_war_exhaustion = {
+					target = prevprev
+					value > 80
+				}
+			}
+		}
+		add = 0.2
+	}
+}
+
+bpm_issue_anti_war_interest_soldiers_weight = {
+	value = 0
+	every_scope_pop = {
+		limit = {
+			is_pop_type = soldiers
+		}
+		add = {
+			value = total_size
+			multiply = bpm_electoral_weight
+		}
+	}
+	divide = bpm_total_electorate
+}
+
+#+======================+
+#| bpm anti war issue  |
+#+=====================+
+
+bpm_issue_anti_liberal_interest = {
+	value = 0
+	add = {
+		value = bpm_issue_anti_liberal_interest_peasantry
+		multiply = bpm_issue_anti_liberal_interest_peasantry_weight
+	}
+	add = {
+		value = bpm_issue_anti_liberal_interest_workers
+		multiply = bpm_issue_anti_liberal_interest_workers_weight
+	}
+	add = {
+		value = bpm_issue_anti_liberal_interest_landowners
+		multiply = bpm_issue_anti_liberal_interest_landowners_weight
+	}
+}
+
+# PEASANTRY
+bpm_issue_anti_liberal_interest_peasantry = { 
+	value = 0
+	every_political_movement = {
+		limit = {
+			bpm_movement_is_liberal_bourgeois = yes
+		}
+		add = {
+			value = political_movement_support
+			multiply = political_movement_radicalism
+		}
+	}
+	max = 1
+}
+
+bpm_issue_anti_liberal_interest_peasantry_weight = {
+	value = 0
+	every_scope_pop = {
+		limit = {
+			is_pop_type = peasants
+		}
+		add = {
+			value = total_size
+			multiply = bpm_electoral_weight
+		}
+	}
+	divide = bpm_total_electorate
+}
+
+# WORKERS
+bpm_issue_anti_liberal_interest_workers = {
+	value = -0.2
+	every_political_movement = {
+		limit = {
+			bpm_movement_is_liberal_bourgeois = yes
+		}
+		add = {
+			value = political_movement_support
+			multiply = political_movement_radicalism
+		}
+	}
+	min = 0
+	max = 1
+}
+
+bpm_issue_anti_liberal_interest_workers_weight = {
+	value = 0
+	every_scope_pop = {
+		limit = {
+			OR = {					
+				is_pop_type = laborers
+				is_pop_type = machinists
+			}
+		}
+		add = {
+			value = total_size
+			multiply = bpm_electoral_weight
+		}
+	}
+	divide = bpm_total_electorate
+}
+
+# LANDOWNERS
+bpm_issue_anti_liberal_interest_landowners = {
+	value = 0.3
+	every_political_movement = {
+		limit = {
+			bpm_movement_is_liberal_bourgeois = yes
+		}
+		add = {
+			value = political_movement_support
+		}
+	}
+	max = 1
+}
+
+bpm_issue_anti_liberal_interest_landowners_weight = {
+	value = 0
+	every_scope_pop = {
+		limit = {
+			OR = {
+				is_pop_type = aristocrats
+			}
 		}
 		add = {
 			value = total_size

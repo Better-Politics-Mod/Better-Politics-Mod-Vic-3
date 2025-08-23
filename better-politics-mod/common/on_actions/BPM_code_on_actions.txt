@@ -226,17 +226,21 @@ on_bpm_yearly_pulse_country = {
 				}
 				change_global_variable = {
 					name = bpm_je_first_intl_progress
-					add = 1
+					add = 5
 				}
 			}
 			every_political_movement = {
 				limit = {
-					is_political_movement_type = movement_socialist
+					OR = {
+						is_political_movement_type = movement_labor
+						is_political_movement_type = movement_socialist
+					}
 				}
 				change_global_variable = {
 					name = bpm_je_first_intl_progress
 					add = {
 						value = political_movement_support
+						multiply = 6
 					}
 				}
 			}
@@ -550,146 +554,164 @@ bpm_on_actions_colonial_check = {
 
 on_bpm_law_activated = {
 	effect = {
-		owner = {
-			bpm_setup_country_stubbornness = yes
-			bpm_institution_workaround_effect = yes
-			bpm_cache_country_igs_radical_opposition_effect = yes
-		}
-
 		if = {
 			limit = {
-				game_date > 1836.1.1
-				owner = { is_revolutionary = no }
+				owner = {
+					NOT = {
+						has_variable = bpm_norec
+					}
+				}
+			}
+			owner = { 
+				set_variable = {
+					name = bpm_norec
+					days = 1
+				}
+			}
+			owner = {
+				bpm_setup_country_stubbornness = yes
+				bpm_institution_workaround_effect = yes
+				bpm_cache_country_igs_radical_opposition_effect = yes
+			}
+			type = {
+				save_scope_as = lawtype
+			}
+
+			if = {
+				limit = {
+					game_date > 1836.1.1
+					owner = { is_revolutionary = no }
+				}
+				if = {
+					limit = {
+						OR = {
+							scope:lawtype = law_type:law_presidential_republic
+							scope:lawtype = law_type:law_parliamentary_republic
+						}
+					}
+					trigger_event = bpm_send_notification.1
+				}
+				else_if = {
+					limit = {
+						scope:lawtype = law_type:law_council_republic
+					}
+					trigger_event = bpm_send_notification.2
+				}
+				else_if = {
+					limit = {
+						scope:lawtype = law_type:law_monarchy
+					}
+					trigger_event = bpm_send_notification.3
+				}
+			}
+
+			if = {
+				limit = { scope:lawtype = law_type:law_serfdom }
+				owner = { set_variable = bpm_country_has_serfdom }
+			}
+			else_if = {
+				limit = {
+					scope:law_type = {
+						is_same_law_group_as = law_type:law_serfdom
+						NOT = { this = law_type:law_serfdom }
+					}
+					owner = { has_variable = bpm_country_has_serfdom }
+				}
+				owner = {
+					remove_variable = bpm_country_has_serfdom
+					if = {
+						limit = { is_player = no }
+						if = {
+							limit = {
+								OR = {
+									has_law = law_type:law_land_based_taxation
+									has_law = law_type:law_consumption_based_taxation
+								}
+							}
+							activate_law = law_type:law_per_capita_based_taxation
+						}
+						if = {
+							limit = {
+								has_law = law_type:law_traditionalism
+							}
+							activate_law = law_type:law_agrarianism	
+						}
+					}
+				}
 			}
 			if = {
 				limit = {
-					OR = {
-						this.type = law_type:law_presidential_republic
-						this.type = law_type:law_parliamentary_republic
+					scope:law_type = {
+						is_same_law_group_as = law_type:law_isolationism
+						NOT = { this = law_type:law_isolationism }	
+					}
+					owner = { has_law = law_type:law_closed_borders }
+				}
+				owner = { activate_law = law_type:law_migration_controls }
+			}
+			else_if = {
+				limit = {
+					game_date > 1836.1.1
+					scope:lawtype = law_type:law_isolationism
+				}
+				owner = { activate_law = law_type:law_closed_borders }
+			}
+			if = {
+				limit = {
+					scope:law_type = {
+						is_same_law_group_as = law_type:law_closed_borders
+						NOT = { this = law_type:law_closed_borders}	
+					}
+					owner = { has_law = law_type:law_isolationism }
+				}
+				owner = { activate_law = law_type:law_mercantilism }
+			}
+			else_if = {
+				limit = {
+					game_date > 1836.1.1
+					scope:lawtype = law_type:law_closed_borders
+				}
+				owner = { activate_law = law_type:law_isolationism }
+			}
+
+			if = {
+				limit = {
+					owner = { has_journal_entry = je_bpm_modernizers }
+					ig:ig_conservatives ?= {
+						law_stance = {
+							value >= approve
+							law = scope:lawtype
+						}
 					}
 				}
-				trigger_event = bpm_send_notification.1
+				change_variable = {
+					name = bpm_je_modernizers_conservative_laws_passed
+					add = 1
+				}
 			}
-			else_if = {
+			if = {
 				limit = {
-					this.type = law_type:law_council_republic
-				}
-				trigger_event = bpm_send_notification.2
-			}
-			else_if = {
-				limit = {
-					this.type = law_type:law_monarchy
-				}
-				trigger_event = bpm_send_notification.3
-			}
-		}
-
-		if = {
-			limit = { this.type = law_type:law_serfdom }
-			owner = { set_variable = bpm_country_has_serfdom }
-		}
-		else_if = {
-			limit = {
-				this.type = {
-					is_same_law_group_as = law_type:law_serfdom
-					NOT = { this = law_type:law_serfdom }
-				}
-				owner = { has_variable = bpm_country_has_serfdom }
-			}
-			owner = {
-				remove_variable = bpm_country_has_serfdom
-				if = {
-					limit = { is_player = no }
-					if = {
-						limit = {
-							OR = {
-								has_law = law_type:law_land_based_taxation
-								has_law = law_type:law_consumption_based_taxation
+			
+					OR = {
+						ig:ig_liberals ?= {
+							law_stance = {
+								value >= approve
+								law = scope:lawtype
 							}
 						}
-						activate_law = law_type:law_per_capita_based_taxation
-					}
-					if = {
-						limit = {
-							has_law = law_type:law_traditionalism
-						}
-						activate_law = law_type:law_agrarianism	
-					}
-				}
-			}
-		}
-		if = {
-			limit = {
-				this.type = {
-					is_same_law_group_as = law_type:law_isolationism
-					NOT = { this = law_type:law_isolationism }	
-				}
-				owner = { has_law = law_type:law_closed_borders }
-			}
-			owner = { activate_law = law_type:law_migration_controls }
-		}
-		else_if = {
-			limit = {
-				game_date > 1836.1.1
-				this.type = law_type:law_isolationism
-			}
-			owner = { activate_law = law_type:law_closed_borders }
-		}
-		if = {
-			limit = {
-				this.type = {
-					is_same_law_group_as = law_type:law_closed_borders
-					NOT = { this = law_type:law_closed_borders}	
-				}
-				owner = { has_law = law_type:law_isolationism }
-			}
-			owner = { activate_law = law_type:law_mercantilism }
-		}
-		else_if = {
-			limit = {
-				game_date > 1836.1.1
-				this.type = law_type:law_closed_borders
-			}
-			owner = { activate_law = law_type:law_isolationism }
-		}
-
-		if = {
-			limit = {
-				owner = { has_journal_entry = je_bpm_modernizers }
-				ig:ig_conservatives ?= {
-					law_stance = {
-						value >= approve
-						law = prev.type
-					}
-				}
-			}
-			change_variable = {
-				name = bpm_je_modernizers_conservative_laws_passed
-				add = 1
-			}
-		}
-		if = {
-			limit = {
-		
-				OR = {
-					ig:ig_liberals ?= {
-						law_stance = {
-							value >= approve
-							law = prev.type
-						}
-					}
-					ig:ig_radicals ?= {
-						law_stance = {
-							value >= approve
-							law = prev.type
+						ig:ig_radicals ?= {
+							law_stance = {
+								value >= approve
+								law = scope:lawtype
+							}
 						}
 					}
 				}
-			}
-		
-			change_variable = {
-				name = bpm_je_modernizers_liberal_laws_passed
-				add = 1
+			
+				change_variable = {
+					name = bpm_je_modernizers_liberal_laws_passed
+					add = 1
+				}
 			}
 		}
 	}

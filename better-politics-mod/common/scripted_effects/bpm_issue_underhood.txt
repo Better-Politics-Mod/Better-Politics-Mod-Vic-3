@@ -1,34 +1,39 @@
 
 bpm_setup_party_issues_campaign = {
-	bpm_setup_issues_varlist = yes
-	clear_variable_list = bpm_box_of_issues
-	save_scope_as = country
-	every_in_list = {
-		variable = bpm_country_issues
-		scope:country = {
-			add_to_variable_list = {
-				name = bpm_box_of_issues
-				target = prev
+	if = {
+		limit = {
+			is_player = yes
+		}
+		bpm_setup_issues_varlist = yes
+		clear_variable_list = bpm_box_of_issues
+		save_scope_as = country
+		every_in_list = {
+			variable = bpm_country_issues
+			scope:country = {
+				add_to_variable_list = {
+					name = bpm_box_of_issues
+					target = prev
+				}
 			}
 		}
-	}
-	every_active_party = {
-		save_scope_as = checking_party
-		scope:country = {
-			ordered_in_list = {
-				variable = bpm_box_of_issues
-				order_by = bpm_issue_attraction
-				position = 0
-				save_scope_as = selected_issue
+		every_active_party = {
+			save_scope_as = checking_party
+			scope:country = {
+				ordered_in_list = {
+					variable = bpm_box_of_issues
+					order_by = bpm_issue_attraction
+					position = 0
+					save_scope_as = selected_issue
+				}
+				# remove_list_variable = {
+				# 	name = bpm_box_of_issues
+				# 	target = scope:selected_issue
+				# }
+				bpm_splat_issue = yes
 			}
-			# remove_list_variable = {
-			# 	name = bpm_box_of_issues
-			# 	target = scope:selected_issue
-			# }
-			bpm_splat_issue = yes
 		}
+		bpm_unsplat_issues = yes
 	}
-	bpm_unsplat_issues = yes
 }
 
 
@@ -104,17 +109,19 @@ bpm_unsplat_issues = {
 				name = bpm_momentum_impact
 				value = {
 					value = scope:sel_issue.bpm_issue_interest
-					subtract = 0.15
+					subtract = 0.075
 					multiply = {
 						value = scope:sel_issue.bpm_issue_interest
-						subtract = 0.15
+						subtract = 0.075
 					}
+					multiply = 10
 					if = {
 						limit = {
-							scope:sel_issue.bpm_issue_interest < 0.15
+							scope:sel_issue.bpm_issue_interest < 0.075
 						}
 						multiply = -1
 					}
+					min = -0.02
 				}
 			}
 		}
@@ -162,6 +169,50 @@ bpm_setup_issues_varlist_subp = {
 		add_to_variable_list = {
 			name = bpm_country_issues
 			target = flag:bpm_issue_$issue$
+		}
+	}
+}
+
+bpm_electoral_mandate_status_track = {
+	bpm_electoral_mandate_status_track_special = yes
+	change_variable = {
+		name = bpm_electoral_mandate_time_progress
+		add = 1
+	}
+	save_scope_value_as = {
+		name = bpm_electoral_mandate_time_progress_years
+		value = {
+			value = var:bpm_electoral_mandate_time_progress
+			divide = 12
+			floor = yes
+		}
+	}
+	if = {
+		limit = {
+			scope:bpm_electoral_mandate_time_progress_years > var:bpm_electoral_mandate_progress
+		}
+		random_list = {
+			9 = {}
+			1 = {
+				add_radicals = {
+					value = 0.01
+				}
+				bpm_auth_add_exhaustion_small = yes
+			}
+		}
+	}
+	else_if = {
+		limit = {
+			scope:bpm_electoral_mandate_time_progress_years < var:bpm_electoral_mandate_progress
+		}
+		random_list = {
+			9 = {}
+			1 = {
+				add_loyalists = {
+					value = 0.01
+				}
+				bpm_auth_remove_exhaustion_small = yes
+			}
 		}
 	}
 }

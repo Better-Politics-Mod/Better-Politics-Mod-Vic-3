@@ -56,6 +56,8 @@ bpm_add_macro_issue = {
 	bpm_add_macro_issue_subp = { issue = pro_slavery }
 	bpm_add_macro_issue_subp = { issue = land_reform }
 }
+# sol, anti_war, anti_liberal, trade_deficit, unemployment, anti_socialist, 
+# anti_monarchist, chauvinism, anti_slavery, pro_slavery, land_reform 
 
 # post hook
 bpm_post_electoral_mandate_hook = {
@@ -77,6 +79,71 @@ bpm_post_electoral_mandate_hook = {
 			value = bpm_liberal_movements_support
 		}
 	}
+	else_if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_anti_socialist
+		}
+		set_variable = {
+			name = bpm_electoral_mandate_anti_socialist_baseline_socialist
+			value = bpm_liberal_movements_support
+		}
+	}
+	else_if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_anti_monarchist
+		}
+		set_variable = {
+			name = bpm_electoral_mandate_anti_monarchist_baseline_monarchist
+			value = bpm_labor_movements_support
+		}
+	}
+	else_if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_trade_deficit
+		}
+		set_variable = {
+			name = bpm_electoral_mandate_trade_deficit_baseline_trade_deficit
+			value = total_trade_value
+		}
+	}
+	else_if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_pro_slavery
+		}
+		set_variable = {
+			name = bpm_electoral_mandate_pro_slavery_baseline_support
+			value = bpm_antislavery_movements_support
+		}
+	}
+	else_if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_anti_slavery
+		}
+		if = {
+			limit = {
+				has_law = law_type:law_legacy_slavery
+			}
+			set_variable = bpm_electoral_mandate_anti_slavery_already_compromised
+		}
+		else = {
+			remove_variable = bpm_electoral_mandate_anti_slavery_already_compromised
+		}
+	}
+	else_if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_unemployment
+		}
+		set_variable = {
+			name = bpm_electoral_mandate_unemployment_baseline_unemployment
+			value = {
+				value = 0
+				every_scope_state = {
+					add = state_unemployment_rate
+				}
+				divide = num_states
+			}
+		}
+	}
 	set_variable = {
 		name = bpm_electoral_mandate_progress
 		value = 0
@@ -89,6 +156,7 @@ bpm_post_electoral_mandate_hook = {
 }
 
 bpm_electoral_mandate_status_track_special = {
+	# Increase SOL by 4 points.
 	if = {
 		limit = {
 			var:bpm_electoral_mandate = flag:bpm_issue_sol
@@ -106,6 +174,7 @@ bpm_electoral_mandate_status_track_special = {
 			min = var:bpm_electoral_mandate_progress
 		}	
 	}
+	# End the war.
 	if = {
 		limit = {
 			var:bpm_electoral_mandate = flag:bpm_issue_anti_war
@@ -117,7 +186,7 @@ bpm_electoral_mandate_status_track_special = {
 			value = 4
 		}
 	}
-
+	# Suppress liberal movements by 50%.
 	if = {
 		limit = {
 			var:bpm_electoral_mandate = flag:bpm_issue_anti_liberal
@@ -126,7 +195,7 @@ bpm_electoral_mandate_status_track_special = {
 			name = bpm_electoral_mandate_progress
 			value = {
 				value = var:bpm_electoral_mandate_anti_liberal_baseline_liberal
-				subtract = bpm_liberal_movements_support
+				divide = bpm_liberal_movements_support
 				multiply = 2
 				floor = yes
 				min = 0
@@ -135,7 +204,161 @@ bpm_electoral_mandate_status_track_special = {
 			min = var:bpm_electoral_mandate_progress
 		}	
 	}
+	# Suppress socialist movements by 50%.
+	if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_anti_socialist
+		}
+		set_variable = {
+			name = bpm_electoral_mandate_progress
+			value = {
+				value = var:bpm_electoral_mandate_anti_socialist_baseline_socialist
+				divide = bpm_labor_movements_support
+				multiply = 2
+				floor = yes
+				min = 0
+				max = 4
+			}
+			min = var:bpm_electoral_mandate_progress
+		}	
+	}
+	# Suppress reactionary movements by 50% or enact a republic.
+	if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_anti_monarchist
+		}
+		set_variable = {
+			name = bpm_electoral_mandate_progress
+			value = {
+				value = var:bpm_electoral_mandate_anti_monarchist_baseline_monarchist
+				divide = bpm_reactionary_movements_support
+				multiply = 2
+				floor = yes
+				min = 0
+				max = 4
+			}
+			min = var:bpm_electoral_mandate_progress
+		}	
+		if = {
+			limit = {
+				OR = {
+					has_law = law_type:law_parliamentary_republic
+					has_law = law_type:law_presidential_republic
+				}
+			}
+			set_variable = {
+				name = bpm_electoral_mandate_progress
+				value = 4
+			}
+		}
+	}
+	# Reduce the deficit by 4x or to zero.
+	if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_trade_deficit
+		}
+		set_variable = {
+			name = bpm_electoral_mandate_progress
+			value = {
+				value = var:bpm_electoral_mandate_trade_deficit_baseline_trade_deficit
+				divide = {
+					value = total_trade_value
+					max = -1
+				}
+				floor = yes
+				min = 0
+				max = 4
+			}
+			min = var:bpm_electoral_mandate_progress
+		}
+		if = {
+			limit = {
+				total_trade_value > 0
+			}
+			set_variable = {
+				name = bpm_electoral_mandate_progress
+				value = 4
+			}
+		}
+	}
+
+	# Suppress abolitionist movements by 50%.
+	if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_pro_slavery
+		}
+		set_variable = {
+			name = bpm_electoral_mandate_progress
+			value = {
+				value = var:bpm_electoral_mandate_pro_slavery_baseline_support
+				divide = bpm_antislavery_movements_support
+				multiply = 2
+				floor = yes
+				min = 0
+				max = 4
+			}
+			min = var:bpm_electoral_mandate_progress
+		}
+	}
+	
+	# Ban the slave trade for 2 and ban slavery for 4
+	if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_anti_slavery
+		}
+		if = {
+			limit = {
+				NOT = { has_variable = bpm_electoral_mandate_anti_slavery_already_compromised }
+				has_law = law_type:law_legacy_slavery
+			}
+			set_variable = {
+				name = bpm_electoral_mandate_progress
+				value = 2
+			}
+		}
+		if = {
+			limit = {
+				has_law = law_type:law_slavery_banned
+			}
+			set_variable = {
+				name = bpm_electoral_mandate_progress
+				value = 4
+			}
+		}
+	}
+	# Reduce unemployment by 25%.
+	if = {
+		limit = {
+			var:bpm_electoral_mandate = flag:bpm_issue_unemployment
+		}
+		set_variable = {
+			name = bpm_electoral_mandate_progress
+			value = {
+				value = var:bpm_electoral_mandate_unemployment_baseline_unemployment
+				divide = {
+					value = 0
+					every_scope_state = {
+						add = state_unemployment_rate
+					}
+					divide = num_states
+					min = 0.01
+				}
+				multiply = 4
+				floor = yes
+				min = 0
+				max = 4
+			}
+			min = var:bpm_electoral_mandate_progress
+		}	
+	}
+
+	# Land Reform (in on actions): Move to a more progressive or equally progressive land reform law.
+	# Chauvinism : Passing four chauvinistic repeatables
 }
+
+# sol, anti_war, anti_liberal, trade_deficit, unemployment, anti_socialist, 
+# anti_monarchist, chauvinism, anti_slavery, pro_slavery, land_reform 
+
 
 bpm_add_electoral_mandate_progress = {
 	if = {
@@ -146,5 +369,11 @@ bpm_add_electoral_mandate_progress = {
 			name = bpm_electoral_mandate_progress
 			add = $add$
 		}
+		clamp_variable = {
+			name = bpm_electoral_mandate_progress
+			min = 0
+			max = 4
+		}
+		custom_tooltip = bpm_elecmandate_progress_tooltip
 	}
 }

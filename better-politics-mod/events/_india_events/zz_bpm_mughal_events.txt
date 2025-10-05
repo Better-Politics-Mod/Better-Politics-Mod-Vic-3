@@ -1,5 +1,431 @@
 ﻿namespace = mughal
 
+mughal.1 = { # Heiring Grievances
+	type = country_event
+	placement = root
+
+	title = mughal.1.t
+	desc = mughal.1.d
+	flavor = mughal.1.f
+
+	event_image = {
+		video = "asia_politician_parliament_motion"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	cooldown = { days = long_modifier_time } # the chances of this happening twice are slim, but Akbar insisting again years later sounds appropriate for him.
+
+	trigger = {
+		is_subject = yes
+		ruler = {
+			has_template = mug_akbar_ii
+		}
+		any_scope_character = {
+			is_heir = yes
+			has_template = mug_bahadur_ii
+		}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			ruler = {
+				NOT = { has_template = mug_akbar_ii } # event cancels if Akbar dithered and didn't press the succession issue either way
+			}
+			is_subject = no
+		}
+	}
+
+	immediate = {
+		overlord = {
+			save_scope_as = probably_east_india_company_scope
+		}
+		top_overlord = {
+			save_scope_as = probably_britain_scope
+		}
+		root = {
+			save_scope_as = hindustan
+		}
+		random_scope_character = {
+			limit = { has_template = mug_akbar_ii }
+			save_scope_as = akbar_ii
+		}
+		random_scope_character = {
+			limit = { has_template = mug_bahadur_ii }
+			save_scope_as = bahadur_ii
+		}
+	}
+
+	option = {
+		name = mughal.1.a
+		default_option = yes
+
+		ai_chance = {
+			base = 1
+		}
+
+		add_liberty_desire = -5
+		custom_tooltip = {
+			text = mirza_salim_will_probably_die
+			trigger_event = {
+				id = mughal.2
+				months = 3
+			}
+		}
+	}
+
+	option = {
+		name = mughal.1.b
+
+		ai_chance = {
+			base = 0
+
+			modifier = {
+				trigger = {
+					OR = {
+						has_attitude = {
+							who = scope:probably_east_india_company_scope
+							attitude = DEFIANT
+						}
+						has_attitude = {
+							who = scope:probably_east_india_company_scope
+							attitude = REBELLIOUS
+						}
+					}
+				}
+				add = 10
+			}
+		}
+
+		add_modifier = {
+			name = assertive_mughals
+			days = normal_modifier_time
+		}
+		add_modifier = {
+			name = belated_british_interference
+			days = short_modifier_time
+		}
+		overlord = {
+			change_relations = {
+				country = root
+				value = -50
+			}
+		}
+		custom_tooltip = {
+			text = mirza_salim_succeeds
+			create_character = {
+				template = mug_mirza_salim
+			}
+		}
+		hidden_effect = {
+			trigger_event = {
+				id = mughal.3 # separate event to fire BIC notification, so Mirza Salim can be scoped to in loc properly
+			}
+		}
+	}
+}
+
+mughal.2 = {
+	type = country_event
+	hidden = yes
+
+	dlc = dlc011
+
+	immediate = {
+		post_notification = mirza_salim_has_died				# Mirza Salim has died.
+	}
+}
+
+mughal.3 = {
+	type = country_event
+	hidden = yes
+
+	dlc = dlc011
+
+	immediate = {
+		root = {
+			save_scope_as = hindustan
+		}
+		random_scope_character = {
+			limit = { has_template = mug_akbar_ii }
+			save_scope_as = akbar_ii
+		}
+		random_scope_character = {
+			limit = { has_template = mug_mirza_salim }
+			save_scope_as = crown_prince_mirza_salim
+		}
+		overlord = {
+			save_scope_as = probably_east_india_company_scope
+		}
+		scope:probably_east_india_company_scope = {
+			post_notification = mughals_pick_own_successor		# [Hindustan] ignores our diktat!
+		}
+	}
+}
+
+mughal.4 = { # An Appeal to Interlopers
+	type = country_event
+	placement = root
+
+	title = mughal.4.t
+	desc = mughal.4.d
+	flavor = mughal.4.f
+
+	category = enactment
+
+	event_image = {
+		video = "ep1_transfer_of_authority"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	cooldown = { days = stupidly_long_modifier_time }
+
+	trigger = {
+		is_subject = yes
+		NOT = { has_modifier = belated_british_interference }
+		enacting_any_law = yes
+	}
+
+	immediate = {
+		overlord = {
+			save_scope_as = probably_east_india_company_scope
+			ruler = {
+				save_scope_as = probably_bic_governor_general
+			}
+		}
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+    	save_scope_as = hindustan
+    	ruler = {
+    		save_scope_as = hindustan_ruler
+    	}
+    }
+
+	option = {
+		name = mughal.4.a
+        default_option = yes
+
+		ai_chance = {
+			base = 1
+
+			modifier = {
+				trigger = {
+					any_scope_character = {
+						is_ruler = yes
+						OR = {
+							has_trait = ambitious
+							has_template = mug_mirza_salim
+						}
+					}
+				}
+				add = -1
+			}
+			modifier = {
+				trigger = {
+					any_scope_character = {
+						is_ruler = yes
+						has_template = mug_bahadur_ii
+					}
+				}
+				add = 1
+			}
+		}
+
+		add_enactment_modifier = {
+			name = governor_general_rules_in_favor_of_law
+		}
+		add_modifier = {
+			name = government_reliant_on_bic
+			days = short_modifier_time
+		}
+	}
+
+	option = {
+		name = mughal.4.b
+
+		ai_chance = {
+			base = 1
+
+			modifier = {
+				trigger = {
+					any_scope_character = {
+						is_ruler = yes
+						OR = {
+							has_trait = ambitious
+							has_template = mug_mirza_salim
+						}
+					}
+				}
+				add = 10
+			}
+		}
+
+		add_enactment_modifier = {
+			name = mired_in_court_intrigue
+		}
+		add_modifier = {
+			name = mug_independent_lawmakers
+			days = short_modifier_time
+		}
+	}
+}
+
+mughal.5 = { # Pressing for the Stipend
+	type = country_event
+	placement = root
+
+	title = mughal.5.t
+	desc = mughal.5.d
+	flavor = mughal.5.f
+
+	event_image = {
+		video = "middleeast_upperclass_party"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	cooldown = { days = stupidly_long_modifier_time }
+
+	immediate = {
+		overlord = {
+			save_scope_as = probably_east_india_company_scope
+		}
+
+		root = {
+			save_scope_as = hindustan
+			ruler = {
+				save_scope_as = hindustan_ruler
+			}
+		}
+	}
+
+	trigger = {
+		is_subject = yes
+		taking_loans = yes
+	}
+
+	cancellation_trigger = {
+		scope:hindustan_ruler = {
+			is_character_alive = no
+		}
+	}
+
+	option = {
+		name = mughal.5.a
+        default_option = yes
+
+		ai_chance = {
+			base = 1
+
+			modifier = {
+				trigger = {
+					any_scope_character = {
+						is_ruler = yes
+						OR = {
+							has_trait = ambitious
+							has_template = mug_mirza_salim
+						}
+					}
+				}
+				add = -1
+			}
+			modifier = {
+				trigger = {
+					scope:hindustan_ruler = {
+						has_template = mug_bahadur_ii
+					}
+				}
+				add = 1
+			}
+		}
+
+		add_modifier = {
+			name = reliant_on_temporary_stipend
+			days = short_modifier_time
+		}
+
+		if = {
+			limit = {
+				has_dlc_feature = lobbies
+				any_political_lobby = {
+					is_political_lobby_type = lobby_anti_overlord
+				}
+			}
+			random_political_lobby = {
+				limit = { is_political_lobby_type = lobby_anti_overlord }
+				change_appeasement = {
+					amount = -1
+					factor = appeasement_lobby_loss
+				}
+			}
+		}
+	}
+
+	option = {
+		name = mughal.5.b
+
+		ai_chance = {
+			base = 1
+
+			modifier = {
+				trigger = {
+					any_scope_character = {
+						is_ruler = yes
+						OR = {
+							has_trait = ambitious
+							has_template = mug_mirza_salim
+						}
+					}
+				}
+				add = 10
+			}
+		}
+
+		scope:hindustan_ruler = {
+			add_modifier = {
+				name = proudly_poor
+				days = short_modifier_time
+			}
+		}
+
+		if = {
+			limit = {
+				has_dlc_feature = lobbies
+				any_political_lobby = {
+					is_political_lobby_type = lobby_anti_overlord
+				}
+			}
+			random_political_lobby = {
+				limit = { is_political_lobby_type = lobby_anti_overlord }
+				change_appeasement = {
+					amount = 1
+					factor = appeasement_lobby_pleased
+				}
+			}
+		}
+	}
+}
+
 mughal.6 = { # The British India Society
 	type = country_event
 	placement = root
@@ -20,7 +446,7 @@ mughal.6 = { # The British India Society
 	
 	duration = 3
 
-	cooldown = { days = normal_modifier_time }
+	cooldown = { days = stupidly_long_modifier_time }
 
 	immediate = {
 		overlord = {
@@ -44,8 +470,8 @@ mughal.6 = { # The British India Society
 		if = {
 			limit = {
 				OR = {
-					NOT = { has_law = law_type:law_slavery_banned }
-					has_law = law_type:law_serfdom
+					NOT = { has_law_or_variant = law_type:law_slavery_banned }
+					has_law_or_variant = law_type:law_serfdom
 				}
 			}
 			i:ideology_abolitionist = {
@@ -69,8 +495,8 @@ mughal.6 = { # The British India Society
 		}
 		else_if = {
 			limit = {
-				has_law = law_type:law_slavery_banned
-				NOT = { has_law = law_type:law_serfdom }
+				has_law_or_variant = law_type:law_slavery_banned
+				NOT = { has_law_or_variant = law_type:law_serfdom }
 				has_technology_researched = egalitarianism
 			}
 			i:ideology_radical = {
@@ -174,8 +600,8 @@ mughal.6 = { # The British India Society
 				if = {
 					limit = {
 						owner = {
-							has_law = law_type:law_slavery_banned
-							NOT = { has_law = law_type:law_serfdom }
+							has_law_or_variant = law_type:law_slavery_banned
+							NOT = { has_law_or_variant = law_type:law_serfdom }
 							has_technology_researched = egalitarianism
 						}
 					}
@@ -197,6 +623,7 @@ mughal.6 = { # The British India Society
 						limit = {
 							OR = {
 								has_ideology = ideology:ideology_pro_slavery
+								has_ideology = ideology:ideology_pro_slavery_colonial
 								leader = { has_ideology = ideology:ideology_slaver }
 							}
 						}
@@ -239,7 +666,7 @@ mughal.6 = { # The British India Society
 					}
 				}
 				else = {
-					ig:ig_intelligentsia = {
+					ig:ig_intelligentsia ?= {
 						add_modifier = {
 							name = ideology_surge_in_popularity
 							days = short_modifier_time
@@ -262,6 +689,7 @@ mughal.6 = { # The British India Society
 				any_interest_group = {
 					OR = {
 						has_ideology = ideology:ideology_pro_slavery
+						has_ideology = ideology:ideology_pro_slavery_colonial
 						leader = { has_ideology = ideology:ideology_slaver }
 					}
 				}
@@ -270,6 +698,7 @@ mughal.6 = { # The British India Society
 				limit = {
 					OR = {
 						has_ideology = ideology:ideology_pro_slavery
+						has_ideology = ideology:ideology_pro_slavery_colonial
 						leader = { has_ideology = ideology:ideology_slaver }
 					}
 				}
@@ -280,7 +709,7 @@ mughal.6 = { # The British India Society
 			}
 		}
 		else = {
-			ig:ig_landowners = {
+			ig:ig_landowners ?= {
 				add_modifier = {
 					name = ig_mug_slavers_pleased
 					days = short_modifier_time
@@ -324,6 +753,447 @@ mughal.6 = { # The British India Society
 			change_appeasement = {
 			   amount = 2
 			   factor = appeasement_lobby_pleased
+			}
+		}
+	}
+}
+
+mughal.7 = { # The Peacock Throne Flies the Coop!
+	type = country_event
+	placement = root
+
+	title = mughal.7.t
+	desc = mughal.7.d
+	flavor = mughal.7.f
+
+	event_image = {
+		video = "ip2_cross_cultural_festival"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	immediate = {
+		root = {
+			ruler = { save_scope_as = hindustan_ruler }
+			save_scope_as = mughal_scope
+		}
+
+		set_variable = {
+			name = mughal_annex_count
+			value = 0
+		}
+	}
+
+	option = {
+		name = mughal.7.a
+        default_option = yes
+
+        # give MUG the primary cultures it used to have prior to this content
+        add_primary_culture = cu:avadhi
+        add_primary_culture = cu:bengali
+        add_primary_culture = cu:sindi
+        add_primary_culture = cu:kannada
+
+    	custom_tooltip = {
+    		text = mughal_7_annex_up_to_3_immediate_neighbors
+
+	    	if = {
+	    		limit = {
+					any_neighbouring_state = {
+						state_is_in_india = yes
+						owner = {
+							is_player = no
+							relations:root >= 20
+							OR = {
+								is_subject = no
+								is_subject_of = scope:bic_scope
+							}
+							any_primary_culture = {
+								shares_heritage_trait_group_with_any_primary_culture = ROOT
+							}
+						}
+					}
+	    		}
+	    		while = {
+	    			limit = {
+		    			var:mughal_annex_count < 3
+		    		}
+					ordered_country = {
+						limit = {
+							relations:root >= define:NDiplomacy|RELATIONS_THRESHOLD_CORDIAL
+							is_player = no
+							OR = {
+								is_subject = no
+								is_subject_of = scope:bic_scope
+							}
+							any_primary_culture = {
+								shares_heritage_trait_group_with_any_primary_culture = ROOT
+							}
+							any_scope_state = {
+								state_is_in_india = yes
+								any_neighbouring_state = {
+									owner = ROOT
+								}
+							}
+						}
+						order_by = gdp
+
+						save_temporary_scope_as = to_be_annexed
+					}
+
+					if = {
+						limit = {
+							exists = scope:to_be_annexed
+							exists = scope:bic_scope
+							scope:to_be_annexed = { is_subject_of = scope:bic_scope }
+						}
+						scope:bic_scope = {
+							change_relations = {
+								country = root
+								value = -10
+							}
+						}
+					}
+
+					if = {
+						limit = { exists = scope:to_be_annexed }
+						annex = scope:to_be_annexed
+
+						change_variable = {
+							name = mughal_annex_count
+							add = 1
+						}
+					}
+					else = {
+						change_variable = {
+							name = mughal_annex_count
+							add = 3 # just force it to end
+						}
+					}
+				}
+			}
+    	}
+    }
+
+    option = {
+    	name = mughal.7.b
+
+    	ruler = {
+    		add_modifier = {
+    			name = liberator_of_hindustan
+    			months = -1 # permanent bonus
+    		}
+    	}
+    	if = {
+    		limit = {
+	    		any_scope_character = {
+	    			is_heir = yes
+	    		}
+	    	}
+    		heir ?= {
+    			add_modifier = {
+    				name = scion_of_the_liberator
+    				months = -1
+    			}
+    		}
+    	}
+
+    	custom_tooltip = {
+    		text = mughal_7_annex_up_to_2_immediate_neighbors
+
+	    	if = {
+	    		limit = {
+					any_neighbouring_state = {
+						state_is_in_india = yes
+						owner = {
+							is_player = no
+							relations:root >= define:NDiplomacy|RELATIONS_THRESHOLD_CORDIAL
+							OR = {
+								is_subject = no
+								is_subject_of = scope:bic_scope
+							}
+							any_primary_culture = {
+								shares_heritage_trait_group_with_any_primary_culture = ROOT
+							}
+						}
+					}
+	    		}
+	    		while = {
+	    			limit = {
+		    			var:mughal_annex_count < 2
+		    		}
+					ordered_country = {
+						limit = {
+							relations:root >= define:NDiplomacy|RELATIONS_THRESHOLD_CORDIAL
+							is_player = no
+							OR = {
+								is_subject = no
+								is_subject_of = scope:bic_scope
+							}
+							any_primary_culture = {
+								shares_heritage_trait_group_with_any_primary_culture = ROOT
+							}
+							any_scope_state = {
+								state_is_in_india = yes
+								any_neighbouring_state = {
+									owner = ROOT
+								}
+							}
+						}
+						order_by = gdp
+
+						save_temporary_scope_as = to_be_annexed
+					}
+
+					if = {
+						limit = {
+							exists = scope:to_be_annexed
+							exists = scope:bic_scope
+							scope:to_be_annexed = { is_subject_of = scope:bic_scope }
+						}
+						scope:bic_scope = {
+							change_relations = {
+								country = root
+								value = -10
+							}
+						}
+					}
+
+					if = {
+						limit = { exists = scope:to_be_annexed }
+						annex = scope:to_be_annexed
+
+						change_variable = {
+							name = mughal_annex_count
+							add = 1
+						}
+					}
+					else = {
+						change_variable = {
+							name = mughal_annex_count
+							add = 3 # just force it to end
+						}
+					}
+				}
+			}
+    	}
+    }
+
+    option = {
+    	name = mughal.7.c
+    	highlighted_option = yes
+
+    	trigger = {
+    		ruler = {
+    			NOT = { has_trait = ambitious }
+    			age >= define:NCharacters|ADULT_AGE	# only adults can have the ambitious trait
+    		}
+    	}
+
+    	ruler = {
+    		add_trait = ambitious
+    		if = {
+    			limit = {
+    				has_trait = cautious
+    			}
+    		}
+    		random_list = {
+    			1 = {
+    				# nothing
+    			}
+    			1 = {
+    				remove_trait = cautious
+    				add_trait = reckless
+    			}
+    		}
+    	}
+
+    	custom_tooltip = {
+    		text = mughal_7_annex_up_to_2_immediate_neighbors
+
+	    	if = {
+	    		limit = {
+					any_neighbouring_state = {
+						state_is_in_india = yes
+						owner = {
+							is_player = no
+							relations:root >= define:NDiplomacy|RELATIONS_THRESHOLD_CORDIAL
+							OR = {
+								is_subject = no
+								is_subject_of = scope:bic_scope
+							}
+							any_primary_culture = {
+								shares_heritage_trait_group_with_any_primary_culture = ROOT
+							}
+						}
+					}
+	    		}
+	    		while = {
+	    			limit = {
+		    			var:mughal_annex_count < 2
+		    		}
+					ordered_country = {
+						limit = {
+							relations:root >= define:NDiplomacy|RELATIONS_THRESHOLD_CORDIAL
+							is_player = no
+							OR = {
+								is_subject = no
+								is_subject_of = scope:bic_scope
+							}
+							any_primary_culture = {
+								shares_heritage_trait_group_with_any_primary_culture = ROOT
+							}
+							any_scope_state = {
+								state_is_in_india = yes
+								any_neighbouring_state = {
+									owner = ROOT
+								}
+							}
+						}
+						order_by = gdp
+
+						save_temporary_scope_as = to_be_annexed
+					}
+
+					if = {
+						limit = {
+							exists = scope:to_be_annexed
+							exists = scope:bic_scope
+							scope:to_be_annexed = { is_subject_of = scope:bic_scope }
+						}
+						scope:bic_scope = {
+							change_relations = {
+								country = root
+								value = -10
+							}
+						}
+					}
+
+					if = {
+						limit = { exists = scope:to_be_annexed }
+						annex = scope:to_be_annexed
+
+						change_variable = {
+							name = mughal_annex_count
+							add = 1
+						}
+					}
+					else = {
+						change_variable = {
+							name = mughal_annex_count
+							add = 3 # just force it to end
+						}
+					}
+				}
+			}
+    	}
+    }
+
+    option = {
+    	name = mughal.7.dd
+    	highlighted_option = yes
+
+    	trigger = {
+    		ruler = {
+    			age >= define:NCharacters|ADULT_AGE
+    			OR = {
+    				has_trait = meticulous
+    				has_trait = innovative
+    				has_trait = surveyor
+    				has_trait = engineer
+    			}
+    		}
+    	}
+
+    	add_modifier = {
+    		name = mug_unshackled_governance
+			multiplier = money_amount_multiplier_medium
+    		days = long_modifier_time
+    	}
+
+    	custom_tooltip = {
+    		text = mughal_7_annex_up_to_2_immediate_neighbors
+
+	    	if = {
+	    		limit = {
+					any_neighbouring_state = {
+						state_is_in_india = yes
+						owner = {
+							is_player = no
+							relations:root >= define:NDiplomacy|RELATIONS_THRESHOLD_CORDIAL
+							OR = {
+								is_subject = no
+								is_subject_of = scope:bic_scope
+							}
+							any_primary_culture = {
+								shares_heritage_trait_group_with_any_primary_culture = ROOT
+							}
+						}
+					}
+	    		}
+	    		while = {
+	    			limit = {
+		    			var:mughal_annex_count < 2
+		    		}
+					ordered_country = {
+						limit = {
+							relations:root >= define:NDiplomacy|RELATIONS_THRESHOLD_CORDIAL
+							is_player = no
+							OR = {
+								is_subject = no
+								is_subject_of = scope:bic_scope
+							}
+							any_primary_culture = {
+								shares_heritage_trait_group_with_any_primary_culture = ROOT
+							}
+							any_scope_state = {
+								state_is_in_india = yes
+								any_neighbouring_state = {
+									owner = ROOT
+								}
+							}
+						}
+						order_by = gdp
+
+						save_temporary_scope_as = to_be_annexed
+					}
+
+					if = {
+						limit = {
+							exists = scope:to_be_annexed
+							exists = scope:bic_scope
+							scope:to_be_annexed = { is_subject_of = scope:bic_scope }
+						}
+						scope:bic_scope = {
+							change_relations = {
+							country = root
+							value = -10
+						}
+					}
+
+					if = {
+						limit = { exists = scope:to_be_annexed }
+						annex = scope:to_be_annexed
+
+						change_variable = {
+							name = mughal_annex_count
+							add = 1
+						}
+					}
+					else = {
+						change_variable = {
+							name = mughal_annex_count
+							add = 3 # just force it to end
+						}
+					}
+				}
+			}
 			}
 		}
 	}

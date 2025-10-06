@@ -116,54 +116,8 @@ bpm_dissent_je_revolution_active_weekly = {
 	scope:journal_entry.var:bpm_front_currently_planning = {
 		save_scope_as = member_front_name
 	}
-	if = {
-		limit = {
-			bpm_state_capacity < 0
-		}
-		set_variable = {
-			name = bpm_auth_state_exhaustion
-			value = 0
-		}
-		every_interest_group = {
-			limit = {
-				bpm_ig_in_front_check = yes
-			}
-			add_modifier = {
-				name = modifier_revolution_victorious_light
-				multiplier = 5
-				days = 3650
-				is_decaying = yes
-			}
-		}
-		every_interest_group = {
-			limit = {
-				NOT = {
-					bpm_ig_in_front_check = yes
-				}
-			}
-			add_modifier = {
-				name = modifier_revolution_defeated_light
-				multiplier = 1
-				days = 3650
-				is_decaying = yes
-			}
-			remove_modifier = bpm_empowered_ig
-		}
-		if = {
-			limit = {
-				scope:member_front_name = flag:bpm_front_republican
-			}
-			activate_law = law_type:law_presidential_republic
-		}
-		else_if = {
-			limit = {
-				scope:member_front_name = flag:bpm_front_socialist
-			}
-			activate_law = law_type:law_council_republic
-		}
-		bpm_dissent_je_revolution_active_on_inactive = yes
-	}
-
+	bpm_post_rev_victory = yes
+	bpm_post_rev_defeat = yes
 }
 
 bpm_dissent_je_revolution_active_immediate = {
@@ -190,6 +144,15 @@ bpm_dissent_je_revolution_active_immediate = {
 	}
 }
 
+bpm_post_rev_defeat = {
+	if = {
+		limit = {
+			scope:journal_entry.var:bpm_revolution_resource_amount <= 0
+		}
+		bpm_dissent_je_revolution_active_on_inactive = yes
+	}
+}
+
 bpm_dissent_je_revolution_active_on_inactive = {
 	scope:journal_entry= {
 		var:bpm_front_currently_planning = {
@@ -202,5 +165,69 @@ bpm_dissent_je_revolution_active_on_inactive = {
 		remove_variable = bpm_current_front_organization
 		remove_variable = bpm_last_delta
 		remove_variable = bpm_je_counter
+	}
+}
+
+bpm_post_rev_victory = {
+	if = {
+		limit = {
+			bpm_state_capacity < 0
+		}
+		set_variable = {
+			name = bpm_auth_state_exhaustion
+			value = 0
+		}
+		clear_variable_list = bpm_revolution_victory_igs
+		every_interest_group = {
+			remove_modifier = modifier_revolution_defeated_light
+			remove_modifier = modifier_revolution_victorious_light
+			remove_modifier = bpm_modifier_revolution_victorious_light
+		}
+		every_interest_group = {
+			limit = {
+				bpm_ig_in_front_check = yes
+			}
+			add_modifier = {
+				name = bpm_modifier_revolution_victorious_light
+				multiplier = 20
+				days = 3650
+				is_decaying = yes
+			}
+			owner = { add_to_variable_list = {
+				name = bpm_revolution_victory_igs
+				target = prev
+			} }
+		}
+		every_interest_group = {
+			limit = {
+				NOT = {
+					bpm_ig_in_front_check = yes
+				}
+			}
+			add_modifier = {
+				name = modifier_revolution_defeated_light
+				multiplier = 2
+				days = 3650
+				is_decaying = yes
+			}
+			remove_modifier = bpm_empowered_ig
+		}
+		bpm_dissent_je_revolution_active_on_inactive = yes
+		if = {
+			limit = {
+				scope:member_front_name = flag:bpm_front_peasant
+			}
+			trigger_event = {
+				id = bpm_revolution_results.1
+				days = 0
+				popup = yes
+			}
+		}
+		# else_if = {
+		# 	limit = {
+		# 		scope:member_front_name = flag:bpm_front_socialist
+		# 	}
+		# 	activate_law = law_type:law_council_republic
+		# }
 	}
 }

@@ -31,7 +31,7 @@ law_autocracy = {
 		country_legitimacy_ideological_incoherence_mult = 0.1
 		country_bureaucrats_pol_str_mult = 0.5
 		country_peasants_pol_str_mult = -0.4
-		state_pop_pol_str_mult = -0.95
+		state_pop_pol_str_mult = -0.5
 		state_political_strength_from_wealth_mult = 1
 		state_pop_pol_str_add = -6
 		country_authority_add = 200
@@ -86,6 +86,66 @@ law_autocracy = {
 	}
 }
 
+law_neo_absolutism = { # Reward for completing the neo-absolutist content
+	group = lawgroup_distribution_of_power
+	parent = law_autocracy
+
+	icon = "gfx/interface/icons/law_icons/neo_absolutism.dds"
+
+	progressiveness = -100
+	
+	requires_law_or = {
+		law_monarchy
+	}
+
+	on_activate = {
+		clear_geheime_staatskonferenz = yes
+		bpm_disable_elective_laws = yes
+		if = {
+			limit = { bpm_country_is_republic = yes	}
+			scripted_effect_parties_emergence = yes
+			add_modifier = bpm_republic_gov_size
+		} else = {
+			scripted_effect_parties_disappearence = yes
+		}
+	}
+
+	is_visible = {
+		c:AUS ?= this
+		has_global_variable = neo_absolutism_victory
+	}
+
+	modifier = {
+		country_legitimacy_govt_total_clout_add = 100
+		country_legitimacy_govt_size_add = 2
+		country_legitimacy_ideological_incoherence_mult = 0.1
+		country_bureaucrats_pol_str_mult = 0.5
+		country_peasants_pol_str_mult = -0.4
+		state_pop_pol_str_mult = -0.95
+		state_political_strength_from_wealth_mult = 1
+		state_pop_pol_str_add = -6
+		country_authority_add = 250
+		# country_bpm_base_mandate_add = 60
+	}
+
+	can_impose = { 
+		always = no
+	} 
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+		
+		if = {
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
+			add = 750
+		}
+	}
+
+	ai_impose_chance = {
+		value = 0
+	}
+}
+
 law_colonial_admin = {	
 	group = lawgroup_distribution_of_power
 	
@@ -123,7 +183,7 @@ law_colonial_admin = {
 		country_liberty_desire_increase_mult = -0.5
 		country_liberty_desire_add = -0.1
 		country_authority_add = 200
-		#state_pop_pol_str_add = -5
+		state_pop_pol_str_add = -5
 		country_bpm_change_primary_culture_to_overlord = yes
 		# country_bpm_base_mandate_add = 60
 	}
@@ -327,6 +387,89 @@ law_oligarchy = {
 				}
 			}
 			
+			add = base_impose_law_weight
+		}
+	}
+}
+
+law_organic_regulation = {
+	group = lawgroup_distribution_of_power
+	parent = law_oligarchy
+
+	icon = "gfx/interface/icons/law_icons/organic_regulation.dds"
+
+	progressiveness = -50
+
+	is_visible = {
+		country_has_primary_culture = cu:romanian
+		is_subject = yes
+	}
+
+	can_enact = {
+		country_has_primary_culture = cu:romanian
+		is_subject = yes
+	}
+
+	on_activate = {
+		scripted_effect_parties_disappearence = yes
+	}
+
+	modifier = {
+		country_legitimacy_govt_total_clout_add = 115
+		country_legitimacy_govt_size_add = 2
+		country_legitimacy_ideological_incoherence_mult = 0.1
+		country_officers_pol_str_mult = 0.25
+		country_shopkeepers_pol_str_mult = 0.5
+		country_clerks_pol_str_mult = 0.25
+		country_authority_add = 100
+	}
+
+	can_impose = {
+		OR = {
+			AND = {
+				scope:target_country = {
+					country_has_primary_culture = cu:romanian
+				}
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_distribution_of_power_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			can_impose_law_default = yes
+		}
+	}
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+
+		if = {
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
+			add = 750
+		}
+	}
+
+	ai_impose_chance = {
+		value = 0
+
+		if = {
+			limit = {
+				has_law = law_type:law_organic_regulation
+				OR = {
+					AND = {
+						power_bloc ?= { has_identity = identity:identity_ideological_union }
+						has_strategy = ai_strategy_conservative_agenda
+					}
+					has_strategy = ai_strategy_reactionary_agenda
+				}
+				scope:target_country = {
+					NOR = { # Is their law different enough from what we want to impose?
+						has_law_or_variant = law_type:law_autocracy
+						has_law_or_variant = law_type:law_landed_voting
+					}
+				}
+			}
+
 			add = base_impose_law_weight
 		}
 	}

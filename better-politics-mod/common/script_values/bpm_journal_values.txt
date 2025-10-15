@@ -1,4 +1,4 @@
-bpm_je_propaganda_of_the_deed_philosophy_value = {
+﻿bpm_je_propaganda_of_the_deed_philosophy_value = {
 	value = 0
 	if = {
 		limit = { has_variable = bpm_je_propaganda_of_the_deed }
@@ -583,6 +583,14 @@ bpm_je_syndicalism_rate = {
 		}
 	}
 	if = {
+		limit = { exists = ig:reformist_socialists }
+		add = {
+			desc = "BPM_VALUE_FROM_REFSOCS_POPULARITY"
+			value = ig:ig_reformist_socialists.interest_group_population_percentage
+			multiply = -20
+		}
+	}
+	if = {
 		limit = { exists = ig:ig_trade_unions }
 		add = {
 			desc = "BPM_VALUE_FROM_TRADE_UNIONS_POPULARITY"
@@ -649,6 +657,25 @@ bpm_je_syndicalism_rate = {
 			value = var:bpm_machinist_radicals_yandev_var
 			multiply = 0.10
 		}
+	}
+
+	# Labourer and machinists loyalists for syndicalism JE change
+	if = {
+	        limit = { has_variable = bpm_laborer_loyalists_yandev_var }
+	        add = {
+	           	desc = "BPM_VALUE_FROM_LABORER_LOYALISTS"
+	            	value = var:bpm_laborer_loyalists_yandev_var
+	            	multiply = -0.05
+	        }
+	}
+
+	if = {
+	        limit = { has_variable = bpm_machinist_loyalists_yandev_var }
+	        add = {
+	           	desc = "BPM_VALUE_FROM_MACHINIST_LOYALISTS"
+	            	value = var:bpm_machinist_loyalists_yandev_var
+	            	multiply = -0.05
+	        }
 	}
 
 	# Other Journal factors
@@ -1031,9 +1058,41 @@ bpm_je_general_strike_power = {
 		# Radicals vs Loyalists
 		add = {
 			desc = "BPM_VALUE_FROM_RADICALS"
-			add = pop_radical_fraction
-			subtract = pop_loyalist_fraction
+			add = radical_fraction				#this might not work, in case use options below
+			subtract = loyalist_fraction
+
+			#add = radical_population_fraction	#Another option
+
+			#add = {							#And manual option
+			#	every_scope_pop = {
+			#		add = {
+			#			value = total_size
+			#			multiply = pop_radical_fraction
+			#		}
+			#	}
+			#	divide = {
+			#		every_scope_pop = {
+			#			add = total_size
+			#		}
+			#		min = 1
+			#	}
+			#}
+			#subtract = {
+			#	every_scope_pop = {
+			#		add = {
+			#			value = total_size
+			#			multiply = pop_loyalist_fraction
+			#		}
+			#	}
+			#	divide = {
+			#		every_scope_pop = {
+			#			add = total_size
+			#		}
+			#		min = 1
+			#	}
+			#}
 			multiply = 80
+			round_to = 0.01
 		}
 
 		# War
@@ -1205,18 +1264,18 @@ bpm_je_general_strike_power = {
 			}
 			# Union Laws
 			if = {
-				limit = { has_law = law_type:law_state_controlled_labor_unions }
+				limit = { has_law = law_type:law_corporatized_unions }
 				subtract = {
-					desc = "BPM_VALUE_FROM_LAW_STATE_CONTROLLED_LABOR_UNIONS"
+					desc = "BPM_VALUE_FROM_law_corporatized_unions"
 					add = {
 						value = -20
 					}
 				}
 			}
 			else_if = {
-				limit = { has_law = law_type:law_limited_labor_unions }
+				limit = { has_law = law_type:law_anti_strike_laws }
 				subtract = {
-					desc = "BPM_VALUE_FROM_LAW_LIMITED_LABOR_UNIONS"
+					desc = "BPM_VALUE_FROM_law_anti_strike_laws"
 					add = {
 						value = -10
 					}
@@ -1723,12 +1782,12 @@ bpm_je_split_patcons_progress_from_poverty = { # TODO: FIX THIS VALUE
 }
 bpm_je_split_patcons_progress_from_loyalists = {
 	value = 0
-	add = pop_loyalist_fraction
+	add = loyalist_fraction
 	multiply = 2
 }
 bpm_je_split_patcons_progress_from_radicals = {
 	value = 0
-	add = pop_radical_fraction
+	add = radical_fraction
 	multiply = 2
 }
 bpm_je_split_patcons_progress_from_conservative_status = {
@@ -1986,115 +2045,139 @@ bpm_je_modernizers_ideology_rate_modernizers = {
 	value = 0		
 	subtract = {
 		desc = "BPM_VALUE_FROM_MONARCH_POPULARITY_NEGATIVE"
-		if = {
-			limit = { 
-				has_law = law_type:law_monarchy 
-				ruler.popularity < 0
-			}
-			add = {
-				value = ruler.popularity
-				multiply = 0.01
+		owner = {
+			if = {
+				limit = { 
+					has_law = law_type:law_monarchy 
+					ruler.popularity < 0
+				}
+				add = {
+					value = ruler.popularity
+					multiply = 0.01
+				}
 			}
 		}
 	}
 
 	add = {
 		desc = "BPM_VALUE_FROM_LIBERAL_LEADER_AND_AGITATORS"
-		every_scope_character = {
-			limit = {
-				is_interest_group_type = ig_liberals
-				OR = {
-					has_role = politician
-					has_role = agitator
+		owner = {
+			every_scope_character = {
+				limit = {
+					is_interest_group_type = ig_liberals
+					OR = {
+						has_role = politician
+						has_role = agitator
+					}
 				}
+				add = this.popularity
 			}
-			add = popularity
+			multiply = 0.01
 		}
-		multiply = 0.01
 	}
 	add = {
 		desc = "BPM_VALUE_FROM_RADICAL_LEADER_AND_AGITATORS"
-		every_scope_character = {
-			limit = {
-				is_interest_group_type = ig_radicals
-				OR = {
-					has_role = politician
-					has_role = agitator
+		owner = {
+			every_scope_character = {
+				limit = {
+					is_interest_group_type = ig_radicals
+					OR = {
+						has_role = politician
+						has_role = agitator
+					}
 				}
+				add = this.popularity
 			}
-			add = popularity
+			multiply = 0.01
 		}
-		multiply = 0.01
 	}
 	add = {
 		desc = "BPM_VALUE_FROM_SOCIALIST_LEADER_AND_AGITATORS"
-		every_scope_character = {
-			limit = {
-				is_interest_group_type = ig_socialists
-				OR = {
-					has_role = politician
-					has_role = agitator
+		owner = {
+			every_scope_character = {
+				limit = {
+					is_interest_group_type = ig_socialists
+					OR = {
+						has_role = politician
+						has_role = agitator
+					}
 				}
+				add = this.popularity
 			}
-			add = popularity
+			multiply = 0.01
 		}
-		multiply = 0.01
 	}
 
 	add = {
 		desc = "BPM_VALUE_FROM_PRO_MODERNIZER_LOBBY_APPEASEMENT"
-		every_political_lobby = {
-			limit = {
-				is_political_lobby_type = lobby_pro_country
-				any_lobby_member = {
-					OR = {
-						is_interest_group_type = ig_liberals
-						is_interest_group_type = ig_radicals
-						is_interest_group_type = ig_socialists
+		owner = {
+			every_political_lobby = {
+				limit = {
+					is_political_lobby_type = lobby_pro_country
+					any_lobby_member = {
+						OR = {
+							is_interest_group_type = ig_liberals
+							is_interest_group_type = ig_radicals
+							is_interest_group_type = ig_socialists
+						}
 					}
 				}
+				add = appeasement
 			}
-			add = appeasement
+			multiply = 0.25
+			add = 0.0001
 		}
-		multiply = 0.25
-		add = 0.0001
 	}
 	subtract = 0.0001
 
-	add = {
-		desc = "BPM_VALUE_FROM_PRO_MODERNIZER_LAW_PASSING"
-		add = var:bpm_je_modernizers_liberal_laws_passed
-		multiply = 0.25
-		add = 0.0001
+	if = {
+		limit = {
+			exists = owner.var:bpm_je_modernizers_liberal_laws_passed
+			NOT = {
+				owner.var:bpm_je_modernizers_liberal_laws_passed = 0
+			}
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_PRO_MODERNIZER_LAW_PASSING"
+			value = owner.var:bpm_je_modernizers_liberal_laws_passed
+			multiply = 0.25
+			add = 0.0001
+		}
 	}
 	subtract = 0.0001
 
 	add = {
 		desc = "BPM_VALUE_FROM_PROMOTE_SECULAR_VALUES_LAW"
-		add = 0.0001
-		if = {
-			limit = { has_modifier = bpm_repeatable_law_promote_secular_values_result }
-			add = 1
+		owner = {
+			add = 0.0001
+			if = {
+				limit = { has_modifier = bpm_repeatable_law_promote_secular_values_result }
+				add = 1
+			}
+			multiply = 0.5
 		}
-		multiply = 0.5
 	}
 	add = {
 		desc = "BPM_VALUE_FROM_INVITE_FOREIGN_EXPERTS_LAW"
-		add = 0.0001
-		if = {
-			limit = { has_modifier = bpm_repeatable_law_invite_foreign_experts_result }
-			add = 1
+		owner = {
+			add = 0.0001
+			if = {
+				limit = { has_modifier = bpm_repeatable_law_invite_foreign_experts_result }
+				add = 1
+			}
+			multiply = 0.5
 		}
-		multiply = 0.5
 	}
 	add = {
 		desc = "BPM_VALUE_FROM_PROMOTE_DEMOCRATIC_VALUES_LAW"
-		add = 0.0001
-		if = {
-			limit = { has_modifier = bpm_repeatable_law_promote_democratic_values_result }
-			add = 1
+		owner = {
+			add = 0.0001
+			if = {
+				limit = { has_modifier = bpm_repeatable_law_promote_democratic_values_result }
+				add = 1
+			}
+			multiply = 0.5
 		}
-		multiply = 0.5
 	}
 	subtract = 0.00015
 }
@@ -2103,89 +2186,111 @@ bpm_je_modernizers_ideology_rate_conservatives = {
 	value = 0
 	add = {
 		desc = "BPM_VALUE_FROM_MONARCH_POPULARITY"
-		if = {
-			limit = { 
-				has_law = law_type:law_monarchy 
-				ruler.popularity < 0
-			}
-			add = {
-				value = ruler.popularity
-				multiply = 0.01
+		owner = {
+			if = {
+				limit = { 
+					has_law = law_type:law_monarchy 
+					ruler.popularity < 0
+				}
+				add = {
+					value = ruler.popularity
+					multiply = 0.01
+				}
 			}
 		}
 	}
 	add = {
 		desc = "BPM_VALUE_FROM_REACTIONARY_LEADER_AND_AGITATORS"
-		every_scope_character = {
-			limit = {
-				is_interest_group_type = ig_reactionaries
-				OR = {
-					has_role = politician
-					has_role = agitator
+		owner = {
+			every_scope_character = {
+				limit = {
+					is_interest_group_type = ig_reactionaries
+					OR = {
+						has_role = politician
+						has_role = agitator
+					}
 				}
+				add = this.popularity
 			}
-			add = popularity
+			multiply = 0.01
 		}
-		multiply = 0.01
 	}
 	add = {
 		desc = "BPM_VALUE_FROM_CONSERVATIVE_LEADER_AND_AGITATORS"
-		every_scope_character = {
-			limit = {
-				is_interest_group_type = ig_conservatives
-				OR = {
-					has_role = politician
-					has_role = agitator
+		owner = {
+			every_scope_character = {
+				limit = {
+					is_interest_group_type = ig_conservatives
+					OR = {
+						has_role = politician
+						has_role = agitator
+					}
 				}
+				add = this.popularity
 			}
-			add = popularity
+			multiply = 0.01
 		}
-		multiply = 0.01
 	}
 
-	add = {
-		desc = "BPM_VALUE_FROM_PRO_CONSERVATIVE_LAW_PASSING"
-		add = var:bpm_je_modernizers_conservative_laws_passed
-		multiply = 0.25
-		add = 0.0001
+	if = {
+		limit = {
+			exists = owner.var:bpm_je_modernizers_conservative_laws_passed
+			NOT = {
+				owner.var:bpm_je_modernizers_conservative_laws_passed = 0
+			}
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_PRO_CONSERVATIVE_LAW_PASSING"
+			value = owner.var:bpm_je_modernizers_conservative_laws_passed
+			multiply = 0.25
+			add = 0.0001
+		}
 	}
 	subtract = 0.0001
 
 	add = {
 		desc = "BPM_VALUE_FROM_ANTI_SECULAR_REACTION_LAW"
-		add = 0.0001
-		if = {
-			limit = { has_modifier = bpm_repeatable_law_anti_secular_reaction_result }
-			add = 1
+		owner = {
+			add = 0.0001
+			if = {
+				limit = { has_modifier = bpm_repeatable_law_anti_secular_reaction_result }
+				add = 1
+			}
+			multiply = 0.5
 		}
-		multiply = 0.5
 	}
 	add = {
 		desc = "BPM_VALUE_FROM_PARADES_AND_DRILLS_LAW"
-		add = 0.0001
-		if = {
-			limit = { has_modifier = bpm_repeatable_law_parades_and_drills_result }
-			add = 1
+		owner = {
+			add = 0.0001
+			if = {
+				limit = { has_modifier = bpm_repeatable_law_parades_and_drills_result }
+				add = 1
+			}
+			multiply = 0.5
 		}
-		multiply = 0.5
 	}
 	add = {
 		desc = "BPM_VALUE_FROM_PROMOTE_ABSOLUTIST_VALUES_LAW"
-		add = 0.0001
-		if = {
-			limit = { has_modifier = bpm_repeatable_law_promote_absolutist_values_result }
-			add = 1
+		owner = {
+			add = 0.0001
+			if = {
+				limit = { has_modifier = bpm_repeatable_law_promote_absolutist_values_result }
+				add = 1
+			}
+			multiply = 0.5
 		}
-		multiply = 0.5
 	}
 	add = {
 		desc = "BPM_VALUE_FROM_PROMOTE_STATE_RELIGION_LAW"
-		add = 0.0001
-		if = {
-			limit = { has_modifier = bpm_repeatable_law_promote_state_religion_result }
-			add = 1
+		owner = {
+			add = 0.0001
+			if = {
+				limit = { has_modifier = bpm_repeatable_law_promote_state_religion_result }
+				add = 1
+			}
+			multiply = 0.5
 		}
-		multiply = 0.5
 	}
 	subtract = 0.0002
 }
@@ -2198,40 +2303,54 @@ bpm_je_modernizers_dialectic_rate = {
 		desc = "BPM_VALUE_FROM_MODERNIZER_MINIMUM_BETWEEN_TWO_IDEOLOGIES"
 	}
 
-	add = {
-		value = var:bpm_je_modernizers_copied_society_times
-		multiply = 0.2
-		desc = "BPM_VALUE_FROM_MODERNIZER_COPIED_SOCIETY_AMOUNT"
-	} 
+	if = {
+		limit = {
+			exists = owner.var:bpm_je_modernizers_copied_society_times
+			NOT = {
+				owner.var:bpm_je_modernizers_copied_society_times = 0
+			}
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_MODERNIZER_COPIED_SOCIETY_AMOUNT"
+			value = owner.var:bpm_je_modernizers_copied_society_times
+			multiply = 0.2
+		}
+	}
 
 	subtract = {
-		if = {
-			limit = {
-				has_law = law_type:law_censorship
+		owner = {
+			if = {
+				limit = {
+					has_law = law_type:law_censorship
+				}
+				add = institution:institution_culture.investment
 			}
-			add = institution:institution_culture.investment
+			multiply = 0.2
 		}
-		multiply = 0.2
 		desc = "BPM_VALUE_FROM_INSTITUTION_CENSORSHIP"
 	}
 
 	subtract = {
-		if = {
-			limit = {
-				has_law = law_type:law_outlawed_dissent
+		owner = {
+			if = {
+				limit = {
+					has_law = law_type:law_outlawed_dissent
+				}
+				add = institution:institution_culture.investment
 			}
-			add = institution:institution_culture.investment
+			multiply = 0.2
 		}
-		multiply = 0.2
 		desc = "BPM_VALUE_FROM_INSTITUTION_OUTLAWED_DISSENT"
 	}
 
 	subtract = {
-		if = {
-			limit = {					
-				has_law = law_type:law_traditional_ostracism
+		owner = {
+			if = {
+				limit = {					
+					has_law = law_type:law_traditional_ostracism
+				}
+				add = 0.5
 			}
-			add = 0.5
 		}
 		desc = "BPM_VALUE_FROM_LAW_TRADITIONAL_OSTRACISM"
 	}

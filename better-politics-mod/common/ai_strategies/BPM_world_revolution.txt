@@ -1,0 +1,200 @@
+ai_strategy_world_revolution = {
+	icon = "gfx/interface/icons/ai_strategy_icons/revolutionary.dds"
+
+	type = diplomatic
+
+	will_form_power_bloc = {
+		always = yes
+	}
+
+	undesirable_infamy_level = {
+		value = 500
+	}
+
+	unacceptable_infamy_level = {
+		value = 1000
+	}
+
+	ideological_opinion_effect_mult = {
+		value = 3
+	}
+
+	wargoal_maneuvers_fraction = {
+		value = 0.25
+	}
+
+	diplomatic_play_neutrality = {
+		value = 0
+	}
+
+	diplomatic_play_boldness = {
+		value = 200
+	}
+
+	recklessness = {
+		value = 1
+	}
+
+	aggression = {
+		value = 50
+
+		if = {
+			limit = {
+				scope:target_country = {
+					has_radical_leftist_government = no
+				}
+			}
+			add = 200
+		}
+
+		if = {
+			limit = {
+				scope:target_country = {
+					has_radical_leftist_government = yes
+				}
+			}
+			multiply = 0.25
+		}
+
+		# More aggressive against ideological enemies, a bit less aggressive against ideological allies
+		multiply = {
+			value = "ai_ideological_opinion(scope:target_country)"
+			multiply = -1
+			add = 1
+		}
+	}
+
+	building_group_weights = {
+		bg_army = 3
+	}
+
+	secret_goal_scores = {
+		protect = {
+			trigger = {
+				scope:target_country = {
+					OR = {
+						has_radical_leftist_government = yes
+						has_radical_leftist_economy = yes
+					}
+				}
+			}
+			score = {
+				value = 100
+
+				if = {
+					limit = {
+						has_strategic_adjacency = scope:target_country
+					}
+					add = 200
+				}
+			}
+		}
+		befriend = {
+			trigger = {
+				scope:target_country = {
+					has_radical_leftist_government = yes
+				}
+			}
+			score = {
+				value = 200
+			}
+		}
+		dominate = {
+			trigger = {
+				NOT = { scope:target_country = { is_subject_of = root } }
+				scope:target_country = { country_rank < root.country_rank }
+				has_strategic_adjacency = scope:target_country
+				scope:target_country = { has_radical_leftist_government = no }
+			}
+			score = {
+				value = 200
+			}
+		}
+		conquer = {
+			trigger = {
+				has_strategic_adjacency = scope:target_country
+				scope:target_country = { country_rank <= root.country_rank }
+				scope:target_country = { has_radical_leftist_government = no }
+			}
+			score = {
+				value = 1000
+			}
+		}
+	}
+
+	wanted_army_size = {
+		# To increase base army size for small countries, capped at 1 million population
+		add = {
+			value = cached_ai_incorporated_population
+			divide = 50000 # 1 level of barracks per 100k incorporated population
+
+			max = 10
+		}
+	}
+
+	wargoal_weights = {
+		regime_change = 100.0
+		force_nationalization = 1.0
+	}
+
+	possible = {
+		is_subject = no
+		has_radical_leftist_government = yes
+		country_rank >= rank_value:major_power
+	}
+
+	weight = {
+		value = 25
+
+		if = {
+			limit = {
+				OR = {
+					has_law_or_variant = law_type:law_professional_army
+					has_law_or_variant = law_type:law_mass_conscription
+				}
+			}
+			add = 25
+		}
+
+		if = {
+			limit = { has_law_or_variant = law_type:law_isolationism }
+			add = -200
+		}
+
+		if = {
+			limit = { country_rank = rank_value:great_power }
+			multiply = 10
+		}
+
+		if = {
+			limit = { country_rank = rank_value:major_power }
+			multiply = 1.10
+		}
+
+		if = {
+			limit = {
+				any_country = {
+					NOT = {
+						THIS = ROOT
+					}
+					has_strategic_adjacency = ROOT
+					has_radical_leftist_government = yes
+					country_rank >= rank_value:great_power
+				}
+			}
+			multiply = 1.5
+		}
+		else_if = {
+			limit = {
+				any_country = {
+					NOT = {
+						THIS = ROOT
+					}
+					has_radical_leftist_government = yes
+					country_rank >= rank_value:great_power
+				}
+			}
+			multiply = 1.15
+		}
+	}
+}

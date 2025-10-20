@@ -1,0 +1,2027 @@
+bpm_je_christian_democrat_ideology_rate = {
+	value = 0
+
+	add = { ##### Countries with strong trade unions (Germany, France, Belgium) and high industrialization were progressive and definitely Christian Democratic
+		desc = "BPM_VALUE_FROM_TRADE_UNIONS_CLOUT"
+		if = {
+			limit = {
+				exists = ig:ig_trade_unions
+			}
+			add = ROOT.ig:ig_trade_unions.interest_group_population_percentage # ig_clout
+			multiply = 10
+		}
+	}
+
+	##### This was moved down to class-focused values!
+
+	#add = { ##### Countries with modern machinery, technology and automatization also had more progressive Christian Democrats (France, Belgium, Netherlands)
+	#	desc = "BPM_VALUE_FROM_MACHINIST_POPULATION"
+	#	if = {
+	#		limit = { has_variable = bpm_machinist_population_yandev_var }
+	#		add = {
+	#			value = var:bpm_machinist_population_yandev_var
+	#			multiply = 0.15 # 0.2
+	#		}
+	#	}
+	#}
+
+	add = { ##### Countries with strong labour consciousness and movements (Belgium, Italy, Germany)
+		desc = "BPM_VALUE_FROM_LABOUR_CONCIOUSNESS"
+		if = { 
+			limit = {
+				has_variable = bpm_consciousness_labor
+			}
+			add = {
+				value = ROOT.var:bpm_consciousness_labor
+				multiply = 0.01
+			}
+		}
+	}
+
+	add = { ##### Countries where liberalism was omnipresent... (France, Germany, Italy)
+		desc = "BPM_VALUE_FROM_LIBERAL_CONCIOUSNESS_SECULARISTS_LIBERAL_NATIONALISTS_MOVEMENT"
+		if = { 
+			limit = {
+				has_variable = bpm_consciousness_liberal
+			}
+			add = {
+				value = ROOT.var:bpm_consciousness_liberal
+				multiply = 0.0066
+			}
+		}
+
+		if = { ### ...served as a backing for pan-national movements... (Germany, Italy)
+			limit = {
+				#OR = {
+				#	owner = {
+				#		OR = {
+				#			can_form_nation = ITA
+				#			can_form_nation = GER
+				#		}
+				#	}
+				#	has_technology_researched = pan-nationalism
+				#}
+				always = yes
+			}
+			every_interest_group = {
+				limit = {
+					is_interest_group_type = ig_national_liberals
+				}
+				add = {
+					value = ig_clout
+				}
+			}
+			every_political_movement = {
+				limit = {
+					is_political_movement_type = movement_national_liberal
+				}
+				add = {
+					value = political_movement_support
+					multiply = 1.11
+				}
+			}
+		}
+		
+		if = { ### ...and where secularism was present... has Christian Democratic Catholics! (France)
+			limit = {
+				any_interest_group = {
+					OR = {
+						has_ideology = ideology:ideology_rel_secularist
+						has_ideology = ideology:ideology_rel_radical_secularist
+						has_ideology = ideology:ideology_rel_atheist
+					}
+				}
+			}
+			every_interest_group = {
+				limit = {
+					has_ideology = ideology:ideology_rel_secularist # Notably Liberals, Agrarian Populists.
+				}
+				add = {
+					value = ig_clout
+					multiply = 1.05
+				}
+			}
+			every_interest_group = {
+				limit = {
+					has_ideology = ideology:ideology_rel_radical_secularist # Notably Radical Liberals and all Socialists
+				}
+				add = {
+					value = ig_clout
+					multiply = 1.33
+				}
+			}
+			every_interest_group = {
+				limit = {
+					has_ideology = ideology:ideology_rel_atheist # Notably Communists, if the enemy is too atheist then they'll become more Christian.
+				}
+				subtract = {
+					value = ig_clout
+					multiply = 1.66
+				}
+			}
+		}
+	}
+
+	add = { ##### The less liberal nations had Christian Democrats develop towards universal suffrage and pro-union legislation. (Poland, 
+		desc = "BPM_VALUE_FROM_ILLIBERAL_SOCIETY_AND_STATE"
+		
+		if = { ### Can't be liberal if they moved towards authoritarianism themselves!
+			limit = {
+				ig:ig_christian_democrats = {
+					NOR = {
+						is_in_government = yes
+						has_ideology = ideology:ideology_dop_conservative_democratrat
+					}
+					ig_clout >= 0.001
+				}
+			}
+
+			###################################################
+			####### Suffrage and Voting Rights
+
+			if = { # Autocratic Government drives them to the left very hard (Poland; Lidovci response to AgrPop authoritarianism)
+				limit = {
+					OR = {
+						has_law = law_type:law_autocracy
+						has_law = law_type:law_military_junta
+						has_law = law_type:law_landed_voting
+						has_law = law_type:law_technocracy
+					}
+				}
+				add = {
+					value = 0.005
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			else_if = { # Wealth-based and education-based voting drives them to the left but less so (Italan Popularists, Belgian New Right)
+				limit = {
+					OR = {
+						has_law = law_type:law_wealth_voting
+						has_law = law_type:law_census_voting
+					}
+				}
+				add = {
+					value = 0.003
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			else_if = { # Wealth-based and education-based voting drives them to the left but less so (Italan Popularists, Belgian New Right)
+				limit = {
+					has_law = law_type:law_organic_democracy
+				}
+				add = {
+					value = 0.002
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			if = { # Women should also vote! Though not work.
+				limit = {
+					NOT = {
+						has_law = law_type:law_womens_suffrage
+					}
+				}
+				add = {
+					value = 0.001
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			###################################################
+			####### Labour Unions and Labouresque Legislation
+
+			if = { # Reactionary and anti-labor legislation and laws drive them towards more left-wing positions.
+				limit = {
+					OR = {
+						has_law = law_type:law_illegal_labor_unions
+						has_law = law_type:law_state_controlled_labor_unions
+					}
+				}
+				add = {
+					value = 0.003
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+			else_if = { # Syndicalist-eqsue and free labour are something Christian Democrats strive for and will try to defend the current state of things.
+				limit = {
+					OR = {
+						has_law = law_type:law_syndicalism
+						has_law = law_type:law_limited_labor_unions
+					}
+				}
+				add = {
+					value = 0.002
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			###################################################
+			####### Censorship and State Power
+
+			if = { # Censorship and worse will make catholics defend themselves fiercly
+				limit = {
+					OR = {
+						has_law = law_type:law_censorship
+						has_law = law_type:law_outlawed_dissent
+					}
+				}
+				add = {
+					value = 0.002
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			###################################################
+			####### Separation of Powers
+
+			if = { # Advisory Body will make them rather unhappy.
+				limit = {
+					has_law = law_type:law_advisory_body
+				}
+				add = {
+					value = 0.003
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			else_if = { # Too much liberalism is very bad!
+				limit = {
+					has_law = law_type:law_supreme_legislature
+				}
+				subtract = {
+					value = 0.005
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_STRONG_LABOR_LIBERAL_RADICAL_MOVEMENTS"
+
+		if = {
+			limit = {
+				always = yes
+			}
+			every_political_movement = {
+				limit = {
+					OR = {
+						is_political_movement_type = movement_modernizer
+						is_political_movement_type = movement_liberal
+					}	
+				}
+				add = {
+					value = political_movement_support
+					#multiply = ROOT.ig:ig_christian_democrats.ig_clout
+					multiply = 1.11
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				always = yes
+			}
+			every_political_movement = {
+				limit = {
+					is_political_movement_type = movement_labor
+				}
+				add = {
+					value = political_movement_support
+					#multiply = ROOT.ig:ig_christian_democrats.ig_clout
+					multiply = 1.33
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				always = yes
+			}
+			every_political_movement = {
+				limit = {
+					is_political_movement_type = movement_radical
+				}
+				add = {
+					value = political_movement_support
+					#multiply = ROOT.ig:ig_christian_democrats.ig_clout
+					multiply = 1.22
+				}
+			}
+		}
+	}
+	
+	add = { ##### More conservative-liberal Middle Class and Relatively present moralist had Christian Democrats grew rather conservative (Early Polish Chadecy, Benelux, Austria)
+		desc = "BPM_VALUE_FROM_MORALIST_MIDDLE_CLASS_GROUPS"
+		
+		if = { ### Professional Interests, Business Interests will move them towards more reactionary groups
+			limit = {
+				OR = {
+					exists = ig:ig_intelligentsia
+					exists = ig:ig_industrialists
+					exists = ig:ig_landowners
+					exists = ig:ig_rural_folk
+				}
+				#scope:journal_entry = {
+				#	"scripted_bar_progress(je_bpm_christian_democrat_ideology_progress_bar)" < 50
+				#}
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_industrialists
+						is_interest_group_type = ig_intelligentsia
+						is_interest_group_type = ig_landowners
+						is_interest_group_type = ig_rural_folk
+					}
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
+				subtract = ig_clout
+			}
+			multiply = 1.33
+		}
+
+		if = { ### Moralist Interest Groups should drive them towards more conservative and reactionary stances.
+			limit = {
+				any_interest_group = {
+					OR = {
+						has_ideology = ideology:ideology_rel_moralist # Conservatives, National Liberals, Market Liberals
+						has_ideology = ideology:ideology_rel_radical_moralist # Reactionaries, the Church
+					}
+				}
+ 			}
+			if = { # Strong moralists drive the Christian Democrats towards right-wing positions (Austria, Hungary to a degree)
+				limit = {
+					country_has_state_religion = rel:catholic
+				}
+				every_interest_group = {
+					limit = {
+						OR = {
+							has_ideology = ideology:ideology_rel_moralist
+							has_ideology = ideology:ideology_rel_radical_moralist
+						}
+						NOT = {
+							has_ideology = ideology:ideology_nonexistent
+						}
+					}
+					subtract = ig_clout
+					multiply = 1.128
+				}
+			}
+			else_if = { # If the laymen are a minority in the state, then illiberalism serves as a threat to catholic laymen! (Germany, later on Netherlands)
+				limit = {
+					NOT = {
+						country_has_state_religion = rel:catholic
+					}
+				}
+				every_interest_group = {
+					limit = {
+						OR = {
+							has_ideology = ideology:ideology_rel_moralist
+							has_ideology = ideology:ideology_rel_radical_moralist
+						}
+						NOT = {
+							has_ideology = ideology:ideology_nonexistent
+						}
+					}
+					add = ig_clout
+					multiply = 1.25
+				}
+			}
+		}
+	}
+
+	
+
+	add = { ##### The Pope, though not directly, excersises his power and influence on Catholics, ultimately deciding their progression
+		desc = "BPM_VALUE_FROM_PAPACY"
+		if = {
+			limit = {
+				game_date >= 1922.1.22
+			}
+			add = -0.25
+		}
+		else_if = {
+			limit = {
+				game_date >= 1914.8.20
+			}
+			add = 0.25
+		}
+		else_if = {
+			limit = {
+				game_date >= 1903.8.20
+			}
+			add = -0.25
+		}
+		else_if = {
+			limit = {
+				game_date >= 1878.2.7
+			}
+			add = 0.33
+		}
+		else_if = {
+			limit = {
+				game_date <= 1878.2.7
+			}
+			add = -0.5
+		}
+		if = {
+			limit = {
+				country_has_state_religion = rel:catholic
+			}
+			subtract = {
+				value = ROOT.ig:ig_devout.ig_clout
+				multiply = 1.66
+				if = {
+					limit = {
+						ig:ig_devout = {
+							leader = {
+								has_ideology = ideology:ideology_theocrat
+							}
+						}
+					}
+					multiply = 1.33
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				country_has_state_religion = rel:catholic
+				ig:ig_devout = {
+					leader = {
+						OR = {
+							has_ideology = ideology:ideology_radical
+							has_ideology = ideology:ideology_land_reformer
+							# has_ideology = ideology:ideology_liberal_democrat
+						}
+					}
+				}
+			}
+			add = {
+				value = ROOT.ig:ig_devout.ig_clout
+				multiply = 1.33
+			}
+		}
+
+		if = {
+			limit = {
+				country_has_state_religion = rel:catholic
+			}
+			subtract = {
+				value = ROOT.ig:ig_devout.ig_clout
+				multiply = 1.66
+					if = {
+						limit = {
+							ig:ig_devout = {
+							leader = {
+									has_ideology = ideology:ideology_theocrat
+								}
+							}
+						}
+					multiply = 1.33
+				}
+			}
+		}
+	}
+
+	add = { ##### As Christian Democrats progress, they should retain their goal of retaining moderation wherever they currently are.
+		desc = "BPM_VALUE_FROM_CONSERVATIVE_MODERATION_EVENTS_AND_OTHER_REASONS"
+		
+		add = {
+			value = 50
+			subtract = ROOT.je:je_bpm_christian_or_democrat.var:ideological_leaning_bar_variable
+			multiply = ROOT.ig:ig_christian_democrats.ig_clout
+			divide = 2.5
+		}
+
+		if = { ### Essentially a negative modifier
+			limit = {
+				has_variable = christian_democrats_ideology_change
+			}
+			subtract = {
+				value = ROOT.var:christian_democrats_ideology_change
+				multiply = 0.05
+			}
+		}
+
+		subtract = {
+			value = bpm_loyalist_population_fraction
+			multiply = bpm_loyalist_population_fraction
+			multiply = 1.66
+		}
+
+		#else_if = { ### Lots of loyalists will keep them relatively moderate 
+		#	limit = {
+		#		OR = {
+		#			bpm_country_laws_are_very_undemocratic = yes
+		#			bpm_country_laws_are_moderately_undemocratic = yes
+		#		}
+		#	}
+		#	add = {
+		#		value = 1
+		#
+		#		multiply = bpm_loyalist_population_fraction
+		#		multiply = bpm_loyalist_population_fraction
+		#		multiply = 3.33
+		#	}
+		#}
+
+		if = { ### A moderate leader of ChD will have them be more moderate
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_ideology = ideology:ideology_moderate
+					}
+				}
+			}
+			subtract = -0.2
+		}
+	}
+
+	add = { ##### As Christian Democrats progress, they should retain their goal of retaining moderation wherever they currently are.
+		desc = "BPM_VALUE_FROM_SOCIALIST_MOVEMENTS_IGS_AND_AUTHORITARIANISM"
+
+		if = { ### Essentially a negative modifier
+			limit = {
+				any_interest_group = {
+					bpm_ig_is_socialist = yes
+				}
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_reformist_socialists
+						is_interest_group_type = ig_socialists
+					}
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
+				subtract = {
+					value = ig_clout
+					multiply = 1.66
+				}
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_revilutionists
+						is_interest_group_type = ig_anarchists
+					}
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
+				subtract = {
+					value = ig_clout
+					multiply = 2.33
+				}
+			}
+
+			every_interest_group = {
+				limit = {
+					is_interest_group_type = ig_trade_unions
+					leader = {
+						OR = {
+							has_ideology = ideology:ideology_socialists
+							has_ideology = ideology:ideology_communist
+							has_ideology = ideology:ideology_utopian_socialist
+							has_ideology = ideology:ideology_vanguardist
+							has_ideology = ideology:ideology_syndicalist
+							has_ideology = ideology:ideology_anarchosyndicalist
+						}
+					}
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
+				subtract = {
+					value = ig_clout
+					multiply = 2.66
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				always = yes
+			}
+			every_political_movement = {
+				limit = {
+					OR = {
+						is_political_movement_type = movement_socialist
+						is_political_movement_type = movement_reformist_socialist
+						is_political_movement_type = movement_communist
+						is_political_movement_type = movement_anarchist
+					}
+				}
+				subtract = {
+					value = political_movement_support
+					multiply = 1.2
+				}
+			}
+		}
+	}
+
+	add = { ##### Countries with significant peasantry/farmers that formed the BASE of Christian Democrats were conservative; (Austria, Lithuania)
+		desc = "BPM_VALUE_FROM_PEASANT_POPULATION_COMPETITION_WITH_AGRPOPS_LAND_REFORM_POWER"
+		
+		subtract = {
+			value = var:bpm_peasant_population_yandev_var
+			multiply = 0.125 # 0.04
+		}
+
+		if = { ### If both are together then Christian Democrats will be far more progressive (Italy, Belgium)
+			limit = {
+				ig:ig_agrarian_populists = {
+					OR = {
+						is_member_of_party = owner.py:conservative_party
+						is_member_of_party = owner.py:religious_party
+					}
+				}
+				ig:ig_christian_democrats = {
+					OR = {
+						is_member_of_party = owner.py:conservative_party
+						is_member_of_party = owner.py:religious_party
+					}
+				}
+			}
+
+			every_interest_group = {
+				limit = {
+					is_interest_group_type = ig_agrarian_populists
+				}
+				add = {
+					value = ig_clout
+					multiply = 1.66
+				}
+			}
+		}
+
+		else_if = { ### If both compete then Christian Democrats will be far more conservative (Poland, Austria, Lithuania)
+			limit = {
+				ig:ig_agrarian_populists = {
+					NOR = {
+						is_member_of_party = owner.py:conservative_party
+						is_member_of_party = owner.py:religious_party
+					}
+				}
+			}
+
+			every_interest_group = {
+				limit = {
+					is_interest_group_type = ig_agrarian_populists
+				}
+				subtract = {
+					value = ig_clout
+					multiply = 1.66
+				}
+			}
+		}
+
+		if = { # Strong inclination towards land reform is needed the peasant movement is strong
+			limit = {
+				ROOT.je:je_bpm_christian_or_democrat.var:economical_leaning_bar_variable <= 66
+			}
+			every_political_movement = {
+				limit = {
+					OR = {
+						is_political_movement_type = movement_land_reform
+					}
+				}
+				add = {
+					value = political_movement_support
+					multiply = 1.33
+				}
+			}
+		}
+	}
+
+	add = { ##### After Rerum Novarum many catholics drifted towards Christian Democracy...
+		desc = "BPM_VALUE_FROM_RERUM_NOVARUM_DEMOCRATIC_RADICALIZATION" ### but some 'radicalized' themselves towards right-wing illiberal approaches (Austria, Lithuania)
+
+		if = {
+			limit = {
+				has_global_variable = global_rerum_novarum_issued_var
+			}
+
+			add = {
+				value = -50
+				add = ROOT.je:je_bpm_christian_or_democrat.var:ideological_leaning_bar_variable
+				multiply = ROOT.ig:ig_christian_democrats.ig_clout
+				divide = 2
+			}
+		}
+
+		#if = { ### Christian Democrats, once in power, would ALWAYS 'moderate'/'radicalize' towards Christian Democrat or Illiberal Democrat stances. 
+		#	limit = {
+		#		ig:ig_christian_democrats = {
+		#			is_in_government = yes
+		#		}
+		#		has_global_variable = global_rerum_novarum_issued_var
+		#	}
+		#	if = { # (Netherlands, New (Old?) Right in Belgium)
+		#		limit = {
+		#			scope:journal_entry = {
+		#				"scripted_bar_progress(je_bpm_christian_democrat_ideology_progress_bar)" > 50
+		#			}
+		#		}
+		#		every_interest_group = {
+		#			limit = {
+		#				is_interest_group_type = ig_christian_democrats
+		#				NOT = {
+		#					has_ideology = ideology:ideology_nonexistent
+		#				}
+		#			}
+		#			add = ig_clout
+		#		}
+		#		multiply = 2.5
+		#	}
+		#
+		#	else_if = { # (Austria, Switzerland)
+		#		limit = {
+		#			scope:journal_entry = {
+		#				"scripted_bar_progress(je_bpm_christian_democrat_ideology_progress_bar)" < 50
+		#			}
+		#		}
+		#		every_interest_group = {
+		#			limit = {
+		#				is_interest_group_type = ig_christian_democrats
+		#				NOT = {
+		#					has_ideology = ideology:ideology_nonexistent
+		#				}
+		#			}
+		#			subtract = ig_clout
+		#		}
+		#		multiply = 1.5
+		#	}
+		#}
+		
+		if = { ### Go, go away Divine Democrats! Industry Part
+			limit = {
+				has_global_variable = global_rerum_novarum_issued_var
+				has_technology_researched = anarchism # Trade Federations
+			}
+			if = { # Countries with a strong middle class (Shopkeepers, Farmers) (To show orientation towards them)
+				limit = {
+					has_variable = bpm_shopkeeper_population_yandev_var
+				}
+				subtract = {
+					value = ROOT.var:bpm_shopkeeper_population_yandev_var
+					multiply = 0.5
+				}
+				subtract = {
+					value = ROOT.var:bpm_farmer_population_yandev_var
+					multiply = 0.33
+				}
+			}
+			if = { # Countries with a strong lower class (Labourers, Machinists) were also a bit more progressive.
+				limit = {
+					OR = {
+						has_variable = bpm_laborer_population_yandev_var
+						has_variable = bpm_machinist_population_yandev_var
+					}
+				}
+				add = {
+					value = ROOT.var:bpm_laborer_population_yandev_var
+					multiply = 0.25 # 0.05 - Counter-balance for the 'reactionary' shopkeepers and farmers!
+				}
+				add = {
+					value = ROOT.var:bpm_machinist_population_yandev_var
+					multiply = 0.33 # 0.20 - Counter-balance for the 'reactionary' shopkeepers and farmers!
+				}
+			}
+		}
+	}
+}
+
+bpm_je_christian_democrat_economy_rate = { # bpm_country_fraction_below_expected_sol
+	value = 0
+
+	add = { ##### Low Conciousness of labor made Christian Democrats develop towards more capitalist or reactionary anti-capitalist (Austria, Poland)
+		desc = "BPM_VALUE_FROM_LABOR_CONCIOUSNESS_BELOW_75_PERCENT"
+		if = { 
+			limit = {
+				has_variable = bpm_consciousness_labor
+				ROOT.var:bpm_consciousness_labor <= 75
+			}
+			add = {
+				value = ROOT.var:bpm_consciousness_labor
+				multiply = 0.0088
+			}
+		}
+		else = {
+			subtract = {
+				value = ROOT.var:bpm_consciousness_labor
+				subtract = 75
+				multiply = 0.008
+				subtract = 0.2
+				min = -0.2
+			}
+		}
+	}
+
+	add = { ##### Lots of rural-peasant pops and sluggish industrialization had more statist Christian Democrats (France, Netherlands, Italy, Poland)
+		desc = "BPM_VALUE_FROM_PEASANTS_LABORERS_AND_POPULARITY_OF_PROLETARIAT"
+		
+		if = {
+			limit = {
+				has_variable = bpm_laborer_population_yandev_var
+			}
+			add = {
+				value = ROOT.var:bpm_laborer_population_yandev_var
+				multiply = 0.125 # 0.05 - Counter-balance for the 'reactionary' shopkeepers and farmers!
+			}
+			add = {
+				value = bpm_proletarian_popularity # 0.05%
+				multiply = 3.33
+			}
+		}
+	}
+
+	add = { ##### Strong Laissez-Faire politics are not exactly great.
+		desc = "BPM_VALUE_FROM_LAISSEZ_FAIRE_VS_INTERVENTIONISM_LAW_IGS_MOVEMENT"
+		
+		if = { ### 
+			limit = {
+				ig:ig_christian_democrats = {
+					ig_clout >= 0.001
+					leader = {
+						NOT = {
+							has_ideology = ideology:ideology_market_liberal
+						}
+					}
+				}
+			}
+
+			###################################################
+			####### Laissez-Faire/Traditionalism vs Interventionism/Reactionary Anti-Capitalist
+
+			if = { # Laissez-faire or traditionalism laws make Christian Democrats like a modern economy.
+				limit = {
+					OR = {
+						has_law = law_type:law_laissez_faire
+						has_law = law_type:law_traditionalism
+					}
+				}
+				add = {
+					value = 0.0033
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			else_if = { # Anti-Capitalism
+				limit = {
+					OR = {
+						has_law = law_type:law_industry_banned
+						has_law = law_type:law_cooperative_ownership
+						has_law = law_type:law_command_economy
+					}
+					ig:ig_christian_democrats = {
+						OR = {
+							has_ideology = ideology:ideology_eco_centralized_economy
+							leader = {
+								has_ideology = ideology:ideology_reactionary_anti_capitalist
+							}
+						}
+					}
+				}
+				add = {
+					value = 0.0044
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			if = { # Free Trade vs Protectionism (Free Trade is okay during low SoL, its bad anywhere else)
+				limit = {
+					has_law = law_type:law_free_trade
+					NOT = {
+						ig:ig_christian_democrats = {
+							has_ideology = ideology:ideology_eco_centralized_economy
+						}
+					}
+				}
+				subtract = {
+					value = 0.005
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			else_if = { # Protectionism is evil if we are heckin' starving.
+				limit = {
+					NOT = {
+						has_law = law_type:law_free_trade
+					}
+					any_state = {
+						has_famine = yes
+						owner ?= ROOT
+					}
+				}
+				add = {
+					value = 0.01
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+
+			else = {
+				add = {
+					value = 0.0011
+					divide = ROOT.ig:ig_christian_democrats.ig_clout
+				}
+			}
+		}
+
+		if = { ### + Laissez-faire and Moderate Interventionist vs - Interventionists and Proletarians (Belgium, Poland, Germany)
+			limit = {
+				any_interest_group = {
+					OR = {
+						OR = {
+							has_ideology = ideology:ideology_eco_laissez_faire # Libs, Business, Market Liberals
+							has_ideology = ideology:ideology_eco_modernizer # Late Libs, Radicals
+							has_ideology = ideology:ideology_eco_conservative_agrarian # Conservatives, Reactionaries, some Devout etc.
+							has_ideology = ideology:ideology_eco_modern_agrarian # Agrpops, Village Interests
+						}
+						OR = {
+							has_ideology = ideology:ideology_eco_autarky # Fascists
+							has_ideology = ideology:ideology_eco_interventionist # Most National Liberals, Patcons
+							has_ideology = ideology:ideology_eco_proletarian_economy # All Socialists.
+							has_ideology = ideology:ideology_eco_socialist_mixed_economy # Social Democrats
+						}
+					}
+				}
+				ROOT.je:je_bpm_christian_or_democrat.var:economical_leaning_bar_variable <= 66
+ 			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						has_ideology = ideology:ideology_eco_laissez_faire
+						has_ideology = ideology:ideology_eco_modernizer
+						has_ideology = ideology:ideology_eco_conservative_agrarian
+						has_ideology = ideology:ideology_eco_modern_agrarian
+						leader = {
+							has_ideology = ideology:ideology_market_liberal
+						}
+					}
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
+				add = {
+					value = ig_clout
+					multiply = 1.33
+				}
+			}
+			
+			every_interest_group = {
+				limit = {
+					OR = {
+						has_ideology = ideology:ideology_eco_autarky
+						has_ideology = ideology:ideology_eco_interventionist
+						has_ideology = ideology:ideology_eco_proletarian_economy
+						has_ideology = ideology:ideology_eco_socialist_autarky
+						is_interest_group_type = ig_trade_unions
+					}
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
+				subtract = {
+					value = ig_clout
+					multiply = 1.5
+				}
+			}
+		}
+	}
+	
+
+	add = { ##### No state or paternialist-only welfare? This is definitely not enough (Poland, Belgium, Germany)
+		desc = "BPM_VALUE_FROM_PATERNALIST_RELIGIOUS_VS_SECULAR_EXTENSIVE_WELFARE"
+		
+		if = { ### Paternalist, Religious, Distrubutist welfare dominating in clout (Poland, Germany, Belgium) had em pro-welfare
+			limit = {
+				any_interest_group = {
+					OR = {
+						has_ideology = ideology:ideology_wel_distributist_welfare
+						has_ideology = ideology:ideology_wel_paternalistic_welfare
+						has_ideology = ideology:ideology_wel_religious_welfare
+						has_ideology = ideology:ideology_wel_market_welfare
+						leader = {
+							has_ideology = ideology:ideology_market_liberal
+						}
+					}
+				}
+				#scope:journal_entry = {
+				#	"scripted_bar_progress(je_bpm_christian_democrats_economy_progress_bar)" <= 75
+				#}
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						has_ideology = ideology:ideology_wel_distributist_welfare # Notably weird Conservatives, Reactionaries, other guys.
+						has_ideology = ideology:ideology_wel_paternalistic_welfare # Nationa Liberals, Paternal Conservatives, Fascists, theoretically some Liberals
+						has_ideology = ideology:ideology_wel_religious_welfare # The Church, Conservatives, some rando's
+						has_ideology = ideology:ideology_wel_market_welfare # Classical Liberals, Market Liberals
+						leader = {
+							has_ideology = ideology:ideology_market_liberal
+						}
+					}
+				}
+				add = {
+					value = ig_clout
+					multiply = 1.44
+				}
+			}
+			
+		}
+
+		if = { ### Actual public welfare satisfied Christian Democrats and workers... somewhat...!
+			limit = {
+				any_interest_group = {
+					OR = {
+						has_ideology = ideology:ideology_wel_public_welfare
+						has_ideology = ideology:ideology_wel_expanded_public_welfare
+						leader = {
+							has_ideology = ideology:ideology_social_democrat
+						}
+					}
+				}
+				#scope:journal_entry = {
+				#	"scripted_bar_progress(je_bpm_christian_democrats_economy_progress_bar)" <= 75
+				#}
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						has_ideology = ideology:ideology_wel_public_welfare # Radical Liberals, some liberals
+						has_ideology = ideology:ideology_wel_expanded_public_welfare # Labor, Socialists
+						leader = {
+							has_ideology = ideology:ideology_social_democrat
+						}
+					}
+				}
+				subtract = {
+					value = ig_clout
+					multiply = 1.55
+				}
+			}
+		}
+	}
+
+	add = { ##### Lack of proper healtcare, welfare and rights. 
+		desc = "BPM_VALUE_FROM_MARKET_WELFARE_LAWS_BELOW_LVL_3_AND_LACK_OF_WELFARE"
+		
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					ig_clout >= 0.001
+					#always = yes
+				}
+			}
+
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_no_health_system
+					}
+				}
+				add = {
+					value = ROOT.ig:ig_trade_unions.interest_group_population_percentage
+					multiply = 10
+				}
+			}
+
+			else_if = {
+				limit = {
+					owner = {
+						institution_investment_level = { 
+							institution = institution_health_system value < 3
+						}
+					}
+				}
+				add = {
+					value = 3
+					subtract = "institution_investment_level(institution_health_system)"
+					multiply = ROOT.ig:ig_trade_unions.interest_group_population_percentage
+					multiply = 3.33
+				}
+			}
+
+
+			###################
+
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_no_schools
+					}
+				}
+				add = {
+					value = ROOT.ig:ig_trade_unions.interest_group_population_percentage
+					multiply = 10
+				}
+			}
+
+			else_if = {
+				limit = {
+					owner = {
+						institution_investment_level = { 
+							institution = institution_schools value < 3
+						}
+					}
+				}
+				add = {
+					value = 3
+					subtract = "institution_investment_level(institution_schools)"
+					multiply = ROOT.ig:ig_trade_unions.interest_group_population_percentage
+					multiply = 3.33
+				}
+			}
+
+			#######################
+
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_no_workers_rights
+					}
+				}
+				add = {
+					value = ROOT.ig:ig_trade_unions.interest_group_population_percentage
+					multiply = 10
+				}
+			}
+
+			else_if = {
+				limit = {
+					owner = {
+						institution_investment_level = { 
+							institution = institution_workplace_safety value < 3
+						}
+					}
+				}
+				add = {
+					value = 3
+					subtract = "institution_investment_level(institution_workplace_safety)"
+					multiply = ROOT.ig:ig_trade_unions.interest_group_population_percentage
+					multiply = 3.33
+				}
+			}
+
+			###########################
+
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_no_social_security
+					}
+				}
+				add = {
+					value = ROOT.ig:ig_trade_unions.interest_group_population_percentage
+					multiply = 10
+				}
+			}
+
+			else_if = {
+				limit = {
+					owner = {
+						institution_investment_level = { 
+							institution = institution_social_security value < 4
+						}
+					}
+				}
+				add = {
+					value = 4
+					subtract = "institution_investment_level(institution_social_security)"
+					multiply = ROOT.ig:ig_trade_unions.interest_group_population_percentage
+					multiply = 3.33
+				}
+			}
+
+
+			if = {
+				limit = {
+					OR = {
+						has_law = law_type:law_child_labor_allowed
+						has_law = law_type:law_restricted_child_labor
+					}
+				}
+				add = {
+					value = ROOT.ig:ig_trade_unions.interest_group_population_percentage
+					multiply = 10
+				}
+			}
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_BELOW_EXPECTED_SOL"
+	
+		add = {
+			value = bpm_country_fraction_below_expected_sol
+			#multiply = bpm_country_fraction_below_expected_sol
+			#multiply = bpm_country_fraction_below_expected_sol
+			multiply = 6.666 # 33.456
+		}
+
+		add = {
+			value = 5
+			subtract = average_sol
+			divide = 20
+			multiply = 1.66
+			max = 0.0	
+			#max = 1.0 # (1-0.66)*3 will be 1.02, so we clamp it for nice numbers
+		}
+	}
+
+	add = { ##### Countries with significant peasantry/farmers that competed for rural voters (since their primary support wasn't in the cities)
+		desc = "BPM_VALUE_FROM_PEASANTS_COMPETITION_FOR_MINOR_PRODUCTION" # (Poland, Czechia, Austria, Lithuania)
+		
+		if = {
+			limit = {
+				has_variable = bpm_peasant_population_yandev_var
+			}
+			subtract = {
+				value = ROOT.var:bpm_peasant_population_yandev_var
+				multiply = 0.088 # 0.04
+			}
+		}
+
+		if = { ### Competing with other interest groups for agrarian voters
+			limit = {
+				ig:ig_agrarian_populists = {
+					NOR = {
+						is_member_of_party = owner.py:conservative_party
+						is_member_of_party = owner.py:religious_party
+					}
+				}
+			}
+
+			every_interest_group = {
+				limit = {
+					is_interest_group_type = ig_agrarian_populists
+				}
+				subtract = {
+					value = ig_clout
+					multiply = 3.33
+				}
+			}
+
+			every_political_movement = {
+				limit = {
+					OR = {
+						is_political_movement_type = movement_land_reform
+					}
+				}
+				add = {
+					value = political_movement_support
+					multiply = 1.33
+				}
+			}
+		}
+	}
+
+	add = { ##### Wealthy capitalists and dispartity between poor people had christian democrats move towards more state-/anti-capitalist positions (France, Germany, Poland)
+		desc = "BPM_VALUE_RERUM_NOVARUM_ECONOMY"
+
+		if = {
+			limit = {
+				NOT = {
+					has_global_variable = global_rerum_novarum_issued_var
+				}
+			}
+
+			add = {
+				value = 0
+				subtract = ROOT.je:je_bpm_christian_or_democrat.var:economical_leaning_bar_variable
+				multiply = ROOT.ig:ig_christian_democrats.ig_clout
+				#divide = 2.5
+				multiply = 1.22
+				divide = 1.44
+				#max = 0
+			}
+
+			every_interest_group = {
+				limit = {
+					OR = {
+						has_ideology = ideology:ideology_eco_traditional_agrarian
+						has_ideology = ideology:ideology_eco_conservative_agrarian
+						has_ideology = ideology:ideology_eco_autarky
+						has_ideology = ideology:ideology_eco_agrarian_autarky
+						AND = {
+							has_ideology = ideology:ideology_eco_modern_agrarian
+							OR = {
+								is_interest_group_type = ig_liberals
+								is_interest_group_type = ig_national_liberals
+								is_interest_group_type = ig_radicals
+								is_interest_group_type = ig_conservatives
+							}
+						}
+					}
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
+				subtract = {
+					value = ig_clout
+					multiply = 4.88
+				}
+			}
+
+			if = {
+				limit = {
+					NOR = {
+						has_law = law_type:law_industry_banned
+						has_law = law_type:law_traditionalism
+						has_law = law_type:law_agrarianism
+						has_law = law_type:law_cooperative_ownership
+					}
+				}
+
+				subtract = {
+					value = 0.2
+				}
+			}
+
+			if = { # Moderation from being in a non-Catholic state
+				limit = {
+					owner = {
+						NOT = {
+							country_has_state_religion = rel:catholic
+						}
+					}
+				}
+
+				add = {
+					value = 50
+					subtract = ROOT.je:je_bpm_christian_or_democrat.var:economical_leaning_bar_variable
+					multiply = ROOT.ig:ig_christian_democrats.ig_clout
+					#divide = 1.66
+					multiply = 2.33
+				}
+			}
+
+			if = {
+				limit = {
+					OR = {
+						has_law_or_variant = law_type:law_total_separation
+						has_law_or_variant = law_type:law_state_atheism
+					}
+				}
+				multiply = 2
+			}
+		}
+
+		else_if = {
+			limit = {
+				has_global_variable = global_rerum_novarum_issued_var
+			}
+
+			if = { ### Unjust taxation is evil, and we suffer so much! Or do we?
+				limit = {
+					ig:ig_christian_democrats = {
+						ig_clout >= 0.001
+					}
+				}
+
+				###################################################
+				####### Taxation
+
+				if = { # Peasant Tax or lack of one means that wealth cannot be redistributed well!
+					limit = {
+						OR = {
+							has_law = law_type:law_land_based_taxation
+							has_law = law_type:law_consumption_based_taxation
+						}
+					}
+					add = {
+						value = 0.005
+						divide = ROOT.ig:ig_christian_democrats.ig_clout
+					}
+				}
+
+				else_if = { # Wealth is still barely redistributed
+					limit = {
+						has_law = law_type:law_per_capita_based_taxation
+					}
+					add = {
+						value = 0.004
+						divide = ROOT.ig:ig_christian_democrats.ig_clout
+					}
+				}
+
+				else_if = { # Everyone pays roughly equal, but is it enough?
+					limit = {
+						has_law = law_type:law_proportional_taxation
+					}
+					add = {
+						value = 0.003
+						divide = ROOT.ig:ig_christian_democrats.ig_clout
+					}
+				}
+
+				else_if = { # Wealth now is equally and justily redistributed.
+					limit = {
+						has_law = law_type:law_graduated_taxation
+					}
+					add = {
+						value = 0.002
+						divide = ROOT.ig:ig_christian_democrats.ig_clout
+					}
+				}
+			}
+
+			if = {
+				limit = {
+					tax_level = very_low
+				}
+				multiply = 0.8
+			}
+			else_if = {
+				limit = {
+					tax_level = low
+				}
+				multiply = 0.9
+			}
+			else_if = {
+				limit = {
+					tax_level = medium
+				}
+				multiply = 1
+			}
+			else_if = {
+				limit = {
+					tax_level = high
+				}
+				multiply = 1.05
+			}
+			else_if = {
+				limit = {
+					tax_level = very_high
+				}
+				multiply = 1.1
+			}
+
+			add = {
+				value = 50
+				subtract = ROOT.je:je_bpm_christian_or_democrat.var:economical_leaning_bar_variable
+				multiply = ROOT.ig:ig_christian_democrats.ig_clout
+				divide = 3
+				#multiply = 3.33
+			}
+
+			if = {
+				limit = {
+					average_sol <= 15.0
+				}
+				add = {
+					value = 15
+					subtract = average_sol
+					divide = 15
+					multiply = 1.66
+					min = 0.0	
+					#max = 1.0 # (1-0.66)*3 will be 1.02, so we clamp it for nice numbers
+				}
+			}
+
+			else_if = {
+				limit = {
+					average_sol >= 15.0
+				}
+				subtract = {
+					value = average_sol
+					divide = 20
+					subtract = 15
+					multiply = 3
+					min = 0.0
+				}
+			}
+		}	
+	}
+
+	add = { # Countries with a proper, conservative and strong middle-class had Christdems more reactionary anti-capitalist, populist etc. (Poland, Austria)
+		desc = "BPM_VALUE_FROM_MIDDLE_CLASS_LANDOWNER_POPULATION"
+
+		if = { # Countries with a strong middle class (Shopkeepers, Farmers) (To show orientation towards them)
+			limit = {
+				OR = {
+					has_variable = bpm_shopkeeper_population_yandev_var
+					has_variable = bpm_farmer_population_yandev_var
+					has_variable = bpm_clergymen_population_yandev_var
+					has_variable = bpm_aristocrat_population_yandev_var
+				}
+			}
+			subtract = {
+				value = ROOT.var:bpm_shopkeeper_population_yandev_var
+				multiply = 2
+			}
+			subtract = {
+				value = ROOT.var:bpm_farmer_population_yandev_var
+				multiply = 1.33
+			}
+			subtract = {
+				value = ROOT.var:bpm_clergymen_population_yandev_var
+				multiply = 1.66
+			}
+			subtract = {
+				value = ROOT.var:bpm_aristocrat_population_yandev_var
+				multiply = 4.44
+			}
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_rural_folk
+					is_interest_group_type = ig_intelligentsia
+				}
+			}
+
+			subtract = {
+				value = ig_clout
+				multiply = 1.2
+			}
+		}
+
+		every_interest_group = {
+			limit = {
+				is_interest_group_type = ig_landowners
+			}
+
+			subtract = {
+				value = ig_clout
+				multiply = 2.33
+			}
+		}
+	}
+
+	add = { # Cooperation with business always ended up in becoming more and more pro-capitalist. Examples being the main line of CSP.
+		desc = "BPM_VALUE_FROM_BUSINESS_AND_LAISSEZ_FAIRE_IN_PARTY_WITH_CHRISTDEMS"
+
+		if = { # Countries with a strong middle class (Shopkeepers, Farmers) (To show orientation towards them)
+			limit = {
+				NOT = {
+					has_law = law_type:law_laissez_faire
+				}
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_industrialists
+						#has_ideology = ideology:ideology_eco_laissez_faire
+					}
+					NOT = {
+						has_ideology = ideology:ideology_nonexistent
+					}
+				}
+				subtract = {
+					value = ig_clout
+					multiply = 6.66
+				}
+			}
+		}
+		else = {
+			add = {
+				value = -50
+				add = ROOT.je:je_bpm_christian_or_democrat.var:ideological_leaning_bar_variable
+				multiply = ROOT.ig:ig_industrialists.ig_clout
+				divide = 12.34
+			}
+		}
+	}
+}
+
+je_bpm_split_christdem_progress_bar_rate = {
+	value = 0
+
+	add = {
+		desc = "BPM_BASE_VALUE"
+		add = 0.1
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_BEING_RELIGIOUS_MINORITY"
+		
+		if = {
+			limit = {
+				NOT = {
+					country_has_state_religion = rel:catholic
+				}
+			}
+			add = -0.2
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_STRONG_LIBERAL_MOVEMENT"
+
+		if = {
+			limit = { 
+				OR = { 
+					ig:ig_christian_democrats.var:bpm_movement_liberal_pressure > 0.1
+					OR = {
+						var:bpm_liberal_movement.political_movement_support >= 0.1
+						var:bpm_liberal_movement.political_movement_radicalism >= 0.2
+					}
+				}
+			}
+			add = 20
+			multiply = ig:ig_christian_democrats.var:bpm_movement_liberal_pressure
+			divide = 20
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_EVOLVING_CHRISTIAN_DEMOCRATS"
+
+		add = var:christian_democrats_ideology_change
+
+		multiply = 0.05
+		#change_variable = { name = christian_democrats_ideology_change add = 1 }
+	}
+}
+
+##########################################################
+##################################################
+################################ WINE CONTENT:
+
+bpm_je_christdem_conservative_difference_points = {
+	value = 0
+
+	add = {
+		value = ROOT.je:je_bpm_christian_or_democrat.var:christdem_ideological_power_variable
+		subtract = ROOT.je:je_bpm_christian_or_democrat.var:clacon_ideological_power_variable
+	}
+}
+
+bpm_je_christdem_ideological_power = {
+	value = 0
+
+	add = {
+		desc = "BPM_VALUE_BASE"
+		value = 5
+	}
+}
+
+bpm_je_christdem_ideological_power_gain = {
+	value = 0
+
+	add = {
+		desc = "BPM_VALUE_FROM_CLOUT_DIFFERENCE"
+		if = {
+			limit = {
+				bpm_conservative_christdem_clout_difference >= 0.0
+			}
+			add = {
+				value = bpm_conservative_christdem_clout_difference
+				multiply = 1.33
+			}
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_TRADE_UNIONS_CLOUT"
+		if = {
+			limit = {
+				always = yes
+			}
+			every_interest_group = {
+				limit = {
+					is_interest_group_type = ig_trade_unions
+				}
+				add = interest_group_population_percentage
+			}
+			multiply = 10
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_LABOR_CONCIOUSNESS"
+		if = {
+			limit = {
+				has_variable = bpm_consciousness_labor
+			}
+			add = {
+				value = ROOT.var:bpm_consciousness_labor
+				multiply = 0.0066
+			}
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_LEADER_POPULARITY"
+		every_scope_character = {
+			limit = {
+				is_interest_group_type = ig_christian_democrats
+				has_role = politician
+			}
+			add = popularity
+		}
+		multiply = 0.0022
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_RADICAL_CLOUT"
+		if = {
+			limit = {
+				always = yes
+			}
+			every_interest_group = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_radicals
+						is_interest_group_type = ig_socialists
+						is_interest_group_type = ig_reformist_socialists
+						is_interest_group_type = ig_revolutionist_socialists
+						is_interest_group_type = ig_anarchist
+					}
+				}
+				add = ig_clout
+			}
+			divide = 1.66
+			multiply = 1.33
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_PATERNALISTIC_LAWS"
+		if = {
+			limit = {
+				always = yes
+			}
+			subtract = {
+				value = var:bpm_old_wine_paternalism_progress_bar_var
+				divide = 10
+			}
+		}
+	}
+
+	
+
+	add = {
+		desc = "BPM_VALUE_FROM_MOVEMENTS_LAISSEZ_FAIRE"
+
+		if = {
+			limit = {
+				always = yes
+			}
+			every_political_movement = {
+				limit = {
+					OR = {
+						is_political_movement_type = movement_laissez_faire
+						is_political_movement_type = movement_liberal
+					}
+				}
+				subtract = {
+					value = political_movement_support
+					multiply = 1.33
+					divide = 2.5
+				}
+			}
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_LEGITIMACY_AND_LACKING_UNIVERSAL_SUFFRAGE"
+
+		if = {
+			limit = {
+				NOT = {
+					has_law = law_type:law_universal_suffrage
+				}
+			}
+			add = {
+				value = government_legitimacy
+				multiply = 0.004
+				subtract = 0.5
+			}
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_TRAITS_BASIC"
+		
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_trait = direct
+					}
+				}
+			}
+
+			add = 0.1
+		}
+
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_trait = persistent
+					}
+				}
+			}
+
+			add = 0.1
+		}
+
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_trait = reckless
+					}
+				}
+			}
+
+			subtract = 0.15
+		}
+
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_trait = meticulous
+					}
+				}
+			}
+
+			add = 0.1
+		}
+
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_trait = imposing
+					}
+				}
+			}
+
+			add = 0.1
+		}
+
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_trait = master_bureaucrat
+					}
+				}
+			}
+
+			add = 0.1
+		}
+
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_trait = grifter
+					}
+				}
+			}
+
+			subtract = 0.2
+		}
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_trait = ruthless
+					}
+				}
+			}
+
+			add = 0.05
+		}
+	}
+
+	add = {
+		desc = "BPM_VALUE_FROM_TRAITS_STRONG"
+		
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_trait = charismatic
+					}
+				}
+			}
+
+			add = 0.2
+		}
+
+		if = {
+			limit = {
+				ig:ig_christian_democrats = {
+					leader = {
+						has_trait = pious
+					}
+				}
+			}
+
+			add = 0.2
+		}
+	}
+}
+
+bpm_organicists_popularity = {
+	value = 0
+	every_interest_group = {
+		limit = { 
+			OR = {
+				has_ideology = ideology:ideology_dop_organic_democrat
+				has_ideology = ideology:ideology_dop_organic_power
+				has_ideology = ideology:ideology_dop_state_power
+				is_interest_group_type = ig_christian_democrats
+			}
+		}
+		add = ig_clout
+	}
+}
+
+bpm_political_catholicism_popularity = {
+	value = 0
+	every_interest_group = {
+		limit = { 
+			OR = {
+				AND = {
+					is_interest_group_type = ig_conservatives
+					owner = {
+						has_variable = bpm_old_new_wine_conservative_win_variable
+					}
+				}
+				AND = {
+					is_interest_group_type = ig_reactionaries
+					has_ideology = ideology:ideology_dop_organic_democrat
+				}
+				is_interest_group_type = ig_christian_democrats
+			}
+		}
+		add = ig_clout
+	}
+	if = {
+		limit = {
+			owner = {
+				OR = {
+					country_has_primary_culture = cu:north_italian
+					country_has_primary_culture = cu:south_italian
+				}
+			}
+		}
+		every_interest_group = {
+			limit = {
+				is_interest_group_type = ig_agrarian_populists
+			}
+			add = ig_clout
+		}
+	}
+}
+
+bpm_conservative_christdem_clout_difference = {
+	value = 0
+	every_interest_group = {
+		limit = { 
+			is_interest_group_type = ig_christian_democrats
+		}
+		add = ig_clout
+	}
+
+	every_interest_group = {
+		limit = { 
+			is_interest_group_type = ig_conservatives
+		}
+		subtract = ig_clout
+	}
+}
+
+bpm_secularist_popularity = {
+	value = 0
+	every_interest_group = {
+		limit = { 
+			OR = {
+				has_ideology = ideology:ideology_rel_radical_secularist
+				has_ideology = ideology:ideology_rel_secularist
+				has_ideology = ideology:ideology_rel_atheist
+			}
+		}
+		add = ig_clout
+	}
+}
+
+bpm_moralist_popularity = {
+	value = 0
+	every_interest_group = {
+		limit = { 
+			OR = {
+				has_ideology = ideology:ideology_rel_radical_moralist
+				has_ideology = ideology:ideology_rel_moralist
+				has_ideology = ideology:ideology_rel_modern_moralist
+			}
+		}
+		add = ig_clout
+	}
+}

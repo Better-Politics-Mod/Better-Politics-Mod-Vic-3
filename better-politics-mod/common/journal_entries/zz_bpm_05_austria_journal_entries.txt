@@ -277,3 +277,162 @@
 	weight = 100
 	should_be_pinned_by_default = yes
 }
+
+je_metternich = {
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	group = je_group_historical_content
+
+	is_shown_in_lobby = {
+		has_dlc_feature = ip3_content #National Awakening
+		c:AUS ?= this
+	}
+
+	immediate = {
+		random_scope_character = {
+			limit = {
+				has_template = aus_klemens_von_metternich
+			}
+			save_scope_as = metternich_scope
+		}
+		ig:ig_reactionaries ?= {
+			save_scope_as = reactionaries_scope
+		}
+		heir ?= {
+			save_scope_as = franz_joseph_scope
+		}
+		set_variable = { name = reactionaries_out_var value = 0 }
+	}
+
+	complete = {
+		OR = {
+			trigger_if = {
+				limit = {
+					exists = scope:franz_joseph_scope
+				}
+				scope:franz_joseph_scope ?= {
+					age >= 18
+					custom_tooltip = {
+						text = franz_joseph_acceded_tt
+						is_ruler = yes
+					}
+				}
+			}
+			trigger_else = {
+				ruler = {
+					age >= 18
+					NOR = {
+						has_trait = psychological_affliction
+						has_trait = cancer
+						has_trait = senile
+					}
+				}
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		random_events = {
+			100 = 0
+			10 = metternich.3
+		}
+		effect = {
+			if = {
+				limit = {
+					ig:ig_reactionaries ?= {
+						is_in_government = no
+					}
+				}
+				change_variable = { name = reactionaries_out_var add = 1 }
+			}
+			else = {
+				set_variable = { name = reactionaries_out_var value = 0 }
+			}
+		}
+	}
+
+	on_complete = {
+		custom_tooltip = {
+			text = metternich_retirement_tt
+		}
+		trigger_event = { id = metternich.1 }
+	}
+	
+	event_outcome_completed_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = event_effects_metternich.1_tt
+			}
+		}
+	}
+
+	fail = {
+		OR = {
+			any_civil_war = {
+				is_civil_war_type = revolution
+				civil_war_progress >= 0.25
+			}
+			custom_tooltip = {
+				text = had_springtime_revolution_tt
+				has_variable = had_springtime_revolution
+			}
+			custom_tooltip = {
+				text = reactionaries_out_of_government_for_six_months_or_more_tt
+				exists = var:reactionaries_out_var
+				var:reactionaries_out_var > 6
+				ig:ig_reactionaries ?= {
+					is_in_government = no
+				}
+			}
+			custom_tooltip = {
+				text = metternich_not_leader_of_landowners_tt
+				NOT = {
+					ig:ig_reactionaries.leader ?= {
+						has_template = aus_klemens_von_metternich
+					}
+				}
+			}
+		}
+	}
+
+	on_fail = {
+		if = {
+			limit = {
+				ig:ig_reactionaries.leader ?= {
+					has_template = aus_klemens_von_metternich
+				}
+			}
+			custom_tooltip = metternich_resignation_and_flee_tt
+			trigger_event = { id = metternich.2 }
+		}
+	}
+	
+	event_outcome_failed_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = event_effects_metternich.2_tt
+			}
+		}
+	}
+
+	invalid = {
+		NOT = {
+			has_law_or_variant = law_type:law_monarchy
+		}
+	}
+
+	on_invalid = {
+		scope:metternich_scope = {
+			if = {
+				limit = {
+					is_immortal = yes
+				}
+				set_character_immortal = no
+			}
+			exile_character = yes
+		}
+	}
+
+	weight = 200
+	should_be_pinned_by_default = yes
+}

@@ -1,4 +1,4 @@
-﻿bpm_initialize_agpops = {
+bpm_initialize_agpops = {
 	if = {
 		limit = { 
 			ig:ig_agrarian_populists ?= { 
@@ -235,7 +235,17 @@ bpm_initialize_natlibs = {
 			}
 			else = { add_ideology = ideology_cit_nationalist }
 			if = {
-				limit = { ROOT = c:USA }
+				limit = { 
+					ROOT = {
+						OR = {
+							this = c:USA
+							country_has_primary_culture = cu:north_german
+							country_has_primary_culture = cu:south_german
+							country_has_primary_culture = cu:north_italian
+							country_has_primary_culture = cu:south_italian
+						}
+					}
+				}
 				add_ideology = ideology_rel_secularist
 			}
 			else_if = {
@@ -513,16 +523,35 @@ bpm_initialize_fascists = {
 		ig:ig_reactionaries ?= {
 			if = {
 				limit = {
-					ROOT = { country_has_state_religion = rel:catholic }
+					ROOT = { 
+						country_has_state_religion = rel:catholic 
+						NOT = {
+							has_law	= law_type:law_organic_democracy
+						}
+					}
 				}
+				bpm_remove_all_gov_ideologies = yes
 				bpm_remove_all_dop_ideologies = yes
 				add_ideology = ideology_dop_organic_power
+				bpm_reorder_ideologies = yes
+			}
+			else = {
+				bpm_remove_all_dop_ideologies = yes
+				add_ideology = ideology_dop_organic_power
+				bpm_remove_all_cit_ideologies = yes
+				add_ideology = ideology_cit_ethnonationalist
+
 				bpm_remove_all_sta_ideologies = yes
 				add_ideology = ideology_sta_organic_state
-				bpm_remove_all_cit_ideologies = yes
-				add_ideology = ideology_cit_multiethnic_nationalist
+
+				bpm_remove_all_eco_ideologies = yes
+				add_ideology = ideology_eco_distributist_economy
 				bpm_remove_all_wel_ideologies = yes
-				add_ideology = ideology_wel_distributist_welfare
+				add_ideology = ideology_wel_religious_welfare
+				
+				bpm_remove_all_mil_ideologies = yes
+				add_ideology = ideology_jingoist
+
 				bpm_reorder_ideologies = yes
 			}
 		}
@@ -531,7 +560,47 @@ bpm_initialize_fascists = {
 }
 
 bpm_initialize_patcons = {
+	############ Confessional Conservatives
 	if = {
+		limit = {
+			NOT = { # Non-Catholic
+				country_has_state_religion = rel:catholic
+			}
+			any_interest_group = { # Christian Democrats / Catholic Interests are a together with the conservatives.
+				is_interest_group_type = ig_christian_democrats
+				is_member_of_party = owner.py:conservative_party
+			}
+		}
+		ig:ig_conservatives = {
+			bpm_remove_all_eco_ideologies = yes
+			bpm_remove_all_wel_ideologies = yes
+			
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_moderate_democrat
+
+			bpm_remove_all_rel_ideologies = yes
+
+			add_ideology = ideology_rel_moralist
+
+			add_ideology = ideology_eco_distributist_economy
+
+			if = {
+				limit = { ROOT = { country_has_state_religion = rel:catholic } }
+				add_ideology = ideology_wel_distributist_welfare
+			}
+			
+			bpm_remove_all_cit_ideologies = yes
+			
+			add_ideology = ideology_cit_multiethnic_nationalist
+			
+			add_ideology = ideology_corporatist
+			bpm_reorder_ideologies = yes
+
+			set_interest_group_name = ig_confessional_conservatives
+		}
+	}
+
+	else_if = {
 		limit = { 
 			ig:ig_conservatives ?= { 
 				has_ideology = ideology:ideology_wel_religious_welfare
@@ -571,6 +640,19 @@ bpm_initialize_patcons = {
 
 			set_interest_group_name = ig_paternal_conservatives
 		}
+
+		
+
+		#country_has_state_religion = rel:catholic
+		#	any_interest_group = { # Christian Democrats / Catholic Interests are a together with the conservatives.
+		#		is_interest_group_type = ig_christian_democrats
+		#		is_member_of_party = owner.py:conservative_party
+		#	}
+		#	any_interest_group = { # Cons are in the con party
+		#		is_interest_group_type = ig_conservatives
+		#		is_member_of_party = owner.py:conservative_party
+		#	}
+		#	ig:ig_christian_democrats.ig_clout > ig:ig_conservatives.ig_clout
 
 		ig:ig_reactionaries ?= {
 			if = {
@@ -768,104 +850,86 @@ bpm_initialize_revsocs = {
 		bpm_setup_country_stubbornness = yes
 	}
 }
-bpm_initialize_christdems = { 
+bpm_initialize_catholic_interests = { 
 	if = { 
 		limit = { 
-			ig:ig_christian_democrats ={ has_ideology = ideology:ideology_nonexistent}
+			ig:ig_christian_democrats = { has_ideology = ideology:ideology_nonexistent }
 		}
+		set_variable = local_christdem_split_var
+		#set_variable = catholics_appear_voila_var
 		ig:ig_christian_democrats = {
-			remove_ideology = ideology_nonexistent 
-			if = { 
+			remove_ideology = ideology_nonexistent
+			add_ideology = ideology_gov_placeholder
+			
+			if = {
 				limit = { 
-					owner = { 
-						has_law = law_type:law_monarchy
+					owner = {
+						OR = {
+							bpm_country_is_latin_american = yes
+							this ?= c:SWI
+						}
+						NOT = {
+							this ?= c:FRA
+						}
 					}
 				}
-				add_ideology = ideology_gov_moderate_monarchist
-			}
-			else = { 
 				add_ideology = ideology_gov_liberal_republican
 			}
-			if = { 
+
+			else = { add_ideology = ideology_gov_moderate_monarchist }
+
+			if = {
 				limit = { 
-					owner = { 
-						this = c:NET #Dutch Catholics were anti-universal suffrage until they werent
+					owner = {
+						OR = {
+							country_has_primary_culture = cu:flemish
+							country_has_primary_culture = cu:alemannic
+						}	
 					}
 				}
-				add_ideology = ideology_dop_moderate_democrat
+				add_ideology = ideology_dop_divine_democrat
 			}
-			else = { 
-				add_ideology = ideology_dop_radical_democrat
+
+			else = {
+				add_ideology = ideology_dop_placeholder
 			}
-			if = { 
-				limit = { 
-					owner = { 
-						this = c:NET
-					}
+
+			add_ideology = ideology_eco_traditional_agrarian
+			
+			add_ideology = ideology_sta_regionalized_state
+			
+			add_ideology = ideology_cit_traditional_culture
+
+			if = {
+				limit = {
+					has_global_variable = global_variable_immortale_dei_var_released
 				}
-				add_ideology = ideology_sta_weak_state
+				add_ideology = ideology_rel_modern_moralist
 			}
-			else = { 
-				add_ideology = ideology_sta_federated_state
-			}
-			if =  {
+			else_if = { 
 				limit = { 
-					owner = { 
-						this = c:AUS
-					}
-				}
-				add_ideology = ideology_cit_multiethnic_nationalist
-			}
-			else = { 
-				add_ideology = ideology_cit_liberal_nationalist
-			} 
-			if = { 
-				limit = { 
-					owner = { 
-						religion_percent_country = { 
-							target = rel:catholic
-							value <= 0.5
+					owner = {
+						NOT = {
+							country_has_state_religion = rel:catholic
 						}
 					}
 				}
 				add_ideology = ideology_rel_pragmatic_moralist
 			}
-			else = { 
-				add_ideology = ideology_moralist
+			else = {
+				add_ideology = ideology_rel_radical_moralist
 			}
-			#add_ideology = ideology_mil_emergency
-			add_ideology = ideology_eco_modernizer
-			if = { 
-				limit = { 
-					owner = { 
-						has_technology_researched = modern_financial_instruments
-					}
-				}
-				add_ideology = ideology_wel_social_market_welfare
-			}
-			else_if = { 
-				limit = { 
-					owner = { 
-						has_technology_researched = corporatism
-					}
-				}
-				add_ideology = ideology_wel_distributist_welfare
-			}
-			else = { 
-				add_ideology = ideology_wel_religious_welfare
-			}
-			if = { 
-				limit = { 
-					owner = {
-						has_technology_researched = feminism
-					}
-				}
-				add_ideology = ideology_fem_benevolent_sexism
-			}
-			else = { 
-				add_ideology = ideology_fem_moderate_patriarchal
-			}
-			add_ideology = ideology_ban_opposed
+
+			add_ideology = ideology_eco_placeholder
+			
+			add_ideology = ideology_mil_placeholder
+			
+			add_ideology = ideology_wel_religious_welfare
+
+			add_ideology = ideology_fem_moderate_patriarchal
+
+			
+			add_ideology = ideology_ban_averse
 
 			every_scope_character = {
 				limit = {
@@ -874,9 +938,16 @@ bpm_initialize_christdems = {
 				set_ideology = ideology:ideology_center_leader
 			}
 
+			leader = {
+				set_ideology = ideology:ideology_center_leader
+			}
+
 			#vanilla
 
-			add_ideology = ideology_corporatist
+			add_ideology = ideology_populist
+			add_ideology = ideology_particularist
+			add_ideology = ideology_moralist
+			#add_ideology = ideology_corporatist
 			bpm_reorder_ideologies = yes
 		}
 	}

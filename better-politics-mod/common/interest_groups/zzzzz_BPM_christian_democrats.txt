@@ -7,111 +7,636 @@
 	ideologies = {
 		ideology_nonexistent
 	}
+
+	character_ideologies = {
+		ideology_center_leader
+		ideology_protectionist
+		ideology_sovereignist_leader
+		ideology_liberal_leader
+		#ideology_corporatist_leader
+		ideology_reformer
+	}
 	
 	enable = {
-		owner = {
-			trigger_if = {
-				limit = {
-					OR = {
-						is_secessionist = yes
-						is_revolutionary = yes
-					}
-				}
-				civil_war_origin_country = {
-					exists = ig:ig_christian_democrats
-				}
-			}
-			trigger_else = {
-				NOT = { is_country_type = decentralized }
-				has_variable = local_christ_dems
-			}
-		}
+		always = yes
+	}
+
+	priority_cultures = {
+		
 	}
 	
 	on_enable = {
 		ig:ig_christian_democrats ?= {
-			# #set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
-			#set_ig_trait = ig_trait:ig_trait_right_bastion_of_freedom
+			# set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
 			#set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
 		}
-        if = { 
-            limit = { 
-                ig:ig_christian_democrats ?= { has_ideology = ideology:ideology_nonexistent }
-            }
-            bpm_initialize_christdems = yes
-        }
+		if = {
+			limit = {
+				NOR = {
+					country_has_state_religion = rel:catholic
+					religion_percent_country = { 
+						target = rel:catholic
+						value >= 0.5
+					}
+				}	
+			}
+			#ig:ig_christian_democrats ?= {
+			#	set_interest_group_name = ig_catholic_interests
+			#}
+		}
 	}
-	on_disable = {}	
-	on_character_ig_membership = {}
-	
-	pop_potential = {
-		custom_tooltip = {
-			text = BPM_VALID_POP_FOR_IG
-			owner ?= {
-				ig:ig_christian_democrats ?= {
-					NOT = { has_ideology = ideology:ideology_nonexistent }
+
+	on_character_ig_membership = {
+		if = {
+			limit = {
+				owner = {
+					c:PRU ?= this
 				}
 			}
+			change_character_religion = rel:catholic
 		}
-		NOT = {
-            has_pop_religion = atheist
+		else_if = {
+			limit = {
+				NOT = {
+					owner = {
+						has_law = law_type:bpm_repeatable_politics_terror_name_white
+					}
+				}
+			}
+			change_character_religion = rel:catholic
+		}
+	}
+
+	on_disable = {}	
+	
+	pop_potential = {
+		has_pop_religion = catholic
+		#owner = {
+		#	ig:ig_christian_democrats = {
+		#		bpm_interest_group_is_activated = yes
+		#	}
+		#}
+		custom_tooltip = {
+			text = BPM_VALID_POP_FOR_IG
+			owner = {
+				NOT = { is_country_type = decentralized }
+				#exists = ig:ig_christian_democrats
+				#ig:ig_christian_democrats ?= { NOT = { has_ideology = ideology:ideology_nonexistent } }
+				has_variable = local_christdem_split_var
+				#ig:ig_christian_democrats = { bpm_interest_group_is_activated = yes }
+
+			}
 		}
 	}
 	
 	pop_weight = {
-		value = 10	
+		value = 25 # 35
 
-        #Attraction from being Catholic
+        # Attraction from being Catholic
         if = {
             limit = { 
                 has_pop_religion = catholic
+				owner = { 
+                    religion_percent_country = { 
+						target = rel:catholic
+						value <= 0.5 
+					}
+					NOT = {
+						country_has_state_religion = rel:catholic
+					}
+                }
             }
             add = { 
-                desc = "Catholic"
-                value = 100
+                desc = "Catholic Religion"
+                value = 500
             }
         }
+
+		# CLERGYMEN LIKE LOYALTY TO THE POPE
+
+		if = {
+			limit = { 
+				is_pop_type = clergymen 
+			}
+			add = {
+				desc = "POP_CLERGYMEN"
+				value = 100
+			}
+		}
+
+		# Rural reactionary workers like it
+
+		if = {
+			limit = { 
+				bpm_pop_employment_is_rural = yes 
+			}
+			add = {
+				desc = "RURAL_POP"
+				value = 25
+			}
+
+			if = {
+				limit = {
+					owner = {
+						ig:ig_christian_democrats = {
+							has_ideology = ideology:ideology_sta_regionalized_state
+						}
+						has_variable = bpm_christian_democrats_eco_ideology
+					}
+				}
+				add = {
+					value = 5
+				}
+			}
+		}
+
+		if = {
+			limit = { strata = middle }
+			add = {
+				desc = "MIDDLE_CLASS"
+				value = 5
+
+				if = {
+					limit = {
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_eco_distributist_economy # CSP example:
+							}
+						}
+					}
+					add = {
+						value = 35
+					}
+				}
+				else_if = {
+					limit = { 
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_eco_modern_interventionist # Popularists, Young Right, Dutch Christian Democrats
+							}
+						}
+					}
+					add = {
+						value = 25
+					}
+				}
+				else_if = {
+					limit = { 
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_eco_centralized_economy # Young Zentrumites, late Polish Chadecy
+							}
+						}
+					}
+					add = {
+						value = 10
+					}
+				}
+				else_if = {
+					limit = {
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_eco_modern_agrarian # Bavarian People's Party, Lithuanian Christian Democrats
+							}
+						}
+					}
+					add = {
+						value = 25
+					}
+				}
+
+				if = {
+					limit = {
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_dop_divine_democrat # Belgians, Dutch, Austrians general tendencies
+							}
+						}
+					}
+					add = {
+						value = 5
+					}
+				}
+
+				if = {
+					limit = {
+						owner = {
+							ig:ig_christian_democrats = {
+								OR = {
+									has_ideology = ideology:ideology_cit_immigrant_nationalist
+									has_ideology = ideology:ideology_cit_multiethnic_nationalist
+									has_ideology = ideology:ideology_cit_ethnonationalist
+								}
+							}
+						}
+					}
+					add = {
+						value = 5
+					}
+				}
+
+				if = {
+					limit = {
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_wel_distributist_welfare
+							}
+						}
+					}
+					add = {
+						value = 5
+					}
+				}
+			}
+		}
+
+		if = {
+			limit = { strata = lower }
+			add = {
+				desc = "LOWER_CLASS"
+				value = 0
+				
+				if = {
+					limit = {
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_eco_distributist_economy
+							}
+						}
+					}
+					add = {
+						value = 20
+					}
+				}
+
+				else_if = {
+					limit = { 
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_eco_modern_interventionist # Popularists, Young Right, Dutch Christian Democrats
+							}
+						}
+					}
+					add = {
+						value = 25
+					}
+				}
+				else_if = {
+					limit = { 
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_eco_centralized_economy # late Polish Chadecy
+							}
+						}
+					}
+					add = {
+						value = 30
+					}
+				}
+
+				if = {
+					limit = {
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_dop_conservative_democrat
+							}
+						}
+					}
+					add = {
+						value = 5
+					}
+				}
+
+				if = {
+					limit = {
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_dop_christian_democrat
+							}
+						}
+					}
+					add = {
+						value = 5
+					}
+				}
+
+				if = {
+					limit = {
+						owner = {
+							ig:ig_christian_democrats = {
+								OR = {
+									has_ideology = ideology:ideology_wel_social_market_welfare
+									has_ideology = ideology:ideology_wel_expanded_public_welfare
+								}
+							}
+						}
+					}
+					add = {
+						value = 5
+					}
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					ig:ig_christian_democrats = {
+						has_ideology = ideology:ideology_eco_centralized_economy # Young Zentrumites, late Polish Chadecy
+					}
+				}
+			}
+			if = {
+				limit = {
+					OR = {
+						is_pop_type = capitalists
+						is_pop_type = aristocrats
+					}
+				}
+				add = {
+					desc = "LOWER_CLASS_MOVEMENT"
+					value = -500
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = peasants
+				}
+				add = {
+					desc = "POP_PEASANTS"
+					value = -250
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					ig:ig_christian_democrats = {
+						has_ideology = ideology:ideology_eco_distributist_economy
+					}
+				}
+			}
+			if = {
+				limit = {
+					OR = {
+						is_pop_type = capitalists
+						is_pop_type = aristocrats
+					}
+				}
+				add = {
+					desc = "LOWER_CLASS_MOVEMENT"
+					value = -100
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					ig:ig_christian_democrats = {
+						has_ideology = ideology:ideology_eco_distributist_economy
+					}
+				}
+			}
+			if = {
+				limit = {
+					OR = {
+						is_pop_type = capitalists
+						is_pop_type = aristocrats
+					}
+				}
+				add = {
+					desc = "LOWER_CLASS_MOVEMENT"
+					value = -250
+				}
+			}
+		}
+		
+
+		if = {
+			limit = {
+				owner = {
+					ig:ig_christian_democrats = {
+						has_ideology = ideology:ideology_eco_modern_agrarian # Bavarian People's Party, Lithuanian Christian Democrats
+					}
+				}
+			}
+
+			if = {
+				limit = { is_pop_type = farmers }
+				add = {
+					desc = "POP_FARMERS"
+					value = 100
+				}
+			}
+			else_if = {
+				limit = { is_pop_type = peasants }
+				add = {
+					desc = "POP_PEASANTS"
+					value = 50
+				}
+			}
+
+			
+			else_if = {
+				limit = {
+					is_pop_type = aristocrats
+				}
+				add = {
+					desc = "POP_ARISTOCRATS"
+					value = 5
+				}
+			}
+		}
+
+		if = {
+			limit = { 
+				OR = {
+					is_pop_type = officers
+					is_pop_type = soldiers
+				}
+			}
+			add = {
+				desc = "Serving the Nation"
+				value = 0
+				
+				if = {
+					limit = {
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_mil_patriotic_liberal
+							}
+						}
+					}
+					add = {
+						value = 5
+					}
+				}
+
+				else_if = {
+					limit = { 
+						owner = {
+							ig:ig_christian_democrats = {
+								has_ideology = ideology:ideology_mil_antimilitarist
+							}
+						}
+					}
+					add = {
+						value = 5
+					}
+				}
+			}
+		}
+
+
         #Attraction from being discriminated (see the efforts by Zentrum under Poles etc)
         add = {
 			desc = "POP_DISCRIMINATED"
 			if = {
 				limit = { 
-					pop_acceptance >= acceptance_status_4
+					pop_acceptance <= acceptance_status_3
 				}
-				value = 20
+				value = 50
 			}
 		}	
 
-        multiply = { #stronger in non-Catholic countries (see Zentrum, Brabant/Limburg in the Netherlands)
-            desc = "Catholic Minority"    
-        
-            value = 1.0 
+        #multiply = { #stronger in non-Catholic countries (see Zentrum, Brabant/Limburg in the Netherlands)
+        #    desc = "Catholic Minority"    
+        #
+        #    value = 1.0 
+        #    if = { 
+        #        limit = { 
+        #            owner = { 
+        #                OR = {
+		#					religion_percent_country = { 
+		#						target = rel:catholic
+		#						value <= 0.5 
+		#					}
+		#				}
+		#				NOT = {
+		#					country_has_state_religion = rel:catholic
+		#				}
+        #            }
+        #        }
+        #        value = 10
+        #    }
+        #}
+
+		if = {
+			limit = { owner = { NOT = { has_technology_researched = corporatism } } }
+			multiply = {
+				desc = "No Corporatism"
+				value = 0.8
+			}
+		}
+
+		multiply = { # Secularised state and place where secularization was relatively significant had Christian Democrats rather weakened (France, Germany)
+            desc = "Is a Secular State"
+            value = 1.0
             if = { 
                 limit = { 
                     owner = { 
-                        religion_percent_country = { 
-                            target = rel:catholic
-                            value <= 0.5 
-                        }
+                        OR = {
+							has_law = law_type:law_total_separation
+							has_law = law_type:law_state_atheism
+						}
                     }
                 }
-                value = 1.8
+                value = 0.5
             }
         }
-        multiply = { #has researched corporatism
-            desc = "Has Corporatism"
-            value = 1.0 
+
+		multiply = { # Rerum novarum was released. Time to implode whole parties and organizations.
+            desc = "Rerum novarum was released"
+            value = 0.7
+            if = { 
+                limit = { 
+                    has_global_variable = global_rerum_novarum_issued_var
+                }
+                value = 1.0
+            }
+        }
+
+		multiply = { # Graves de communi re was released. Time to implode whole parties and organizations.
+            desc = "Graves de communi re was released"
+            value = 1.0
+            if = { 
+                limit = { 
+                    has_global_variable = global_variable_graves_de_communi_re
+                }
+                value = 0.75
+            }
+        }
+
+
+		multiply = { #has researched mass parties
+            desc = "Has Mass Parties"
+            value = 0.7
             if = { 
                 limit = { 
                     owner = { 
-                        has_technology_researched = corporatism
+                        has_technology_researched = socialism
                     }
                 }
-                value = 1.2
+                value = 1.0
             }
         }
-        if = {
+
+		if = {
+			limit = { owner = { has_variable = independence_from_church_variable } }
+			multiply = {
+				desc = "FROM_INDEPENDENCE_FROM_THE_CHURCH_JE"
+				value = 1
+				add = {
+					value = owner.var:independence_from_church_variable
+					multiply = 0.005
+				}
+			}
+		}
+
+		#if = {
+		#	limit = { owner = { has_variable = bpm_country_very_undemocratic_var } }
+		#	multiply = {
+		#		desc = "NO_DEMOCRACY"
+		#		value = 1.5
+		#	}
+		#}
+		#else_if = {
+		#	limit = { owner = { has_variable = bpm_country_undemocratic_var } }
+		#	multiply = {
+		#		desc = "LIMITED_DEMOCRACY"
+		#		value = 1.2
+		#	}
+		#}
+
+		if = {
 			limit = { owner = { bpm_performance_significant_country = yes } }
+			multiply = 0.5
+			if = {
+				limit = {
+					owner = {
+						has_variable = bpm_strong_labor 
+					}
+				}
+				multiply = {
+					desc = "BPM_STRONG_LABOR"
+					value = 4 # 20
+				}
+			}
+			else_if = {
+				limit = {
+					owner = {
+						has_variable = bpm_average_labor 
+					}
+				}
+				multiply = {
+					desc = "BPM_AVERAGE_LABOR"
+					value = 2
+				}
+			}
+			
 			multiply = {
 				desc = "LEADER_POPULARITY"
 				scope:interest_group = {
@@ -120,17 +645,19 @@
 						multiply = 0.01
 						add = 1
 						max = 2.0
-						min = 0.5
+						min = 0.75
 					}
 				}
 			}	
 			multiply = bpm_ig_agitators_popularity
 			multiply = bpm_ig_ruler_popularity
-        }
+			multiply = ig_attraction_from_radicals_and_loyalists
+		}
+		multiply = ig_attraction_to_ruler_ideology_from_stability
 	}
 	
 	monarch_weight = {
-		value = 0.1
+		value = 0.5
 	}	
 
 	agitator_weight = {
@@ -147,6 +674,16 @@
 	commander_weight = {
 		value = 1.0
 		multiply = bpm_commander_assignment_from_laws_factor
+	}	
+
+	executive_weight = {
+		value = 0.3
+		if ={
+			limit = {
+				owner.ig:ig_christian_democrats = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
 	}	
 	
 	noble_chance = {
@@ -166,6 +703,11 @@
 	female_agitator_chance = {
 		value = 1.0
 		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

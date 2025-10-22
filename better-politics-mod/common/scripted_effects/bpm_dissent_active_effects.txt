@@ -43,33 +43,81 @@ bpm_dissent_je_revolution_active_weekly = {
 		id = bpm_crisis_debug_utils.4
 		days = 7
 	}
-
 	if = {
 		limit = {
 			scope:journal_entry= {
-				var:bpm_revolution_resource_amount > 400
-				NAND = {
-					var:bpm_left_alone_counter >= 2
-					var:bpm_left_alone_counter <= 8
-				}			}
+				bpm_resource_percentage > 0.2
+			}
 		}
 		scope:journal_entry= {
+			save_scope_value_as = {
+				name = vallost
+				value = {
+					value = var:bpm_left_alone_counter
+					multiply = 20
+				}
+			}
+			if = {
+				limit = {
+					scope:vallost >= var:bpm_revolution_resource_amount
+				}
+				set_variable = {
+					name = bpm_left_alone_counter
+					value = 1
+				}
+			}
 			change_variable = {
 				name = bpm_revolution_resource_amount
-				subtract = 50
+				add = {
+					value = var:bpm_left_alone_counter
+					multiply = -20
+				}
 			}
-			set_variable = {
-				name = bpm_left_alone_counter
-				value = 0
+			if = {
+				limit = { 
+					bpm_resource_percentage <= 0.2
+				}
+				set_variable = {
+					name = bpm_left_alone_counter
+					value = {
+						value = var:bpm_revolution_resource_amount_max
+						divide = 200
+						ceiling = yes
+					}
+				}
 			}
 		}
 		random_list = {
 			2 = 0
 			2 = {
-				bpm_auth_add_exhaustion_small = yes
+				change_variable = {
+					name = bpm_auth_state_exhaustion
+					add = {
+						value = scope:journal_entry.var:bpm_left_alone_counter
+						multiply = 30
+					}
+				}
 			}
 			1 = {
-				bpm_auth_add_exhaustion_normal = yes
+				change_variable = {
+					name = bpm_auth_state_exhaustion
+					add = {
+						value = scope:journal_entry.var:bpm_left_alone_counter
+						multiply = 50
+					}
+				}
+			}
+		}
+	}
+	else = {
+		scope:journal_entry = {
+
+			change_variable = {
+				name = bpm_revolution_resource_amount
+				add = {
+					value = 50
+					multiply = var:bpm_left_alone_counter
+				}
 			}
 		}
 	}
@@ -79,38 +127,11 @@ bpm_dissent_je_revolution_active_weekly = {
 			add = 1
 		}
 	}
-	if = {
-		limit = {
-			scope:journal_entry.var:bpm_left_alone_counter >= 2
-		}
-		scope:journal_entry = {
-			change_variable = {
-				name = bpm_revolution_resource_amount
-				add = {
-					value = 10
-					multiply = var:bpm_left_alone_counter
-				}
-			}
-		}
-	}
 	scope:journal_entry = {
 		clamp_variable = {
 			name = bpm_revolution_resource_amount
 			min = 0
 			max = var:bpm_revolution_resource_amount_max
-		}
-	}
-	if = {
-		limit = {
-			scope:journal_entry = {
-				bpm_resource_percentage >= 0.8
-			}
-		}
-		scope:journal_entry = {
-			set_variable = {
-				name = bpm_left_alone_counter
-				value = 0
-			}
 		}
 	}
 	scope:journal_entry.var:bpm_front_currently_planning = {
@@ -227,6 +248,10 @@ bpm_post_rev_victory_wch_coup = {
 		remove_modifier = bpm_empowered_ig
 	}
 	bpm_dissent_je_revolution_active_on_inactive = yes
+
+	bpm_add_political_stability_huge = yes
+	bpm_add_political_stability_huge = yes
+
 	switch = {
 		trigger = scope:member_front_name
 		flag:bpm_front_peasant = {
@@ -358,6 +383,10 @@ bpm_post_rev_victory_wch = {
 		}
 
 	}
+
+	bpm_remove_political_stability_huge = yes
+	bpm_remove_political_stability_huge = yes
+
 	switch = {
 		trigger = scope:member_front_name
 		flag:bpm_front_peasant = {

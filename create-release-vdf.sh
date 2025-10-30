@@ -24,7 +24,7 @@ fi
 title='Better Politics Mod'
 
 # Read mod id
-mod_id='2932134122'
+mod_id='3420763650'
 
 # Clean up old file
 printf '' > workshop.vdf

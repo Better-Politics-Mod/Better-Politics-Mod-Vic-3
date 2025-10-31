@@ -21,7 +21,7 @@ else
   exit 1
 fi
 
-title='Better Politics Mod'
+title='Better Politics Mod - 3.0 Beta'
 
 # Read mod id
 mod_id='3420763650'

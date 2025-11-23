@@ -166,5 +166,245 @@
 # 	should_be_pinned_by_default = no
 # }
 
+je_bpm_crises_government_scandal = {
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
 
+	group = je_group_bpm_crises
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_crises_government_scandal_desc_low
+				trigger = {
+					scope:journal_entry.var:bpm_government_scandal_progress <= 10
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_crises_government_scandal_desc_medium
+				trigger = {
+					scope:journal_entry.var:bpm_government_scandal_progress > 10
+					scope:journal_entry.var:bpm_government_scandal_progress < 50
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_crises_government_scandal_desc_high
+				trigger = {
+					scope:journal_entry.var:bpm_government_scandal_progress >= 50
+				}
+			}
+		}
+	}
+
+	can_deactivate = yes
+
+	modifiers_while_active = {
+		# add modifiers
+	}
+
+	is_shown_when_inactive = {
+		# this should always be yes
+		always = yes
+	}
+
+	possible = {
+		scope:journal_entry = {
+			NOT = {
+				has_variable = bpm_crisis_ended
+			}
+		}
+		OR = {
+			var:bpm_scandal_roll = 99
+			hidden_trigger = {
+				has_journal_entry = je_bpm_crises_government_scandal
+			}
+		}
+	}
+
+	immediate = {
+
+		random_list = {
+			1 = {
+				trigger_event = {
+					id = bpm_scandal_events.1
+					popup = yes
+				}
+			}
+			1 = {
+				trigger_event = {
+					id = bpm_scandal_events.2
+					popup = yes
+				}
+			}
+			1 = {
+				trigger_event = {
+					id = bpm_scandal_events.3
+					popup = yes
+				}
+			}
+			1 = {
+				trigger_event = {
+					id = bpm_scandal_events.4
+					popup = yes
+				}
+			}
+		}
+		scope:journal_entry = {
+			set_variable = {
+				name = bpm_government_scandal_progress
+				value = {
+					integer_range = {
+						min = 0
+						max = 20
+					}
+				}
+			}
+			if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_traditional_ostracism
+					}
+				}
+				scope:journal_entry = {
+					change_variable = {
+						name = bpm_government_scandal_progress
+						add = 5
+					}
+				}
+			}
+			if = {
+				limit = {
+					owner = {
+						OR = {
+							has_law = law_type:law_outlawed_dissent
+							has_law = law_type:law_censorship
+						}
+					}
+				}
+				scope:journal_entry = {
+					change_variable = {
+						name = bpm_government_scandal_progress
+						add = 20
+					}
+				}
+			}
+		}
+		every_active_party = {
+			limit = {
+				any_member = {
+					is_in_government = yes
+				}
+			}
+			scope:journal_entry = {
+				add_to_variable_list = {
+					name = bpm_government_parties_involved_in_scandal
+					target = prev
+				}
+			}
+		}
+	}
+	
+	invalid = {
+		scope:journal_entry = {
+			NOT = {
+				any_in_list = {
+					variable = bpm_government_parties_involved_in_scandal
+					any_member = {
+						is_in_government = yes
+					}
+				}
+			}
+		}
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			scope:journal_entry = {
+				remove_modifier = bpm_crisis_scandal_scandal_in_the_press
+			}
+			if = {
+				limit = {
+					scope:journal_entry.var:bpm_government_scandal_progress < 100
+				}
+				scope:journal_entry = {
+					change_variable = {
+						name = bpm_government_scandal_progress
+						add = 2.5
+					}
+					clamp_variable = {
+						name = bpm_government_scandal_progress
+						min = 0
+						max = 100
+					}
+				}
+			}
+			else = {
+				# Lower strata care less about government scandals (they have better things to worry about)
+				# But it can definitely compound with SoL issues
+				add_radicals = {
+					strata = lower
+					value = 0.025
+				}
+				# The middle class (esp. bureaucrats and clerks) cares a lot about government scandals
+				# This can have a big impact on middle class IGs's approval
+				add_radicals = {
+					strata = middle
+					value = 0.1
+				}
+				# The upper class also cares about government scandals but less than the middle class
+				add_radicals = {
+					strata = upper
+					value = 0.05
+				}
+			}
+			if = {
+				limit = {
+					scope:journal_entry.var:bpm_government_scandal_progress >= 10
+				}
+				save_scope_value_as = {
+					name = bpm_crisis_scandal_popularity_penalty
+					value = {
+						value = scope:journal_entry.var:bpm_government_scandal_progress
+						add = 25
+						min = 25
+						max = 75
+					}
+				}
+				scope:journal_entry = {
+					add_modifier = {
+						name = bpm_crisis_scandal_scandal_in_the_press
+						multiplier = {
+							value = scope:journal_entry.var:bpm_government_scandal_progress
+							max = 75
+						}
+					}
+				}
+			}
+		}
+	}
+
+	current_value = {
+		value = scope:journal_entry.var:bpm_government_scandal_progress
+	}
+
+	complete = {
+		hidden_trigger = {
+			always = no
+		}
+		OR = {
+			custom_tooltip = {
+				text = je_bpm_crises_government_scandal_end_party_left_tt
+				always = no
+			}
+		}
+
+	}
+
+	goal_add_value = {
+		value = 100
+	}
+
+	progressbar = yes
+
+	should_be_pinned_by_default = no
+}
 

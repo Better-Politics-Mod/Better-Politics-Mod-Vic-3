@@ -5,6 +5,10 @@
             name = bpm_cost_ig_position_var
             value = bpm_cost_ig_position
         }
+        set_variable = {
+            name = bpm_randomval
+            value = bpm_pick_new_char_weight_rdmod
+        }
     }
     set_variable = {
         name = bpm_newcab_available_good_candidates
@@ -15,19 +19,19 @@
                 add = var:bpm_expert_characters
             }
         }
-    }
-    bpm_newcab_char_pick_subp = { INST = economy REMAINING = 12 }
-    bpm_newcab_char_pick_subp = { INST = diplomacy REMAINING = 11 }
-    bpm_newcab_char_pick_subp = { INST = schools REMAINING = 10 }
-    bpm_newcab_char_pick_subp = { INST = centralization REMAINING = 9 }
-    bpm_newcab_char_pick_subp = { INST = suffrage REMAINING = 8 }
-    bpm_newcab_char_pick_subp = { INST = police REMAINING = 7 }
-    bpm_newcab_char_pick_subp = { INST = health_system REMAINING = 6 }
-    bpm_newcab_char_pick_subp = { INST = colonial_affairs REMAINING = 5 }
-    bpm_newcab_char_pick_subp = { INST = home_affairs REMAINING = 4 }
-    bpm_newcab_char_pick_subp = { INST = workplace_safety REMAINING = 3 }
-    bpm_newcab_char_pick_subp = { INST = social_security REMAINING = 2 }
-    bpm_newcab_char_pick_subp = { INST = culture REMAINING = 1 }
+    } 
+    bpm_newcab_char_pick_subp = { INST = economy }
+    bpm_newcab_char_pick_subp = { INST = diplomacy }
+    bpm_newcab_char_pick_subp = { INST = schools }
+    bpm_newcab_char_pick_subp = { INST = centralization }
+    bpm_newcab_char_pick_subp = { INST = suffrage }
+    bpm_newcab_char_pick_subp = { INST = police }
+    bpm_newcab_char_pick_subp = { INST = health_system }
+    bpm_newcab_char_pick_subp = { INST = colonial_affairs }
+    bpm_newcab_char_pick_subp = { INST = home_affairs }
+    bpm_newcab_char_pick_subp = { INST = workplace_safety }
+    bpm_newcab_char_pick_subp = { INST = social_security }
+    bpm_newcab_char_pick_subp = { INST = culture }
 }
 
 bpm_newcab_char_pick_subp = {
@@ -39,118 +43,22 @@ bpm_newcab_char_pick_subp = {
                 NOT = { has_variable = bpm_minister_of_$INST$ }
             }
         }
-        # If there are enough good candidates, we don't need to think about bad ones
-        if = {
+        ordered_interest_group = {
             limit = {
-                var:bpm_newcab_available_good_candidates >= $REMAINING$
-                any_interest_group = {
-                    var:bpm_cost_ig_position_var <= bpm_remaining_mandate
-                    OR = {
-                        var:bpm_skilled_characters > 0
-                        var:bpm_expert_characters > 0
+                OR = {
+                    is_in_government = yes
+                    owner = {
+                        bpm_country_has_parliamentary_electoral_system = no
                     }
                 }
+                leader = { NOT = { bpm_is_antagonistic_hypothetical_inst = { INST = $INST$ } } }
+                ig_approval > angry
+                bpm_interest_group_is_activated = yes
             }
-            # Check for cheaper ones first
-            if = {
-                limit = {
-                    any_interest_group = {
-                        var:bpm_cost_ig_position_var < 5
-                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
-                        OR = {
-                            var:bpm_skilled_characters > 0
-                            var:bpm_expert_characters > 0
-                        }
-                    }
-                }
-                random_interest_group = {
-                    limit = {
-                        var:bpm_cost_ig_position_var < 5
-                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
-                        OR = {
-                            var:bpm_skilled_characters > 0
-                            var:bpm_expert_characters > 0
-                        }
-                    }
-                    save_scope_as = bpm_selected_ig
-                }
-                change_variable = {
-                    name = bpm_newcab_available_good_candidates
-                    subtract = 1
-                }
-            }
-            # If no cheaper ones, use regular cost ones
-            else = {
-                random_interest_group = {
-                    limit = {
-                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
-                        OR = {
-                            var:bpm_skilled_characters > 0
-                            var:bpm_expert_characters > 0
-                        }
-                    }
-                    save_scope_as = bpm_selected_ig
-                }
-                change_variable = {
-                    name = bpm_newcab_available_good_candidates
-                    subtract = 1
-                }
-            }
-        }
-        else = {
-            # Check for cheaper ones first
-            if = {
-                limit = {
-                    any_interest_group = {
-                        var:bpm_cost_ig_position_var < 5
-                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
-                    }
-                }
-                random_interest_group = {
-                    limit = {
-                        var:bpm_cost_ig_position_var < 5
-                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
-                    }
-                    save_scope_as = bpm_selected_ig
-                    if = {
-                        limit = {
-                            OR = {
-                                var:bpm_skilled_characters > 0
-                                var:bpm_expert_characters > 0
-                            }
-                        }
-                        owner = {
-                            change_variable = {
-                                name = bpm_newcab_available_good_candidates
-                                subtract = 1
-                            }
-                        }
-                    }
-                }
-            }
-            # If no cheaper ones, use regular cost ones
-            else = {
-                random_interest_group = {
-                    limit = {
-                        var:bpm_cost_ig_position_var <= bpm_remaining_mandate
-                    }
-                    save_scope_as = bpm_selected_ig
-                    if = {
-                        limit = {
-                            OR = {
-                                var:bpm_skilled_characters > 0
-                                var:bpm_expert_characters > 0
-                            }
-                        }
-                        owner = {
-                            change_variable = {
-                                name = bpm_newcab_available_good_candidates
-                                subtract = 1
-                            }
-                        }
-                    }
-                }
-            }
+            position = 0
+            order_by = bpm_pick_new_char_weight
+
+            save_scope_as = bpm_selected_ig
         }
         if = {
             limit = {

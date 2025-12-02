@@ -17,12 +17,16 @@ bpm_ig_organization_val = {
 bpm_front_organization_change = {
 	value = 0
 	every_interest_group = {
-		limit = {
+		limit = { 
 			bpm_ig_in_front_check = yes
 		}
 		add = {
-			value = var:bpm_ig_organization
-			multiply = ig_clout
+			value = ig_clout
+			multiply = {
+                value = var:bpm_ig_organization
+                multiply = var:bpm_ig_organization
+                divide = 100
+            }
 		}
 	}
 	every_political_movement = {
@@ -31,11 +35,65 @@ bpm_front_organization_change = {
 		}
 		add = {
 			value = political_movement_radicalism
-			multiply = political_movement_support
-			multiply = 100
+			multiply = {
+                value = political_movement_support
+                multiply = political_movement_support
+            }
+			multiply = 50
 		}
+
 	}
-	divide = 10
+    owner = {
+        multiply = {
+            value = bpm_exhprct
+            multiply = bpm_exhprct
+        }
+    }
+    if = {
+        limit = {
+            NOT = { has_global_variable = bpm_peoples_springtime_happening }
+            NOT = { has_global_variable = bpm_peoples_springtime_happened }
+            has_global_variable = bpm_je_march_to_radicalism_progress
+            global_var:bpm_je_march_to_radicalism_progress >= 100
+            OR = {
+                scope:selected_front_name = flag:bpm_front_popular
+                scope:selected_front_name = flag:bpm_front_liberal
+                scope:selected_front_name = flag:bpm_front_republican
+                scope:selected_front_name = flag:bpm_front_labor
+                scope:selected_front_name = flag:bpm_front_urban
+            }
+        }
+        multiply = 5
+    }
+}
+
+# Example:
+# If exhaustion is 200 and capacity is 400:
+# 200 / 400 = 0.5
+# If 50% of population is radical:
+# 0.5 + (0.5 * 2) = 1.5
+# This gets cubed in bpm_front_organization_change
+# So final multiplier is 1.5 * 1.5 * 1.5 = 3.375
+# Imagine 100% exhaustion and 100% radical population:
+# 1 + (1 * 2) = 3
+# So final multiplier is 3 * 3 * 3 = 27 => instant revolution&state collapse
+bpm_exhprct = {
+    value = var:bpm_auth_state_exhaustion
+    divide = {
+        value = {
+            value = bpm_state_capacity
+            add = var:bpm_auth_state_exhaustion
+        }
+        min = 1
+    }
+    add = {
+        value = bpm_total_radical_percentage
+        multiply = 4
+    }
+}
+
+bpm_total_radical_percentage = {
+    value = radical_fraction
 }
 
 # scopes to pass selected_front_name 
@@ -76,18 +134,17 @@ bpm_revclockc = {
 bpm_will_change_nw = {
 	if = {
 		limit = {
-			var:bpm_revolution_resource_amount > 400
-			NAND = {
-				var:bpm_left_alone_counter >= 2
-				var:bpm_left_alone_counter <= 8
-			}
+			bpm_resource_percentage > 0.2
 		}
-		value = -50
+		value = {
+            value = var:bpm_left_alone_counter
+            multiply = -20
+        }
 	}
 	else_if = {
 		limit = { bpm_left_alone_counter >= 2 }
 		value = var:bpm_left_alone_counter
-		multiply = 25
+		multiply = 50
 	} 
 	else = {
 		value = 0

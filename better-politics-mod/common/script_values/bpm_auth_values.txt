@@ -1,3 +1,19 @@
+bpm_total_state_capacity = {
+	# Capacity if no exhaustion
+	value = bpm_state_capacity
+	if = {
+		limit = {
+			has_variable = bpm_auth_state_exhaustion
+		}
+		add = var:bpm_auth_state_exhaustion
+	}
+}
+
+bpm_state_capacity_percentage = {
+	value = bpm_state_capacity
+	divide = bpm_total_state_capacity
+}
+
 bpm_auth_state_exhaustion_rate = {
 	value = 0
 
@@ -6,12 +22,35 @@ bpm_auth_state_exhaustion_rate = {
 	subtract = bpm_auth_weekly_state_exhaustion_recovery
 }
 
-bpm_auth_weekly_state_exhaustion_recovery = {
-	value = 0
+bpm_auth_state_exhaustion_increase_incomplete_mandate = {
+	if = {
+		limit = {
+			has_variable = bpm_electoral_mandate_progress
+			has_variable = bpm_electoral_mandate_time_progress
+		}
+		value = {
+			value = 4
+			subtract = var:bpm_electoral_mandate_progress
+		}
+		subtract = {
+			value = var:bpm_electoral_mandate_time_progress
+			divide = 12
+			floor = yes
+		}
+	}
+	else = {
+		value = 0
+	}
 
-	add = {
+}
+
+bpm_auth_weekly_state_exhaustion_recovery_percentage = {
+	value = 0
+		add = {
 		desc = "base_value"
 		value = bpm_auth_weekly_state_exhaustion_recovery_base
+		divide = 10
+		#max = 1
 	}
 
 	add = {
@@ -35,7 +74,8 @@ bpm_auth_weekly_state_exhaustion_recovery = {
 			}
 			multiply = -1
 		}
-		multiply = 5
+		divide = 20
+		#max = 1
 	}
 
 	add = {
@@ -59,7 +99,8 @@ bpm_auth_weekly_state_exhaustion_recovery = {
 			}
 			multiply = -1
 		}
-		multiply = 10
+		divide = 20
+		#max = 1
 	}
 
 	add = {
@@ -83,7 +124,8 @@ bpm_auth_weekly_state_exhaustion_recovery = {
 			}
 			multiply = -1
 		}
-		multiply = 5
+		divide = 20
+		#max = 1
 	}
 
 	add = {
@@ -135,12 +177,26 @@ bpm_auth_weekly_state_exhaustion_recovery = {
 					}
 					add = ig_clout
 				}
-			}
-			multiply = 100
-	
+			}	
 			multiply = modifier:country_bpm_auth_exhaustion_recovery_from_governing_ig
 		}
+		divide = 20
+		#max = 1
 	}
+	if = {
+		limit = {
+			is_player = no
+		}
+		add = 0.1 # we love cheating AI folks
+	}
+}
+
+bpm_auth_weekly_state_exhaustion_recovery = {
+	value = {
+		value = bpm_auth_weekly_state_exhaustion_recovery_percentage
+		divide = 100
+	}
+
 
 	if = {
 		limit = {
@@ -171,10 +227,12 @@ bpm_auth_weekly_state_exhaustion_recovery = {
 			is_player = no
 		}
 
-		add = 20 # we love cheating AI folks
+		add = 0.02 # we love cheating AI folks
 	}
-
 	min = 0 # Recovery can not go below zero
+
+	multiply = bpm_total_state_capacity
+
 }
 
 bpm_auth_collapsed_states_effect_power = {
@@ -211,7 +269,10 @@ bpm_auth_collapsed_states_effect_power = {
 }
 
 bpm_auth_weekly_state_exhaustion_increase = {
-	value = 0
+	value = {
+		desc = "BPM_EXHAUSTION_FROM_DEFAULT"
+		value = 5
+	}
 	add = {
 		desc = "BPM_EXHAUSTION_FROM_COLLAPSED_STATES"
 		value = bpm_auth_collapsed_states_effect_power
@@ -225,6 +286,52 @@ bpm_auth_weekly_state_exhaustion_increase = {
 	add = {
 		desc = "BPM_EXHAUSTION_FROM_RADICALS"
 		value = bpm_auth_exhaustion_from_radicals
+	}
+	if = {
+		limit = {
+			is_player = yes
+		}
+		add = {
+			desc = "BPM_EXHAUSTION_FROM_DECREES"
+			value = {
+				value = 0
+				every_scope_state = {
+					add = bpm_auth_decree_count_in_state
+				}
+			}
+		}
+	}
+	add = {
+		desc = "BPM_EXHAUSTION_FROM_DEVASTATION"
+		value = {
+			value = 0
+			every_scope_state = {
+				limit = {
+					is_incorporated = yes
+				}
+				add = {
+					value = devastation
+					multiply = 20
+				}
+			}
+		}
+		divide = {
+			every_scope_state = {
+				limit = {
+					is_incorporated = yes
+				}
+				add = 1
+			}
+		}
+	}
+
+	add = {
+		value = bpm_auth_state_exhaustion_increase_incomplete_mandate
+		multiply = {
+			value = bpm_total_state_capacity
+			divide = 500
+		}
+		desc = "BPM_EXHAUSTION_FROM_INCOMPLETE_MANDATE"
 	}
 
 }
@@ -274,9 +381,11 @@ bpm_auth_exhaustion_from_radicals = {
 				min = 1
 			}		
 		}
-
 	}
-	multiply = 10
+	multiply = {
+		value = bpm_total_state_capacity
+		divide = 1000
+	}
 	min = 0
 }
 
@@ -365,4 +474,62 @@ bpm_auth_authority_and_recent_exhaustion = {
 	value = var:bpm_auth_state_exhaustion_old
 	subtract = var:bpm_auth_state_exhaustion
 	add = authority
+}
+
+bpm_auth_decree_count_in_state = {
+	value = 0
+	if = {
+		limit = {
+			has_decree = decree_road_maintenance
+		}
+		add = 1
+	}
+	if = {
+		limit = {
+			has_decree = decree_violent_suppression
+		}
+		add = 2
+	}
+	if = {
+		limit = {
+			has_decree = decree_promote_social_mobility
+		}
+		add = 5
+	}
+	if = {
+		limit = {
+			has_decree = decree_promote_national_values
+		}
+		add = 4
+	}
+	if = {
+		limit = {
+			has_decree = decree_encourage_manufacturing_industry
+		}
+		add = 2
+	}
+	if = {
+		limit = {
+			has_decree = decree_encourage_agricultural_industry
+		}
+		add = 2
+	}
+	if = {
+		limit = {
+			has_decree = decree_encourage_resource_industry
+		}
+		add = 2
+	}
+	if = {
+		limit = {
+			has_decree = decree_greener_grass_campaign
+		}
+		add = 4
+	}
+	if = {
+		limit = {
+			has_decree = decree_enlistment_efforts
+		}
+		add = 3
+	}
 }

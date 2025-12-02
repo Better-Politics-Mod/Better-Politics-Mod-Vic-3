@@ -521,7 +521,7 @@ types political_situation_types {
                                 #datamodel = "[GetJournalEntryGroup('je_group_bpm_dissent').GetInactiveJournalEntryTypes(GetPlayer.Self)]"
                                 flipdirection = yes
                                 block "datamodel_wrap" {
-                                    datamodel_wrap = 5
+                                    datamodel_wrap = 3
                                 }
                                 item = {
                                     bpm_political_situation_crises_scandals = { }
@@ -977,13 +977,13 @@ types political_situation_types {
             textbox = {
                 size = { 125 24 }
                 # [JournalEntry.MakeScope.Var('bpm_last_delta')|v-=2]
-                text = "#yellow Organization#!: [JournalEntry.MakeScope.Var('bpm_current_front_organization').GetValue|v1]#! ([JournalEntry.MakeScope.Var('bpm_last_delta').GetValue|v-=2])"
+                text = "bpm_organization_text_tt"
                 fontsize = 16
                 align = hcenter|nobaseline
                 #multiline = yes
             }
             bad_progressbar_horizontal = {
-                size = { 160 12 }
+                size = { 140 12 }
 
                 blockoverride "values" {
                     # Concatenate(JournalEntry.MakeScope.Var('bpm_front_currently_planning'), '_organization')
@@ -1006,7 +1006,7 @@ types political_situation_types {
                 #multiline = yes
             }
             gold_progressbar_horizontal = {
-                size = { 160 12 }
+                size = { 140 12 }
 
                 blockoverride "values" {
                     # Concatenate(JournalEntry.MakeScope.Var('bpm_front_currently_planning'), '_organization')
@@ -1017,14 +1017,24 @@ types political_situation_types {
                 }
             }
         }
+        button_icon_round = {
+            visible = "[Not(JournalEntry.IsActive)]"
+            size = { 40 40 }
+            blockoverride "icon" {
+                texture = "gfx/interface/icons/political_lobby_icons/lobby_anti.dds"
+            }
+            enabled = "[GetScriptedGui('bpm_nuke_revolution').IsValid(GuiScope.SetRoot(JournalEntry.MakeScope).End)]"
+            onclick = "[GetScriptedGui('bpm_nuke_revolution').Execute(GuiScope.SetRoot(JournalEntry.MakeScope).End)]"
+            tooltip = "[GetScriptedGui('bpm_nuke_revolution').ExecuteTooltip(GuiScope.SetRoot(JournalEntry.MakeScope).End)]"
+        }
     }
 
     type bpm_political_situation_crises_scandals = widget {
-        size = { 400 300 }
+        size = { 500 400 }
         margin = { 10 0 }
         datacontext = "[AccessPlayer.GetJournalEntry(JournalEntryType.Self)]"
         vbox = {
-            maximumsize = { 375 280 }
+            maximumsize = { 475 380 }
             using = entry_bg_simple_colored
             background = {
                 visible = "[Not(JournalEntry.IsActive)]"
@@ -1054,9 +1064,9 @@ types political_situation_types {
                         }
                     }   
                     textbox = {
-                        size = { 320 50 }
+                        size = { 420 70 }
                         block "action_name" {
-                            text = "[JournalEntry.GetName]"
+                            text = "#tooltippable [JournalEntry.GetName]#!"
                         }
                         margin_right = 35
 
@@ -1074,11 +1084,84 @@ types political_situation_types {
             }
             divider_clean = {}
 
+            hbox = {
+                margin = { 5 0 }
+                parentanchor = left
+                visible = "[Not( IsDataModelEmpty( JournalEntry.GetScriptedButtons ) )]"
+                datamodel = "[JournalEntry.GetScriptedButtons]"
+                
+                item = {
+                    widget = {
+                        size = { 140 60 }
+
+                        scripted_journal_entry_button = {
+                            parentanchor = center
+                            #using = default_button_primary
+                            background = {
+                                using = entry_bg_fancy
+                                alpha = 0.1
+                            }
+                            size = { 120 50 }
+                            margin = 0
+                        }
+                        margin = 0
+                        # Buttons for which the selected trigger is true have a different appearance and tooltip, but share all behaviors.
+                        # This means that even selected buttons are clickable as usual, assuming the possible trigger does not prevent it.
+                        # This enables more use cases, such as using buttons as on-off toggles, but requires the scripter to disable buttons manually in the possible trigger as needed.
+                    }
+                }
+            }
+
+
+            divider_clean = {
+                visible = "[Not( IsDataModelEmpty( JournalEntry.GetScriptedButtons ) )]"
+            }
+
+            hbox = { 
+                minimumsize = { -1 6 }
+            }
+
+            default_progressbar_horizontal = {
+                visible = "[And(JournalEntry.HasProgressBar, JournalEntry.IsActive)]"
+                block "progressbar_size" {
+                    size = { 304 25 }
+                }
+                blockoverride "values" {
+                    value = "[FixedPointToFloat(JournalEntry.GetGoalProgressPercent)]"
+                    min = 0
+                    max = 1
+                }
+
+                textbox = {
+                    visible = "[EqualTo_CFixedPoint(JournalEntry.GetBaselineValue, '(CFixedPoint)0')]"
+                    text = "JOURNAL_ENTRY_PROGRESSBAR_FROM_ZERO"
+                    autoresize = yes
+                    align = nobaseline
+                    margin_left = 10
+                    parentanchor = vcenter
+                }
+                textbox = {
+                    visible = "[Not(EqualTo_CFixedPoint(JournalEntry.GetBaselineValue, '(CFixedPoint)0'))]"
+                    text = "JOURNAL_ENTRY_PROGRESSBAR_FROM_BASE"
+                    autoresize = yes
+                    align = nobaseline
+                    margin_left = 10
+                    parentanchor = vcenter
+                }
+            }
+
+            hbox = { 
+                minimumsize = { -1 6 }
+            }
+            divider_clean = {
+                visible = "[And(JournalEntry.HasProgressBar, JournalEntry.IsActive)]"
+            }
+
             textbox = {
                 size = { 300 140 }
                 visible = "[Not(JournalEntry.IsActive)]"
                 text = "[JournalEntry.GetActivationTooltip]"
-                fontsize = 16
+                fontsize = 18
                 align = hcenter|top
                 parentanchor = left|top
                 multiline = yes
@@ -1093,7 +1176,7 @@ types political_situation_types {
                 align = hcenter|top
                 parentanchor = left|top
                 multiline = yes
-                margin = { 0 10 }
+                margin = { 0 16 }
             }
             
             #expand = {}

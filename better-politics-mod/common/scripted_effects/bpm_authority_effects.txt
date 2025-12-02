@@ -6,16 +6,12 @@ bpm_auth_handle_potential_collapses = {
 			limit = {
 				AND = {
 					owner = { is_player = no }
-					owner = { authority > 0 }
+					owner = { bpm_state_capacity > 0 }
 				}
 			}
 
 			owner = {
 				bpm_auth_init_exhaustion_if_necessary = yes
-				change_variable = {
-					name = bpm_auth_state_exhaustion
-					add = 10 # We are nicer to AI here
-				}
 			}
 		} else = {
 			if = {
@@ -39,7 +35,7 @@ bpm_auth_handle_potential_collapses = {
 							limit = {
 								OR = { # Only increases in chance of collapse are applied at low authority
 									modifier:state_bpm_auth_collapse_chance > 0
-									owner = { authority > 0 }
+									owner = { bpm_state_capacity > 0 }
 								}
 							}
 							multiply = {
@@ -225,12 +221,22 @@ bpm_auth_init_weeks_to_restore_order = {
 
 bpm_auth_handle_suppression_and_order = {
 	if = {
-		limit = { owner = { authority > 0 } }
+		limit = { owner = { bpm_state_capacity_percentage > 0.2 } }
+		if = {
+			limit = {
+				devastation > 0
+				is_incorporated = yes
+			}
+			add_devastation = -0.25
+		}
 		if = { 
+			limit = {
+				turmoil > 0.1
+			}
 			add_radicals_in_state = {
 				value = {
 					value = owner.authority
-					multiply = -10
+					multiply = -4
 					divide = state_population
 				}
 			}
@@ -244,7 +250,7 @@ bpm_auth_handle_suppression_and_order = {
 		if = {
 			limit = {
 				owner = { is_player = no }
-				owner = { authority > 0 }
+				owner = { bpm_state_capacity > 0 }
 				OR = {
 					turmoil >= 0.25
 					has_variable = bpm_auth_ai_is_removing_radicals
@@ -253,10 +259,6 @@ bpm_auth_handle_suppression_and_order = {
 			set_variable = bpm_auth_ai_is_removing_radicals
 			owner = {
 				bpm_auth_init_exhaustion_if_necessary = yes
-				change_variable = {
-					name = bpm_auth_state_exhaustion
-					add = 10 # We are nicer to AI here
-				}
 			}
 			add_radicals_in_state = {
 				value = -0.025
@@ -273,23 +275,30 @@ bpm_auth_handle_suppression_and_order = {
 					modifier:state_bpm_auth_partisans_self_remove = yes 
 					AND = {
 						owner = { is_player = no }
-						owner = { authority > 0 }
+						owner = { bpm_state_capacity > 0 }
 					}
 					AND = {
 						owner = { modifier:country_bpm_auth_restores_order = yes }
 						is_incorporated = yes
 					}
-					owner = { authority > 500 }
+					owner = { bpm_state_capacity > 500 }
 					turmoil < 0.6
 
 				}
 				always = yes
 			}
+			add_radicals_in_state = {
+				value = {
+					value = owner.authority
+					multiply = -6
+					divide = state_population
+				}
+			}
 
 			# if = {
 			# 	limit = {
 			# 		owner = { is_player = no }
-			# 		owner = { authority > 0 }
+			# 		owner = { bpm_state_capacity > 0 }
 			# 	}
 			# 	owner = { 
 			# 	bpm_auth_init_exhaustion_if_necessary = yes
@@ -302,7 +311,7 @@ bpm_auth_handle_suppression_and_order = {
 			# if = {
 			# 	limit = {
 			# 		owner = { is_player = yes }
-			# 		owner = { authority > 0 }
+			# 		owner = { bpm_state_capacity > 0 }
 			# 	}
 			# 	owner = { 
 			# 	bpm_auth_init_exhaustion_if_necessary = yes
@@ -338,6 +347,12 @@ bpm_auth_handle_suppression_and_order = {
 				if = {
 					limit = { bpm_auth_state_has_partisans = yes }
 					bpm_auth_downgrade_partisans = yes
+					if  {
+						limit = {
+							turmoil < 0.25
+						}
+						bpm_auth_downgrade_partisans = yes
+					}
 				}
 			}
 		}
@@ -353,6 +368,72 @@ bpm_auth_update_state_exhaustion = {
 		name = bpm_auth_state_exhaustion
 		add = bpm_auth_state_exhaustion_rate
 	}
+
+	if = {
+		limit = {
+			# If you collapse with no revolution to take over
+			bpm_state_capacity < 0
+			bpm_rev_exists = no
+		}
+		if = {
+			limit = {
+				NOT = {
+					has_variable = bpm_tick_tack_bureaubomb
+				}
+			}
+			set_variable = { name = bpm_tick_tack_bureaubomb value = 0 }
+		}
+		change_variable = { name = bpm_tick_tack_bureaubomb add = 1 }
+	}
+	else = {
+		remove_variable = bpm_tick_tack_bureaubomb
+	}
+	if = {
+		limit = {
+			var:bpm_tick_tack_bureaubomb >= 6
+		}
+		set_variable = {
+			name = bpm_auth_state_exhaustion
+			value = 0
+		}
+		set_variable = {
+			name = bpm_tick_tack_bureaubomb
+			value = 0
+		}
+		if = {
+			limit = {
+				has_law = law_type:law_hereditary_bureaucrats
+			}
+			bpm_palace_coup = yes
+		}
+		else = {
+			bpm_bureaucratic_coup = yes
+		}
+	}
+
+	# if = {
+	# 	limit = {
+	# 		var:bpm_auth_state_exhaustion > 500
+	# 	}
+	# 	save_scope_value_as = {
+	# 		name = radper
+	# 		value = {
+	# 			value = var:bpm_auth_state_exhaustion
+	# 			divide = {
+	# 				value = {
+	# 					value = bpm_state_capacity
+	# 					add = var:bpm_auth_state_exhaustion
+	# 				}
+	# 				min = 1
+	# 			}
+	# 			divide = 1000
+	# 			max = 0.01
+	# 		}
+	# 	}
+	# 	add_radicals = {
+	# 		value = scope:radper
+	# 	}
+	# }
 
 	if = { limit = { var:bpm_auth_state_exhaustion < 0 } set_variable = { name = bpm_auth_state_exhaustion value = 0 } }
 
@@ -404,7 +485,7 @@ bpm_auth_save_reserve_authority = { # Saving the authority pre-civil war. Post c
 	}
 
 	if = {
-		limit = { var:bpm_auth_pre_civil_war_authority > 0 }
+		limit = { var:bpm_auth_pre_civil_war_bpm_state_capacity > 0 }
 	} else = {
 		scope:target = {
 			set_variable = {
@@ -440,7 +521,7 @@ bpm_auth_use_reserve_authority_post_civil_war = {
 bpm_auth_handle_authority_shortage = {
 	if = {
 		limit = {
-			bpm_state_capacity <= 0
+			bpm_state_capacity_percentage <= 0.2
 		}
 		if = {
 			limit = { NOT = { has_modifier = bpm_auth_shortage } }
@@ -451,7 +532,7 @@ bpm_auth_handle_authority_shortage = {
 		}
 	} else_if = {
 		limit = {
-			authority > 0
+			bpm_state_capacity_percentage > 0.2
 			has_modifier = bpm_auth_shortage
 		}
 		remove_modifier = bpm_auth_shortage

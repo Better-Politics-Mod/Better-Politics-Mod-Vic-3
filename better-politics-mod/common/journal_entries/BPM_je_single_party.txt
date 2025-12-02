@@ -23,26 +23,52 @@
 			has_law = law_type:law_outlawed_dissent
 		}
 
-		NOT = { has_law = law_type:law_party_single }
+		NOT = { has_law_or_variant = law_type:law_party_single }
 
 		has_technology_researched = socialism
 
-		# The government must have one single ruling party
-		custom_tooltip = {
-			text = "bpm_je_single_party_in_government_trigger"
-			AND = {
-				ruler.interest_group = {
-					has_party = yes
+		OR = {
+			# The government must have one single ruling party
+			custom_tooltip = {
+				text = "bpm_je_single_party_in_government_trigger"
+				AND = {
+					ruler.interest_group = {
+						has_party = yes
+					}
+					any_interest_group = {
+						count = all
+						OR = {
+							AND = {
+								is_in_government = yes 
+								has_party = yes
+								is_member_of_party = prev.ruler.interest_group.party
+							}
+							is_in_government = no
+						}
+					}
 				}
-				any_interest_group = {
-					count = all
-					OR = {
+				NOT = {
+					any_interest_group = {
+						is_interest_group_type = ig_reactionaries
 						AND = {
 							is_in_government = yes 
 							has_party = yes
-							is_member_of_party = prev.ruler.interest_group.party
+							bpm_ig_is_organic_democrat = yes
+							is_powerful = yes
 						}
-						is_in_government = no
+					}
+				}
+			}
+
+			# The government must have one single ruling party
+			custom_tooltip = {
+				text = "bpm_je_reactionaries_in_government_trigger"
+				any_interest_group = {
+					is_interest_group_type = ig_reactionaries
+					AND = {
+						is_in_government = yes 
+						has_party = yes
+						bpm_ig_is_organic_democrat = yes
 					}
 				}
 			}
@@ -90,21 +116,36 @@
 			}
 
 			# The government must have one single ruling party
-			custom_tooltip = {
-				text = "bpm_je_single_party_in_government_trigger"
-				AND = {
-					ruler.interest_group = {
-						has_party = yes
-					}
-					any_interest_group = {
-						count = all
-						OR = {
-							AND = {
-								is_in_government = yes 
-								has_party = yes
-								is_member_of_party = prev.ruler.interest_group.party
+			OR = {
+				custom_tooltip = {
+					text = "bpm_je_single_party_in_government_trigger"
+					AND = {
+						ruler.interest_group = {
+							has_party = yes
+						}
+						any_interest_group = {
+							count = all
+							OR = {
+								AND = {
+									is_in_government = yes 
+									has_party = yes
+									is_member_of_party = prev.ruler.interest_group.party
+								}
+								is_in_government = no
 							}
-							is_in_government = no
+						}
+					}
+				}
+
+				custom_tooltip = {
+					text = "bpm_je_reactionaries_in_government_trigger"
+					any_interest_group = {
+						is_interest_group_type = ig_reactionaries
+						AND = {
+							is_in_government = yes
+							is_powerful = yes
+							has_party = yes
+							bpm_ig_is_organic_democrat = yes
 						}
 					}
 				}
@@ -114,7 +155,23 @@
 
 	on_complete = {
 		custom_tooltip = bpm_become_single_party
-		trigger_event = { id = bpm_single_party.1 }
+		if = {
+			limit = {
+				any_interest_group = {
+					is_interest_group_type = ig_reactionaries
+					AND = {
+						is_in_government = yes
+						is_powerful = yes
+						has_party = yes
+						bpm_ig_is_organic_democrat = yes
+					}
+				}
+			}
+			trigger_event = { id = bpm_single_party.10 }
+		}
+		else = {
+			trigger_event = { id = bpm_single_party.1 }
+		}
 	}
 
 	on_monthly_pulse = {

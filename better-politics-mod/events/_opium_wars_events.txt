@@ -1,0 +1,322 @@
+﻿namespace = opium_wars
+
+# Start event for obsessed country
+opium_wars.1 = {
+	type = country_event
+	placement = ROOT
+
+	title = opium_wars.1.t
+	desc = opium_wars.1.d
+	flavor = opium_wars.1.f
+
+	duration = 3
+
+	cooldown = { days = stupidly_long_modifier_time }
+
+	event_image = {
+		video = "europenorthamerica_opium_smoker"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	trigger = {
+		NOT = { has_variable = opium_wars_start_var }
+		any_primary_culture = {
+			has_cultural_obsession = opium
+		}
+		is_country_type = unrecognized
+		total_population > 5000000
+		NOT = {
+			any_country = {
+				has_variable = opium_wars_target
+			}
+		}
+		any_scope_state = {
+			any_scope_building = {
+				is_building_type = building_trade_center
+			}
+		}
+		is_subject = no
+		NOT = { has_law_or_variant = law_type:law_free_trade }
+		any_market = {
+            root.market = {
+                market_imports_reliance = { target = prev goods = opium value > 0.25 }
+            }
+			owner = {
+				country_rank >= rank_value:major_power
+				NOR = {
+					any_scope_state = {
+						is_treaty_port = yes
+						any_neighbouring_state = {
+							owner = ROOT
+						}
+					}
+					any_scope_treaty = {
+						binds = ROOT
+						any_scope_article = {
+							has_type = foreign_investment_rights
+							source_country = root
+						}
+					}
+				}
+			}
+        }
+		NOT = {
+			has_modifier = opium_wars_addiction_modifier
+		}
+	}
+
+	immediate = {
+		set_variable = opium_wars_start_var
+		random_primary_culture = {
+			limit = {
+				has_cultural_obsession = opium
+			}
+			save_scope_as = addicted_culture
+		}
+		random_market = {
+			limit = {
+				root.market = {
+					market_imports_reliance = { target = prev goods = opium value > 0.25 }
+				}
+				owner = {
+					country_rank >= rank_value:major_power
+					NOR = {
+						any_scope_state = {
+							is_treaty_port = yes
+							any_neighbouring_state = {
+								owner = ROOT
+							}
+						}
+						any_scope_treaty = {
+							binds = ROOT
+							any_scope_article = {
+								has_type = foreign_investment_rights
+								source_country = root
+							}
+						}
+					}
+				}
+			}
+			owner = {
+				save_scope_as = opium_exporter
+			}
+		}
+	}
+
+	option = {
+		name = opium_wars.1.a
+		default_option = yes
+		set_variable = opium_wars_target
+		set_variable = {
+			name = opium_wars_completion_tracker
+			value = 0
+		}
+		add_journal_entry = {
+			type = je_opium_obsession
+		}
+		# send events to all applicable powers
+		# can't just use the scope because we want to catch multiple countries if we can
+		random_market = {
+			limit = {
+				root.market = {
+					market_imports_reliance = { target = prev goods = opium value > 0.25 }
+				}
+				owner = {
+					country_rank >= rank_value:major_power
+					NOR = {
+						any_scope_state = {
+							is_treaty_port = yes
+							any_neighbouring_state = {
+								owner = ROOT
+							}
+						}
+						any_scope_treaty = {
+							binds = ROOT
+							any_scope_article = {
+								has_type = foreign_investment_rights
+								source_country = root
+							}
+						}
+					}
+				}
+			}
+			owner = {
+				trigger_event = { id = opium_wars.2 }
+			}
+		}
+		add_modifier = {
+			name = opium_wars_addiction_modifier
+			days = long_modifier_time
+		}
+		ai_chance = {
+			base = 100
+		}
+	}
+	option = {
+		name = opium_wars.1.b
+		add_modifier = {
+			name = opium_wars_addiction_modifier
+			days = very_long_modifier_time
+		}
+		every_political_movement = {
+				limit = {
+					OR = {
+						is_political_movement_type = movement_cultural_majority
+						is_political_movement_type = movement_hindu_nationalist
+					}
+				}
+				add_modifier = {
+					name = bpm_capitulated_to_west
+					days = very_long_modifier_time
+				}
+			}
+		add_radicals = {
+			value = medium_radicals
+		}
+		if = {
+			limit = { has_journal_entry = je_warlord_china }
+			chi_remove_1_fragile_unity = yes
+		}
+		ai_chance = {
+			base = 10
+		}
+	}
+}
+
+# Obsessed country fails
+opium_wars.4 = {
+	type = country_event
+	placement = ROOT
+
+	title = opium_wars.4.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = opium_wars.4.d
+				trigger = {
+					has_law_or_variant = law_type:law_free_trade
+				}
+			}
+			triggered_desc = {
+				desc = opium_wars.4.d2
+				trigger = {
+					any_country = {
+						has_variable = opium_wars_aggressor
+						any_scope_state = {
+							market = {
+								owner = ROOT
+							}
+						}
+					}
+				}
+			}
+			triggered_desc = {
+				desc = opium_wars.4.d3
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	flavor = opium_wars.4.f
+
+	duration = 3
+
+	cooldown = { days = stupidly_long_modifier_time }
+
+	event_image = {
+		video = "europenorthamerica_opium_smoker"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	trigger = {
+		# triggered by JE complete
+	}
+
+	immediate = {
+		if = {
+			limit = { has_modifier = opium_wars_addiction_modifier }
+			remove_modifier = opium_wars_addiction_modifier
+		}
+		if = {
+			limit = {
+				any_country = {
+					has_variable = opium_wars_aggressor
+					any_scope_state = {
+						market = {
+							owner = ROOT
+						}
+					}
+				}
+			}
+			random_country = {
+				limit = {
+					has_variable = opium_wars_aggressor
+					any_scope_state = {
+						market = {
+							owner = ROOT
+						}
+					}
+				}
+				save_scope_as = opium_wars_treaty_port_winner
+				random_scope_state = {
+					limit = {
+						is_treaty_port = yes
+						state_region = {
+							any_scope_state = {
+								owner = root
+							}
+						}
+					}
+					save_scope_as = treaty_port_state
+				}
+			}
+		}
+		if = {
+			limit = { has_journal_entry = je_warlord_china }
+			set_variable = lost_opium_wars
+			chi_remove_1_fragile_unity = yes
+		}
+	}
+
+	option = {
+		name = opium_wars.4.a
+		default_option = yes
+		add_modifier = {
+			name = opium_wars_lost
+			days = very_long_modifier_time
+			is_decaying = yes
+		}
+		add_radicals = {
+			value = large_radicals
+		}
+		if = {
+			limit = {
+				is_banning_goods = g:opium
+			}
+			remove_banned_goods = g:opium
+		}
+		if = {
+			limit = {
+				has_modifier = opium_ban_authority
+			}
+			remove_modifier = opium_ban_authority
+		}
+		if = {
+			limit = {
+				exists = c:CHI
+            	this = c:CHI
+			}
+			trigger_event = { 
+				id = bpm_china.1
+				days = 2
+			}
+		}
+	}
+}

@@ -27,6 +27,9 @@
 			NOT = { has_global_variable = bpm_peoples_springtime_happened }
 			NOT = { has_global_variable = bpm_peoples_springtime_happening }
 		}
+	}
+
+	should_be_involved = {
 		bpm_country_is_in_europe = yes
 	}
 
@@ -69,40 +72,41 @@
 
 	on_monthly_pulse = {
 		effect = {
-			if = {
-				limit = {
-					bpm_country_is_in_europe = yes
-					NOT = { this = c:RUS }
-				}
-
-				hidden_effect = {
-					remove_modifier = bpm_pre_peoples_springtime
-				}
-				add_modifier = {
-					name = bpm_pre_peoples_springtime
-					multiplier = {
-						value = global_var:bpm_je_march_to_radicalism_progress
-						divide = 100
-						max = 1
-					}
-					months = 24
-				}
-				if = {
-					limit = {
-						global_var:bpm_je_march_to_radicalism_progress >= 100
-						bpm_country_laws_ok_voting = no
-						NOR = {
-							this = c:GBR
+			scope:journal_entry = {
+				every_scope_je_involved = {
+					if = {
+						limit = {
+							bpm_country_is_in_europe = yes
+							NOT = { this = c:RUS }
 						}
-						NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
-					}
-					add_radicals = {
-						value = small_radicals
+						hidden_effect = {
+							remove_modifier = bpm_pre_peoples_springtime
+						}
+						add_modifier = {
+							name = bpm_pre_peoples_springtime
+							multiplier = {
+								value = global_var:bpm_je_march_to_radicalism_progress
+								divide = 100
+								max = 1
+							}
+							months = 24
+						}
+						if = {
+							limit = {
+								global_var:bpm_je_march_to_radicalism_progress >= 100
+								bpm_country_laws_ok_voting = no
+								NOR = {
+									this = c:GBR
+								}
+								NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+							}
+							add_radicals = {
+								value = small_radicals
+							}
+						}
 					}
 				}
 			}
-		}
-		effect = {
 			if = {
 				NOT = { has_global_variable = bpm_peoples_springtime_happening }
 				NOT = { has_global_variable = bpm_peoples_springtime_happened }
@@ -114,7 +118,7 @@
                 }
 				set_global_variable = peoples_springtime_happening
             }   
-        }
+		}
 	}
 
 	progressbar = yes
@@ -128,22 +132,19 @@
 		max = 120
 	}
 
-	on_complete = {
+	on_complete_all_involved = {
 		set_global_variable = {
 			name = bpm_march_to_radicalism_complete_var
 		}
 		set_variable = {
 			name = bpm_march_to_radicalism_complete_local_var
 		}
-		if = {
-			limit = {
-				bpm_country_is_in_europe = yes
-				NOT = { this = c:RUS }
-			}
-			set_variable = bpm_sotp_start
-			add_journal_entry = {
-				type = je_springtime_of_the_peoples
-			}
+		custom_tooltip = "bpm_activate_je_springtimes"
+	}
+
+	on_complete = {
+		hidden_effect = {
+			add_contextless_journal_entry = je_springtime_of_the_peoples
 		}
 	}
 
@@ -151,12 +152,16 @@
 	should_be_pinned_by_default = yes
 }
 
-REPLACE:je_springtime_of_the_peoples = {
+REPLACE_OR_CREATE:je_springtime_of_the_peoples = {
 	icon = "gfx/interface/icons/event_icons/48je.dds"
 
-	group = je_group_crises
+	group = bpm_je_group_global
 
-	immediate = {
+	should_be_involved = {
+		bpm_country_is_in_europe = yes
+	}
+
+	immediate_all_involved = {
 		trigger_event = { id = 1848.4 }
 		if = {
 			limit = {
@@ -241,7 +246,7 @@ REPLACE:je_springtime_of_the_peoples = {
 		}
 	}
 
-	on_timeout = {
+	on_timeout_all_involved = {
 		set_variable = completed_peoples_springtime_je
 		remove_global_variable = bpm_peoples_springtime_happening
 		set_global_variable = bpm_peoples_springtime_happened
@@ -297,7 +302,11 @@ REPLACE:je_springtime_of_the_peoples = {
 			10 = peoples_springtime.5
 		}
 		effect = {
-			bpm_setup_country_stubbornness = yes
+			scope:journal_entry = {
+				every_scope_je_involved = {
+					bpm_setup_country_stubbornness = yes
+				}
+			}
 		}
 	}
 

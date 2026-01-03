@@ -375,7 +375,7 @@ REPLACE:liberal_party = {
 				AND = {
 					owner = { 
 						c:BEL ?= THIS
-						has_variable = liberal_party_congress_1846_variable
+						has_variable = liberal_party_congress_has_happened
 					}
 				}
 				NOR = {
@@ -393,7 +393,10 @@ REPLACE:liberal_party = {
 			AND = {
 				owner = { 
 					c:BEL ?= THIS
-					has_variable = liberal_party_congress_1846_variable
+					has_variable = liberal_party_congress_has_happened
+					NOT = {
+						has_variable = bpm_bel_conservative_catholic_party_created_var
+					}
 				}
 			}
 			NOR = {
@@ -964,6 +967,24 @@ REPLACE:liberal_party = {
 			}
 		}
 
+		if = {
+			limit = { owner = c:BEL }
+			if = { 
+				limit = {
+					OR = {
+						is_interest_group_type = ig_socialists
+						is_interest_group_type = ig_agrarian_populists
+						is_interest_group_type = ig_trade_unions
+					}
+					NOT = { has_global_variable = first_intl_chain_complete_var }
+				}
+				add = {
+					value = -25
+					desc = "bpm_from_belgian_early_socialists"
+				}
+			}
+		}
+
 		if = { # north andean and mexican liberals like descentralism
 			limit = {
 				owner = {
@@ -1266,6 +1287,90 @@ REPLACE:liberal_party = {
 			}
 		}
 
+		if = {
+			limit = { owner = c:BEL }
+			if = { # Unions des Oppositions
+				limit = { owner = { has_variable = liberal_party_congress_has_happened } }
+				if = {
+					limit = { 
+						OR = {
+							is_interest_group_type = ig_armed_forces
+							is_interest_group_type = ig_national_liberals
+            				is_interest_group_type = ig_liberals
+						}
+					}
+					add = {
+						value = 25
+						desc = "bpm_liberal_party_core"
+					}
+				}
+				else_if = {
+					limit = { 
+						is_interest_group_type = ig_reactionaries 
+						has_ideology = ideology:ideology_rel_secularist
+					}
+					add = {
+						value = 25
+						desc = "bpm_liberal_party_anticlericals"
+					}
+				}
+				else_if = {
+					limit = { 
+						OR = {
+							is_interest_group_type = ig_radicals
+							is_interest_group_type = ig_intelligentsia
+						} 
+					}
+					add = {
+						value = 25
+						desc = "bpm_liberal_party_anticlericals"
+					}
+				}
+			}
+		}
+
+		else_if = {
+			limit = { owner = c:BEL }
+			if = { # Unions des Oppositions
+				limit = { owner = { has_variable = bpm_je_belgium_legacy_of_unionism } }
+				if = {
+					limit = {
+						OR = {
+							is_interest_group_type = ig_radicals
+							is_interest_group_type = ig_intelligentsia
+							is_interest_group_type = ig_reactionaries 
+						} 
+					}
+					add = {
+						value = ROOT.var:bpm_je_belgium_legacy_of_unionism
+						multiply = 2
+						desc = "bpm_liberal_party_anticlericals"
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							is_interest_group_type = ig_armed_forces
+							is_interest_group_type = ig_national_liberals
+            				is_interest_group_type = ig_liberals
+						}
+					}
+					add = {
+						value = ROOT.var:bpm_je_belgium_legacy_of_unionism
+						multiply = 2
+						desc = "bpm_liberal_party_core"
+					}
+				}
+				else = {
+					add = {
+						value = ROOT.var:bpm_je_belgium_legacy_of_unionism
+						multiply = -1
+						desc = "bpm_fom_opposition_to_unionism"
+					}
+				}
+			}
+		}
+
 		# ===========================================================================
 		# Hardcoded party affiliation
 		# ===========================================================================
@@ -1556,70 +1661,6 @@ REPLACE:liberal_party = {
 					add = {
 						value = 10
 						desc = "bpm_third_party_system"
-					}
-				}
-			}
-		}
-
-		# BEL
-
-		else_if = {
-			limit = { owner = c:BEL }
-			# Second Party System
-			if = {
-				limit = { owner = { has_variable = liberal_party_congress_1846_variable } }
-				if = {
-					limit = { leader = { has_variable = liberal_party_leader } }
-					add = {
-						value = 100
-						desc = "bpm_historical_leader"
-					}
-				}
-				else_if = {
-					limit = { leader = { has_variable = anti_liberal_party_leader } }
-					add = {
-						value = -100
-						desc = "bpm_historical_leader"
-					}
-				}
-				if = {
-					limit = { 
-						OR = {
-							is_interest_group_type = ig_armed_forces
-							is_interest_group_type = ig_national_liberals
-            				is_interest_group_type = ig_liberals
-						}
-					}
-					add = {
-						value = 25
-						desc = "bpm_liberal_party_core"
-					}
-				}
-				else_if = {
-					limit = { 
-						is_interest_group_type = ig_reactionaries 
-						leader = {
-							has_ideology = ideology_leader_anti_clericalist
-						}
-					}
-					add = {
-						value = 25
-						desc = "bpm_liberal_party_anticlericals"
-					}
-				}
-				else_if = {
-					limit = { 
-						is_interest_group_type = ig_radicals 
-						leader = {
-							OR = {
-								has_ideology = ideology_moderate
-								has_ideology = ideology_leader_anti_clericalist
-							}
-						}
-					}
-					add = {
-						value = 25
-						desc = "bpm_liberal_party_anticlericals"
 					}
 				}
 			}

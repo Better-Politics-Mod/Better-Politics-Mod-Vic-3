@@ -1,0 +1,706 @@
+﻿namespace = ip4_coup
+
+# Start event
+REPLACE:ip4_coup.1 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = ip4_coup.1.t
+	desc = ip4_coup.1.d
+	flavor = ip4_coup.1.f
+
+	is_popup = yes
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:golpista_general
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/2Characters"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	trigger = {
+		NOT = { has_journal_entry = je_ip4_coup }
+		NOT = { has_free_government_reform = yes } # Election grace period
+		any_scope_character = {
+			OR = {
+				has_role = general
+				has_role = admiral
+			}
+			interest_group = {
+				ig_approval <= define:NPolitics|APPROVAL_THRESHOLD_ANGRY
+			}
+			commander_coup_strength >= { # Commander can plausibly coup the government with help
+				value = owner.country_coup_resistance
+				multiply = 0.9
+			}
+		}
+		NOT = { has_variable = coup_event_active }
+		NOT = { has_variable = coup_cooldown_var }
+		NOT = { has_variable = coup_immunity }
+		always = no
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:golpista_general }
+	}
+
+	immediate = {
+		set_variable = { name = coup_event_active days = 90 }
+		ordered_scope_character = {
+			limit = {
+				OR = {
+					has_role = general
+					has_role = admiral
+				}
+				interest_group = {
+					ig_approval <= define:NPolitics|APPROVAL_THRESHOLD_ANGRY
+				}
+				commander_coup_strength >= { # Commander can plausibly coup the government with help
+					value = owner.country_coup_resistance
+					multiply = 0.9
+				}
+			}
+			order_by = popularity
+			position = 0
+			check_range_bounds = no
+			set_variable = golpista_var
+			set_variable = { name = monthly_cached_units_share value = this.num_units_share } # Updates at start of coup
+			set_variable = { name = monthly_cached_commander_coup_strength value = this.commander_coup_strength }
+			save_scope_as = golpista_general
+			interest_group = {
+				set_variable = golpista_ig_var
+				save_scope_as = golpista_ig
+			}
+		}
+		generate_2_common_name = {
+			CULTURE_1 = primary_culture
+			CULTURE_2 = primary_culture
+		}
+	}
+
+	# Advance the coup
+	option = {
+		name = ip4_coup.1.a
+		add_journal_entry = { type = je_ip4_coup }
+		scope:golpista_general ?= {
+			add_modifier = {
+				name = coup_supported
+				days = short_modifier_time
+			}
+		}
+		clear_generated_names = yes
+	}
+
+	# Resist the coup
+	option = {
+		name = ip4_coup.1.b
+		default_option = yes
+		add_journal_entry = { type = je_ip4_coup }
+		add_modifier = {
+			name = coup_resisted
+			days = short_modifier_time
+		}
+		clear_generated_names = yes
+	}
+
+	after = {
+		show_as_tooltip = {
+			custom_tooltip = if_coup_is_successful_tt
+			ip4_coup_victory_effect = yes
+		}
+		remove_variable = coup_event_active
+	}
+}
+
+# Success Event
+REPLACE:ip4_coup.2 = {
+	type = country_event
+	placement = scope:pronunciamento_state
+
+	duration = 3
+
+	title = ip4_coup.2.t
+	desc = ip4_coup.2.d
+	flavor = ip4_coup.2.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:golpista_general
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/2Characters"
+
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	# No cooldown
+
+	trigger = {
+		always = no
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:golpista_general }
+	}
+
+	immediate = {
+		random_scope_character = {
+			limit = {
+				has_variable = golpista_var
+			}
+			save_scope_as = golpista_general
+			interest_group = {
+				save_scope_as = golpista_ig
+			}
+		}
+		scope:golpista_general ?= { # This looks worse than it really is.
+			if = {
+				limit = {
+					exists = commander_military_formation
+				}
+				commander_military_formation ?= {
+					if = {
+						limit = {
+							exists = current_hq
+						}
+						current_hq ?= {  # Case 1 - the commander has a formation and is stationed in an HQ
+							region ?= {
+								if = { # Case 1.1 - the commander has a formation and is stationed in an HQ, and ROOT owns at least one state in this HQ.
+									limit = {
+										any_scope_state = {
+											owner = ROOT
+										}
+									}
+									ip4_coup_get_owned_pronunciamento_state = yes
+								}
+								else = { # Case 1.2 - the commander has a formation and is stationed in an HQ, and ROOT does not own at least one state in this HQ.
+									ip4_coup_get_unowned_pronunciamento_state = yes
+								}
+							}
+						}
+					}
+					else_if = {
+						limit = {
+							exists = front
+						}
+						front ?= {  # Case 2 - the commander has a formation and is on or travelling to a front
+							if = {  # Case 2.1 - the commander has a formation and is on or travelling to a front, and ROOT owns at least one state on this front.
+								limit = {
+									any_scope_state = {
+										owner = ROOT
+									}
+								}
+								ip4_coup_get_owned_pronunciamento_state = yes
+							}
+							else_if = { # Case 2.2 - the commander has a formation and is on or travelling to a front, and any allied country owns at least one state on this front.
+								limit = {
+									any_scope_state = {
+										owner = {
+											is_diplomatic_play_ally_of = ROOT
+										}
+									}
+								}
+								ip4_coup_get_allied_pronunciamento_state = yes
+							}
+							else = {  # Case 2.3 - the commander has a formation and is on or travelling to a front, and no allied country owns at least one state on this front.
+								ordered_scope_state = {
+									order_by = gdp
+									position = 0
+									check_range_bounds = no
+									save_scope_as = pronunciamento_state
+								}
+							}
+						}
+					}
+					else_if = {
+						limit = {
+							exists = home_hq
+						}
+						home_hq ?= {  # Case 3 - the commander has a formation but somehow has neither a front nor a current HQ.
+							region ?= {
+								if = { # Case 3.1 - the commander has a formation but somehow has neither a front nor a current HQ, and ROOT owns at least one state in the home HQ.
+									limit = {
+										any_scope_state = {
+											owner = ROOT
+										}
+									}
+									ip4_coup_get_owned_pronunciamento_state = yes
+								}
+								else = { # Case 3.2 - the commander has a formation but somehow has neither a front nor a current HQ, and ROOT does not own at least one state in the home HQ.
+									ip4_coup_get_unowned_pronunciamento_state = yes
+								}
+							}
+						}
+					}
+					else = {
+						ROOT.capital = { # Case 4 - the commander has no current HQ, front, or home HQ, but does have a formation. This should never happen.
+							save_scope_as = pronunciamento_state
+						}
+					}
+				}
+			}
+			else = {
+				capital = { # Case 5 - the commander has no formation but somehow is still valid.
+					save_scope_as = pronunciamento_state
+				}
+			}
+		}
+		scope:golpista_ig ?= {
+            ordered_preferred_law = {
+				limit = {
+					law_is_available = yes
+					law_is_valid_for_ig_petition = yes
+					NOT = {
+						ROOT = {
+							has_law = prev.type
+						}
+					}
+				}
+				position = 0
+                check_range_bounds = no
+                save_scope_as = coup_desired_law
+            }
+		}
+		set_variable = { name = coup_event_active days = 90 }
+	}
+
+	# Do whatever they say.
+	option = {
+		name = ip4_coup.2.a
+		default_option = yes
+		trigger = {
+			scope:golpista_general ?= {
+				NOR = {
+					has_variable = commander_doing_coup_on_player_behalf
+					has_modifier = modifier_preempetive_coup
+				}
+			}
+		}
+		ai_chance = {
+			base = 25
+		}
+		custom_tooltip = pronunciamento_victory_tt
+		ip4_coup_victory_effect = yes
+		scope:golpista_general ?= {
+			remove_variable = golpista_var
+		}
+		random_interest_group = {
+			limit = {
+				has_variable = golpista_ig_var
+			}
+			remove_variable = golpista_ig_var
+		}
+	}
+
+	# Nononononononono-
+	option = {
+		name = ip4_coup.2.b
+		default_option = yes
+		highlighted_option = yes
+		trigger = {
+			OR = {
+				custom_tooltip = {
+					text = doing_coup_for_player_tt
+					scope:golpista_general ?={
+						has_variable = commander_doing_coup_on_player_behalf
+					}
+				}
+				custom_tooltip = {
+					text = pronunciamento_immediately_var_tt
+					scope:golpista_general ?= {
+						has_modifier = modifier_preempetive_coup
+					}
+				}
+				root.government_legitimacy >= scope:golpista_general.popularity
+				trigger_if = {
+					limit = {
+						scope:golpista_general ?= {
+							has_role = admiral
+						}
+					}
+					scope:golpista_general.num_units_share < {
+						value = root.navy_size
+						multiply = 0.10
+					}
+				}
+				trigger_if = {
+					limit = {
+						scope:golpista_general ?= {
+							has_role = general
+						}
+					}
+					scope:golpista_general.num_units_share < {
+						value = root.army_size
+						multiply = 0.10
+					}
+				}
+			}
+		}
+		ai_chance = {
+			base = 100 # If the AI can avert a coup, it will try to
+		}
+		scope:pronunciamento_state ?= {
+			add_devastation = 25
+		}
+		random_list = {
+			1 = {
+				modifier = {
+					add = {
+						value = scope:golpista_general.commander_coup_strength
+					}
+					min = 0
+				}
+				custom_tooltip = pronunciamento_victory_tt
+				ip4_coup_victory_effect = yes
+			}
+			1 = {
+				modifier = {
+					add = {
+						value = root.country_coup_resistance
+					}
+					min = 0
+				}
+				custom_tooltip = pronunciamento_crushed_tt
+				ROOT = { save_scope_as = coup_country } # For the notification
+				post_notification = failed_coup_in_country
+				scope:pronunciamento_state ?= {
+					if = {
+						limit = {
+							scope:golpista_general.popularity >= 0
+						}
+						add_radicals_in_state = {
+							value = {
+								add = scope:golpista_general.popularity
+								divide = 100
+								max = 0.75
+							}
+							interest_group = scope:golpista_ig
+						}
+					}
+					else = {
+						add_radicals_in_state = {
+							value = small_radicals
+						}
+					}
+				}
+				add_radicals = {
+					value = {
+						add = scope:golpista_general.num_units_share
+						divide = owner.army_size
+					}
+					pop_type = soldiers
+				}
+				add_radicals = {
+					value = {
+						add = scope:golpista_general.num_units_share
+						divide = owner.army_size
+					}
+					pop_type = officers
+				}
+				if = {
+					limit = {
+						has_variable = exile_golpista_var
+					}
+					scope:golpista_general ?= {
+						show_as_tooltip = {
+							exile_character = yes
+						}
+						hidden_effect = {
+							exile_character_with_martyrdom = yes
+						}
+					}
+					remove_variable = exile_golpista_var
+				}
+				else_if = {
+					limit = {
+						has_variable = retire_golpista_var
+					}
+					scope:golpista_general ?= {
+						if = {
+							limit = {
+								has_role = general
+							}
+							remove_character_role = general
+						}
+						if = {
+							limit = {
+								has_role = admiral
+							}
+							remove_character_role = admiral
+						}
+					}
+					remove_variable = retire_golpista_var
+				}
+				change_global_variable = { name = failed_coups add = 1 }
+			}
+		}
+		scope:golpista_general ?= {
+			remove_variable = golpista_var
+		}
+		random_interest_group = {
+			limit = {
+				has_variable = golpista_ig_var
+			}
+			remove_variable = golpista_ig_var
+		}
+	}
+
+	after = {
+		remove_variable = coup_event_active
+	}
+}
+
+REPLACE:ip4_coup.3 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = ip4_coup.3.t
+	desc = ip4_coup.3.d
+	flavor = ip4_coup.3.f
+
+	event_image = {
+		video = "votp_conspiring"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	trigger = {
+		always = no
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:golpista_general }
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				has_variable = golpista_ig_var
+			}
+			save_scope_as = golpista_ig
+		}
+		random_scope_character = {
+			limit = {
+				has_variable = golpista_var
+			}
+			save_scope_as = golpista_general
+		}
+		capital = {
+			save_scope_as = capital_scope
+		}
+	}
+
+	option = {
+		name = ip4_coup.3.a
+		default_option = yes
+		scope:golpista_ig = {
+			add_modifier = {
+				name = failed_coup
+				days = normal_modifier_time
+			}
+			set_variable = { name = coup_guilty days = 3650 }
+		}
+		scope:golpista_general = {
+			add_modifier = {
+				name = incompetent_coup_attempt
+				days = very_long_modifier_time
+				# large popularity reduction
+			}
+		}
+		scope:golpista_general ?= {
+			remove_variable = golpista_var
+		}
+		random_interest_group = {
+			limit = {
+				has_variable = golpista_ig_var
+			}
+			remove_variable = golpista_ig_var
+		}
+	}
+
+	option = {
+		name = ip4_coup.3.b
+		highlighted_option = yes
+		trigger = {
+			OR = {
+				has_law = law_type:law_secret_police
+				has_law = law_type:law_outlawed_dissent
+			}
+		}
+		scope:golpista_ig = {
+			add_modifier = {
+				name = modifier_super_failed_coup
+				days = normal_modifier_time
+			}
+			set_variable = { name = coup_guilty days = 3650 }
+		}
+		random_list = {
+			50 = {
+				modifier = {
+					if = {
+						limit = {
+							owner.institution:institution_home_affairs.investment >= 2
+						}
+						add = 25
+					}
+					if = {
+						limit = {
+							owner.institution:institution_home_affairs.investment >= 3
+						}
+						add = 25
+					}
+					if = {
+						limit = {
+							owner.institution:institution_home_affairs.investment >= 4
+						}
+						add = 25
+					}
+					if = {
+						limit = {
+							owner.institution:institution_home_affairs.investment >= 5
+						}
+						add = 25
+					}
+				}
+				scope:golpista_general = {
+					kill_character = yes
+				}
+			}
+			50 = {
+				scope:golpista_general = {
+					exile_character = yes
+				}
+			}
+		}
+		scope:golpista_general ?= {
+			remove_variable = golpista_var
+		}
+		random_interest_group = {
+			limit = {
+				has_variable = golpista_ig_var
+			}
+			remove_variable = golpista_ig_var
+		}
+	}
+}
+
+# For characters realising that they're getting marginalised
+REPLACE:ip4_coup.4 = {
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = ip4_coup.4.t
+	desc = ip4_coup.4.d
+	flavor = ip4_coup.4.f
+
+	event_image = {
+		video = "votp_conspiring"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	# Cooldown is handled by ip4_coup_4_var
+
+	trigger = {
+		# triggered by je_ip4_coup
+		any_scope_character = {
+			has_variable = golpista_var
+			has_variable = monthly_cached_units_share
+			trigger_if = {
+				limit = {
+					has_variable = monthly_cached_units_share
+				}
+				this.num_units_share <= {
+					value = this.var:monthly_cached_units_share # Their amount of controlled units has declined by at least 20%
+					multiply = 0.8
+				}
+			}
+			NOT = { has_variable = ip4_coup_4_var }
+		}
+		always = no
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:golpista_general }
+			NOT = { has_journal_entry = je_ip4_coup }
+		}
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				has_variable = golpista_ig_var
+			}
+			save_scope_as = golpista_ig
+		}
+		random_scope_character = {
+			limit = {
+				has_variable = golpista_var
+				this.num_units_share <= {
+					value = this.var:monthly_cached_units_share # Their amount of controlled units has declined by at least 20%
+					multiply = 0.8
+				}
+			}
+			save_scope_as = golpista_general
+			set_variable = { name = ip4_coup_4_var days = short_modifier_time }
+		}
+		capital = {
+			save_scope_as = capital_scope
+		}
+		generate_2_common_name = {
+			CULTURE_1 = primary_culture
+			CULTURE_2 = primary_culture
+		}
+	}
+
+	option = {
+		name = ip4_coup.4.a
+		default_option = yes
+		scope:golpista_general.interest_group ?= {
+			add_modifier = {
+				name = modifier_sabotaged_military_forces
+				days = normal_modifier_time
+				multiplier = 2
+			}
+		}
+		custom_tooltip = {
+			text = je_ip4_coup_progress_bar_add_50_tt
+			je:je_ip4_coup ?= {
+				add_progress = { value = 50 name = je_ip4_coup_progress_bar }
+			}
+		}
+		clear_generated_names = yes
+	}
+
+	option = {
+		name = ip4_coup.4.b
+		scope:golpista_general.interest_group ?= {
+			add_modifier = {
+				name = modifier_sabotaged_military_forces
+				days = normal_modifier_time
+				multiplier = 4
+			}
+		}
+		add_radicals = {
+			pop_type = officers
+			value = large_radicals
+		}
+		add_radicals = {
+			pop_type = soldiers
+			value = large_radicals
+		}
+		clear_generated_names = yes
+	}
+}

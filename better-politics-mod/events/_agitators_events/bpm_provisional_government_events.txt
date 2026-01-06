@@ -297,3 +297,154 @@ bpm_provisional_government_events.3 = {
 	
 
 }
+
+
+bpm_provisional_government_events.4 = {
+	type = country_event
+	placement = root
+	event_image = {
+		video = "votp_monarch_holding_court"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	title = bpm_provisional_government_events.4.t
+	desc = bpm_provisional_government_events.4.d
+	#flavor = bpm_provisional_government_events.4.f
+
+	duration = 3
+
+	trigger = {
+	}
+
+	after = {
+		scope:ig = {
+			remove_variable = bpm_negotiation_selected_ig
+		}
+		remove_variable = bpm_negotiating_amendment
+		remove_variable = bpm_temp_amendment1
+		remove_variable = bpm_temp_amendment2
+		remove_variable = bpm_temp_amendment3
+	}
+
+	immediate = {
+		random_interest_group = {
+			limit = {
+				has_variable = bpm_negotiation_selected_ig
+			}
+			save_scope_as = ig
+		}
+		currently_enacting_law = {
+			save_scope_as = law
+		}
+		scope:law = {
+			random_possible_amendment_type = {
+				limit = {
+					bpm_amendment_banned_from_enactment = no
+					scope:ig = { would_sponsor_amendment = prev }
+				}
+				save_scope_as = amendment_type1
+			}
+			random_possible_amendment_type = {
+				limit = {
+					bpm_amendment_banned_from_enactment = no
+					amendment_is_generic = no
+					scope:ig = { would_sponsor_amendment = prev }
+					NOT = { 
+						this = scope:amendment_type1
+					}
+				}
+				save_scope_as = amendment_type2
+			}
+			random_possible_amendment_type = {
+				limit = {
+					bpm_amendment_banned_from_enactment = no
+					amendment_is_generic = no
+					scope:ig = { would_sponsor_amendment = prev }
+					NOT = { 
+						this = scope:amendment_type1
+					}
+					NOT = { 
+						this = scope:amendment_type2
+					}
+				}
+				save_scope_as = amendment_type3
+			}
+		}
+		set_variable = {
+			name = bpm_temp_amendment1
+			value = scope:amendment_type1
+		}
+		set_variable = {
+			name = bpm_temp_amendment2
+			value = scope:amendment_type2
+		}
+		set_variable = {
+			name = bpm_temp_amendment3
+			value = scope:amendment_type3
+		}
+	}
+
+	option = {
+		name = bpm_provisional_government_events.4.a
+		trigger = {
+			exists = scope:amendment_type1
+		}
+		scope:ig = {
+			set_variable = bpm_negotiated_amendment_sway_used
+			bpm_subtract_from_law_sways = yes
+		}
+		set_variable = { name = bpm_negotiate_amendment_cd days = 90 }
+		scope:law = {
+			add_amendment = {
+				type = scope:amendment_type1
+				sponsor = scope:ig
+				cooldown = 120
+			}
+		}
+	}
+	option = {
+		name = bpm_provisional_government_events.4.b
+		trigger = {
+			exists = scope:amendment_type2
+		}
+		scope:ig = {
+			set_variable = bpm_negotiated_amendment_sway_used
+			bpm_subtract_from_law_sways = yes
+		}
+		set_variable = { name = bpm_negotiate_amendment_cd days = 90 }
+		scope:law = {
+			add_amendment = {
+				type = scope:amendment_type2
+				sponsor = scope:ig
+				cooldown = 120
+			}
+		}
+	}
+		option = {
+		name = bpm_provisional_government_events.4.c
+		trigger = {
+			exists = scope:amendment_type3
+		}
+		scope:ig = {
+			set_variable = bpm_negotiated_amendment_sway_used
+			bpm_subtract_from_law_sways = yes
+		}
+		set_variable = { name = bpm_negotiate_amendment_cd days = 90 }
+		scope:law = {
+			add_amendment = {
+				type = scope:amendment_type3
+				sponsor = scope:ig
+				cooldown = 120
+			}
+		}
+	}
+
+	option = {
+		name = bpm_provisional_government_events.4.cancel
+		default_option = yes
+		# cancel
+	}
+}

@@ -1,7 +1,23 @@
-﻿je_peru_bolivia = {
+REPLACE:je_peru_bolivia = {
 	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
 
-	group = je_group_historical_content
+	group = je_group_global_international_situations
+
+	should_be_involved = {
+		OR = {
+			c:BOL ?= this
+			is_subject_of = c:BOL
+		}
+	}
+
+	should_show_when_not_involved = {
+		capital ?= {
+			is_in_geographic_region = geographic_region_south_america
+		}
+		NOT = {
+			has_variable = ignore_peru_bol
+		}
+	}
 
 	immediate = {
 		cu:quechua = {
@@ -10,10 +26,9 @@
 		cu:south_andean = {
 			save_scope_as = south_andean_culture
 		}
-		c:BOL = {
+		c:BOL ?= {
 			save_scope_as = bolivia_scope
 		}
-		set_variable = pbc_member
 	}
 	on_monthly_pulse = {
 		effect = {
@@ -43,6 +58,8 @@
 			}
 		}
 	}
+
+	custom_on_completion_header = je_peru_bolivia_on_confederation_victory
 
 	complete = {
 		hidden_trigger = {
@@ -82,14 +99,29 @@
 	on_complete = {
 		custom_tooltip = {
 			text = peru_bolivia_completion_nonbolivia_tt
-			if = {
-				limit = {
-					c:BOL ?= this
-				}
+			c:BOL ?= {
 				trigger_event = {
 					id = peru_bolivia_events.1
 				}
 			}
+		}
+	}
+
+	on_complete_all_involved = {
+		if = {
+			limit = {
+				has_variable = pbc_member
+			}
+			custom_tooltip = all_restorers_lose_prestige_tt
+		}
+		if = {
+			limit = {
+				NOT = { has_variable = pbc_member }
+				NOT = { has_variable = befriend_bolivia }
+			}
+			remove_variable = attack_bolivia
+			remove_variable = befriend_bolivia
+			trigger_event = { id = peru_bolivia_events.7 popup = yes }
 		}
 	}
 
@@ -119,33 +151,45 @@
 		}
 	}
 
+	custom_failure_header = je_peru_bolivia_restorer_victory
+
 	fail = {
 		OR = {
 			NOT = {
 				exists = c:BOL
 			}
-			OR = {
-				AND = {
-					exists = c:SPU
+			AND = {
+				OR = {
+					NOT = {
+						exists = c:SPU
+					}
 					c:SPU ?= {
 						NOT = { is_subject_of = c:BOL }
 					}
 				}
-				AND = {
-					exists = c:NPU
+				OR = {
+					NOT = {
+						exists = c:NPU
+					}
 					c:NPU ?= {
 						NOT = { is_subject_of = c:BOL }
 					}
 				}
-			}
-			trigger_if = {
-				limit = {
+				OR = {
 					NOT = {
-						c:IQU ?= this
+						exists = c:IQU
+					}
+					c:IQU ?= {
+						NOT = { is_subject_of = c:BOL }
 					}
 				}
-				NOT = {
-					country_has_primary_culture = cu:south_andean
+				OR = {
+					NOT = {
+						exists = c:PEU
+					}
+					c:PEU ?= {
+						NOT = { is_subject_of = c:BOL }
+					}
 				}
 			}
 			c:BOL ?= {
@@ -154,7 +198,9 @@
 		}
 	}
 
-	on_fail = {
+	custom_on_failure_header = je_peru_bolivia_on_restorer_victory
+
+	on_fail_all_involved = {
 		if = { #Why? So that [somehow] this doesn't cause four fail events to fire at once. That should be impossible, but you never know.
 			limit = {
 				c:BOL ?= this
@@ -180,6 +226,8 @@
 						has_variable = pbc_member
 					}
 					order_by = gdp
+					position = 0
+					check_range_bounds = no
 					trigger_event = { id = peru_bolivia_events.3 popup = yes }
 				}
 			}
@@ -211,9 +259,59 @@
 						has_variable = pbc_member
 					}
 					order_by = gdp
+					position = 0
+					check_range_bounds = no
 					trigger_event = { id = peru_bolivia_events.3 popup = yes }
 				}
 			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					has_variable = pbc_member
+				}
+			}
+			remove_variable = attack_bolivia
+			remove_variable = befriend_bolivia
+			custom_tooltip = {
+				text = peru_bolivia_complete_tt
+				if = {
+					limit = {
+						AND = {
+							c:BOL ?= {
+								relations:root >= relations_threshold:amicable
+							}
+							c:BOL ?= {
+								OR = {
+									is_in_customs_union_with = root
+									any_scope_treaty = {
+										binds = root
+										any_scope_article = {
+											has_type = alliance
+										}
+									}
+									any_scope_treaty = {
+										binds = root
+										any_scope_article = {
+											has_type = defensive_pact
+										}
+									}
+								}
+							}
+						}
+					}
+					trigger_event = { id = peru_bolivia_events.6 popup = yes }
+				}
+				else = {
+					trigger_event = { id = peru_bolivia_events.5 popup = yes }
+				}
+			}
+		}
+		if = {
+			limit = {
+				has_variable = pbc_member
+			}
+			remove_variable = pbc_member
 		}
 	}
 

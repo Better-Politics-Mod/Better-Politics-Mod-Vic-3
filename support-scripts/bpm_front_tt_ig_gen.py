@@ -25,7 +25,6 @@ bpm_front_attraction_dispatch_ig_bpm_front_WWW = {
             
             # check if value is a digit
             if str(value).isnumeric():
-                print(str(value))
                 continue 
             
             base_text += handle_pair(ig_type, value, isif)
@@ -37,7 +36,7 @@ bpm_front_attraction_dispatch_ig_bpm_front_WWW = {
             always = no
         }
         fallback = yes
-        localization_key = bpm_unknown_grid
+        localization_key = bpm_zero
     }
 }
 """

@@ -12,7 +12,7 @@ def map_over_rows(df):
     t2 = []
     for index, row in df.iterrows():
         row = row.dropna()
-        title = row[0].lower()
+        title = row.iloc[0].lower()
         # convert the rest to pairs (key, value)
         rest = row[1:].to_dict()
         ismov = False

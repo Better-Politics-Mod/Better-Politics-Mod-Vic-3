@@ -5,7 +5,7 @@
 law_autocracy = {	
 	group = lawgroup_distribution_of_power
 	
-	icon = "gfx/interface/icons/law_icons/autocracy.dds"
+	icon = "gfx/interface/icons/law_icons/despotism.dds"
 	
 	progressiveness = -100
 
@@ -26,16 +26,21 @@ law_autocracy = {
 	}
 
 	modifier = {
-		#country_legitimacy_headofstate_add = 10
-		country_legitimacy_govt_total_clout_add = 120
-		country_legitimacy_govt_size_add = 2
 		country_bureaucrats_pol_str_mult = 0.5
 		country_peasants_pol_str_mult = -0.4
-		state_pop_pol_str_mult = -0.95
+		
+		country_bpm_auth_authority_per_bureaucracy_add = 0.1
+		country_bpm_auth_authority_per_army_size_add = 1
+		state_pop_pol_str_mult = -0.5
 		state_political_strength_from_wealth_mult = 1
 		state_pop_pol_str_add = -6
-		country_authority_add = 200
 		# country_bpm_base_mandate_add = 60
+	}
+
+	is_visible = {
+		NOT = {
+			has_law = law_type:law_oligarchy
+		}
 	}
 
 	can_impose = {
@@ -86,6 +91,71 @@ law_autocracy = {
 	}
 }
 
+law_neo_absolutism = { # Reward for completing the neo-absolutist content
+	group = lawgroup_distribution_of_power
+	parent = law_autocracy
+
+	icon = "gfx/interface/icons/law_icons/neo_absolutism.dds"
+
+	progressiveness = -100
+	
+	requires_law_or = {
+		law_monarchy
+	}
+
+	on_activate = {
+		clear_geheime_staatskonferenz = yes
+		bpm_disable_elective_laws = yes
+		if = {
+			limit = { bpm_country_is_republic = yes	}
+			scripted_effect_parties_emergence = yes
+			add_modifier = bpm_republic_gov_size
+		} else = {
+			scripted_effect_parties_disappearence = yes
+		}
+	}
+
+	can_enact = {
+		c:AUS ?= this
+		has_global_variable = neo_absolutism_victory
+	}
+	
+	is_visible = {
+		c:AUS ?= this
+		has_global_variable = neo_absolutism_victory
+	}
+
+	modifier = {
+		country_legitimacy_govt_total_clout_add = 100
+		country_legitimacy_govt_size_add = 2
+		country_legitimacy_ideological_incoherence_mult = 0.1
+		country_bureaucrats_pol_str_mult = 0.5
+		country_peasants_pol_str_mult = -0.4
+		state_pop_pol_str_mult = -0.95
+		state_political_strength_from_wealth_mult = 1
+		state_pop_pol_str_add = -6
+		country_authority_add = 250
+		# country_bpm_base_mandate_add = 60
+	}
+
+	can_impose = { 
+		always = no
+	} 
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+		
+		if = {
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
+			add = 750
+		}
+	}
+
+	ai_impose_chance = {
+		value = 0
+	}
+}
+
 law_colonial_admin = {	
 	group = lawgroup_distribution_of_power
 	
@@ -107,10 +177,10 @@ law_colonial_admin = {
 	}
 
 	modifier = {
-		country_legitimacy_headofstate_add = 30
-		country_legitimacy_govt_total_clout_add = 60
-		country_legitimacy_govt_total_votes_add = 10
-		country_legitimacy_govt_size_add = 2
+		#country_legitimacy_govt_total_clout_add = 60
+		#country_legitimacy_govt_total_votes_add = 10
+		#country_legitimacy_govt_size_add = 2
+		#country_legitimacy_ideological_incoherence_mult = 0.1
 		country_voting_power_base_add = 1
 		country_voting_power_wealth_threshold_add = 30
 		country_aristocrats_pol_str_mult = 0.80
@@ -123,19 +193,23 @@ law_colonial_admin = {
 		country_liberty_desire_increase_mult = -0.5
 		country_liberty_desire_add = -0.1
 		country_authority_add = 200
-		#state_pop_pol_str_add = -5
+		state_pop_pol_str_add = -5
 		country_bpm_change_primary_culture_to_overlord = yes
 		# country_bpm_base_mandate_add = 60
+		
+		country_bpm_auth_authority_per_bureaucracy_add = 0.1
+		country_bpm_auth_authority_per_army_size_add = 1
+		state_radicals_from_sol_change_mult = -0.05
 	}
 
-	# there are insignificant elections in the colonies
-	institution = institution_suffrage
-	institution_modifier = {
-		country_legitimacy_govt_total_votes_add = 5
-		country_legitimacy_govt_total_clout_add = -5
-		country_voting_power_wealth_threshold_add = -3
-		country_authority_add = -10
-		state_radicals_from_political_movements_mult = -0.025
+	can_impose = {
+		scope:target_country = {
+			is_subject_of = root
+			OR = {
+				is_subject_type = subject_type_chartered_company
+				is_subject_type = subject_type_colony
+			}
+		}
 	}
 
 	ai_enact_weight_modifier = { #Petitions
@@ -171,18 +245,18 @@ law_military_junta = {
 		}
 	}
 
+	is_visible = {
+		always = no
+	}
+
 	
 	modifier = {
-		#country_legitimacy_headofstate_add = 10
-		country_legitimacy_govt_total_clout_add = 120
-		country_legitimacy_govt_size_add = 2
 		
 		country_officers_pol_str_mult = 1.25
 		country_aristocrats_pol_str_mult = 0.4
 		country_soldiers_pol_str_mult = 0.25
-		state_pop_pol_str_add = -4
-
-		country_authority_add = 100
+		
+		country_bpm_auth_authority_per_army_size_add = 5
 		# country_bpm_base_mandate_add = 60
 	}
 
@@ -224,7 +298,7 @@ law_military_junta = {
 law_oligarchy = {
 	group = lawgroup_distribution_of_power
 	
-	icon = "gfx/interface/icons/law_icons/oligarchy.dds"
+	icon = "gfx/interface/icons/law_icons/despotism.dds"
 	
 	progressiveness = -50
 
@@ -244,19 +318,21 @@ law_oligarchy = {
 		}
 	}
 
+	is_visible = {
+		has_law = law_type:law_oligarchy
+	}
+
 	
 	modifier = {
-		#country_legitimacy_headofstate_add = 10
-		country_legitimacy_govt_total_clout_add = 120
-		country_legitimacy_govt_size_add = 3
-		
+		country_legitimacy_govt_total_clout_add = 115
+		country_legitimacy_govt_size_add = 2
+		country_legitimacy_ideological_incoherence_mult = 0.25
 		country_aristocrats_pol_str_mult = 0.40
 		country_bureaucrats_pol_str_mult = 0.40
 		country_capitalists_pol_str_mult = 0.40
 		country_officers_pol_str_mult = 0.40
-		country_authority_add = 100
-		state_pop_pol_str_add = -5
-
+		country_bpm_auth_authority_per_bureaucracy_add = 0.1
+		country_bpm_auth_authority_per_army_size_add = 1
 		# country_bpm_base_mandate_add = 60
 	}
 
@@ -282,21 +358,21 @@ law_oligarchy = {
 		}
 	}
 
-	pop_support = {
-		value = 0
-		add = {
-			desc = "POP_OFFICERS"			
-			if = {
-				limit = {
-					owner = {
-						NOT = { has_law = law_type:law_wealth_voting }
-					}
-					is_pop_type = officers
-				}
-				value = 0.25
-			}
-		}
-	}
+#	pop_support = {
+#		value = 0
+#		add = {
+#			desc = "POP_OFFICERS"			
+#			if = {
+#				limit = {
+#					owner = {
+#						NOT = { has_law = law_type:law_wealth_voting }
+#					}
+#					is_pop_type = officers
+#				}
+#				value = 0.25
+#			}
+#		}
+#	}
 
 	ai_impose_chance = {
 		value = 0
@@ -324,6 +400,89 @@ law_oligarchy = {
 	}
 }
 
+law_organic_regulation = {
+	group = lawgroup_distribution_of_power
+	parent = law_oligarchy
+
+	icon = "gfx/interface/icons/law_icons/organic_regulation.dds"
+
+	progressiveness = -50
+
+	is_visible = {
+		country_has_primary_culture = cu:romanian
+		is_subject = yes
+	}
+
+	can_enact = {
+		country_has_primary_culture = cu:romanian
+		is_subject = yes
+	}
+
+	on_activate = {
+		scripted_effect_parties_disappearence = yes
+	}
+
+	modifier = {
+		country_legitimacy_govt_total_clout_add = 115
+		country_legitimacy_govt_size_add = 2
+		country_legitimacy_ideological_incoherence_mult = 0.1
+		country_officers_pol_str_mult = 0.25
+		country_shopkeepers_pol_str_mult = 0.5
+		country_clerks_pol_str_mult = 0.25
+		country_authority_add = 100
+	}
+
+	can_impose = {
+		OR = {
+			AND = {
+				scope:target_country = {
+					country_has_primary_culture = cu:romanian
+				}
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_distribution_of_power_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			can_impose_law_default = yes
+		}
+	}
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+
+		if = {
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
+			add = 750
+		}
+	}
+
+	ai_impose_chance = {
+		value = 0
+
+		if = {
+			limit = {
+				has_law = law_type:law_organic_regulation
+				OR = {
+					AND = {
+						power_bloc ?= { has_identity = identity:identity_ideological_union }
+						has_strategy = ai_strategy_conservative_agenda
+					}
+					has_strategy = ai_strategy_reactionary_agenda
+				}
+				scope:target_country = {
+					NOR = { # Is their law different enough from what we want to impose?
+						has_law_or_variant = law_type:law_autocracy
+						has_law_or_variant = law_type:law_landed_voting
+					}
+				}
+			}
+
+			add = base_impose_law_weight
+		}
+	}
+}
+
 law_elder_council = {
 	group = lawgroup_distribution_of_power
 	
@@ -345,10 +504,10 @@ law_elder_council = {
 	}
 
 	modifier = {
-		country_legitimacy_base_add = 20
-		country_legitimacy_govt_total_clout_add = 100
-		country_legitimacy_govt_size_add = 1
-		country_legitimacy_ideological_incoherence_mult = -0.1
+		#country_legitimacy_base_add = 20
+		#country_legitimacy_govt_total_clout_add = 100
+		#country_legitimacy_govt_size_add = 1
+		#country_legitimacy_ideological_incoherence_mult = -0.25
 		country_aristocrats_pol_str_mult = 0.5
 		country_officers_pol_str_mult = 0.5
 		country_clergymen_pol_str_mult = 0.5
@@ -385,11 +544,14 @@ law_technocracy = {
 			remove_modifier = bpm_republic_gov_size
 		}
 	}
+
+	is_visible = {
+		always = no
+	}
 	
 	modifier = {
-		country_legitimacy_headofstate_add = 10
-		country_legitimacy_govt_total_clout_add = 120
-		country_legitimacy_govt_size_add = 1
+		#country_legitimacy_govt_total_clout_add = 100
+		#country_legitimacy_govt_size_add = 1
 		
 		country_academics_pol_str_mult = 0.33
 		country_engineers_pol_str_mult = 0.33
@@ -398,7 +560,9 @@ law_technocracy = {
 
 
 		# country_bpm_base_mandate_add = 50
-		country_authority_add = 100
+		
+		country_bpm_auth_authority_per_bureaucracy_add = 0.1
+		country_bpm_auth_authority_per_army_size_add = 1
 	}
 
 	unlocking_technologies = {
@@ -418,30 +582,30 @@ law_technocracy = {
 		}
 	}
 	
-	pop_support = {
-		value = 0
-		add = {
-			desc = "POP_ACADEMICS"			
-			if = {
-				limit = {
-					is_pop_type = academics
-				}
-				value = 0.25
-			}
-		}
-		add = {
-			desc = "POP_CAPITALISTS"			
-			if = {
-				limit = {
-					owner = {
-						NOT = { has_law = law_type:law_wealth_voting }
-					}
-					is_pop_type = capitalists
-				}
-				value = 0.25
-			}
-		}
-	}
+#	pop_support = {
+#		value = 0
+#		add = {
+#			desc = "POP_ACADEMICS"			
+#			if = {
+#				limit = {
+#					is_pop_type = academics
+#				}
+#				value = 0.25
+#			}
+#		}
+#		add = {
+#			desc = "POP_CAPITALISTS"			
+#			if = {
+#				limit = {
+#					owner = {
+#						NOT = { has_law = law_type:law_wealth_voting }
+#					}
+#					is_pop_type = capitalists
+#				}
+#				value = 0.25
+#			}
+#		}
+#	}
 
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
@@ -486,24 +650,18 @@ law_landed_voting = {
 	}
 
 	modifier = {
-		country_legitimacy_govt_total_clout_add = 130
-		
 		country_aristocrats_voting_power_add = 50
-		country_authority_add = 100
-		# country_bpm_base_mandate_add = 60
-		country_institution_cost_institution_suffrage_mult = -0.85
-	}
+		country_capitalists_voting_power_add = 10
 
-	institution = institution_suffrage
-	institution_modifier = {
-		country_legitimacy_govt_total_votes_add = 10
-		country_legitimacy_govt_total_clout_add = -10
-		country_capitalists_voting_power_add = 5
+		country_bureaucrats_voting_power_add = 5
+		country_academics_voting_power_add = 5
 		country_officers_voting_power_add = 5
-		country_clergymen_voting_power_add = 5
+
+		state_bureaucracy_population_base_cost_factor_mult = 0.05
+
 		country_rigidity_baseline_add = -5
 		state_pop_pol_str_add = -3
-		state_political_strength_from_wealth_mult = 1
+		state_political_strength_from_wealth_mult = 2
 	}
 
 	on_activate = {
@@ -528,34 +686,34 @@ law_landed_voting = {
 		}
 	}
 
-	pop_support = {
-		value = 0
-
-		add = {
-			desc = "POP_LITERACY" 
-			
-			if = {
-				limit = { 
-					OR = {
-						NOT = { strata = upper }
-						wealth < 30
-					}					
-					owner = { 
-						NOR = {
-							has_law = law_type:law_wealth_voting
-							has_law = law_type:law_census_voting
-							has_law = law_type:law_universal_suffrage
-							has_law = law_type:law_anarchy
-						}	
-					}
-				}
-				add = {
-					value = literacy_rate
-					divide = 2
-				}
-			}
-		}			
-	}
+#	pop_support = {
+#		value = 0
+#
+#		add = {
+#			desc = "POP_LITERACY" 
+#			
+#			if = {
+#				limit = { 
+#					OR = {
+#						NOT = { strata = upper }
+#						wealth < 30
+#					}					
+#					owner = { 
+#						NOR = {
+#							has_law = law_type:law_wealth_voting
+#							has_law = law_type:law_census_voting
+#							has_law = law_type:law_universal_suffrage
+#							has_law = law_type:law_anarchy
+#						}	
+#					}
+#				}
+#				add = {
+#					value = literacy_rate
+#					divide = 2
+#				}
+#			}
+#		}			
+#	}
 
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
@@ -609,25 +767,18 @@ law_wealth_voting = {
 	}
 	
 	modifier = {
-		country_legitimacy_govt_total_clout_add = 130
+		country_voting_power_wealth_threshold_add = 20
+		country_capitalists_voting_power_add = 20
+		country_aristocrats_voting_power_add = 20
+		country_shopkeepers_voting_power_add = 20
+		country_bureaucrats_voting_power_add = 20
+		country_academics_voting_power_add = 20
 		
-		country_voting_power_wealth_threshold_add = 40
-		country_voting_power_base_add = 10
-		country_authority_add = 100
-		country_institution_cost_institution_suffrage_mult = -0.85
-		state_pop_pol_str_add = -3
+		state_bureaucracy_population_base_cost_factor_mult = 0.1
+
+		state_pop_pol_str_add = -2
 		state_political_strength_from_wealth_mult = 1
-
-		# country_bpm_base_mandate_add = 70
-	}
-
-	institution = institution_suffrage
-	institution_modifier = {
-		country_legitimacy_govt_total_votes_add = 15
-		country_legitimacy_govt_total_clout_add = -15
-		country_voting_power_wealth_threshold_add = -5
-		country_voting_power_base_add = 5
-		country_rigidity_baseline_add = -5
+		country_rigidity_baseline_add = -10
 	}
 
 	on_activate = {
@@ -652,30 +803,30 @@ law_wealth_voting = {
 		}
 	}
 
-	pop_support = {
-		value = 0
-
-		add = {
-			desc = "POP_LITERACY"
-			
-			if = {
-				limit = { 
-					NOT = { strata = upper }
-					owner = { 
-						NOR = {
-							has_law = law_type:law_census_voting
-							has_law = law_type:law_universal_suffrage
-							has_law = law_type:law_anarchy
-						}	
-					}
-				}
-				add = {
-					value = literacy_rate
-					divide = 2
-				}
-			}
-		}			
-	}
+#	pop_support = {
+#		value = 0
+#
+#		add = {
+#			desc = "POP_LITERACY"
+#			
+#			if = {
+#				limit = { 
+#					NOT = { strata = upper }
+#					owner = { 
+#						NOR = {
+#							has_law = law_type:law_census_voting
+#							has_law = law_type:law_universal_suffrage
+#							has_law = law_type:law_anarchy
+#						}	
+#					}
+#				}
+#				add = {
+#					value = literacy_rate
+#					divide = 2
+#				}
+#			}
+#		}			
+#	}
 
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
@@ -722,28 +873,24 @@ law_census_voting = {
 	}
 
 	modifier = {
-		country_legitimacy_govt_total_clout_add = 130
+		country_voting_power_wealth_threshold_add = 15
+		country_voting_power_base_add = 20
 		
-		country_voting_power_wealth_threshold_add = 30
-		country_voting_power_from_literacy_add = 6
-		country_authority_add = 100
-		country_institution_suffrage_max_investment_add = 1
-		country_institution_cost_institution_suffrage_mult = -0.85
+		country_clerks_voting_power_add = -20
+		country_laborers_voting_power_add = -20
+		country_peasants_voting_power_add = -20
+		country_soldiers_voting_power_add = -20
+
+		state_bureaucracy_population_base_cost_factor_mult = 0.15
+		
 		state_political_strength_from_wealth_mult = 0.75
 		state_pop_pol_str_add = -1
+		
+		state_loyalists_from_political_movements_mult = 0.05
+		
+		country_bpm_labor_consciousness_target_mult = -0.05
 
-		# country_bpm_base_mandate_add = 90
-	}
-
-	institution = institution_suffrage
-	institution_modifier = {
-		country_legitimacy_govt_total_votes_add = 20
-		country_legitimacy_govt_total_clout_add = -20
-		country_voting_power_wealth_threshold_add = -5
-		country_voting_power_from_literacy_add = 6
-		country_authority_add = -10
-		state_radicals_from_political_movements_mult = -0.025
-		country_rigidity_baseline_add = -5
+		country_rigidity_baseline_add = -15
 	}
 
 	on_activate = {
@@ -768,29 +915,29 @@ law_census_voting = {
 		}
 	}
 
-	pop_support = {
-		value = 0
-
-		add = {
-			desc = "POP_ANGRY_UNSTABLE"
-			
-			if = {
-				limit = { 
-					owner = { 
-						var:bpm_political_stability <= 33	
-						NOR = {
-							has_law = law_type:law_universal_suffrage
-							has_law = law_type:law_anarchy
-						}
-					}
-					NOT = { strata = upper }
-				}
-				add = {
-					value = pop_radical_fraction
-				}
-			}
-		}			
-	}
+#	pop_support = {
+#		value = 0
+#
+#		add = {
+#			desc = "POP_ANGRY_UNSTABLE"
+#			
+#			if = {
+#				limit = { 
+#					owner = { 
+#						var:bpm_political_stability <= 33	
+#						NOR = {
+#							has_law = law_type:law_universal_suffrage
+#							has_law = law_type:law_anarchy
+#						}
+#					}
+#					NOT = { strata = upper }
+#				}
+#				add = {
+#					value = pop_radical_fraction
+#				}
+#			}
+#		}			
+#	}
 
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
@@ -837,28 +984,19 @@ law_universal_suffrage = {
 	}
 	
 	modifier = {
-		country_legitimacy_govt_total_clout_add = 130
+		country_voting_power_base_add = 30
+		country_voting_power_wealth_threshold_add = 10
 		
-		country_voting_power_base_add = 20
-		country_voting_power_wealth_threshold_add = 30
-		country_authority_add = 100
-		country_institution_suffrage_max_investment_add = 1
-		country_institution_cost_institution_suffrage_mult = -0.85
 		state_political_strength_from_wealth_mult = 0.25
 		country_populist_movement_support_add = 0.05
 
-		# country_bpm_base_mandate_add = 100
-	}
+		state_bureaucracy_population_base_cost_factor_mult = 0.2
 
-	institution = institution_suffrage
-	institution_modifier = {
-		country_legitimacy_govt_total_votes_add = 25
-		country_legitimacy_govt_total_clout_add = -25
-		country_voting_power_base_add = 6
-		country_voting_power_wealth_threshold_add = -6
-		country_authority_add = -20
-		state_radicals_from_political_movements_mult = -0.05
-		country_rigidity_baseline_add = -5
+		country_rigidity_baseline_add = -20
+		country_bpm_labor_consciousness_target_mult = -0.2
+		state_loyalists_from_political_movements_mult = 0.25
+
+		# country_bpm_base_mandate_add = 100
 	}
 
 	on_activate = {
@@ -883,28 +1021,28 @@ law_universal_suffrage = {
 		}
 	}
 
-	pop_support = {
-		value = 0
-
-		add = {
-			desc = "POP_ANGRY_UNSTABLE"
-			
-			if = {
-				limit = { 
-					owner = { 
-						NOT = {
-							has_law = law_type:law_anarchy
-						}
-						var:bpm_political_stability <= 33	
-					}
-					NOT = { strata = upper }
-				}
-				add = {
-					value = pop_radical_fraction
-				}
-			}
-		}					
-	}
+#	pop_support = {
+#		value = 0
+#
+#		add = {
+#			desc = "POP_ANGRY_UNSTABLE"
+#			
+#			if = {
+#				limit = { 
+#					owner = { 
+#						NOT = {
+#							has_law = law_type:law_anarchy
+#						}
+#						var:bpm_political_stability <= 33	
+#					}
+#					NOT = { strata = upper }
+#				}
+#				add = {
+#					value = pop_radical_fraction
+#				}
+#			}
+#		}					
+#	}
 
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
@@ -958,11 +1096,13 @@ law_anarchy = {
 	modifier = {
 		state_pop_pol_str_add = 4
 		state_political_strength_from_wealth_mult = -0.75
-		country_legitimacy_ideological_incoherence_mult = -0.25
-		country_legitimacy_govt_total_clout_add = 100
-		country_authority_mult = -0.5
-		country_legitimacy_govt_size_add = 1
+		country_authority_mult = -0.25 # Supreme legislature accounts for other -25%
 		country_rigidity_baseline_add = -5
+		state_loyalists_from_political_movements_mult = 1.0
+		
+		state_bureaucracy_population_base_cost_factor_mult = 0.25
+
+		country_bpm_low_rigidity_no_econ_debuff = yes
 		# country_bpm_base_mandate_add = 20
 	}
 
@@ -971,6 +1111,14 @@ law_anarchy = {
 		if = {
 			limit = { has_modifier = bpm_republic_gov_size }
 			remove_modifier = bpm_republic_gov_size
+		}
+		if = {
+			limit = { NOT = { has_law = law_type:law_supreme_legislature } }
+			activate_law = law_type:law_supreme_legislature
+		}
+		if = {
+			limit = { NOT = { has_law = law_type:law_answers_to_legislature } }
+			activate_law = law_type:law_answers_to_legislature
 		}
 	}
 	
@@ -1004,25 +1152,25 @@ law_anarchy = {
 		}
 	}
 
-	pop_support = {
-		value = 0
-
-		add = {
-			desc = "POP_ANGRY_UNSTABLE"
-			
-			if = {
-				limit = { 
-					owner = { 
-						var:bpm_political_stability <= 33	
-					}
-					NOT = { strata = upper }
-				}
-				add = {
-					value = pop_radical_fraction
-				}
-			}
-		}		
-	}
+#	pop_support = {
+#		value = 0
+#
+#		add = {
+#			desc = "POP_ANGRY_UNSTABLE"
+#			
+#			if = {
+#				limit = { 
+#					owner = { 
+#						var:bpm_political_stability <= 33	
+#					}
+#					NOT = { strata = upper }
+#				}
+#				add = {
+#					value = pop_radical_fraction
+#				}
+#			}
+#		}		
+#	}
 
 	ai_enact_weight_modifier = { #Petitions
 		value = 0
@@ -1039,6 +1187,152 @@ law_anarchy = {
 		if = {
 			limit = {
 				has_law = law_type:law_anarchy
+				has_strategy = ai_strategy_egalitarian_agenda	
+				scope:target_country = { # Is their law different enough from what we want to impose?
+					NOT = { has_law = law_type:law_universal_suffrage }
+				}
+			}
+			
+			add = base_impose_law_weight
+		}
+	}
+}
+
+law_organic_democracy = {
+	group = lawgroup_distribution_of_power
+	
+	icon = "gfx/interface/icons/law_icons/corporate_state.dds"
+	
+	progressiveness = 200
+
+	unlocking_technologies = {
+		corporatism 
+	}
+	
+	can_enact = {
+		#custom_tooltip = {
+		#	text = root_has_enacted_no_parties_allowed
+		#	has_law = law_type:law_no_parties_allowed
+		#}
+		OR = {
+			has_law = law_type:law_no_parties_allowed
+			has_law = law_type:law_autocracy
+		}
+	}
+	
+	unlocking_laws = {
+		law_universal_suffrage
+		law_autocracy
+	}
+
+	disallowing_laws = {
+		law_council_republic
+	}
+	
+	modifier = {
+		country_rigidity_baseline_add = 25
+
+		state_political_strength_from_wealth_mult = 1.5
+
+		country_voting_power_wealth_threshold_add = 10
+
+		country_bpm_labor_consciousness_target_mult = -0.25
+		state_radicals_from_political_movements_mult = -0.1
+
+		state_bureaucracy_population_base_cost_factor_mult = 0.25
+
+		interest_group_ig_rural_folk_pop_attraction_mult = 0.25
+		interest_group_ig_trade_unions_pop_attraction_mult = 0.25
+		interest_group_ig_intelligentsia_pop_attraction_mult = 0.25
+
+		country_voting_power_base_add = 20
+	}
+
+	on_activate = {
+		scripted_effect_parties_emergence = yes
+		if = {
+			limit = { has_modifier = bpm_republic_gov_size }
+			remove_modifier = bpm_republic_gov_size
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					NOT = {
+						has_law = law_type:law_no_parties_allowed
+					}
+				}
+				trigger_event = { id = bpm_single_party.10 }
+			}
+		}
+		activate_law = law_type:law_advisory_body
+	}
+	
+	ai_will_do = {
+		exists = ruler
+		OR = {
+			ruler = {
+				#has_ideology = ideology:ideology_anarchist
+			}
+			any_interest_group = {
+				is_interest_group_type = ig_reactionaries
+				has_ideology = ideology_dop_organic_democrat
+				is_powerful = yes
+				is_in_government = yes
+			}
+		}
+	}
+	
+	can_impose = {
+		OR = {
+			AND = {
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_distribution_of_power_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			AND = { # modification of the standard trigger, only other anarchic countries can impose anarchy on their subjects
+				has_law = scope:law
+				can_impose_law_default = yes
+			}
+		}
+	}
+
+#	pop_support = {
+#		value = 0
+#
+#		add = {
+#			desc = "POP_ANGRY_UNSTABLE"
+#			
+#			if = {
+#				limit = { 
+#					owner = { 
+#						var:bpm_political_stability <= 33	
+#					}
+#					NOT = { strata = upper }
+#				}
+#				add = {
+#					value = pop_radical_fraction
+#				}
+#			}
+#		}		
+#	}
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+		
+		if = {
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
+			add = 750
+		}
+	}
+
+	ai_impose_chance = {
+		value = 0
+		
+		if = {
+			limit = {
+				has_law = law_type:law_organic_democracy
 				has_strategy = ai_strategy_egalitarian_agenda	
 				scope:target_country = { # Is their law different enough from what we want to impose?
 					NOT = { has_law = law_type:law_universal_suffrage }
@@ -1078,9 +1372,9 @@ law_single_party_state = {
 		always = no
 	}
 	
-	pop_support = {
-		value = 0
-	}
+#	pop_support = {
+#		value = 0
+#	}
 
 	can_impose = { 
 		always = no

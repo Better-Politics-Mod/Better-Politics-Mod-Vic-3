@@ -71,7 +71,7 @@ types politics_panel_types
 					textbox = {
 						layoutpolicy_horizontal = expanding
 						size = { 0 20 }
-						text = "[InterestGroup.GetApprovalRating] #bold ([InterestGroup.GetApprovalValue|=+])#!"
+						raw_text = "[InterestGroup.GetApprovalRating] #bold ([InterestGroup.GetApprovalValue|=+])#!"
 						tooltip = "IG_APPROVAL_BREAKDOWN"
 						using = tooltip_below
 						align = nobaseline
@@ -706,7 +706,7 @@ types politics_panel_types
 					}
 					vbox = {
 						spacing = 5
-						character_ig_button = {
+						character_ig_button_vd = {
 							size = { 40 40 }
 							blockoverride "in_government_icon" {}
 							# blockoverride "tooltip" {}
@@ -724,6 +724,18 @@ types politics_panel_types
 				}
 
 				expand = {}
+			}
+		}
+	}
+	
+	type character_ig_button_vd = ig_button {
+		block "interestgroup_datacontext" {
+			datacontext = "[Character.GetInterestGroup]"
+		}
+
+		blockoverride "tooltip" {
+			tooltipwidget = {
+			 	FancyTooltip_IG = {}
 			}
 		}
 	}
@@ -782,10 +794,9 @@ types politics_panel_types
 		}
 	}
 
-
 	type politics_panel_hog_item = widget {
 		layoutpolicy_horizontal = expanding
-		size = { 0 200 }
+		size = { 0 220 }
 		using = tooltip_below
 
 		block "visible" {
@@ -793,7 +804,7 @@ types politics_panel_types
 		}
 
 		block "datacontext" {
-			datacontext = "[GetPlayer.MakeScope.Var('bpm_headofgov').GetCharacter]"
+			datacontext = "[GetPlayer.MakeScope.Var('bpm_headofgov').AccessCharacter]"
 		}
 		
 		using = entry_bg_fancy
@@ -814,7 +825,7 @@ types politics_panel_types
 			
 				background = {
 					texture = "gfx/interface/tooltip/tooltip_title_bg.dds"
-					color = "[Character.AccessInterestGroup.GetColor]"
+					color = "[Character.GetInterestGroup.GetColor]"
 					alpha = 0.3
 				}
 
@@ -830,7 +841,7 @@ types politics_panel_types
 						blockoverride "highlight" {}
 					}
 					hbox = {
-						character_ig_button = {
+						character_ig_button_vd = {
 							# parentanchor = bottom|left
 							size = { 40 40 }
 							blockoverride "in_government_icon" {}
@@ -952,6 +963,66 @@ types politics_panel_types
 
 						blockoverride "onclick" {
 							onclick = "[GetScriptedGui('bpm_CAB_toggle_pm_select').Execute(GuiScope.SetRoot(Country.MakeScope).End)]"
+						}
+					}
+					expand = {}
+				}
+				#vertical_divider = {}
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					spacing = 10
+					visible = "[GetPlayer.MakeScope.Var('bpm_electoral_mandate').IsSet]"
+					margin_top = 20
+
+					textbox = {
+						#visible = "[GetPlayer.MakeScope.Var('bpm_headofgov').GetCharacter.IsValid]"
+						text = "#bold Electoral Mandate#!"
+						align = left|nobaseline
+						autoresize = yes
+						multiline = yes
+						using = fontsize_medium
+						margin = { 10 0 }
+					}
+					hbox = {
+						datacontext = "[GetPlayer.MakeScope.Var('bpm_electoral_mandate')]"
+						margin = { 13 5 }
+						layoutpolicy_horizontal = expanding
+						minimumsize = { 180 -1 }
+						maximumsize = { 180 -1 }
+						hbox = {
+							layoutpolicy_horizontal = expanding
+							spacing = 5
+							margin = { 10 2 }
+							minimumsize = { 180 -1 }
+							background = {
+								using = entry_bg_simple
+							}
+							textbox = {
+								text = "[Localize(Concatenate(Scope.GetFlagName, '_name'))]"
+								tooltip = "[Localize(Concatenate(Scope.GetFlagName, '_tooltip'))]"
+								fontsize = 10
+								#parentanchor = left
+								#align = left|nobaseline
+								block "minsiz" { minimumsize = { 80 15 } }
+								#maximumsize = { 210 -1 }
+								autoresize = yes
+								align = vcenter
+							}
+							expand = { }
+							vertical_divider = {}
+							expand = { }
+							textbox = {
+								text = "[GetPlayer.MakeScope.Var('bpm_electoral_mandate_progress').GetValue|v0] / 4"
+								tooltip = "bpm_electoral_mandate_progressbar_tooltip"
+								#parentanchor = left
+								#align = left|nobaseline
+								fontsize = 10
+								block "minsiz" { minimumsize = { 40 15 } }
+								#maximumsize = { 210 -1 }
+								autoresize = yes
+								align = vcenter
+							}
 						}
 					}
 					expand = {}
@@ -1305,13 +1376,13 @@ types politics_panel_types
 		}
 	}
 
-	### POLITICS OVERVIEW CONTENT
 	type politics_panel_overview_content = hbox {
 		datacontext = "[AccessPlayer]"
 		layoutpolicy_horizontal = expanding
 		layoutpolicy_vertical = expanding
 		
 		vbox = {
+			#visible = "[And(And(Not(GetVariableSystem.Exists('politics_overview_dissent_panel')), Not(GetVariableSystem.Exists('politics_overview_scandals_panel'))), Not(GetVariableSystem.Exists('politics_overview_crises_panel')))]"
 			layoutpolicy_horizontal = expanding
 			layoutpolicy_vertical = expanding
 			spacing = 10
@@ -1435,7 +1506,7 @@ types politics_panel_types
 						}
 					}
 					
-					politics_panel_legitimacy_item = {
+					politics_panel_synergy_stability = {
 						margin = { 15 5 }
 						datacontext = "[Country.GetGovernmentLegitimacyLevel]"
 					}
@@ -2065,7 +2136,6 @@ types politics_panel_types
 												layoutpolicy_vertical = expanding
 											}
 										}
-
 										### POLITICAL LOBBIES
 										vbox = {
 											name = "tutorial_highlight_lobbies_list"
@@ -2271,6 +2341,16 @@ types politics_panel_types
 											layoutpolicy_horizontal = expanding
 											layoutpolicy_vertical = expanding
 										}
+
+										default_header_clean_faded = {
+											layoutpolicy_horizontal = expanding
+											size = { 0 44 }
+											blockoverride "text" {
+												raw_text = "Political Situations"
+											}
+										}
+
+										#bpm_political_situation_buttons = {}
 									}
 								}
 
@@ -2730,5 +2810,9 @@ types politics_panel_types
 				}
 			}
 		}
+
+		#bpm_political_situation_dissent_panel = {}
+		#bpm_political_situation_crises_panel = {}
+		#bpm_political_situation_scandals_panel = {}
 	}
 }

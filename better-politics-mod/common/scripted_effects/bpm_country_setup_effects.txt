@@ -16,11 +16,29 @@
 	bpm_cache_country_igs_radical_opposition_effect = yes
 	bpm_cache_country_variables_monthly_effect = yes
 	bpm_cache_country_variables_half_yearly_effect = yes
-	bpm_activate_interest_group_initialize = yes
-	trigger_event = { id = bpm_misc.2 }
-	trigger_event = { id = bpm_misc.5 days = 1 }
 	bpm_setup_foundation_laws = yes
 	bpm_trend_party_establishment = yes
+	bpm_auth_handle_authority_from_extra_sources = yes
+	bpm_setup_codification = yes
+	add_journal_entry = {
+		type = je_bpm_cabinet_agendas
+	}
+	bpm_setup_ig_organization = yes
+}
+
+bpm_setup_ig_organization = {
+	every_interest_group = {
+		set_variable = {
+			name = bpm_ig_organization
+			value = 0
+		}
+	}
+}
+
+bpm_earlier_setup_country = {
+	trigger_event = { id = bpm_misc.2 days = 0 }
+	trigger_event = { id = bpm_misc.2 days = 7 }
+	bpm_activate_interest_group_initialize = yes
 }
 
 bpm_setup_cabinet = {
@@ -34,11 +52,11 @@ bpm_setup_cabinet = {
     }
     set_variable = {
         name = bpm_cab_synergy
-        value = 1
+        value = 0
     }
 	set_variable = {
 		name = bpm_cab_hoshog_synergy
-		value = 1
+		value = 0
 	}
 	if = {
 		limit = {
@@ -347,7 +365,7 @@ bpm_setup_country_eco_ideologies = {
 
 	if = {
 		limit = {
-			bpm_country_is_in_new_world = true
+			bpm_country_is_in_new_world = yes
 			country_has_state_religion = rel:catholic
 		}
 		if = {
@@ -406,7 +424,7 @@ bpm_setup_country_mil_cit_ideologies = {
 			}
 			ig:ig_reactionaries ?= { 
 				bpm_remove_all_mil_ideologies = yes
-				add_ideology = ideology_jingoist
+				add_ideology = ideology_mil_jingoist
 			}
 		}
 		if = {
@@ -422,6 +440,22 @@ bpm_setup_country_mil_cit_ideologies = {
 
 	if = {
 		limit = { is_country_type = unrecognized }
+		every_interest_group = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_cit_nationalist
+					has_ideology = ideology:ideology_cit_ethnonationalist
+				}
+			}
+			remove_ideology = ideology_cit_nationalist
+			remove_ideology = ideology_cit_ethnonationalist
+			add_ideology = ideology_cit_traditional_culture
+		}
+	}
+	if = {
+		limit = {
+			has_law = law_type:law_subjecthood
+		}
 		every_interest_group = {
 			limit = {
 				OR = {
@@ -740,6 +774,15 @@ bpm_copy_variables_to_new_country = {
 			set_variable = bpm_je_modernizers_over
 		}
 	}
+	every_in_list = {
+		variable = bpm_movement_interactions
+		scope:target = {
+			add_to_variable_list = {
+				name = bpm_movement_interactions
+				target = prev
+			}
+		}
+	}
 }
 
 bpm_copy_variable_from_civil_war_origin = {
@@ -797,5 +840,22 @@ bpm_copy_variable_from_civil_war_origin = {
 			}
 		}
 		set_variable = local_fascists_split_var
+	}
+	if = {
+		limit = {
+			exists = civil_war_origin_country
+		}
+		save_scope_as = target
+		civil_war_origin_country = {
+			every_in_list = {
+				variable = bpm_movement_interactions
+				scope:target = {
+					add_to_variable_list = {
+						name = bpm_movement_interactions
+						target = prev
+					}
+				}
+			}
+		}
 	}
 }

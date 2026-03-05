@@ -2,6 +2,1098 @@
 
 # Most of these events use global variables, due to the fact that the BIC tag can disappear if a native-ruled India is created.
 
+india_events.1 = { # Kaisar-i-Hind
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = india_events.1.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = india_events.1.d_1
+				trigger = {
+					country_has_voting_franchise = yes
+				}
+			}
+			triggered_desc = {
+				desc = india_events.1.d_2
+				trigger = {
+					country_has_voting_franchise = no
+				}
+			}
+		}
+	}
+	flavor = {
+		first_valid = {
+			triggered_desc = {
+				desc = india_events.1.f_1
+				trigger = {
+					country_has_voting_franchise = yes
+				}
+			}
+			triggered_desc = {
+				desc = india_events.1.f_2
+				trigger = {
+					country_has_voting_franchise = no
+				}
+			}
+		}
+	}
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = ruler
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		c:GBR ?= this
+		has_dlc_feature = ip2_content
+		has_law_or_variant = law_type:law_monarchy
+		any_subject_or_below = {
+			c:BIC ?= this
+			NOT = {
+				has_government_type = gov_chartered_company
+			}
+			any_scope_state = {
+				state_region = s:STATE_DELHI
+			}
+		}
+		country_or_subject_owns_entire_state_region = STATE_WEST_BENGAL
+		OR = {
+			py:conservative_party ?= { # Tory Government
+				any_member = {
+					is_in_government = yes
+				}
+			}
+			country_has_voting_franchise = no
+		}
+		NOT = {
+			has_global_variable = empress_of_india
+		}
+	}
+
+	immediate = {
+		ruler = {
+			save_scope_as = ruler_scope
+		}
+		ordered_interest_group = {
+			limit = {
+				is_in_government = yes
+			}
+			order_by = ig_clout
+			leader = {
+				save_scope_as = pm_scope
+			}
+		}
+		set_global_variable = empress_of_india
+	}
+
+	cancellation_trigger = {
+		OR = {
+			scope:ruler_scope = {
+				is_character_alive = no
+			}
+			NOT = {
+				exists = scope:ruler_scope
+			}
+			NOT = {
+				exists = c:BIC
+			}
+			NOT = {
+				c:BIC ?= {
+					is_subject_of = ROOT
+				}
+			}
+		}
+	}
+
+	option = {
+		name = india_events.1.a
+		default_option = yes
+		scope:ruler_scope = {
+			if = {
+				limit = {
+					is_female = yes
+				}
+				add_modifier = {
+					name = modifier_empress_of_india
+					days = very_long_modifier_time
+				}
+			}
+			else = {
+				add_modifier = {
+					name = modifier_emperor_of_india
+					days = very_long_modifier_time
+				}
+			}
+		}
+		c:BIC = { trigger_event = { id = india_events.2 months = 3 } }
+	}
+
+	option = {
+		name = india_events.1.b
+		trigger = {
+			country_has_voting_franchise = yes
+		}
+		scope:pm_scope = {
+			add_modifier = {
+				name = modifier_denied_monarch_title
+				days = normal_modifier_time
+			}
+		}
+		add_radicals = {
+			value = medium_radicals
+			pop_type = aristocrats
+		}
+	}
+
+	option = {
+		name = india_events.1.c
+		trigger = {
+			country_has_voting_franchise = no
+			country_or_subject_owns_entire_state_region = STATE_LOWLANDS # Must have Scotland as well
+			country_or_subject_owns_entire_state_region = STATE_HIGHLANDS
+		}
+		custom_tooltip = {
+			text = empress_or_emperor_of_britain_tt
+			set_global_variable = empire_of_great_britain
+		}
+		scope:ruler_scope = {
+			if = {
+				limit = {
+					is_female = yes
+				}
+				add_modifier = {
+					name = modifier_empress_of_great_britain
+					days = very_long_modifier_time
+				}
+			}
+			else = {
+				add_modifier = {
+					name = modifier_emperor_of_great_britain
+					days = very_long_modifier_time
+				}
+			}
+		}
+		add_radicals = {
+			value = medium_radicals
+			interest_group = ig:ig_intelligentsia
+		}
+		add_radicals = {
+			value = medium_radicals
+			interest_group = ig:ig_trade_unions
+		}
+		c:BIC = { trigger_event = { id = india_events.2 months = 3 } }
+	}
+}
+
+india_events.2 = { # Delhi Durbar
+	type = country_event
+	placement = scope:delhi_scope
+
+	duration = 3
+
+	title = india_events.2.t
+	desc = india_events.2.d
+	flavor = india_events.2.f
+
+	event_image = {
+		video = "ip2_cross_cultural_festival"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		# Triggered by previous event
+	}
+
+	cancellation_trigger = {
+		OR = {
+			top_overlord = {
+				NOT = {
+					has_law_or_variant = law_type:law_monarchy
+				}
+			}
+			NOT = {
+				any_scope_state = {
+					state_region = s:STATE_DELHI
+				}
+			}
+			NOT = {
+				is_subject = yes
+			}
+		}
+	}
+
+	immediate = {
+		s:STATE_DELHI = {
+			random_scope_state = {
+				limit = {
+					owner = ROOT
+				}
+				save_scope_as = delhi_scope
+			}
+		}
+		top_overlord = {
+			ruler = {
+				save_scope_as = monarch_scope
+			}
+		}
+		ruler = {
+			save_scope_as = viceroy_scope
+		}
+	}
+
+	option = {
+		name = india_events.2.a
+		default_option = yes
+		add_modifier = {
+			name = modifier_delhi_durbar
+			days = normal_modifier_time
+			is_decaying = yes
+		}
+		ig:ig_landowners ?= {
+			add_modifier = {
+				name = modifier_delhi_durbar_approval
+				days = normal_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+
+	option = {
+		name = india_events.2.b
+		trigger = {
+			any_political_movement = {
+				is_political_movement_type = movement_india_pan_national
+			}
+		}
+		add_modifier = {
+			name = modifier_delhi_durbar
+			days = normal_modifier_time
+			is_decaying = yes
+		}
+		custom_tooltip = {
+			text = indian_independence_request_tt
+		}
+		random_political_movement = {
+			limit = {
+				is_political_movement_type = movement_india_pan_national
+			}
+			add_modifier = {
+				name = modifier_indian_independence_request
+				days = long_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+india_events.3 = { # Koh-i-Noor
+	type = country_event
+	placement = scope:punjab_scope
+
+	duration = 3
+
+	title = india_events.3.t
+	desc = india_events.3.d
+	flavor = india_events.3.f
+
+	event_image = {
+		video = "ep1_redcoats"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		# Triggered by on_action
+	}
+
+	cancellation_trigger = {
+		is_subject = no
+	}
+
+	immediate = {
+		save_scope_as = india_scope
+		s:STATE_PUNJAB = {
+			random_scope_state = {
+				limit = {
+					OR = {
+						owner = ROOT
+						owner = {
+							is_subject_of = ROOT
+						}
+					}
+				}
+				save_scope_as = punjab_scope
+			}
+		}
+		top_overlord = {
+			save_scope_as = overlord_scope
+		}
+	}
+
+	option = { # Send it to Britain
+		name = india_events.3.a
+		default_option = yes
+		scope:overlord_scope = {
+			post_notification = koh_i_noor_sent
+			set_variable = koh_i_noor
+		}
+		add_small_indian_radicals = yes
+		ig:ig_industrialists = {
+			add_modifier = {
+				name = modifier_dispatched_koh_i_noor_diamond
+				days = normal_modifier_time
+			}
+		}
+		change_relations = {
+			country = top_overlord
+			value = 10
+		}
+	}
+
+	option = { # Keep it in India
+		name = india_events.3.b
+		scope:overlord_scope = {
+			post_notification = koh_i_noor_not_sent
+		}
+		add_small_indian_loyalists = yes
+		change_relations = {
+			country = top_overlord
+			value = -5
+		}
+	}
+}
+
+india_events.4 = { # Demanding return of the Koh-i-Noor
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = india_events.4.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = india_events.4.d_1
+				trigger = {
+					scope:india_scope = {
+						OR = {
+							c:BHT ?= this
+							c:BIC ?= this
+						}
+					}
+				}
+			}
+			triggered_desc = {
+				desc = india_events.4.d_2
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	flavor = india_events.4.f
+
+	event_image = {
+		video = "ip2_telegraph_dictate"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		# Triggered by decision
+	}
+
+	immediate = {
+		save_scope_as = koh_i_noor_owner_scope
+		var:koh_i_noor_decision_user ?= {
+			save_scope_as = india_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			exists = scope:india_scope
+		}
+	}
+
+	option = { # No.
+		name = india_events.4.a
+		default_option = yes
+		scope:india_scope = {
+			post_notification = koh_i_noor_not_returned
+		}
+		change_relations = {
+			country = scope:india_scope
+			value = -10
+		}
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_patriotic
+			}
+			add_modifier = {
+				name = modifier_refused_to_surrender_diamond
+				days = short_modifier_time
+			}
+		}
+	}
+
+	option = { # Yes.
+		name = india_events.4.b
+		custom_tooltip = {
+			text = returned_koh_i_noor_tt
+			remove_variable = koh_i_noor
+		}
+		scope:india_scope = {
+			post_notification = koh_i_noor_returned
+		}
+		change_relations = {
+			country = scope:india_scope
+			value = 25
+		}
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_patriotic
+			}
+			add_modifier = {
+				name = modifier_surrendered_diamond
+				days = short_modifier_time
+			}
+		}
+	}
+}
+
+india_events.5 = { # Deccan Riots
+	type = country_event
+	placement = scope:riots_site_scope
+
+	duration = 3
+
+	title = india_events.5.t
+	desc = india_events.5.d
+	flavor = india_events.5.f
+
+	event_image = {
+		video = "ip2_india_protest"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_protest.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		has_dlc_feature = ip2_content
+		c:BIC ?= this
+		any_scope_state = {
+			OR = {
+				state_region = s:STATE_KURNOOL
+				state_region = s:STATE_BOMBAY
+				state_region = s:STATE_HYDERABAD
+				state_region = s:STATE_MYSORE
+			}
+			OR = {
+				turmoil > 0.20
+				obstinance >= 0.10
+			}
+			average_sol < average_expected_sol
+			any_scope_pop = {
+				OR = {
+					is_pop_type = peasants
+					is_pop_type = slaves
+				}
+				standard_of_living < state.average_expected_sol
+			}
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				OR = {
+					state_region = s:STATE_KURNOOL
+					state_region = s:STATE_BOMBAY
+					state_region = s:STATE_HYDERABAD
+					state_region = s:STATE_MYSORE
+				}
+				OR = {
+					turmoil > 0.20
+					obstinance >= 0.10
+				}
+				average_sol < average_expected_sol
+				any_scope_pop = {
+					OR = {
+						is_pop_type = peasants
+						is_pop_type = slaves
+					}
+					standard_of_living < state.average_expected_sol
+				}
+			}
+			save_scope_as = riots_site_scope
+		}
+	}
+
+	option = {
+		name = india_events.5.a
+		default_option = yes
+		scope:riots_site_scope = {
+			state_region = {
+				add_devastation = 25
+			}
+		}
+		ig:ig_rural_folk ?= {
+			add_modifier = {
+				name = modifier_deccan_riots_unaffected
+				days = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = india_events.5.b
+		scope:riots_site_scope = {
+			state_region = {
+				add_devastation = 10
+			}
+			custom_tooltip = {
+				text = slaves_freed_in_state_tt
+				every_scope_pop = {
+					limit = {
+						is_pop_type = slaves
+					}
+					change_poptype = pop_type:laborers
+				}
+			}
+			add_radicals_in_state = {
+				value = large_radicals
+				pop_type = aristocrats
+			}
+			add_radicals_in_state = {
+				value = large_radicals
+				pop_type = shopkeepers
+			}
+		}
+		ig:ig_landowners ?= {
+			add_modifier = {
+				name = modifier_deccan_riots_limited_money_lending
+				days = normal_modifier_time
+			}
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			add_modifier = {
+				name = modifier_deccan_riots_limited_money_lending
+				days = normal_modifier_time
+			}
+		}
+	}
+}
+
+india_events.6 = { # Hindu-German Conspiracy
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = india_events.6.t
+	desc = india_events.6.d
+	flavor = india_events.6.f
+
+	event_image = {
+		video = "votp_conspiring"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		has_dlc_feature = ip2_content
+		any_political_movement = {
+			is_political_movement_type = movement_india_pan_national
+			movement_is_causing_obstinance = yes
+		}
+		is_subject = yes
+		top_overlord = {
+			any_enemy_in_war = {
+				country_rank >= rank_value:great_power
+				OR = {
+					has_interest_marker_in_region = sr:region_bengal
+					has_interest_marker_in_region = sr:region_madras
+					has_interest_marker_in_region = sr:region_bombay
+					has_interest_marker_in_region = sr:region_central_india
+					has_interest_marker_in_region = sr:region_punjab
+				}
+			}
+		}
+	}
+
+	immediate = {
+		top_overlord = {
+			ordered_enemy_in_war = {
+				limit = {
+					country_rank >= rank_value:great_power
+					OR = {
+						has_interest_marker_in_region = sr:region_bengal
+						has_interest_marker_in_region = sr:region_madras
+						has_interest_marker_in_region = sr:region_bombay
+						has_interest_marker_in_region = sr:region_central_india
+						has_interest_marker_in_region = sr:region_punjab
+					}
+				}
+				order_by = country_rank
+				save_scope_as = enemy_great_power_scope
+			}
+			save_scope_as = overlord_scope
+		}
+		save_scope_as = india_scope
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			is_subject_of = scope:overlord_scope
+		}
+	}
+
+	option = {
+		name = india_events.6.a
+		default_option = yes
+		scope:overlord_scope = {
+			post_notification = combatting_hindu_german_conspiracy
+		}
+		change_relations = {
+			country = scope:overlord_scope
+			value = 10
+		}
+		custom_tooltip = {
+			text = conspiracy_trials_in_30_days_tt
+			trigger_event = { id = india_events.7 days = 30 }
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			add_modifier = {
+				name = modifier_revolutionary_conspiracy_crackdown
+				days = normal_modifier_time
+			}
+		}
+		ig:ig_intelligentsia ?= {
+			add_modifier = {
+				name = modifier_revolutionary_conspiracy_crackdown
+				days = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = india_events.6.b
+		scope:overlord_scope = {
+			post_notification = not_combatting_hindu_german_conspiracy
+		}
+		change_relations = {
+			country = scope:overlord_scope
+			value = -10
+		}
+		add_small_indian_radicals = yes
+	}
+}
+
+india_events.7 = { # Lahore Trials
+	type = country_event
+	placement = scope:conspiracy_trial_state
+
+	duration = 3
+
+	title = india_events.7.t
+	desc = india_events.7.d
+	flavor = india_events.7.f
+
+	event_image = {
+		video = "votp_prison"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		# Triggered by previous event
+		is_subject = yes
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				any_scope_state = {
+					state_region = s:STATE_PUNJAB
+				}
+			}
+			random_scope_state = {
+				limit = {
+					state_region = s:STATE_PUNJAB
+				}
+				save_scope_as = conspiracy_trial_state
+			}
+		}
+		else = {
+			random_scope_state = {
+				limit = {
+					OR = {
+						state_region = s:STATE_BOMBAY
+						state_region = s:STATE_MADRAS
+						state_region = s:STATE_WEST_BENGAL
+					}
+				}
+				save_scope_as = conspiracy_trial_state
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			is_subject = yes
+		}
+	}
+
+	option = { # Good riddance.
+		name = india_events.7.a
+		default_option = yes
+		add_modifier = {
+			name = modifier_indian_conspiracy_trials
+			days = normal_modifier_time
+			is_decaying = yes
+			multiplier = 1.5
+		}
+	}
+
+	option = { # Use the trials as a platform for independence.
+		name = india_events.7.b
+		add_modifier = {
+			name = modifier_indian_conspiracy_trials
+			days = normal_modifier_time
+			is_decaying = yes
+		}
+		random_political_movement = {
+			limit = {
+				is_political_movement_type = movement_india_pan_national
+			}
+			add_modifier = {
+				name = modifier_india_forty_two_martyrs
+				days = normal_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+india_events.8 = { # Phool Walon Ki Sair
+	type = country_event
+	placement = scope:phool_walon_ki_sair_state
+
+	duration = 3
+
+	title = india_events.8.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = india_events.8.d_1
+				trigger = {
+					c:MUG ?= ROOT
+					has_law_or_variant = law_type:law_monarchy
+				}
+			}
+			triggered_desc = {
+				desc = india_events.8.d_2
+				trigger = {
+					any_primary_culture = {
+						has_discrimination_trait_group = heritage_group_european
+					}
+				}
+			}
+			triggered_desc = {
+				desc = india_events.8.d_3
+			}
+		}
+	}
+	flavor = india_events.8.f
+
+	event_image = {
+		video = "ip2_cross_cultural_festival"
+	}
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	cooldown = { days = long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = ip2_content
+		p:xE0EFA0.state.owner = ROOT
+		month = 8 # It's September
+	}
+
+	immediate = {
+		p:xE0EFA0.state = {
+			save_scope_as = phool_walon_ki_sair_state
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = {
+			p:xE0EFA0.state.owner = ROOT
+		}
+	}
+
+	option = { # Impressive, very nice.
+		name = india_events.8.a
+		default_option = yes
+		scope:phool_walon_ki_sair_state = {
+			add_modifier = {
+				name = modifier_phool_walon_ki_sair
+				months = 12
+			}
+		}
+	}
+
+	option = { # Suppress it for nationalism.
+		name = india_events.8.b
+		trigger = {
+			any_primary_culture = {
+				has_discrimination_trait_group = heritage_group_european
+			}
+		}
+		random_political_movement = {
+			limit = {
+				is_political_movement_type = movement_india_pan_national
+			}
+			add_modifier = {
+				name = modifier_shuttered_pwks
+				days = normal_modifier_time
+			}
+		}
+		scope:phool_walon_ki_sair_state = {
+			add_radicals_in_state = {
+				value = medium_radicals
+				religion = rel:hindu
+			}
+			add_radicals_in_state = {
+				value = medium_radicals
+				religion = rel:sunni
+			}
+		}
+	}
+
+	option = { # Encourage it.
+		name = india_events.8.c
+		add_treasury = -10000
+		scope:phool_walon_ki_sair_state = {
+			add_modifier = {
+				name = modifier_phool_walon_ki_sair
+				months = 12
+				multiplier = 1.5
+			}
+		}
+	}
+}
+
+india_events.9 = { # Indian Army
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = india_events.9.t
+	desc = india_events.9.d
+	flavor = india_events.9.f
+
+	event_image = {
+		video = "ep1_transfer_of_authority"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		c:BIC ?= this
+		is_subject = yes
+		NOT = {
+			has_government_type = gov_chartered_company
+		}
+		has_technology_researched = military_statistics
+	}
+
+	immediate = {
+		ig:ig_industrialists = {
+			save_scope_as = government_scope
+		}
+		ig:ig_armed_forces ?= {
+			save_scope_as = presidency_armies
+		}
+	}
+
+	option = {
+		name = india_events.9.a
+		default_option = yes
+		ig:ig_armed_forces ?= {
+			set_interest_group_name = ig_indian_army
+		}
+		add_modifier = {
+			name = modifier_consolidated_indian_armies
+			days = normal_modifier_time
+		}
+	}
+
+	option = {
+		name = india_events.9.b
+		trigger = {
+			# Hasn't blown up relations between Indians and British
+			NOT = {
+				has_variable = india_home_rule_failed
+			}
+		}
+		ig:ig_armed_forces ?= {
+			set_interest_group_name = ig_indian_army
+		}
+		add_small_indian_loyalists = yes
+		add_modifier = {
+			name = modifier_encouraged_indian_military_participation
+			days = normal_modifier_time
+		}
+	}
+}
+
+india_events.10 = { # Amy Carmichael
+	type = country_event
+	placement = scope:dohnavur_state
+
+	duration = 3
+
+	title = india_events.10.t
+	desc = india_events.10.d
+	flavor = india_events.10.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:carmichael_scope
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		has_dlc_feature = ip2_content
+		c:BIC ?= this
+		is_subject = yes
+		top_overlord = {
+			country_or_subject_owns_entire_state_region = STATE_ULSTER
+		}
+		any_scope_state = {
+			state_region = s:STATE_MADRAS
+		}
+		game_date > 1900.1.1
+	}
+
+	immediate = {
+		top_overlord = {
+			create_character = {
+				template = BIC_amy_carmichael
+				on_created = {
+					set_variable = carmichael_var
+					place_character_in_void = 6
+				}
+			}
+		}
+		random_scope_state = {
+			limit = {
+				state_region = s:STATE_MADRAS
+			}
+			save_scope_as = dohnavur_state
+		}
+		random_character_in_void = {
+			limit = {
+				has_variable = carmichael_var
+			}
+			save_scope_as = carmichael_scope
+		}
+	}
+
+	option = {
+		name = india_events.10.a
+		default_option = yes
+		add_treasury = -2500
+		add_medium_european_loyalists = yes
+		scope:dohnavur_state = {
+			add_radicals_in_state = {
+				value = small_radicals
+				religion = rel:hindu
+			}
+			add_modifier = {
+				name = modifier_bic_missionary_works
+				days = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = india_events.10.b
+		scope:dohnavur_state = {
+			add_modifier = {
+				name = modifier_bic_missionary_works
+				days = normal_modifier_time
+				multiplier = 0.5
+			}
+		}
+	}
+}
 
 india_events.11 = { # Usha Mehta
 	type = country_event
@@ -24,7 +1116,7 @@ india_events.11 = { # Usha Mehta
 
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
-	cooldown = { days = normal_modifier_time }
+	cooldown = { days = never_fire_again_modifier_time }
 
 	trigger = {
 		has_dlc_feature = ip2_content
@@ -101,7 +1193,451 @@ india_events.11 = { # Usha Mehta
 	}
 }
 
+india_events.12 = { # Anne Besant goes to India
+	type = country_event
+	placement = ROOT
 
+	duration = 3
+
+	title = india_events.12.t
+	desc = india_events.12.d
+	flavor = india_events.12.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:besant_scope
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		has_dlc_feature = ip2_content
+		any_country = {
+			OR = {
+				c:BIC ?= this
+				c:BHT ?= this
+			}
+			any_scope_state = {
+				state_region = s:STATE_MADRAS
+			}
+		}
+		any_scope_character = {
+			has_template = GBR_annie_besant
+		}
+		NOT = {
+			is_enacting_law = law_type:law_multicultural # To prevent this event from stealing Besant whilst you're enacting Multiculturalism with her help.
+		}
+		c:BIC ?= {
+			empty_agitator_slots >= 1
+		}
+		game_date > 1893.1.1
+	}
+
+	immediate = {
+		ordered_country = { # Just in case multiple countries own this state
+			limit = {
+				OR = {
+					c:BIC ?= this
+					c:BHT ?= this
+				}
+				any_scope_state = {
+					state_region = s:STATE_MADRAS
+				}
+			}
+			order_by = gdp
+			save_scope_as = india_scope
+			random_scope_state = {
+				limit = {
+					state_region = s:STATE_MADRAS
+				}
+				save_scope_as = madras_state
+			}
+		}
+		random_scope_character = {
+			limit = {
+				has_template = GBR_annie_besant
+			}
+			save_scope_as = besant_scope
+		}
+	}
+
+	option = {
+		name = india_events.12.a
+		default_option = yes
+		ai_chance = {
+			base = 10
+		}
+		scope:india_scope = {
+			post_notification = besant_to_india
+		}
+		scope:besant_scope = {
+			transfer_character = scope:india_scope
+		}
+	}
+
+	option = { # Nothing ever happens.
+		name = india_events.12.b
+		ai_chance = {
+			base = 0
+		}
+		capital = {
+			add_modifier = {
+				name = modifier_london_theosophical_society
+				days = normal_modifier_time
+			}
+		}
+	}
+}
+
+india_events.13 = { # Theosophy Chain - 1
+	type = country_event
+	placement = ROOT
+
+	duration = 3
+
+	title = india_events.13.t
+	desc = india_events.13.d
+	flavor = india_events.13.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:krishnamurti_scope
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		has_dlc_feature = ip2_content
+		OR = {
+			c:BHT ?= this
+			c:BIC ?= this
+		}
+		any_scope_state = {
+			state_region = s:STATE_MADRAS
+		}
+		any_scope_character = {
+			has_template = GBR_annie_besant
+		}
+		game_date > 1907.1.1
+		NOT = {
+			has_variable = krishnamurti_spawn
+		}
+	}
+
+	immediate = {
+		create_character = {
+			template = BIC_jiddu_krishnamurti
+			on_created = {
+				set_variable = krishnamurti_var
+				place_character_in_void = 1000
+			}
+		}
+		random_scope_state = {
+			limit = {
+				state_region = s:STATE_MADRAS
+			}
+			save_scope_as = madras_state
+		}
+		random_scope_character = {
+			limit = {
+				has_template = GBR_annie_besant
+			}
+			save_scope_as = besant_scope
+		}
+		random_character_in_void = {
+			limit = {
+				has_variable = krishnamurti_var
+			}
+			save_scope_as = krishnamurti_scope
+		}
+		set_variable = krishnamurti_spawn
+	}
+
+	option = {
+		name = india_events.13.a
+		default_option = yes
+		ai_chance = {
+			base = 10
+		}
+		custom_tooltip = krishnamurti_chain_adopted_tt
+		set_global_variable = { name = theosophy_var value = 1 }
+	}
+
+	option = {
+		name = india_events.13.b
+		ai_chance = {
+			base = 5
+		}
+		custom_tooltip = krishnamurti_chain_end_tt
+		remove_global_variable = theosophy_var
+	}
+}
+
+india_events.14 = { # Theosophy Chain - 2 - Order of the Star in the East
+	type = country_event
+	placement = ROOT
+
+	duration = 3
+
+	title = india_events.14.t
+	desc = india_events.14.d
+	flavor = india_events.14.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:krishnamurti_scope
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		has_dlc_feature = ip2_content
+		game_date > 1911.1.1
+		has_global_variable = theosophy_var
+		global_var:theosophy_var = 1
+	}
+
+	immediate = {
+		random_character_in_void = {
+			limit = {
+				has_variable = krishnamurti_var
+			}
+			save_scope_as = krishnamurti_scope
+		}
+	}
+
+	option = {
+		name = india_events.14.a
+		default_option = yes
+		set_global_variable = { name = theosophy_var value = 2 }
+		scope:krishnamurti_scope = {
+			add_trait = inspirational_orator
+		}
+	}
+
+	option = {
+		name = india_events.14.b
+		ai_chance = {
+			base = 5
+		}
+		set_global_variable = { name = theosophy_var value = 2 }
+		scope:krishnamurti_scope = {
+			add_trait = ambitious
+		}
+	}
+}
+
+india_events.15 = { # Theosophy Chain - 3 - Divine Inspiration
+	type = country_event
+	placement = scope:california_state
+
+	duration = 3
+
+	title = india_events.15.t
+	desc = india_events.15.d
+	flavor = india_events.15.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:krishnamurti_scope
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		has_dlc_feature = ip2_content
+		game_date > 1918.1.1
+		has_global_variable = theosophy_var
+		global_var:theosophy_var = 2
+	}
+
+	immediate = {
+		random_state = {
+			limit = {
+				state_region = s:STATE_CALIFORNIA
+			}
+			save_scope_as = california_state
+		}
+		random_character_in_void = {
+			limit = {
+				has_variable = krishnamurti_var
+			}
+			save_scope_as = krishnamurti_scope
+		}
+	}
+
+	option = {
+		name = india_events.15.a
+		default_option = yes
+		set_global_variable = { name = theosophy_var value = 3 }
+		scope:krishnamurti_scope = {
+			add_trait = charismatic
+		}
+	}
+
+	option = {
+		name = india_events.15.b
+		ai_chance = {
+			base = 5
+		}
+		set_global_variable = { name = theosophy_var value = 3 }
+		scope:krishnamurti_scope = {
+			add_trait = psychological_affliction
+		}
+	}
+}
+
+india_events.16 = { # Theosophy Chain - 4 - Order of the Star Dissolved
+	type = country_event
+	placement = scope:star_camp_state
+
+	duration = 3
+
+	title = india_events.16.t
+	desc = india_events.16.d
+	flavor = india_events.16.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:krishnamurti_scope
+
+	dlc = dlc011
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		has_dlc_feature = ip2_content
+		any_country = {
+			OR = {
+				country_is_in_europe = yes
+				country_is_in_north_america = yes
+			}
+			has_law_or_variant = law_type:law_total_separation
+		}
+		game_date > 1925.1.1
+		has_global_variable = theosophy_var
+		global_var:theosophy_var = 3
+	}
+
+	immediate = {
+		random_country = {
+			limit = {
+				OR = {
+					country_is_in_europe = yes
+					country_is_in_north_america = yes
+				}
+				has_law_or_variant = law_type:law_total_separation
+			}
+			ordered_scope_state = {
+				order_by = gdp
+				save_scope_as = star_camp_state
+			}
+		}
+		random_character_in_void = {
+			limit = {
+				has_variable = krishnamurti_var
+			}
+			save_scope_as = krishnamurti_scope
+		}
+	}
+
+	option = {
+		name = india_events.16.a
+		default_option = yes
+		trigger = {
+			scope:krishnamurti_scope = {
+				popularity > 15
+			}
+		}
+		ai_chance = {
+			base = 2
+		}
+		remove_global_variable = theosophy_var
+		custom_tooltip = {
+			text = krishnamurti_exile_tt
+			scope:krishnamurti_scope = {
+				add_character_role = agitator
+				remove_character_role = politician
+				free_character_from_void = yes
+				exile_character = yes
+			}
+		}
+	}
+
+	option = {
+		name = india_events.16.b
+		trigger = {
+			scope:krishnamurti_scope = {
+				popularity > 15
+			}
+			empty_agitator_slots >= 1
+		}
+		ai_chance = {
+			base = 1
+		}
+		remove_global_variable = theosophy_var
+		custom_tooltip = {
+			text = krishnamurti_available_tt
+			scope:krishnamurti_scope = {
+				add_character_role = agitator
+				remove_character_role = politician
+				hidden_effect = {
+					free_character_from_void = yes
+				}
+			}
+		}
+	}
+
+	option = {
+		name = india_events.16.c
+		trigger = {
+			scope:krishnamurti_scope = {
+				popularity <= 15
+			}
+		}
+		ai_chance = {
+			base = 1
+		}
+		remove_global_variable = theosophy_var
+		custom_tooltip = {
+			text = krishnamurti_retirement_tt
+			scope:krishnamurti_scope = {
+				kill_character = {
+					hidden = yes
+				}
+			}
+		}
+	}
+}
 
 india_events.17 = { # Khudiram Bose
 	type = country_event
@@ -124,7 +1660,7 @@ india_events.17 = { # Khudiram Bose
 
 	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
 
-	cooldown = { days = normal_modifier_time }
+	cooldown = { days = never_fire_again_modifier_time }
 
 	trigger = {
 		has_dlc_feature = ip2_content
@@ -132,7 +1668,10 @@ india_events.17 = { # Khudiram Bose
 		is_subject = yes
 		any_scope_state = {
 			state_region = s:STATE_BIHAR
+			OR = {
 			turmoil > 0.15
+				obstinance >= 0.10
+			}
 		}
 		game_date > 1907.1.1
 		exists = ig:ig_radicals
@@ -149,7 +1688,10 @@ india_events.17 = { # Khudiram Bose
 		random_scope_state = {
 			limit = {
 				state_region = s:STATE_BIHAR
+				OR = {
 				turmoil > 0.15
+					obstinance >= 0.10
+				}
 			}
 			save_scope_as = khudiram_state
 		}
@@ -184,3 +1726,67 @@ india_events.17 = { # Khudiram Bose
 	}
 }
 
+india_events.18 = { # Sale of Berar
+	type = country_event
+	placement = root
+
+	duration = 3
+
+	title = india_events.18.t
+	desc = india_events.18.d
+	flavor = india_events.18.f
+
+	event_image = {
+		video = "ip2_india_countryside"
+	}
+
+	icon = "gfx/interface/icons/event_icons/event_scales.dds"
+
+	cooldown = { days = never_fire_again_modifier_time }
+
+	trigger = {
+		# triggered by decision
+	}
+
+	immediate = {
+		c:BIC = {
+			save_scope_as = bic_scope
+		}
+		random_scope_state = {
+			limit = {
+				state_region = s:STATE_CENTRAL_PROVINCES
+			}
+			save_scope_as = berar_scope
+		}
+	}
+
+	option = {
+		name = india_events.18.a
+		default_option = yes
+		ai_chance = {
+			base = 90
+		}
+		scope:berar_scope = {
+			set_state_owner = c:BIC
+		}
+		add_modifier = {
+			name = lease_of_berar_income
+		}
+		c:BIC = {
+			add_modifier = {
+				name = lease_of_berar_costs
+			}
+		}
+	}
+
+	option = {
+		name = india_events.18.b
+		ai_chance = {
+			base = 10
+		}
+		create_diplomatic_catalyst = {
+			type = catalyst_event_negative
+			target = c:BIC
+		}
+	}
+}

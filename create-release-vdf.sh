@@ -21,15 +21,10 @@ else
   exit 1
 fi
 
-title=$(grep -Po '(?<=\s\"name\"\s:\s\").+(?=\",)' "$mod_path/.metadata/metadata.json")
+title='Better Politics Mod - 3.0 Beta'
 
 # Read mod id
-if [ -n "$3" ]
-then
-  mod_id="$3"
-else
-  mod_id='0'
-fi
+mod_id='3420763650'
 
 # Clean up old file
 printf '' > workshop.vdf

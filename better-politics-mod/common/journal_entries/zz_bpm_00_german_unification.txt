@@ -1,7 +1,16 @@
 ﻿je_schleswig_holstein_question = {
 	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
 	
-	group = je_group_historical_content
+	group = je_group_german_unification
+	is_shown_in_lobby = {
+		OR = {
+			country_has_primary_culture = cu:north_german
+			country_has_primary_culture = cu:south_german
+		}
+		NOT = {
+			c:AUS = THIS
+		}
+	}
 
 	is_shown_when_inactive = {
 		hidden_trigger = { NOT = { has_global_variable = schleswig_holstein_question_solved } }		
@@ -98,7 +107,19 @@
 je_german_unification_idea = {
 	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
 	
-	group = je_group_historical_content
+	group = je_group_german_unification
+	is_shown_in_lobby = {
+		AND = {
+			OR = {
+				country_has_primary_culture = cu:north_german
+				country_has_primary_culture = cu:south_german
+			}
+			NOR = {
+				c:PRU = THIS
+				c:AUS = THIS
+			}
+		}
+	}
 
 	is_shown_when_inactive = {
 		OR = {
@@ -108,34 +129,33 @@ je_german_unification_idea = {
 	}
  
 	possible = {		
-		custom_tooltip = {
-			text = "bpm_je_springtime_over"
-			has_global_variable = peoples_springtime_happened
-			NOT = { has_global_variable = recently_completed_peoples_springtime_je }
-		}
-		
 		OR = {
 			country_has_primary_culture = cu:north_german
 			country_has_primary_culture = cu:south_german
 		}
+		hidden_trigger = {
+			NOT = { this ?= c:TRS }
+		}
 	}
 
 	complete = {
+		cu:north_german ?= {
+			culture_current_fervor >= 40
+		}
+		cu:south_german ?= {
+			culture_current_fervor >= 30
+		}
+		custom_tooltip = {
+			text = "bpm_je_springtime_over"
+			has_global_variable = bpm_peoples_springtime_happened
+			NOT = { has_global_variable = recently_completed_peoples_springtime_je }
+		}
+	}
+
+	invalid = {
 		OR = {
-			custom_tooltip = {
-				text = bpm_je_trigger_natlibs_germany
-				AND = {
-					country_rank >= rank_value:minor_power
-					exists = ig:ig_national_liberals
-					ig:ig_national_liberals ?= {
-						ig_clout > 0.05
-					}
-				}
-			}
-			custom_tooltip = {
-				text = bpm_je_trigger_complete_elsewhere
-				has_global_variable = bpm_je_german_unification_idea_complete
-			}
+			exists = c:GER
+			has_global_variable = germany_formed
 		}
 	}
 
@@ -271,8 +291,12 @@ je_german_unification_idea = {
 je_north_german_unification = {
 	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
 	
-	group = je_group_historical_content
-	
+	group = je_group_german_unification
+
+	immediate = {
+		c:PRU = { trigger_event = { id = german_unification.3 } }
+	}
+
 	complete = {
 		custom_tooltip = {
 			has_global_variable = schleswig_holstein_question_solved
@@ -294,10 +318,13 @@ je_north_german_unification = {
 		}
 	}
 
-	on_monthly_pulse = {
-		events = {
-			german_unification.3 # Bismarck
+	fail = {
+		NOT = {
+			is_unification_candidate = GER
 		}
+	}
+
+	on_monthly_pulse = {
 	
 		effect = {
 			if = { 
@@ -320,6 +347,11 @@ je_north_german_unification = {
 		}
 	}
 
+	#progressbar = yes
+	#current_value = {
+	#	value = var:je_unification_progress
+	#}
+
 	weight = 1000
 	should_be_pinned_by_default = yes
 }
@@ -327,13 +359,13 @@ je_north_german_unification = {
 je_south_german_unification = {
 	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
 	
-	group = je_group_historical_content
+	group = je_group_german_unification
 
 	complete = {
-		# custom_tooltip = {
-		# 	has_global_variable = schleswig_holstein_question_solved
-		# 	text = je_schleswig_holstein_question_solved_trigger_desc
-		# }	
+		custom_tooltip = {
+			has_global_variable = schleswig_holstein_question_solved
+			text = je_schleswig_holstein_question_solved_trigger_desc
+		}	
 		hidden_trigger = {
 			has_variable = je_unification_progress
 		}
@@ -348,6 +380,12 @@ je_south_german_unification = {
 				}
 			}	
 		}	
+	}
+
+	fail = {
+		NOT = {
+			is_unification_candidate = GER
+		}
 	}
 
 	on_monthly_pulse = {
@@ -382,7 +420,7 @@ je_south_german_unification = {
 je_german_unification = {
 	icon = "gfx/interface/icons/event_icons/germany.dds"
 	
-	group = je_group_historical_content
+	group = je_group_german_unification
 
 	is_shown_when_inactive = {
 		has_variable = je_german_confederate_unifier

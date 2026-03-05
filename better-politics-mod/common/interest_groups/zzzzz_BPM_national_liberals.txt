@@ -31,8 +31,15 @@
 			#set_ig_trait = ig_trait:ig_trait_right_bastion_of_freedom
 			#set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
 		}
-
-		#create_natlib_start_characters = yes
+		if = {
+			limit = {
+				owner = { 
+					bpm_country_is_latin_american = yes
+					has_journal_entry = je_positivist_movement 
+				}
+			}
+			trigger_event = { id = positivism.2 popup = yes }
+		}
 	}
 	on_disable = {}
 
@@ -66,19 +73,21 @@
 	on_character_ig_membership = {}
 	
 	pop_potential = {
-		game_date > 1836.1.2
-		owner = {
-			ig:ig_national_liberals ?= {
-				NOT = { has_ideology = ideology:ideology_nonexistent }
-				bpm_interest_group_is_activated = yes
+		custom_tooltip = {
+			text = BPM_VALID_POP_FOR_IG
+			owner ?= {
+				ig:ig_national_liberals ?= {
+					NOT = { has_ideology = ideology:ideology_nonexistent }
+					bpm_interest_group_is_activated = yes
+				}
 			}
 		}
+		game_date > 1836.1.2
 	}
 	
 	pop_weight = {
 		value = 30
-	
-
+		
 		if = {
 			limit = {
 				owner = {
@@ -109,20 +118,43 @@
 		}
 		else_if = {
 			limit = {
-				is_pop_type = capitalists
-			}
-			add = {
-				desc = "POP_CAPITALISTS"
-				value = 175
-			}
-		}
-		else_if = {
-			limit = {
 				is_pop_type = aristocrats
 			}
 			add = {
 				desc = "POP_ARISTOCRATS"
 				value = 220
+			}
+		}
+
+		
+		if = {
+			limit = { 
+				OR = {
+					is_pop_type = capitalists 
+					is_pop_type = shopkeepers
+				}
+			}
+			add = {
+				desc = "POP_CAPITALISTS"
+				value = var:bpm_consciousness_natlib_igs_capitalists_shopkeepers
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					is_pop_type = academics
+					is_pop_type = engineers
+				}
+			}
+			add = {
+				desc = "POP_ACADEMICS_ENGINEERS"
+				value = var:bpm_consciousness_natlib_igs_academics_engineers
+			}
+		}
+		else = {
+			add = {
+				desc = "LIBERAL_CONSCIOUSNESS"
+				value = var:bpm_consciousness_natlib_igs_others
 			}
 		}
 
@@ -140,7 +172,7 @@
 			limit = { 
 				owner = { 
 					bpm_performance_significant_country = yes
-					has_global_variable = peoples_springtime_happened
+					has_global_variable = bpm_peoples_springtime_happened
 					
 					OR = {
 						can_form_nation = ITA
@@ -221,6 +253,22 @@
 	commander_weight = {
 		value = 2.5
 		multiply = bpm_commander_assignment_from_laws_factor
+		if ={
+			limit = {
+				owner.ig:ig_national_liberals = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}	
+
+	executive_weight = {
+		value = 0.3
+		if ={
+			limit = {
+				owner.ig:ig_national_liberals = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
 	}	
 	
 	noble_chance = {
@@ -240,6 +288,11 @@
 	female_agitator_chance = {
 		value = 1.0
 		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

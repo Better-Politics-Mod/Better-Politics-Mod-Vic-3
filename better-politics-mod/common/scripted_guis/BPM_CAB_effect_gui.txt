@@ -1,3 +1,53 @@
+﻿bpm_dismiss_character_from_stack = {
+    scope = interest_group
+    is_valid = {
+        custom_tooltip = {
+            text = "bpm_cab_select_ig_tt"
+            OR = {
+                var:bpm_skilled_characters > 0
+                var:bpm_unskilled_characters > 0
+                var:bpm_expert_characters > 0
+            }
+        }   
+    }
+    effect = {
+        var:bpm_selected_character_igshow = {
+            kill_character = yes
+        }
+        remove_variable = bpm_selected_character_igshow
+        hidden_effect = {
+            save_scope_as = bpm_selected_ig
+            owner = {
+                bpm_generate_cabinet_character = yes
+            }
+        }
+        scope:bpm_selected_character = {
+            bpm_character_skill_level_init = yes
+        }
+        set_variable = {
+            name = bpm_selected_character_igshow
+            value = scope:bpm_selected_character
+        }
+        owner = { 
+            clear_variable_list = bpm_synergy_calculation_charset
+            add_to_variable_list = {
+                name = bpm_synergy_calculation_charset
+                target = ruler
+            }
+            add_to_variable_list = {
+                name = bpm_synergy_calculation_charset
+                target = scope:bpm_selected_character
+            }
+            bpm_calculate_synergy = yes
+            prev = { set_variable = {
+                name = bpm_compatibility_with_ruler
+                value = owner.var:bpm_temp_synergy_calculation
+            } }        
+        }
+
+    }
+}
+
 bpm_CAB_toggle_char_select = {
 	scope = institution
 	is_shown = {
@@ -15,10 +65,16 @@ bpm_CAB_toggle_char_select = {
                 save_scope_as = bpm_reference_institution_type
             }
             bpm_reload_government_mandate = yes
-            every_interest_group = {
+            ordered_interest_group = {
                 limit = {
-                    var:bpm_ig_mandate > 0
+                    OR = {
+                        owner = { bpm_country_has_parliamentary_electoral_system = no }
+                        is_in_government = yes
+                    }
+                    ig_clout >= 0.01
                 }
+                order_by = ig_clout
+                min = 0
                 owner = { add_to_variable_list = {
                     name = bpm_CAB_ig_select_pool
                     target = prev
@@ -26,6 +82,24 @@ bpm_CAB_toggle_char_select = {
                 set_variable = {
                     name = bpm_cost_ig_position_var
                     value = bpm_cost_ig_position
+                }
+
+            }
+
+            every_interest_group = {
+                remove_variable = bpm_selected_character_igshow
+                hidden_effect = {
+                    save_scope_as = bpm_selected_ig
+                    owner = {
+                        bpm_generate_cabinet_character = yes
+                    }
+                }
+                scope:bpm_selected_character = {
+                    bpm_character_skill_level_init = yes
+                }
+                set_variable = {
+                    name = bpm_selected_character_igshow
+                    value = scope:bpm_selected_character
                 }
             }
             bpm_reset_mandate_used = yes
@@ -50,7 +124,24 @@ bpm_CAB_toggle_char_select = {
                         value = scope:bpm_selected_character.var:bpm_cab_char_synergy
                     }
                 }
+                owner = { 
+                    clear_variable_list = bpm_synergy_calculation_charset
+                    add_to_variable_list = {
+                        name = bpm_synergy_calculation_charset
+                        target = ruler
+                    }
+                    add_to_variable_list = {
+                        name = bpm_synergy_calculation_charset
+                        target = scope:bpm_selected_character
+                    }
+                    bpm_calculate_synergy = yes
+                    prev = { set_variable = {
+                        name = bpm_compatibility_with_ruler
+                        value = owner.var:bpm_temp_synergy_calculation
+                    } }        
+                }
             }
+            
         }
 	}
 }
@@ -142,10 +233,29 @@ bpm_newcab_select_ig = {
                 var:bpm_expert_characters > 0
             }
         }   
-        custom_tooltip = {
-            text = "bpm_cab_select_ig_enough_mandate_tt"
-            bpm_remaining_mandate >= var:bpm_cost_ig_position_var
+        # custom_tooltip = {
+        #     text = "bpm_cab_select_ig_enough_mandate_tt"
+        #     bpm_remaining_mandate >= var:bpm_cost_ig_position_var
+        # }
+        trigger_if = {
+            limit = {
+                owner = {
+                    OR = {
+                        bpm_country_has_executive_dictatorial_system = yes
+                        bpm_country_has_executive_electoral_system = yes
+                    }
+                }
+            }
+            OR = {
+                custom_tooltip = {
+                    text = "bpm_compatibility_with_ruler"
+                    var:bpm_compatibility_with_ruler < 0.35
+                }
+                var:bpm_selected_character_igshow.interest_group ?= owner.ruler.interest_group
+            }
+
         }
+
     }
     effect = {
         save_scope_as = bpm_selected_ig
@@ -208,10 +318,6 @@ bpm_cabinet_shuffle_gui = {
         NOT = { has_variable = bpm_cab_cannot_shuffle }
     }
     effect = {
-        set_variable = {
-            name = bpm_cab_cannot_shuffle
-            days = 730
-        }
         bpm_cab_shuffle = yes
     }
 }
@@ -341,5 +447,123 @@ bpm_CAB_fire_minister_gui = {
     }
     effect = {
         bpm_fire_cabinet_minister = yes
+    }
+}
+
+bpm_institution_is_not_focused_but_available = {
+    scope = institution
+    is_shown = {
+        owner = {
+            je:je_bpm_cabinet_agendas = { OR = {
+                var:bpm_cabinet_agenda_slot_one ?= flag:bpm_no_cabinet_agenda
+                var:bpm_cabinet_agenda_slot_two ?= flag:bpm_no_cabinet_agenda
+                var:bpm_cabinet_agenda_slot_three ?= flag:bpm_no_cabinet_agenda
+            } }
+            NOT = {
+                is_target_in_variable_list = {
+                    name = bpm_focused_institutions
+                    target = prev
+                }
+            }
+        }
+    }
+}
+
+bpm_institution_is_focused = {
+    scope = institution
+    is_shown = {
+        owner = {
+            is_target_in_variable_list = {
+                name = bpm_focused_institutions
+                target = prev
+            }
+        }
+    }
+}
+
+bpm_institution_is_not_focused_and_unavailable = {
+    scope = institution
+    is_shown = {
+        owner = {
+            je:je_bpm_cabinet_agendas = { AND = {
+                NOT = { var:bpm_cabinet_agenda_slot_one ?= flag:bpm_no_cabinet_agenda }
+                NOT = { var:bpm_cabinet_agenda_slot_two ?= flag:bpm_no_cabinet_agenda }
+                NOT = { var:bpm_cabinet_agenda_slot_three ?= flag:bpm_no_cabinet_agenda }
+            } }
+            NOT = {
+                is_target_in_variable_list = {
+                    name = bpm_focused_institutions
+                    target = prev
+                }
+            }
+        }
+    }
+}
+
+bpm_focus_on_inst = {
+    scope = institution
+    effect = {
+        owner = {
+            add_to_variable_list = {
+                name = bpm_focused_institutions
+                target = prev
+            }
+        }
+        bpm_lock_slot_if_no_skill = yes
+    }
+}
+
+bpm_toggle_inst = {
+    scope = institution
+    effect = {
+        if = {
+            limit = {
+                owner = {
+                    OR = {
+                        AND = {
+                            je:je_bpm_cabinet_agendas = { OR = {
+                                var:bpm_cabinet_agenda_slot_one ?= flag:bpm_no_cabinet_agenda
+                                var:bpm_cabinet_agenda_slot_two ?= flag:bpm_no_cabinet_agenda
+                                var:bpm_cabinet_agenda_slot_three ?= flag:bpm_no_cabinet_agenda
+                            } }
+                            NOT = {
+                                is_target_in_variable_list = {
+                                    name = bpm_focused_institutions
+                                    target = prev
+                                }
+                            }
+                        }
+                        is_target_in_variable_list = {
+                            name = bpm_focused_institutions
+                            target = prev
+                        }
+                    }
+                }
+            }
+            owner = {
+                if = {
+                    limit = {
+                        is_target_in_variable_list = {
+                            name = bpm_focused_institutions
+                            target = prev
+                        }
+                    }
+                    remove_list_variable = {
+                        name = bpm_focused_institutions
+                        target = prev
+                    }
+                }
+                else = {
+                    add_to_variable_list = {
+                        name = bpm_focused_institutions
+                        target = prev
+                    }
+                }
+                je:je_bpm_cabinet_agendas = {
+                    save_scope_as = journal_entry
+                }
+                bpm_lock_slot_if_no_skill = yes 
+            }
+        }
     }
 }

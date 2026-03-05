@@ -24,8 +24,8 @@
 	is_shown_when_inactive = {
 		hidden_trigger = {
 			has_global_variable = bpm_je_march_to_radicalism_progress
-			NOT = { has_global_variable = peoples_springtime_happened }
-			NOT = { has_global_variable = peoples_springtime_happening }
+			NOT = { has_global_variable = bpm_peoples_springtime_happened }
+			NOT = { has_global_variable = bpm_peoples_springtime_happening }
 		}
 		bpm_country_is_in_europe = yes
 	}
@@ -34,8 +34,8 @@
 	possible = {
 		hidden_trigger = {
 			has_global_variable = bpm_je_march_to_radicalism_progress
-			NOT = { has_global_variable = peoples_springtime_happened }
-			NOT = { has_global_variable = peoples_springtime_happening }
+			NOT = { has_global_variable = bpm_peoples_springtime_happened }
+			NOT = { has_global_variable = bpm_peoples_springtime_happening }
 		}
 	}
 
@@ -43,7 +43,7 @@
 		hidden_trigger = {
 			OR = {
 				has_variable = bpm_march_to_radicalism_complete_local_var
-				has_global_variable = peoples_springtime_happened
+				has_global_variable = bpm_peoples_springtime_happened
 			}
 		} 
 		# The people have already sprung
@@ -62,7 +62,7 @@
 			}
 			custom_tooltip = {
 				text = "bpm_peoples_springtime_spark_happened"
-				has_global_variable = peoples_springtime_happening
+				has_global_variable = bpm_peoples_springtime_happening
 			}
 		}
 	}
@@ -102,6 +102,19 @@
 				}
 			}
 		}
+		effect = {
+			if = {
+				NOT = { has_global_variable = bpm_peoples_springtime_happening }
+				NOT = { has_global_variable = bpm_peoples_springtime_happened }
+            	limit = {
+               		any_country = {
+                    	bpm_country_is_in_europe = yes
+						has_revolution = yes
+                    }
+                }
+				set_global_variable = peoples_springtime_happening
+            }   
+        }
 	}
 
 	progressbar = yes
@@ -127,6 +140,7 @@
 				bpm_country_is_in_europe = yes
 				NOT = { this = c:RUS }
 			}
+			set_variable = bpm_sotp_start
 			add_journal_entry = {
 				type = je_springtime_of_the_peoples
 			}
@@ -146,12 +160,39 @@ je_springtime_of_the_peoples = {
 		trigger_event = { id = 1848.4 }
 		if = {
 			limit = {
-				exists = c:AUS
-            	this = c:AUS
+				NOT = {
+					any_political_movement = {
+						OR = {
+							is_political_movement_type = movement_radical
+							is_political_movement_type = movement_german_national
+							is_political_movement_type = movement_italian_national
+						}
+					}
+				}
 			}
-			trigger_event = { id = peoples_springtime.9 days = 90 popup = yes}
+			if = {
+				limit = {
+					OR = {
+						country_has_primary_culture = cu:north_german
+						country_has_primary_culture = cu:south_german
+					}
+				}
+				create_political_movement = { type = movement_german_national }
+			}
+			else_if = {
+				limit = {
+					OR = {
+						country_has_primary_culture = cu:north_italian
+						country_has_primary_culture = cu:south_italian
+					}
+				}
+				create_political_movement = { type = movement_italian_national }
+			}
+			else = {
+				create_political_movement = { type = movement_radical }
+			}
 		}
-		else_if = {
+		if = {
 			limit = {
 				exists = c:PRU
 				this = c:PRU
@@ -169,16 +210,30 @@ je_springtime_of_the_peoples = {
 				}
 			}
 		}
+		start_national_awakening = {
+			culture = cu:north_italian
+			months = 48
+			state_region = s:STATE_VENETIA
+		}
 		add_modifier = {
 			name = bpm_peoples_springtime_modifier
 			months = 26
+		}
+		every_interest_group = {
+			limit = {
+				bpm_ig_is_ideological = yes
+			}
+			change_variable = {
+				name = bpm_ig_organization
+				add = 20
+			}
 		}
 	}
 
 	on_timeout = {
 		set_variable = completed_peoples_springtime_je
-		remove_global_variable = peoples_springtime_happening
-		set_global_variable = peoples_springtime_happened
+		remove_global_variable = bpm_peoples_springtime_happening
+		set_global_variable = bpm_peoples_springtime_happened
 		if = {
 			limit = { NOT = { has_global_variable = recently_completed_peoples_springtime_je } }
 			set_global_variable = {
@@ -359,17 +414,21 @@ je_frankfurt_parliament = {
 			country_has_primary_culture = cu:north_german
 			country_has_primary_culture = cu:south_german
 		}
-		NOT = { this ?= c:UBD }
+		hidden_trigger = {
+			has_game_rule = bpm_frankfurt_parliament_active
+		}
 	}
 
 	possible = {
 		# always = no
 		has_journal_entry = je_springtime_of_the_peoples
+		has_global_variable = bpm_frankfurt_parliament_progress
+		global_var:bpm_frankfurt_parliament_progress <= 5
 		OR = {
 			country_has_primary_culture = cu:north_german
 			country_has_primary_culture = cu:south_german
 		}
-		NOT = { this ?= c:UBD }
+		# NOT = { this ?= c:UBD }
 		exists = c:PRU
 	}
 
@@ -423,8 +482,6 @@ je_frankfurt_parliament = {
 			}
 			add_to_global_variable_list = {name = frankfurt_participant target = THIS}
 		}
-
-		trigger_event = { id = bpm_frankfurt_parliament_events.200 }
 	}
 
 	scripted_button = je_frankfurt_button
@@ -441,6 +498,21 @@ je_frankfurt_parliament = {
 				}
 				bpm_calculate_frankfurt_parliament_seats = yes
 			}
+			change_global_variable = {
+				name = bpm_frankfurt_parliament_progress
+				add = {
+					value = 0.5
+					multiply = global_var:bpm_frankfurt_parliament_left_percent
+				}
+				add = {
+					value = 0.3
+					multiply = global_var:bpm_frankfurt_parliament_center_percent
+				}
+				add = {
+					value = 0.1
+					multiply = global_var:bpm_frankfurt_parliament_right_percent
+				}
+			}
 		}
 		events = {
 			bpm_frankfurt_parliament_events.1
@@ -451,27 +523,12 @@ je_frankfurt_parliament = {
 			bpm_frankfurt_parliament_events.6
 			bpm_frankfurt_parliament_events.7
 			bpm_frankfurt_parliament_events.8
-			bpm_frankfurt_parliament_events.23
+			# bpm_frankfurt_parliament_events.23
 		}
 	}
 
 	on_monthly_pulse = {
 		effect = {
-			change_global_variable = {
-				name = bpm_frankfurt_parliament_progress
-				add = {
-					value = 7.5
-					multiply = global_var:bpm_frankfurt_parliament_left_percent
-				}
-				add = {
-					value = 3
-					multiply = global_var:bpm_frankfurt_parliament_center_percent
-				}
-				add = {
-					value = 0.33
-					multiply = global_var:bpm_frankfurt_parliament_right_percent
-				}
-			}
 			every_country = {
 				limit = {
 					OR = {
@@ -483,23 +540,27 @@ je_frankfurt_parliament = {
 				add_to_global_variable_list = {name = frankfurt_member_list target = THIS }
 			}
 		}
-		random_events = {
-			20 = 0
-			10 = bpm_frankfurt_parliament_events.20
-			10 = bpm_frankfurt_parliament_events.21
-			10 = bpm_frankfurt_parliament_events.22
-			5 = bpm_frankfurt_parliament_events.25
-			20 = bpm_frankfurt_parliament_events.28
-			5 = bpm_frankfurt_parliament_events.29
-		}
+		# random_events = {
+		# 	20 = 0
+		# 	10 = bpm_frankfurt_parliament_events.20
+		# 	10 = bpm_frankfurt_parliament_events.21
+		# 	10 = bpm_frankfurt_parliament_events.22
+		# 	5 = bpm_frankfurt_parliament_events.25
+		# 	20 = bpm_frankfurt_parliament_events.28
+		# 	5 = bpm_frankfurt_parliament_events.29
+		# }
 	}
 
 	fail = {
 		custom_tooltip ={
 			text = frankfurt_fail_tt
 			OR = {
-				has_global_variable = peoples_springtime_happened
+				has_global_variable = bpm_peoples_springtime_happened
 				has_global_variable = frankfurt_dissolved
+				any_country = {
+					has_variable = frankfurt_leader
+					has_modifier = country_humiliated
+	  		  	}
 			}
 			NOT = {
 				has_global_variable = bpm_frankfurt_complete
@@ -515,16 +576,22 @@ je_frankfurt_parliament = {
 	complete = {
 		custom_tooltip ={
 			text = frankfurt_win_tt
-			has_global_variable = bpm_frankfurt_complete
+			OR = {
+				has_global_variable = bpm_frankfurt_complete
+				any_country = {
+					has_variable = frankfurt_opposer
+					has_modifier = country_humiliated
+	  		  	}
+			}
 		}
 	}
 
-	# on_complete = {
-	# 	random_country = {
-	# 		limit = { has_variable = frankfurt_leader }
-	# 		trigger_event = { id = bpm_frankfurt_parliament_events.13 }
-	# 	}
-	# }
+	on_complete = {
+		random_country = {
+			limit = { has_variable = frankfurt_leader }
+			trigger_event = { id = bpm_frankfurt_parliament_events.13 }
+		}
+	}
 
 	# invalid = {
 	# 	has_variable = completed_peoples_springtime_je
@@ -543,3 +610,215 @@ je_frankfurt_parliament = {
 	weight = 10000
 	should_be_pinned_by_default = yes
 }
+
+
+## CRISIS
+
+je_bpm_crises_sotp = {
+	icon = "gfx/interface/icons/event_icons/48je.dds"
+
+	group = je_group_bpm_crises
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_crises_some_crisis_desc
+			}
+		}
+	}
+
+	modifiers_while_active = {
+		# add modifiers
+
+	}
+
+	is_shown_when_inactive = {
+		# this should always be yes
+		bpm_country_is_in_europe = yes
+	}
+
+	possible = {
+		# scope:journal_entry = {
+		# 	custom_tooltip = {
+		# 		text = bpm_sotp_start_tt
+		# 		NOT = {
+		# 			has_variable = bpm_crisis_ended
+		# 		}
+		# 	}
+		# }
+		# starting triggers
+		custom_tooltip = {
+			text = bpm_sotp_start_tt
+			has_variable = bpm_sotp_start
+		}
+	}
+
+	immediate = {
+		trigger_event = { id = 1848.4 }
+		if = {
+			limit = {
+				NOT = {
+					any_political_movement = {
+						OR = {
+							is_political_movement_type = movement_radical
+							is_political_movement_type = movement_german_national
+							is_political_movement_type = movement_italian_national
+						}
+					}
+				}
+			}
+			if = {
+				limit = {
+					OR = {
+						country_has_primary_culture = cu:north_german
+						country_has_primary_culture = cu:south_german
+					}
+				}
+				create_political_movement = { type = movement_german_national }
+			}
+			else_if = {
+				limit = {
+					OR = {
+						country_has_primary_culture = cu:north_italian
+						country_has_primary_culture = cu:south_italian
+					}
+				}
+				create_political_movement = { type = movement_italian_national }
+			}
+			else = {
+				create_political_movement = { type = movement_radical }
+			}
+		}
+		if = {
+			limit = {
+				exists = c:PRU
+				this = c:PRU
+			}
+			create_character = {
+				culture = cu:north_german
+				female = no
+				ideology = ideology_radical
+				interest_group = ig_radicals
+				is_agitator = yes 
+				traits = {
+					inspirational_orator
+					ambitious
+					firebrand
+				}
+			}
+		}
+		start_national_awakening = {
+			culture = cu:north_italian
+			months = 48
+			state_region = s:STATE_VENETIA
+		}
+		add_modifier = {
+			name = bpm_peoples_springtime_modifier
+			months = 26
+		}
+	}
+
+	complete = {
+		hidden_trigger = {
+			always = no
+		}
+		# tooltip generation
+		custom_tooltip = my_custom_end_tt
+	}
+
+		on_timeout = {
+		set_variable = completed_peoples_springtime_je
+		remove_global_variable = bpm_peoples_springtime_happening
+		set_global_variable = bpm_peoples_springtime_happened
+		if = {
+			limit = { NOT = { has_global_variable = recently_completed_peoples_springtime_je } }
+			set_global_variable = {
+				name = recently_completed_peoples_springtime_je
+				months = 24
+			}
+		}
+		custom_tooltip = je_springtime_of_the_peoples_tt_3
+		hidden_effect = {
+			remove_modifier = bpm_pre_peoples_springtime
+			remove_modifier = bpm_peoples_springtime_modifier
+			every_interest_group = {
+				remove_modifier = bpm_1848_stubborn_ig
+			}
+			if = {
+				limit = { is_player = no }
+				add_loyalists = {
+					value = 0.5
+					strata = upper
+				}
+				add_loyalists = {
+					value = 0.3
+					strata = middle
+				}
+				add_loyalists = {
+					value = 0.2
+					strata = lower
+				}
+			}
+		}
+		custom_tooltip = je_springtime_of_the_peoples_tt_4
+	}
+
+	on_weekly_pulse = {
+		events = {
+			peoples_springtime.100
+		}
+	}
+
+	on_monthly_pulse = {
+		events = {
+			1848.5
+			bpm_radlib_utils.5
+			bpm_radlib_utils.6
+		}
+		random_events = {
+			100 = 0
+			10 = peoples_springtime.3
+			10 = peoples_springtime.4
+			10 = peoples_springtime.5
+		}
+		effect = {
+			bpm_setup_country_stubbornness = yes
+		}
+	}
+
+	on_weekly_pulse = {
+		events = {
+			peoples_springtime.100
+		}
+	}
+
+	on_monthly_pulse = {
+		events = {
+			1848.5
+			bpm_radlib_utils.5
+			bpm_radlib_utils.6
+		}
+		random_events = {
+			100 = 0
+			10 = peoples_springtime.3
+			10 = peoples_springtime.4
+			10 = peoples_springtime.5
+		}
+		effect = {
+			bpm_setup_country_stubbornness = yes
+		}
+	}
+
+	timeout = 730
+
+	should_be_pinned_by_default = no
+}
+# je_panslavism = {
+# 	is_shown_when_inactive = {
+# 		OR = {
+# 			any_primary_culture = { has_discrimination_trait = west_slavic }
+# 			any_primary_culture = { has_discrimination_trait = east_slavic }
+# 			any_primary_culture = { has_discrimination_trait = south_slavic }
+# 		}
+# 	}
+# }

@@ -217,13 +217,25 @@ je_bpm_crises_government_scandal = {
 		OR = {
 			custom_tooltip = {
 				text = "Random Chance"
-				var:bpm_scandal_roll = 99
+				AND = {
+					has_variable = bpm_scandal_roll
+					var:bpm_scandal_roll >= 98
+				}
 			}
 			hidden_trigger = {
 				has_journal_entry = je_bpm_crises_government_scandal
 			}
 		}
+		hidden_trigger = {
+			game_date > 1842.1.1
+		}
 	}
+
+	scripted_button = bpm_scandal_response_distract
+	scripted_button = bpm_scandal_response_cover_up
+	scripted_button = bpm_scandal_response_admit_failure
+	scripted_button = bpm_scandal_response_scapegoat
+
 
 	immediate = {
 
@@ -256,6 +268,10 @@ je_bpm_crises_government_scandal = {
 		scope:journal_entry = {
 			set_variable = {
 				name = bpm_government_scandal_progress
+				value = 0
+			}
+			set_variable = {
+				name = bpm_government_scandal_progress_toadd
 				value = {
 					integer_range = {
 						min = 0
@@ -271,7 +287,7 @@ je_bpm_crises_government_scandal = {
 				}
 				scope:journal_entry = {
 					change_variable = {
-						name = bpm_government_scandal_progress
+						name = bpm_government_scandal_progress_toadd
 						add = 5
 					}
 				}
@@ -287,7 +303,7 @@ je_bpm_crises_government_scandal = {
 				}
 				scope:journal_entry = {
 					change_variable = {
-						name = bpm_government_scandal_progress
+						name = bpm_government_scandal_progress_toadd
 						add = 20
 					}
 				}
@@ -310,13 +326,16 @@ je_bpm_crises_government_scandal = {
 	
 	invalid = {
 		scope:journal_entry = {
-			NOT = {
-				any_in_list = {
-					variable = bpm_government_parties_involved_in_scandal
-					any_member = {
-						is_in_government = yes
+			OR = {
+				NOT = {
+					any_in_list = {
+						variable = bpm_government_parties_involved_in_scandal
+						any_member = {
+							is_in_government = yes
+						}
 					}
 				}
+				has_variable = bpm_crisis_ended
 			}
 		}
 	}
@@ -325,6 +344,17 @@ je_bpm_crises_government_scandal = {
 		effect = {
 			scope:journal_entry = {
 				remove_modifier = bpm_crisis_scandal_scandal_in_the_press
+				# Add initial progress from event trigger
+				if = {
+					limit = {
+						has_variable = bpm_government_scandal_progress_toadd
+					}
+					change_variable = {
+						name = bpm_government_scandal_progress
+						add = scope:journal_entry.var:bpm_government_scandal_progress_toadd
+					}
+					remove_variable = bpm_government_scandal_progress_toadd
+				}
 			}
 			if = {
 				limit = {
@@ -347,18 +377,18 @@ je_bpm_crises_government_scandal = {
 				# But it can definitely compound with SoL issues
 				add_radicals = {
 					strata = lower
-					value = 0.025
+					value = 0.002
 				}
 				# The middle class (esp. bureaucrats and clerks) cares a lot about government scandals
 				# This can have a big impact on middle class IGs's approval
 				add_radicals = {
 					strata = middle
-					value = 0.1
+					value = 0.02
 				}
 				# The upper class also cares about government scandals but less than the middle class
 				add_radicals = {
 					strata = upper
-					value = 0.05
+					value = 0.01
 				}
 			}
 			if = {
@@ -400,12 +430,19 @@ je_bpm_crises_government_scandal = {
 				text = je_bpm_crises_government_scandal_end_party_left_tt
 				always = no
 			}
+			custom_tooltip = {
+				text = je_bpm_crises_government_scandal_end_resolved_tt
+				always = no
+			}
 		}
 
 	}
 
 	goal_add_value = {
-		value = 100
+		value = {
+			value = 100
+			subtract = scope:journal_entry.var:bpm_government_scandal_progress
+		}
 	}
 
 	progressbar = yes

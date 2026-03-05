@@ -1,0 +1,257 @@
+bpm_scandal_response_distract = {
+	name = "bpm_scandal_response_distract"
+	desc = "bpm_scandal_response_distract_desc"
+
+	visible = {
+		has_journal_entry = je_bpm_crises_government_scandal
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "bpm_scandal_response_distract_possible_tooltip"
+			bpm_media_preparedness >= 20
+		}
+	}
+
+	ai_chance = {
+		value = 100
+	}
+
+	effect = {
+		random_list = {
+			1 = {
+				custom_tooltip = bpm_end_the_crisis_tt 
+				scope:journal_entry = {
+					set_variable = {
+						name = bpm_crisis_ended
+						days = 180
+					}
+				}
+				modifier = {
+					if = {
+						limit = {
+							has_variable = bpm_headofgov
+							var:bpm_headofgov = {
+								bpm_character_skill_level >= 2
+							}
+						}
+						add = 1
+					}
+					if = {
+						limit = {
+							has_variable = bpm_headofgov
+							var:bpm_headofgov = {
+								bpm_character_skill_level >= 4
+							}
+						}
+						add = 1
+					}
+				 	if = {
+						limit = {
+							OR = {
+								bpm_number_of_crises > 1
+							}
+						}
+						# More crises means easier to distract
+						add = bpm_number_of_crises
+					}
+				}
+			}
+			2 = {
+				custom_tooltip = bpm_crisis_progresses_tt
+				change_variable = {
+					name = bpm_government_scandal_progress
+					add = 10
+				}
+			}
+		}
+		change_variable = {
+			name = bpm_media_preparedness
+			subtract = 20
+		}
+		custom_tooltip = {
+			text = "bpm_scandal_response_distract_effect_tooltip"
+		}
+	}
+
+}
+
+bpm_scandal_response_cover_up = {
+	name = "bpm_scandal_response_cover_up"
+	desc = "bpm_scandal_response_cover_up_desc"
+
+	visible = {
+		has_journal_entry = je_bpm_crises_government_scandal
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_possible_tooltip"
+			bpm_political_preparedness >= 20
+		}
+		has_institution = institution_culture
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_possible_tooltip_2"
+			has_variable = bpm_minister_of_culture
+		}
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_possible_tooltip_3"
+			je:je_bpm_crises_government_scandal.var:bpm_government_scandal_progress <= 50
+		}
+	}
+
+	ai_chance = {
+		value = 50
+	}
+
+	effect = {
+		random_list = {
+			1 = {
+				custom_tooltip = bpm_end_the_crisis_tt 
+				scope:journal_entry = {
+					set_variable = {
+						name = bpm_crisis_ended
+						days = 180
+					}
+				}
+
+				modifier = {
+					if = {
+						limit = {
+							has_variable = bpm_minister_of_culture
+							var:bpm_minister_of_culture = {
+								bpm_character_skill_level >= 2
+							}
+						}
+						add = 1
+					}
+					if = {
+						limit = {
+							has_variable = bpm_minister_of_culture
+							var:bpm_minister_of_culture = {
+								bpm_character_skill_level >= 4
+							}
+						}
+						add = 1
+					}
+					if = {
+						limit = {
+							has_law = law_type:law_secret_police
+						}
+						add = 1
+					}
+
+				}
+			}
+			1 = {
+				custom_tooltip = bpm_crisis_progresses_tt
+				change_variable = {
+					name = bpm_government_scandal_progress
+					add = 10
+				}
+			}
+		}
+		change_variable = {
+			name = bpm_political_preparedness
+			subtract = 20
+		}
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_effect_tooltip"
+		}
+	}
+}
+
+bpm_scandal_response_admit_failure = {
+	name = "bpm_scandal_response_admit_failure"
+	desc = "bpm_scandal_response_admit_failure_desc"
+
+	visible = {
+		has_journal_entry = je_bpm_crises_government_scandal
+	}
+
+	possible = {
+		NOR = {
+			has_law = law_type:law_autocracy
+			has_law = law_type:law_advisory_body
+		}
+	}
+
+	ai_chance = {
+		value = 50
+	}
+
+	effect = {
+		every_interest_group = {
+			limit = {
+				is_in_government = yes
+			}
+			add_modifier = {
+				name = bpm_ig_government_admission_of_failure_happiness
+				days = 1825
+				is_decaying = yes
+			}
+		}
+		recalculate_pop_ig_support = yes
+		call_election = { months = 6 }
+		scope:journal_entry = {
+			set_variable = {
+				name = bpm_crisis_ended
+				days = 180
+			}
+		}
+	}
+
+}
+
+bpm_scandal_response_scapegoat = {
+	name = "bpm_scandal_response_scapegoat"
+	desc = "bpm_scandal_response_scapegoat_desc"
+
+	visible = {
+		has_journal_entry = je_bpm_crises_government_scandal
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_possible_tooltip"
+			bpm_political_preparedness >= 20
+		}
+
+		any_interest_group = {
+			is_in_government = yes
+			ig_clout >= 0.1
+			count >= 2
+		}
+	}
+
+	ai_chance = {
+		value = 50
+	}
+
+	effect = {
+		trigger_event = {
+			id = bpm_scandal_events.5
+			popup = yes
+		}
+		if = {
+			limit = {
+				country_has_voting_franchise = yes
+			}
+			call_election = { months = 6 }
+		}
+		change_variable = {
+			name = bpm_political_preparedness
+			subtract = 20
+		}
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_effect_tooltip"
+		}
+		scope:journal_entry = {
+			set_variable = {
+				name = bpm_crisis_ended
+				days = 180
+			}
+		}
+	}
+
+}

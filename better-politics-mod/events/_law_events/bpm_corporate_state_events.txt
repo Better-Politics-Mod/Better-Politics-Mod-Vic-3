@@ -1,0 +1,725 @@
+﻿
+namespace = corporate_state
+
+# Advance: Certain trade unions align themselves with the regime.
+corporate_state.1 = {
+	type = country_event
+	placement = ROOT
+
+	title = corporate_state.1.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = corporate_state.1.d
+				trigger = {
+					is_enacting_law = law_type:law_organic_democracy
+				}
+			}
+			triggered_desc = {
+				desc = corporate_state.1.d1
+				trigger = {
+					is_enacting_law = law_type:law_corporatized_unions
+				}
+			}
+		}
+	}
+	flavor = corporate_state.1.f
+
+	category = enactment
+
+	event_image = {
+		video = "asia_union_leader"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		OR = {
+			is_enacting_law = law_type:law_organic_democracy
+			is_enacting_law = law_type:law_corporatized_unions
+		}
+		ig:ig_trade_unions ?= {
+			leader = {
+				bpm_leader_is_radical_socialist = no
+				NOR = {
+					has_ideology = ideology:ideology_radical
+				}
+			}
+			ig_counts_as_marginal = no
+			ig_approval > 0
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		ig:ig_trade_unions ?= {
+			save_scope_as = trade_unions_ig
+		}
+		if = {
+			limit = {
+				any_political_movement = {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+			}
+			random_political_movement = {
+				limit = {
+					law_stance = {
+						law = owner.currently_enacting_law.type
+						value < neutral
+					}
+				}
+				save_scope_as = relevant_movement
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { is_enacting_law = law_type:law_organic_democracy }
+	}
+
+	option = {
+		name = corporate_state.1.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = modifier_corporate_state_national_unions
+		}
+	}
+
+	option = {
+		name = corporate_state.1.b
+		custom_tooltip = {
+			text = corporatist_leaders_boost_tt
+			scope:trade_unions_ig = {
+				set_variable = { name = corporatist_leaders_boost days = very_long_modifier_time }
+			}
+		}
+		add_enactment_modifier = {
+			name = modifier_corporate_state_national_unions
+			multiplier = 0.5
+		}
+	}
+
+	option = {
+		name = corporate_state.1.c
+		trigger = {
+			any_political_movement = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+			}
+			is_enacting_law = law_type:law_organic_democracy
+		}
+		random_political_movement = {
+			limit = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+			}
+			add_modifier = {
+				name = modifier_corporate_state_opposition_discredited
+				days = short_modifier_time
+			}
+		}
+	}
+}
+
+# Debate: Socialization, a la Mussolini in 1944.
+corporate_state.2 = {
+	type = country_event
+	placement = ROOT
+
+	title = corporate_state.2.t
+	desc = corporate_state.2.d
+	flavor = corporate_state.2.f
+
+	category = enactment
+
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		is_enacting_law = law_type:law_organic_democracy
+		has_technology_researched = central_planning
+		NOR = {
+			has_law = law_type:law_command_economy
+			has_law = law_type:law_laissez_faire
+		}
+		any_interest_group = {
+			law_stance = {
+				law = law_type:law_organic_democracy
+				value > neutral
+			}
+		}
+		NOT = {
+			currently_enacting_law = {
+				OR = {
+					has_amendment = amendment_type:amendment_industrial_socialization
+					has_amendment = amendment_type:amendment_shop_councils
+					has_amendment = amendment_type:amendment_foreign_investment_seizures
+				}
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		random_interest_group = {
+			limit = {
+				law_stance = {
+					law = law_type:law_organic_democracy
+					value > neutral
+				}
+			}
+			save_scope_as = corporatist_ig
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { is_enacting_law = law_type:law_organic_democracy }
+	}
+
+	option = {
+		name = corporate_state.2.a
+		add_radicals = {
+			pop_type = capitalists
+			value = large_radicals
+		}
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_industrial_socialization
+				sponsor = scope:corporatist_ig
+				cooldown = 120
+			}
+		}
+		ig:ig_industrialists ?= {
+			add_modifier = {
+				name = modifier_corporate_state_harmed_by_socialisation
+				days = normal_modifier_time
+			}
+		}
+		add_enactment_modifier = {
+			name = modifier_corporate_state_socialisation
+			multiplier = 2
+		}
+	}
+
+	option = {
+		name = corporate_state.2.b
+		add_radicals = {
+			pop_type = shopkeepers
+			value = medium_radicals
+		}
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_shop_councils
+				sponsor = scope:corporatist_ig
+				cooldown = 120
+			}
+		}
+		ig:ig_petty_bourgeoisie ?= {
+			add_modifier = {
+				name = modifier_corporate_state_harmed_by_socialisation
+				days = normal_modifier_time
+			}
+		}
+		add_enactment_modifier = {
+			name = modifier_corporate_state_socialisation
+			multiplier = 2
+		}
+	}
+
+	option = {
+		name = corporate_state.2.c
+		custom_tooltip = {
+			text = every_investing_country_upset_tt
+			every_country = {
+				limit = {
+					NOT = {
+						THIS = ROOT
+					}
+					ROOT = {
+						"gdp_ownership_ratio(prev)" > 0.01
+					}
+				}
+				change_relations = {
+					country = ROOT
+					value = -15
+				}
+			}
+		}
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_foreign_investment_seizures
+				sponsor = scope:corporatist_ig
+				cooldown = 120
+			}
+		}
+		add_enactment_modifier = {
+			name = modifier_corporate_state_socialisation
+		}
+	}
+
+	option = {
+		name = corporate_state.2.e
+		default_option = yes
+		add_loyalists = {
+			pop_type = capitalists
+			value = medium_radicals
+		}
+		add_loyalists = {
+			pop_type = shopkeepers
+			value = medium_radicals
+		}
+		add_enactment_modifier = {
+			name = modifier_corporate_state_no_socialisation
+		}
+	}
+}
+
+# Stall: News of labour exploitation gets out and embarrasses the government.
+corporate_state.3 = {
+	type = country_event
+	placement = ROOT
+
+	title = corporate_state.3.t
+	desc = corporate_state.3.d
+	flavor = corporate_state.3.f
+
+	category = enactment
+
+	event_image = {
+		video = "asia_factory_accident"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		is_enacting_law = law_type:law_organic_democracy
+		any_scope_state = {
+			is_incorporated = yes
+			any_scope_pop = {
+				strata = lower
+				is_employed = yes
+				NOR = {
+					is_pop_type = peasants
+					is_pop_type = slaves
+				}
+				standard_of_living < state.average_expected_sol
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		random_scope_state = {
+			limit = {
+				is_incorporated = yes
+				any_scope_pop = {
+					strata = lower
+					is_employed = yes
+					NOR = {
+						is_pop_type = peasants
+						is_pop_type = slaves
+					}
+					standard_of_living < state.average_expected_sol
+				}
+			}
+			save_scope_as = relevant_state
+			random_scope_pop = {
+				limit = {
+					strata = lower
+					is_employed = yes
+					NOR = {
+						is_pop_type = peasants
+						is_pop_type = slaves
+					}
+					standard_of_living < state.average_expected_sol
+				}
+				save_scope_as = relevant_pop
+				workplace = {
+					save_scope_as = relevant_building
+				}
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { is_enacting_law = law_type:law_organic_democracy }
+	}
+
+	option = {
+		name = corporate_state.3.a
+		default_option = yes
+		ig:ig_industrialists ?= {
+			add_modifier = {
+				name = modifier_corporate_state_legal_prosecution
+				days = normal_modifier_time
+			}
+		}
+		add_enactment_modifier = {
+			name = modifier_corporate_state_labor_abuses
+		}
+	}
+
+	option = {
+		name = corporate_state.3.b
+		add_enactment_modifier = {
+			name = modifier_corporate_state_labor_abuses_suppressed
+		}
+	}
+
+	option = {
+		name = corporate_state.3.c
+		trigger = {
+			scope:relevant_pop = {
+				pop_acceptance < acceptance_status_4
+			}
+		}
+		add_radicals = {
+			value = medium_radicals
+			culture = scope:relevant_pop.culture
+		}
+		add_enactment_modifier = {
+			name = modifier_corporate_state_labor_abuses
+			multiplier = 0.5
+		}
+	}
+}
+
+# Advance: Approaching the "productive classes", scapegoating others as parasites.
+corporate_state.4 = {
+	type = country_event
+	placement = ROOT
+
+	title = corporate_state.4.t
+	desc = corporate_state.4.d
+	flavor = corporate_state.4.f
+
+	category = enactment
+
+	event_image = {
+		video = "unspecific_gears_pistons"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		is_enacting_law = law_type:law_organic_democracy
+		NOT = {
+			has_law_or_variant = law_type:law_multicultural
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		random_primary_culture = {
+			save_scope_as = primary_culture_scope
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { is_enacting_law = law_type:law_organic_democracy }
+	}
+
+	option = {
+		name = corporate_state.4.a
+		default_option = yes
+		add_modifier = {
+			name = modifier_corporate_state_labor_chauvinism
+			days = normal_modifier_time
+		}
+		add_enactment_modifier = {
+			name = modifier_corporate_state_productive_labor
+		}
+	}
+
+	option = {
+		name = corporate_state.4.b
+		add_modifier = {
+			name = modifier_corporate_state_class_unity
+			days = normal_modifier_time
+		}
+		add_enactment_modifier = {
+			name = modifier_corporate_state_productive_labor
+		}
+	}
+}
+
+# Debate: Organisation of nominating bodies - who may select representatives?
+corporate_state.5 = {
+	type = country_event
+	placement = ROOT
+
+	title = corporate_state.5.t
+	desc = corporate_state.5.d
+	flavor = corporate_state.5.f
+
+	category = enactment
+
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		is_enacting_law = law_type:law_organic_democracy
+		any_scope_building = {
+			is_building_type = building_university
+		}
+		NOT = {
+			currently_enacting_law = {
+				OR = {
+					has_amendment = amendment_type:amendment_corporate_state_nominating_body_tu
+					has_amendment = amendment_type:amendment_corporate_state_nominating_body_id
+					has_amendment = amendment_type:amendment_corporate_state_nominating_body_it
+				}
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		ig:ig_trade_unions ?= {
+			save_scope_as = trade_unions_ig
+		}
+		ig:ig_industrialists ?= {
+			save_scope_as = industrialists_ig
+		}
+		ig:ig_intelligentsia ?= {
+			save_scope_as = intelligentsia_ig
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { is_enacting_law = law_type:law_organic_democracy }
+	}
+
+	option = {
+		name = corporate_state.5.a
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_corporate_state_nominating_body_tu
+				sponsor = scope:trade_unions_ig
+				cooldown = 120
+			}
+		}
+		ig:ig_trade_unions ?= {
+			add_modifier = {
+				name = modifier_corporate_state_favoured_in_nominating_bodies
+				days = normal_modifier_time
+			}
+		}
+		ig:ig_industrialists ?= {
+			add_modifier = {
+				name = modifier_corporate_state_disfavoured_in_nominating_bodies
+				days = normal_modifier_time
+			}
+		}
+		ig:ig_intelligentsia ?= {
+			add_modifier = {
+				name = modifier_corporate_state_disfavoured_in_nominating_bodies
+				days = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = corporate_state.5.b
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_corporate_state_nominating_body_id
+				sponsor = scope:industrialists_ig
+				cooldown = 120
+			}
+		}
+		ig:ig_industrialists ?= {
+			add_modifier = {
+				name = modifier_corporate_state_favoured_in_nominating_bodies
+				days = normal_modifier_time
+			}
+		}
+		ig:ig_intelligentsia ?= {
+			add_modifier = {
+				name = modifier_corporate_state_disfavoured_in_nominating_bodies
+				days = normal_modifier_time
+			}
+		}
+		ig:ig_trade_unions ?= {
+			add_modifier = {
+				name = modifier_corporate_state_disfavoured_in_nominating_bodies
+				days = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = corporate_state.5.c
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_corporate_state_nominating_body_it
+				sponsor = scope:intelligentsia_ig
+				cooldown = 120
+			}
+		}
+		ig:ig_intelligentsia ?= {
+			add_modifier = {
+				name = modifier_corporate_state_favoured_in_nominating_bodies
+				days = normal_modifier_time
+			}
+		}
+		ig:ig_industrialists ?= {
+			add_modifier = {
+				name = modifier_corporate_state_disfavoured_in_nominating_bodies
+				days = normal_modifier_time
+			}
+		}
+		ig:ig_trade_unions ?= {
+			add_modifier = {
+				name = modifier_corporate_state_disfavoured_in_nominating_bodies
+				days = normal_modifier_time
+			}
+		}
+	}
+
+	option = {
+		name = corporate_state.5.e
+		default_option = yes
+		add_enactment_modifier = {
+			name = modifier_corporate_state_unbiased_nominating_bodies
+		}
+	}
+}
+
+# Stall: Disputes over management - private organizations reject corporatist principles.
+corporate_state.6 = {
+	type = country_event
+	placement = ROOT
+
+	title = corporate_state.6.t
+	desc = corporate_state.6.d
+	flavor = corporate_state.6.f
+
+	category = enactment
+
+	event_image = {
+		video = "ep1_clandestine_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { days = normal_modifier_time }
+
+	trigger = {
+		is_enacting_law = law_type:law_organic_democracy
+		any_interest_group = {
+			OR = {
+				is_interest_group_type = ig_industrialists
+				is_interest_group_type = ig_landowners
+				is_interest_group_type = ig_intelligentsia
+			}
+			ig_approval < 0
+			ig_counts_as_marginal = no
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		random_interest_group = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_industrialists
+					is_interest_group_type = ig_landowners
+					is_interest_group_type = ig_intelligentsia
+				}
+				ig_approval < 0
+				ig_counts_as_marginal = no
+			}
+			save_scope_as = relevant_ig
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { is_enacting_law = law_type:law_organic_democracy }
+	}
+
+	option = {
+		name = corporate_state.6.a
+		default_option = yes
+		add_enactment_modifier = {
+			name = modifier_corporate_state_private_property_rights
+		}
+	}
+
+	option = {
+		name = corporate_state.6.b
+		add_enactment_modifier = {
+			name = modifier_corporate_state_private_property_carveouts
+		}
+	}
+
+	option = {
+		name = corporate_state.6.c
+		add_enactment_setback = 1
+		scope:relevant_ig = {
+			add_modifier = {
+				name = modifier_corporate_state_private_property_ignored_ig
+				days = normal_modifier_time
+			}
+		}
+	}
+}

@@ -1,0 +1,260 @@
+﻿je_peru_bolivia = {
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	group = je_group_historical_content
+
+	immediate = {
+		cu:quechua = {
+			save_scope_as = quechua_culture
+		}
+		cu:south_andean = {
+			save_scope_as = south_andean_culture
+		}
+		c:BOL = {
+			save_scope_as = bolivia_scope
+		}
+		set_variable = pbc_member
+	}
+	on_monthly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					c:BOL ?= this
+
+					AND = {
+						c:SPU ?= {
+							is_subject_of = c:BOL
+							liberty_desire <= 60
+						}
+						c:NPU ?= {
+							is_subject_of = c:BOL
+							liberty_desire <= 60
+						}
+						c:IQU ?= {
+							is_subject_of = c:BOL
+							liberty_desire <= 60
+						}
+					}
+				}
+				change_global_variable = {
+					name = peru_bolivia_var
+					add = 1
+				}
+			}
+		}
+	}
+
+	complete = {
+		hidden_trigger = {
+			c:BOL = this
+		}
+		scope:journal_entry = { is_goal_complete = yes }
+		OR = {
+			c:SPU ?= {
+				is_subject_of = c:BOL
+			}
+			c:NPU ?= {
+				is_subject_of = c:BOL
+			}
+			c:IQU ?= {
+				is_subject_of = c:BOL
+			}
+			c:PEU ?= {
+				is_subject_of = c:BOL
+			}
+		}
+		custom_tooltip = {
+			text = bol_no_revolutions_tt
+			NOT = {
+				any_country = {
+					is_subject_of = c:BOL
+					OR = {
+						country_has_primary_culture = cu:south_andean
+						country_has_primary_culture = cu:quechua
+						country_has_primary_culture = cu:peruvian
+					}
+					has_revolution = yes
+				}
+			}
+		}
+	}
+
+	on_complete = {
+		custom_tooltip = {
+			text = peru_bolivia_completion_nonbolivia_tt
+			if = {
+				limit = {
+					c:BOL ?= this
+				}
+				trigger_event = {
+					id = peru_bolivia_events.1
+				}
+			}
+		}
+	}
+
+	is_progressing = {
+		c:BOL ?= {
+			government_legitimacy >= 50
+		}
+		OR = {
+			c:SPU ?= {
+				is_subject_of = c:BOL
+			}
+			c:NPU ?= {
+				is_subject_of = c:BOL
+			}
+			c:IQU ?= {
+				is_subject_of = c:BOL
+			}
+			c:PEU ?= {
+				is_subject_of = c:BOL
+			}
+		}
+		NOT = {
+			any_country = {
+				is_subject_of = c:BOL
+				has_revolution = yes
+			}
+		}
+	}
+
+	fail = {
+		OR = {
+			NOT = {
+				exists = c:BOL
+			}
+			OR = {
+				AND = {
+					exists = c:SPU
+					c:SPU ?= {
+						NOT = { is_subject_of = c:BOL }
+					}
+				}
+				AND = {
+					exists = c:NPU
+					c:NPU ?= {
+						NOT = { is_subject_of = c:BOL }
+					}
+				}
+			}
+			trigger_if = {
+				limit = {
+					NOT = {
+						c:IQU ?= this
+					}
+				}
+				NOT = {
+					country_has_primary_culture = cu:south_andean
+				}
+			}
+			c:BOL ?= {
+				is_subject = yes
+			}
+		}
+	}
+
+	on_fail = {
+		if = { #Why? So that [somehow] this doesn't cause four fail events to fire at once. That should be impossible, but you never know.
+			limit = {
+				c:BOL ?= this
+			}
+			if = {
+				limit = {
+					any_country = {
+						has_variable = pbc_member
+						is_player = yes
+					}
+				}
+				random_country = {
+					limit = {
+						has_variable = pbc_member
+						is_player = yes
+					}
+					trigger_event = { id = peru_bolivia_events.3 popup = yes }
+				}
+			}
+			else = {
+				ordered_country = {
+					limit = {
+						has_variable = pbc_member
+					}
+					order_by = gdp
+					trigger_event = { id = peru_bolivia_events.3 popup = yes }
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				NOT = {
+					exists = c:BOL
+				}
+			}
+			if = {
+				limit = {
+					any_country = {
+						has_variable = pbc_member
+						is_player = yes
+					}
+				}
+				random_country = {
+					limit = {
+						has_variable = pbc_member
+						is_player = yes
+					}
+					trigger_event = { id = peru_bolivia_events.3 popup = yes }
+				}
+			}
+			else = {
+				ordered_country = {
+					limit = {
+						has_variable = pbc_member
+					}
+					order_by = gdp
+					trigger_event = { id = peru_bolivia_events.3 popup = yes }
+				}
+			}
+		}
+	}
+
+	invalid = {
+		OR = {
+			AND = {
+				OR = {
+					c:IQU ?= this
+					c:SPU ?= this
+					c:NPU ?= this
+					c:PEU ?= this
+				}
+				NOT = {
+					is_subject_of = c:BOL
+				}
+			}
+			NOT = {
+				exists = c:BOL
+			}
+			AND = {
+				exists = c:BOL
+				c:BOL = {
+					NOT = {
+						has_journal_entry = je_peru_bolivia
+					}
+				}
+			}
+		}
+	}
+
+	current_value = {
+		value = global_var:peru_bolivia_var #This variable is initialised in Argentina's country file, because of load orders.
+	}
+
+	goal_add_value = {
+		value = 120
+	}
+
+	progressbar = yes
+
+	weight = 10000
+
+	should_be_pinned_by_default = yes
+}

@@ -8,14 +8,14 @@
 			has_role = general
 			has_role = admiral
 		}
-		owner = scope:actor
+		owner ?= scope:actor
 		NOT = { has_variable = bpm_untouchable_char }
 	}
 
 	possible = {
 		age >= define:NCharacters|ADULT_AGE
 		is_female = no
-		owner = {
+		owner ?= {
 			ruler_can_have_command = yes
 		}
 		exists = owner.capital.land_hq
@@ -55,7 +55,7 @@ grant_leadership_to_agitator = {
 	potential = {
 		has_dlc_feature = agitators
 		has_role = agitator
-		owner = scope:actor
+		owner ?= scope:actor
 		NOT = { has_variable = bpm_untouchable_char }
 		interest_group = {
 			leader = {
@@ -70,7 +70,7 @@ grant_leadership_to_agitator = {
 		}
 		character_acceptance = { target = scope:actor value >= acceptance_status_3 }
 		trigger_if = {
-			limit = { owner = { has_law = law_type:law_state_atheism } }
+			limit = { owner ?= { has_law = law_type:law_state_atheism } }
 			NOR = {
 				has_ideology = ideology:ideology_theocrat
 				has_ideology = ideology:ideology_integralist
@@ -79,7 +79,7 @@ grant_leadership_to_agitator = {
 		}
 		OR = {
 			is_female = no
-			scope:actor ?= { has_law = law_type:law_womens_suffrage }
+			scope:actor ?= { has_law_or_variant = law_type:law_womens_suffrage }
 		}
 	}
 
@@ -140,7 +140,7 @@ grant_command_to_agitator = {
 		has_role = agitator
 		NOT = { has_role = general }
 		NOT = { has_role = admiral }
-		owner = scope:actor
+		owner ?= scope:actor
 		NOT = { has_variable = bpm_untouchable_char }
 	}
 
@@ -173,7 +173,7 @@ grant_command_to_agitator = {
 		if = {
 			limit = {
 				NOT = {
-					owner = {	
+					owner ?= {	
 						any_scope_general = {
 							exists = yes
 						}
@@ -184,10 +184,10 @@ grant_command_to_agitator = {
 		}
 		if = {
 			limit = {
-				owner = {
+				owner ?= {
 					any_scope_war = {
 						any_scope_front = {
-							is_vulnerable_front = root
+							is_vulnerable_front = scope:actor #PBF
 						}
 					}
 				}	
@@ -199,6 +199,10 @@ grant_command_to_agitator = {
 
 exile_character = {
 	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	should_ai_evaluate = {
+		country_rank >= rank_value:major_power
+	}
 
 	potential = {
 		is_in_exile_pool = no
@@ -213,7 +217,7 @@ exile_character = {
 			OR = {
 				NOT = { has_variable = bpm_character_in_institutional_ig_var }
 				has_role = agitator
-				owner = {
+				owner ?= {
 					OR = {
 						country_rank >= rank_value:great_power	
 						is_player = yes
@@ -232,12 +236,15 @@ exile_character = {
 		OR = {
 			has_role = agitator
 			interest_group = {
-				bpm_ig_is_marginal = no
 				is_in_government = no
 				is_insurrectionary = no
 			}
+			NOT = { has_modifier = bpm_ig_disrupted_by_exile }
 		}
-		owner = {
+		interest_group = {
+			bpm_ig_is_marginal = no
+		}
+		owner ?= {
 			NOT = { has_law = law_type:law_protected_speech }
 			NOT = { has_law = law_type:law_traditional_ostracism }
 		}
@@ -250,12 +257,15 @@ exile_character = {
 		this = {
 			save_scope_as = exile_scope
 		}
-		owner = {
+		owner ?= {
 			save_scope_as = exiling_country_scope
 		}
+
+		owner = { bpm_auth_add_exhaustion_small = yes }
+		this.interest_group = { add_modifier = { name = bpm_ig_disrupted_by_exile years = 5 is_decaying = yes } }
 		if = {
 			limit = {
-				owner = { has_journal_entry = je_caudillo }
+				owner ?= { has_journal_entry = je_caudillo }
 				interest_group = {
 					is_interest_group_type = ig_armed_forces
 				}
@@ -268,7 +278,7 @@ exile_character = {
 						}
 					}
 				}
-				owner = {
+				owner ?= {
 					custom_tooltip = {
 						text = lose_large_caudillo_points
 						change_variable = {
@@ -279,7 +289,7 @@ exile_character = {
 				}
 			}
 			else = {
-				owner = {
+				owner ?= {
 					custom_tooltip = {
 						text = lose_caudillo_points
 						change_variable = {
@@ -292,13 +302,13 @@ exile_character = {
 		}
 		if = {
 			limit = {
-				owner = {
+				owner ?= {
 					is_player = yes
 					NOT = { has_variable = achievement_agitate_elsewhere_var }
 				}
 				popularity >= 100
 			}
-			owner = { set_variable = achievement_agitate_elsewhere_var }
+			owner ?= { set_variable = achievement_agitate_elsewhere_var }
 		}
 		hidden_effect = {
 			if = {
@@ -689,7 +699,7 @@ invite_exile = {
 		if = {
 			limit = {
 				culture = {
-					is_primary_culture_of = root
+					is_primary_culture_of = scope:actor #PBF
 				}			
 			}
 			add = 50
@@ -720,7 +730,7 @@ invite_exile = {
 		}
 		if = {
 			limit = {
-				scope:actor ?= { has_law = law_type:law_multicultural }
+				scope:actor ?= { has_law_or_variant = law_type:law_multicultural }
 			}
 			add = 15
 		}
@@ -755,11 +765,13 @@ arrange_accident = {
 	show_requirements = yes
 
 	possible = {
-		owner = {
+		owner ?= {
 			has_law = law_type:law_secret_police
 		}
 		interest_group = {
-			bpm_ig_is_marginal = no
+			bpm_is_marginal = no
+			is_in_government = no
+			NOT = { has_modifier = bpm_ig_disrupted_by_assassination }
 		}
 	}
 
@@ -770,19 +782,22 @@ arrange_accident = {
 		this = {
 			save_scope_as = assassinated_scope
 		}
-		random_list = {
-			25 = {
-				kill_character = yes
+
+		owner = { bpm_auth_add_exhaustion_large = yes }
+		this.interest_group = { add_modifier = { name = bpm_ig_disrupted_by_assassination years = 5 is_decaying = yes } }
+		if = {
+			limit = {
+				exists = institution:institution_home_affairs
 			}
 			50 = {
-				owner = {
+				owner ?= {
 					post_notification = arranged_accident_failed
 				}
 				custom_tooltip = assassination_attempt_failed_tt
 			}
 			25 = {
 				custom_tooltip = assassination_attempt_failed_loud_tt
-				owner = {
+				owner ?= {
 					add_radicals = {
 						value = very_large_radicals
 						interest_group = scope:relevant_ig
@@ -806,22 +821,163 @@ arrange_accident = {
 							interest_group_supports_political_movement = yes
 						}
 					}
-					owner = {
+					owner ?= {
 						random_political_movement = {
 							limit = {
-								any_influenced_interest_group = {
-									this = scope:relevant_ig
-								}
+								owner.institution:institution_home_affairs.investment >= 2
 							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 3
+							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 4
+							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 5
+							}
+							add = 25
+						}
+					}
+					kill_character = yes
+				}
+				40 = {
+					owner ?= {
+						post_notification = arranged_accident_failed
+					}
+					custom_tooltip = assassination_attempt_failed_tt
+				}
+				20 = {
+					modifier = {
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 2
+							}
+							subtract = 5
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 3
+							}
+							subtract = 5
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 4
+							}
+							subtract = 5
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 5
+							}
+							subtract = 5
+						}
+					}
+					custom_tooltip = assassination_attempt_failed_loud_tt
+					owner ?= {
+						add_radicals = {
+							value = very_large_radicals
+							interest_group = scope:relevant_ig
+						}
+					}
+					if = {
+						limit = {
+							character_supports_political_movement = yes
+						}
+						this.political_movement = {
 							add_modifier = {
 								name = modifier_government_accident_attempt
 								days = long_modifier_time
 							}
 						}
 					}
+					else_if = {
+						limit = {
+							has_role = politician
+							THIS.interest_group = {
+								interest_group_supports_political_movement = yes
+							}
+						}
+						owner ?= {
+							random_political_movement = {
+								limit = {
+									any_influenced_interest_group = {
+										this = scope:relevant_ig
+									}
+								}
+								add_modifier = {
+									name = modifier_government_accident_attempt
+									months = long_modifier_time
+								}
+							}
+						}
+					}
+					owner ?= {
+						post_notification = arranged_accident_failed_incrimination
+					}
 				}
-				owner = {
-					post_notification = arranged_accident_failed_incrimination
+			}
+		}
+		else = { # Exists purely to generate a tooltip when inactive
+			random_list = {
+				40 = {
+					kill_character = yes
+				}
+				40 = {
+					custom_tooltip = assassination_attempt_failed_tt
+				}
+				20 = {
+					custom_tooltip = assassination_attempt_failed_loud_tt
+					owner ?= {
+						add_radicals = {
+							value = very_large_radicals
+							interest_group = scope:relevant_ig
+						}
+					}
+					if = {
+						limit = {
+							character_supports_political_movement = yes
+						}
+						this.political_movement = {
+							add_modifier = {
+								name = modifier_government_accident_attempt
+								months = long_modifier_time
+							}
+						}
+					}
+					else_if = {
+						limit = {
+							has_role = politician
+							THIS.interest_group = {
+								interest_group_supports_political_movement = yes
+							}
+						}
+						owner ?= {
+							random_political_movement = {
+								limit = {
+									any_influenced_interest_group = {
+										this = scope:relevant_ig
+									}
+								}
+								add_modifier = {
+									name = modifier_government_accident_attempt
+									months = long_modifier_time
+								}
+							}
+						}
+						owner ?= {
+							post_notification = arranged_accident_failed_incrimination
+						}
+					}
 				}
 			}
 		}
@@ -934,9 +1090,9 @@ resign_from_office = {
 
 	potential = {
 		has_dlc_feature = voice_of_the_people_content
-		owner = scope:actor
+		owner ?= scope:actor
 		is_ruler = yes
-		owner = {
+		owner ?= {
 			NOR = {
 				has_law = law_type:law_monarchy
 				has_law = law_type:law_theocracy
@@ -960,7 +1116,7 @@ resign_from_office = {
 				has_trait = senile
 				has_trait = wounded
 			}
-			owner = {
+			owner ?= {
 				any_interest_group = {
 					is_insurrectionary = yes
 				}
@@ -971,18 +1127,18 @@ resign_from_office = {
 	effect = {
 		if = {
 			limit = {
-				owner = {
+				owner ?= {
 					any_interest_group = {
 						is_insurrectionary = yes
 					}
 				}
 			}
-			owner = {
+			owner ?= {
 				trigger_event = { id = resignation.2 popup = yes }
 			}
 		}
 		else = {
-			owner = {
+			owner ?= {
 				trigger_event = { id = resignation.1 popup = yes }
 			}
 		}

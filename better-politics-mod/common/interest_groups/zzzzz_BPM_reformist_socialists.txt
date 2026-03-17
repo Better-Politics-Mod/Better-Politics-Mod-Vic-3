@@ -18,7 +18,7 @@
 		ideology_socialist_leader
 		ideology_pacifist
 		ideology_agrarian_socialist_leader
-		ideology_atheist
+		ideology_nihilist
 	}
 
 	enable = {
@@ -65,15 +65,18 @@
 	on_character_ig_membership = {}
 	
 	pop_potential = {
+		custom_tooltip = {
+			text = BPM_VALID_POP_FOR_IG
+			owner ?= {
+				ig:ig_reformist_socialists ?= {
+					NOT = { has_ideology = ideology:ideology_nonexistent }
+					bpm_interest_group_is_activated = yes
+				}
+			}
+		}
 		NOR = {
 			is_pop_type = aristocrats
 			is_pop_type = capitalists
-		}
-		owner = {
-			ig:ig_reformist_socialists ?= {
-				NOT = { has_ideology = ideology:ideology_nonexistent }
-				bpm_interest_group_is_activated = yes
-			}
 		}
 	}
 	
@@ -85,17 +88,47 @@
 				OR = {
 					is_pop_type = laborers
 					is_pop_type = clerks
+				}
+			}
+			add = {
+				desc = "POP_PROLETARIAT"
+				value = var:bpm_consciousness_communist_igs_laborers
+			}
+			add = {
+				desc = "POP_EDUCATED_PROLETARIAT"
+				value = literacy_rate
+				multiply = 200
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
 					is_pop_type = machinists
 				}
 			}
 			add = {
 				desc = "POP_PROLETARIAT"
-				value = 50
+				value = var:bpm_consciousness_communist_igs_machinists
 			}
 			add = {
 				desc = "POP_EDUCATED_PROLETARIAT"
 				value = literacy_rate
-				multiply = 100
+				multiply = 200
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					is_pop_type = clerks
+					is_pop_type = bureaucrats
+					is_pop_type = shopkeepers
+					is_pop_type = farmers
+					is_pop_type = soldiers
+				}
+			}
+			add = {
+				desc = "POP_PROLETARIAT"
+				value = var:bpm_consciousness_communist_igs_clerks_bureaucrats_shopkeepers_farmers_servicemen
 			}
 		}
 		else_if = {
@@ -115,7 +148,7 @@
 			add = {
 				desc = "POP_EDUCATED_FARMERS"
 				value = literacy_rate
-				multiply = 100
+				multiply = 200
 			}
 		}
 		else_if = {
@@ -127,9 +160,10 @@
 			}
 			add = {
 				desc = "POP_LEADERS"
-				value = 80
+				value = var:bpm_consciousness_communist_igs_academics_and_engineers
 			}
 		}
+
 
 		if = {
 			limit = { 
@@ -186,7 +220,7 @@
 				}
 				multiply = {
 					desc = "BPM_STRONG_LABOR"
-					value = 2
+					value = 4 # 20
 				}
 			}
 			else_if = {
@@ -197,7 +231,7 @@
 				}
 				multiply = {
 					desc = "BPM_AVERAGE_LABOR"
-					value = 4
+					value = 2
 				}
 			}
 			add = ig_attraction_tmp_bpm_non_rural_socialist
@@ -346,6 +380,22 @@
 	commander_weight = {
 		value = 1.0
 		multiply = bpm_commander_assignment_from_laws_factor
+		if ={
+			limit = {
+				owner.ig:ig_reformist_socialists = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}	
+
+	executive_weight = {
+		value = 0.1
+		if ={
+			limit = {
+				owner.ig:ig_reformist_socialists = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
 	}	
 	
 	noble_chance = {
@@ -365,6 +415,11 @@
 	female_agitator_chance = {
 		value = 1.0
 		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

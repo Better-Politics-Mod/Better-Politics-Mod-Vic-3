@@ -124,7 +124,7 @@
 			else_if = {
 				limit = {
 					is_pop_type = peasants
-					NOT = { owner = { OR = { has_law = law_type:law_serfdom has_law = law_type:law_tenant_farmers } } }
+					NOT = { owner = { OR = { has_law_or_variant  = law_type:law_serfdom has_law_or_variant  = law_type:law_tenant_farmers } } }
 				}
 				add = {
 					desc = "POP_FREE_PEASANTS"
@@ -137,8 +137,8 @@
 					NOT = { OR = { is_pop_type = farmers is_pop_type = aristocrats } }
 					owner = {
 						OR = {
-							has_law = law_type:law_serfdom
-							NOT = { has_law = law_type:law_slavery_banned }
+							has_law_or_variant  = law_type:law_serfdom
+							NOT = { has_law_or_variant  = law_type:law_slavery_banned }
 						}
 					}
 				}
@@ -169,17 +169,17 @@
 					}
 				}
 				if = {
-					limit = { owner = { has_law = law_type:law_commercialized_agriculture } }
+					limit = { owner = { has_law_or_variant  = law_type:law_commercialized_agriculture } }
 					add = {
 						desc = "POP_RURAL_ANTICAPITALISM"
 						value = 100
 					}
 				}
 				if = {
-					limit = { owner = { has_law = law_type:law_council_republic } }
+					limit = { owner = { has_law_or_variant  = law_type:law_council_republic } }
 					if = {
 						limit = {
-							owner = { NOT = { has_law = law_type:law_collectivized_agriculture } }
+							owner = { NOT = { has_law_or_variant  = law_type:law_collectivized_agriculture } }
 						}
 						add = {
 							desc = "POP_RURAL_WANTS_COLLECTIVIZATION"
@@ -188,7 +188,7 @@
 					}
 					else_if = {
 						limit = {
-							owner = { has_law = law_type:law_collectivized_agriculture }
+							owner = { has_law_or_variant  = law_type:law_collectivized_agriculture }
 							pop_radical_fraction <= 0.05
 						}
 						add = {
@@ -216,7 +216,7 @@
 				limit = { 
 					is_pop_type = academics
 				}
-				value = 100
+				value = 75
 			}
 		}
 
@@ -244,6 +244,45 @@
 			}
 		}
 
+		multiply = {
+            desc = "Has Land Reformed"
+            value = 1.0
+
+			if = { 
+                limit = { 
+                    owner = { 
+                        has_law_or_variant  = law_type:law_homesteading
+                    }
+                }
+                value = 0.75
+            }
+        }
+
+		multiply = {
+            desc = "Has all Unions Banned"
+            value = 1.0
+            if = { 
+                limit = { 
+                    owner = { 
+                        OR = {
+							has_law_or_variant  = law_type:law_corporatized_unions
+							has_law_or_variant  = law_type:law_anti_strike_laws
+						}
+                    }
+                }
+                value = 0.5
+            }
+
+			else_if = { 
+                limit = { 
+                    owner = { 
+                        has_law_or_variant  = law_type:law_combination_acts
+                    }
+                }
+                value = 0.25
+            }
+        }
+
 		##### EXPENSIVE CALCS #####
 		if = {
 			limit = { owner = { bpm_performance_significant_country = yes } }
@@ -264,9 +303,22 @@
 			}
 			multiply = bpm_ig_agitators_popularity
 			multiply = bpm_ig_ruler_popularity
-			multiply = ig_attraction_from_radicals_and_loyalists
+			multiply = { desc = bpm_ig_attraction_from_radicals_and_loyalists_tt value = ig_attraction_from_radicals_and_loyalists }
 		}
-		multiply = ig_attraction_to_ruler_ideology_from_stability	
+		multiply = ig_attraction_to_ruler_ideology_from_stability		
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			multiply = {
+				desc = "IN_GOVERNMENT_ATTRACTION"
+				value = 1
+				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+				min = 0
+			}
+		}
 	}
 	
 	monarch_weight = {

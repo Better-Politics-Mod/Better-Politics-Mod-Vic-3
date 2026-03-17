@@ -1,4 +1,4 @@
-﻿ig_landowners = {
+REPLACE:ig_landowners = {
 	color = hsv{ 0.78 0.1 0.5 }
 	texture = "gfx/interface/icons/ig_icons/landowners.dds"
 	layer = "revolution_dynamic_landowners"
@@ -222,8 +222,8 @@
 			text = BPM_VALID_POP_FOR_IG
 			owner ?= {
 				NOR = {
-					has_law = law_type:law_collectivized_agriculture
-					has_law = law_type:law_commercialized_agriculture
+					has_law_or_variant  = law_type:law_collectivized_agriculture
+					has_law_or_variant  = law_type:law_commercialized_agriculture
 				}
 			}
 		}
@@ -242,14 +242,31 @@
 			desc = "SLAVERY_DETRACTORS"
 			if = {
 				limit = {
-					owner = { NOT = { has_law = law_type:law_slavery_banned } }
+					owner = {
+						has_law = law_type:law_colonial_slavery
+					}
 					OR = {
-						pop_has_primary_culture = no
+						pop_acceptance <= acceptance_status_3
+						state = { is_incorporated = no }
+					}
+					NOT = { is_pop_type = aristocrats }
+				}
+				value = -300
+			}
+			else_if = {
+				limit = {
+					owner = {
+							NOT = { has_law_or_variant = law_type:law_slavery_banned } 
+					}
+					NOT = { is_pop_type = aristocrats }
+					OR = {
+						pop_acceptance <= acceptance_status_3
 						state = { is_slave_state = no }
 					}
 				}
 				value = -300
 			}
+			
 		}
 
 		if = {
@@ -258,8 +275,7 @@
 				NOT = { owner = { country_has_state_religion = rel:confucian } }
 			}
 			add = {
-				# desc = "RURAL_UPPER_CLASS" # Gotta find a way to fix this post update
-				desc = "POP_ARISTOCRATS_CON"
+				desc = "POP_ARISTOCRATS"
 				value = 250
 			}
 			if = {
@@ -267,6 +283,13 @@
 				add = {
 					desc = "SLAVEHOLDERS"
 					value = 400
+				}
+			}
+			else_if = {
+				limit = { state = { is_incorporated = yes } owner = { has_law_or_variant= law_type:law_colonial_slavery } }
+				add = {
+					desc = "SLAVEHOLDERS"
+					value = 200
 				}
 			}
 		}
@@ -316,7 +339,20 @@
 			}
 		}
 
-		multiply = ig_attraction_to_interests_from_stability
+		multiply = ig_attraction_to_interests_from_stability	
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			multiply = {
+				desc = "IN_GOVERNMENT_ATTRACTION"
+				value = 1
+				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+				min = 0
+			}
+		}
 
 	}
 	

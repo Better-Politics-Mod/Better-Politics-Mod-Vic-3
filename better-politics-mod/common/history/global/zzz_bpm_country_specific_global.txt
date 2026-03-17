@@ -123,6 +123,7 @@
 
 		activate_law = law_type:law_no_womens_rights # Women couldn't hold property until ~1839
 		activate_law = law_type:law_right_to_associate # de jure illegal till 1842 but de facto legal after the 1835 general strike
+		activate_law = law_type:law_universal_suffrage # 
 	}
 
 	c:TUR = {
@@ -259,6 +260,13 @@
 			}
 			bpm_do_socialist_split = yes
 		}
+
+		active_law:lawgroup_distribution_of_power ?= { # Wealth Voting - Reform Act
+			add_amendment = {
+				type = amendment_tradition_of_free_elections
+				sponsor = PREV.ig:ig_intelligentsia
+			}
+		}
 	}
 	every_country = {
 		limit = { is_subject_of = c:GBR }
@@ -287,9 +295,20 @@
 		}
 		if = {
 			limit = { exists = py:conservative_party }
-			py:conservative_party = {
-				set_ruling_party = yes
-			}				
+			every_interest_group = {
+				limit = {
+					is_member_of_party = owner.py:conservative_party
+					is_in_government = no
+				}
+				add_ruling_interest_group = yes
+			}
+			every_interest_group = {
+				limit = {
+					NOT = { is_member_of_party = owner.py:conservative_party }
+					is_in_government = yes
+				}
+				remove_ruling_interest_group = yes
+			}			
 		}
 		if = {
 			limit = {
@@ -309,14 +328,133 @@
 		#bpm_reload_institution_modifiers_hog = yes
 	}
 
+
+
 	c:BEL = {
-		if = {
-			limit = { exists = py:conservative_party }
-			py:conservative_party = {
-				set_ruling_party = yes
-			}				
+
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_rel_radical_moralist
+			}
+			remove_ideology = ideology_rel_radical_moralist
+			add_ideology = ideology_rel_moralist
 		}
-		activate_law = law_type:law_combination_acts
+
+		bpm_add_movement_interaction = { int = socialist_split }
+		bpm_initialize_socialists = yes
+
+		ig:ig_landowners ?= {
+			bpm_remove_all_gov_ideologies = yes
+			add_ideology = ideology_gov_moderate_monarchist
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_doctrinaire_democrat
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_federated_state
+		}
+
+		ig:ig_reactionaries ?= {
+			bpm_remove_all_gov_ideologies = yes
+
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_meritocratic_autocrat
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_decentralized_state
+			bpm_remove_all_eco_ideologies = yes
+			add_ideology = ideology_eco_laissez_faire
+			bpm_remove_all_rel_ideologies = yes
+			add_ideology = ideology_rel_secularist
+		}
+
+		ig:ig_liberals ?= {
+			set_interest_group_name = ig_left_unionists
+
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_doctrinaire_democrat
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_federated_state
+			bpm_remove_all_eco_ideologies = yes
+			add_ideology = ideology_eco_interventionist
+			bpm_remove_all_wel_ideologies = yes
+			add_ideology = ideology_wel_secular_anti_welfare
+		}
+
+		ig:ig_conservatives ?= {
+			set_interest_group_name = ig_right_unionists
+
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_doctrinaire_democrat
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_federated_state
+		}
+
+		ig:ig_radicals ?= {
+			set_interest_group_name = ig_ultraliberals
+
+			bpm_remove_all_gov_ideologies = yes
+			add_ideology = ideology_gov_moderate_monarchist
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_moderate_democrat
+		}
+
+		ig:ig_intelligentsia ?= {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_doctrinaire_democrat
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_federated_state
+			add_ideology = ideology_rel_secularist
+		}
+
+		ig:ig_industrialists ?= {
+			bpm_remove_all_eco_ideologies = yes
+			add_ideology = ideology_eco_interventionist
+			add_ideology = ideology_wel_market_welfare
+		}
+
+		ig:ig_christian_democrats ?= {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_divine_democrat
+		}
+
+		### Constitional Laws
+		activate_law = law_type:law_protected_speech # Articles 18-20 of the Belgian Constitution
+		bpm_codify_law = { #  Codifying into Constituonal Laws
+			law = law_type:law_protected_speech
+			level = constitutional
+		}
+
+		bpm_codify_law = { # Codifying into Constituonal Laws
+			law = law_type:law_wealth_voting
+			level = constitutional
+		}
+		
+		### Legal Laws
+		activate_law = law_type:law_local_police # Police comissioners mentioned in many sessions, acts and dicussions
+		activate_law = law_type:law_private_schools # Two state universities (Ghent & Liège) and two private (Brussels & Leuven)
+
+		### Decrees
+		bpm_codify_law = { # Most units were made by decrees of the Provisional Government or King
+			law = law_type:law_professional_army
+			level = decree
+		}
+
+		bpm_codify_law = { # No organized army and general staff until the 1845 Organization of the Army Law.
+			law = law_type:law_purchased_officers
+			level = decree
+		}
+
+		### Traditional Laws
+		activate_law = law_type:law_ad_hoc_centralization # No organized municipal & provincial system until March and April 30ths, 1836
+
+		bpm_codify_law = { # A long-standing tradition before being codified & previous mayors kept (?)
+			law = law_type:law_elected_bureaucrats
+			level = traditional
+		}
+
+		### Le Chapelier Law
+
+		activate_law = law_type:law_combination_acts # Le Chapelier Law (Articles 414 & 415 of the Criminal Code) until 1866
+		activate_law = law_type:law_national_guard # Various Militia Laws and common usage of the military to bust protests
+		activate_law = law_type:law_women_own_property # Since the Belgian law was largely based off the Napoleonic Code, women could own property
 	}
 
 	c:NET = {
@@ -354,13 +492,25 @@
 		bpm_set_colony_law = yes
 		bpm_setup_country = yes
 	}
+
+	every_country = {
+		limit = {
+			this != BIC
+			is_country_type = colonial
+			OR = {
+				has_law_or_variant = law_type:law_autocracy
+				has_law_or_variant = law_type:law_oligarchy
+			}
+		}
+		bpm_set_colony_law = yes
+	} 
 	
 	c:SPA = {
 		add_technology_researched = egalitarianism
 		activate_law = law_type:law_landed_voting
 		activate_law = law_type:law_separated_powers
-		activate_law = law_type:law_slavery_banned
-		bpm_make_igs_not_pro_slavery_serfdom = yes
+		#activate_law = law_type:law_slavery_banned
+		#bpm_make_igs_not_pro_slavery_serfdom = yes
 
 		if = {
 			limit = { exists = py:liberal_party }
@@ -384,6 +534,14 @@
 			add_ruling_interest_group = yes
 			bpm_remove_all_sta_ideologies = yes
 			add_ideology = ideology_sta_federated_state
+		}
+
+		active_law:lawgroup_distribution_of_power ?= { # Oligarchy
+			add_amendment = {
+				type = amendment_chamber_of_procurators
+				sponsor = PREV.ig:ig_petty_bourgeoisie
+				cooldown = 96 # Product of the 1834 Charter
+			}
 		}
 	}
 
@@ -494,6 +652,10 @@
 			add_ideology = ideology_wel_religious_welfare
 			add_ruling_interest_group = yes
 		}
+		ig:ig_landowners ?= { 
+			bpm_remove_all_eco_ideologies = yes
+			add_ideology = ideology_eco_traditional_agrarian
+		}
 	}
 
 	c:HAN = {
@@ -570,7 +732,7 @@
 			bpm_remove_all_wel_ideologies = yes
 			add_ideology = ideology_wel_market_welfare
 			bpm_remove_all_cit_ideologies = yes
-			add_ideology = ideology_cit_segregationist
+			add_ideology = ideology_cit_colonial_segregationist
 		}
 		ig:ig_petty_bourgeoisie = {
 			bpm_remove_all_gov_ideologies = yes
@@ -582,7 +744,7 @@
 			bpm_remove_all_wel_ideologies = yes
 			add_ideology = ideology_wel_market_welfare
 			bpm_remove_all_cit_ideologies = yes
-			add_ideology = ideology_cit_segregationist
+			add_ideology = ideology_cit_colonial_segregationist
 		}
 	}
 
@@ -607,7 +769,7 @@
 			bpm_remove_all_wel_ideologies = yes
 			add_ideology = ideology_wel_market_welfare
 			bpm_remove_all_cit_ideologies = yes
-			add_ideology = ideology_cit_segregationist
+			add_ideology = ideology_cit_colonial_segregationist
 		}
 	}
 
@@ -639,6 +801,29 @@
 
 	c:MUG = {
 		activate_law = law_type:law_appointed_by_hos
+	}
+
+	c:CHL = {
+		ig:ig_landowners ?= {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_authoritarian_democrat
+			bpm_reorder_ideologies = yes
+		}
+		ig:ig_conservatives ?= {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_moderate_democrat
+			bpm_reorder_ideologies = yes
+		}
+		ig:ig_liberals ?= {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_radical_democrat
+			bpm_reorder_ideologies = yes
+		}
+		ig:ig_intelligentsia ?= {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_radical_democrat
+			bpm_reorder_ideologies = yes
+		}
 	}
 
 	every_country = {
@@ -684,7 +869,7 @@
 	every_country = {
 		limit = {
 			OR = {
-				this = c:BEL
+				#this = c:BEL
 				this = c:LIB
 				country_has_primary_culture = cu:boer
 				AND = {
@@ -739,6 +924,13 @@
 		set_institution_investment_level = {
 			institution = institution_centralization
 			level = 3
+		}
+	}
+
+	c:LIB = {
+		ig:ig_market_liberals ?= {
+			bpm_remove_all_cit_ideologies = yes
+			add_ideology = ideology_cit_immigrant_nationalist
 		}
 	}
 
@@ -821,6 +1013,19 @@
 		}
 		activate_law = law_type:law_noble_officers
 	}
+
+	every_country = {
+		limit = {
+			OR = {
+				this = c:GBR
+				this = c:FRA
+			}
+		}
+		ig:ig_reactionaries ?= {
+			bpm_remove_all_wel_ideologies = yes
+			add_ideology = ideology_wel_reactionary_paternalistic
+		}
+	}
  
 	every_country = {
 		limit = { 
@@ -879,11 +1084,26 @@
 		}
 	}
 
+	every_country = {
+		limit = {
+			has_law_or_variant = law_type:law_oligarchy
+		}
+		activate_law = law_type:law_autocracy
+	}
+
 	# SPEECH LAWS
 	every_country = {
 		if = {
 			limit = { this = c:USA }
 			activate_law = law_type:law_protected_speech
+		}
+		else_if = {
+			limit = { this = c:BEL }
+			activate_law = law_type:law_protected_speech
+			bpm_codify_law = {
+				law = law_type:law_protected_speech
+				level = constitutional
+			}
 		}
 		else_if = {
 			limit = {
@@ -926,6 +1146,20 @@
 		}
 		else = {
 			activate_law = law_type:law_traditional_ostracism
+		}
+	}
+
+	
+
+	every_country = {
+		if = {
+			limit = { 
+				OR = {
+					has_law_or_variant = law_type:law_census_voting
+					has_law_or_variant = law_type:law_universal_suffrage
+				} 
+			}
+			set_variable = liberalism_1_done
 		}
 	}
 

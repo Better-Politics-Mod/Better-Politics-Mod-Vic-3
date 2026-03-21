@@ -1,6 +1,6 @@
 ﻿### Vargas
 
-calculate_populism_progress = {
+REPLACE:calculate_populism_progress = {
 	set_variable = { name = populism_progress_var_next value = 0 }
 	set_variable = { name = populism_progress_from_radicals value = 0 }
 	every_scope_state = {
@@ -124,7 +124,7 @@ calculate_populism_progress = {
 }
 
 # National Identity
-calculate_national_identity_progress = {
+REPLACE:calculate_national_identity_progress = {
 	set_variable = { name = national_identity_progress_var_next value = 0 }
 	set_variable = { name = national_identity_progress_from_igs value = 0 }
 
@@ -243,7 +243,7 @@ calculate_national_identity_progress = {
 	change_variable = { name = national_identity_progress_var_next add = var:national_identity_progress_var_add }
 }
 
-calculate_caudillo_progress = {
+REPLACE:calculate_caudillo_progress = {
 	set_variable = { name = caudillo_next value = 0 }
 	if = {
 		limit = {
@@ -414,7 +414,7 @@ calculate_caudillo_progress = {
 	}
 }
 
-calculate_communism_progress = {
+REPLACE:calculate_communism_progress = {
 	set_variable = { name = communism_progress_var_next value = 0 }
 	set_variable = { name = communism_progress_from_radicals value = 0 }
 	every_scope_state = {
@@ -634,7 +634,7 @@ calculate_communism_progress = {
 	change_variable = { name = communism_progress_var_next add = var:communism_progress_var_add }
 }
 
-create_paris_commune_characters = {
+REPLACE:create_paris_commune_characters = {
 	if = {
 		limit = {
 			game_date > 1866.1.1
@@ -720,3 +720,353 @@ create_paris_commune_characters = {
 	}
 }
 
+REPLACE:initialise_caciquismo_effect = {
+	set_variable = caciquismo_var
+	if = {
+		limit = {
+			OR = {
+				active_law:lawgroup_distribution_of_power ?= {
+					OR = {
+						has_amendment = amendment_type:amendment_chamber_of_procurators
+						has_amendment = amendment_type:amendment_chamber_of_gentleman_deputies
+					}
+				}
+				has_law_or_variant = law_type:law_landed_voting
+				has_law_or_variant = law_type:law_wealth_voting
+				has_law_or_variant = law_type:law_census_voting
+				has_law_or_variant = law_type:law_universal_suffrage
+				has_law_or_variant = law_type:law_presidential_republic
+				has_law_or_variant = law_type:law_parliamentary_republic
+				has_law_or_variant = law_type:law_organic_democracy
+			}
+		}
+		active_law:lawgroup_distribution_of_power ?= {
+			add_amendment = {
+				type = amendment_electoral_clientelism
+				sponsor = PREV.ig:ig_landowners
+				cooldown = 1200
+			}
+		}
+	}
+}
+
+
+REPLACE:enact_preferred_governance_principle = {
+	random_interest_group = {
+		limit = {
+			is_in_government = yes
+			is_strongest_ig_in_government = yes
+		}
+		save_scope_as = ruling_ig
+	}
+	if = {
+		limit = {
+			scope:ruling_ig = {
+				law_stance = {
+					law = law_type:law_council_republic
+					value = strongly_approve
+				}
+			}
+		}
+		activate_law = law_type:law_council_republic
+	}
+	else_if = {
+		limit = {
+			bpm_is_historically_republican = no
+			bpm_is_brazilian_empire = no
+			scope:ruling_ig = {
+				law_stance = {
+					law = law_type:law_monarchy
+					value = strongly_approve
+				}
+			}
+		}
+		activate_law = law_type:law_monarchy
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig = {
+				law_stance = {
+					law = law_type:law_parliamentary_republic
+					value = strongly_approve
+				}
+			}
+		}
+		activate_law = law_type:law_parliamentary_republic
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig = {
+				law_stance = {
+					law = law_type:law_presidential_republic
+					value = strongly_approve
+				}
+			}
+		}
+		activate_law = law_type:law_presidential_republic
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig = {
+				law_stance = {
+					law = law_type:law_theocracy
+					value = strongly_approve
+				}
+			}
+		}
+		activate_law = law_type:law_theocracy
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig = {
+				law_stance = {
+					law = law_type:law_council_republic
+					value = approve
+				}
+			}
+		}
+		activate_law = law_type:law_council_republic
+	}
+	else_if = {
+		limit = {
+			NOT = {country_has_primary_culture = cu:dixie}
+			NOT = {country_has_primary_culture = cu:yankee}
+			bpm_is_brazilian_empire = no
+			scope:ruling_ig = {
+				law_stance = {
+					law = law_type:law_monarchy
+					value = approve
+				}
+			}
+		}
+		activate_law = law_type:law_monarchy
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig = {
+				law_stance = {
+					law = law_type:law_parliamentary_republic
+					value = approve
+				}
+			}
+		}
+		activate_law = law_type:law_parliamentary_republic
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig = {
+				law_stance = {
+					law = law_type:law_presidential_republic
+					value = approve
+				}
+			}
+		}
+		activate_law = law_type:law_presidential_republic
+	}
+	else_if = {
+		limit = {
+			scope:ruling_ig = {
+				law_stance = {
+					law = law_type:law_theocracy
+					value = approve
+				}
+			}
+		}
+		activate_law = law_type:law_theocracy
+	}
+	else = {
+		activate_law = law_type:law_presidential_republic
+		if = {
+			limit = {
+				civil_war_origin_country = {
+					has_law = law_type:law_monarchy
+				}
+			}
+			set_variable = prov_gov_monarchy
+		}
+		else_if = {
+			limit = {
+				civil_war_origin_country = {
+					has_law = law_type:law_theocracy
+				}
+			}
+			set_variable = prov_gov_theocracy
+		}
+		else_if = {
+			limit = {
+				civil_war_origin_country = {
+					has_law = law_type:law_council_republic
+				}
+			}
+			set_variable = prov_gov_council_republic
+		}
+		set_variable = revolutionary_prov_gov_var
+	}
+}
+
+REPLACE:add_regency_modifier = { # Applied in country scope, always uses monarch_scope
+	if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_landowners
+			}
+		}
+		add_modifier = { name = modifier_regency_landowners }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_devout
+			}
+		}
+		add_modifier = { name = modifier_regency_devout }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_petty_bourgeoisie
+			}
+		}
+		add_modifier = { name = modifier_regency_petty_bourgeoisie }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_industrialists
+			}
+		}
+		add_modifier = { name = modifier_regency_industrialists }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_trade_unions
+			}
+		}
+		add_modifier = { name = modifier_regency_trade_unions }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_intelligentsia
+			}
+		}
+		add_modifier = { name = modifier_regency_intelligentsia }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_armed_forces
+			}
+		}
+		add_modifier = { name = modifier_regency_armed_forces }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_rural_folk
+			}
+		}
+		add_modifier = { name = modifier_regency_rural_folk }
+	}
+	
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_rural_folk
+			}
+		}
+		add_modifier = { name = modifier_regency_rural_folk }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_rural_folk
+			}
+		}
+		add_modifier = { name = modifier_regency_rural_folk }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_liberals
+			}
+		}
+		add_modifier = { name = modifier_regency_liberals }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_radicals
+			}
+		}
+		add_modifier = { name = modifier_regency_radicals }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_market_liberals
+			}
+		}
+		add_modifier = { name = modifier_regency_market_liberals }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_national_liberals
+			}
+		}
+		add_modifier = { name = modifier_regency_national_liberals }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_fascists
+			}
+		}
+		add_modifier = { name = modifier_regency_fascists }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_christian_democrats
+			}
+		}
+		add_modifier = { name = modifier_regency_christian_democrats }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_agrarian_populists
+			}
+		}
+		add_modifier = { name = modifier_regency_agrarian_populists }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_conservatives
+			}
+		}
+		add_modifier = { name = modifier_regency_conservatives }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_reactionaries
+			}
+		}
+		add_modifier = { name = modifier_regency_reactionaries }
+	}
+	else_if = {
+		limit = {
+			scope:monarch_scope ?= {
+				is_interest_group_type = ig_reformist_socialists
+			}
+		}
+		add_modifier = { name = modifier_regency_reformist_socialists }
+	}
+	else = {
+		add_modifier = { name = modifier_regency }
+	}
+}

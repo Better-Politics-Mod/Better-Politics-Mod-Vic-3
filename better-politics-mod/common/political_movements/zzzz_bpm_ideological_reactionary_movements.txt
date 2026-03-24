@@ -41,7 +41,16 @@ REPLACE:movement_royalist_absolutist = {
 	creation_trigger = {
 		has_law = law_type:law_monarchy
 		country_has_voting_franchise = no
-		NOT = { c:FRA ?= this }
+		NOR = {
+			c:FRA ?= this
+			c:POR ?= this
+			c:SPA ?= this
+			c:SPC ?= this
+			civil_war_origin_country ?= c:FRA
+			civil_war_origin_country ?= c:POR
+			civil_war_origin_country ?= c:SPA
+			civil_war_origin_country ?= c:SPC
+		}
 	}	
 	creation_weight = {
 		value = 100
@@ -194,7 +203,21 @@ REPLACE:movement_royalist_absolutist = {
 				desc = "POP_PEASANTS"
 			}
 
-		}			
+		}	
+		else_if = {
+			limit = {
+				is_pop_type = laborers
+				bpm_pop_employment_is_rural = yes
+			}
+			add = {
+				value = 6
+				multiply = {
+					value = owner.bpm_consciousness_reactionary_movement_laborers_machinists
+					desc = "BPM_LABOR_CONSCIOUSNESS"
+				}
+				desc = "POP_LABORERS"
+			}
+		}		
 		else_if = {
 			limit = {
 				is_pop_type = clergymen
@@ -449,14 +472,14 @@ REPLACE:movement_royalist_absolutist = {
 						desc = "MONARCHY_BEING_ABOLISHED"
 					}					
 				}
-				else = {
-					add = { # Only care about legitimacy in the context of a monarchy that isn't under direct threat
-						value = 50
-						subtract = legitimacy
-						multiply = 0.005
-						desc = "concept_legitimacy"
-					}				
-				}
+				# else = {
+				# 	add = { # Only care about legitimacy in the context of a monarchy that isn't under direct threat
+				# 		value = 50
+				# 		subtract = legitimacy
+				# 		multiply = 0.005
+				# 		desc = "concept_legitimacy"
+				# 	}				
+				# }
 			}		
 		}
 	}	
@@ -475,10 +498,45 @@ REPLACE:movement_reactionary = {
 	creation_trigger = {
 		NOT = {
 			has_law = law_type:law_traditionalism
-			has_law = law_type:law_serfdom
+			has_law_or_variant = law_type:law_serfdom
 		}
-		has_law = law_type:law_slavery_banned
+		OR = {
+			has_law = law_type:law_slavery_banned
+			has_law = law_type:law_colonial_slavery
+		}
 		country_has_voting_franchise = yes
+		
+		trigger_if = {
+			limit = {
+				OR = {
+					this ?= c:SPA
+					this ?= c:SPC
+					this ?= c:POR
+					civil_war_origin_country ?= c:SPA 
+					civil_war_origin_country ?= c:SPC 
+					civil_war_origin_country ?= c:POR 
+				}
+			}
+			has_variable = monarchy_stamped_out_var
+		}
+		trigger_else_if = {
+			limit = { 
+				OR = {
+					this ?= c:FRA
+					civil_war_origin_country ?= c:FRA 
+				}
+			}
+			OR = {
+				has_variable = monarchy_stamped_out_var
+				AND = {
+					OR = {
+						has_variable = bonapartist_restoration_var
+						has_variable = orleanist_restoration_var
+					}
+					has_variable = one_true_french_dynasty
+				}
+			}
+		}
 	}	
 	creation_weight = {
 		value = 100
@@ -500,7 +558,8 @@ REPLACE:movement_reactionary = {
 				has_ideology = ideology:ideology_traditionalist
 				has_ideology = ideology:ideology_protectionist
 				has_ideology = ideology:ideology_authoritarian
-				has_ideology = ideology:ideology_luddite	
+				has_ideology = ideology:ideology_luddite
+				has_ideology = ideology:ideology_reactionary_anti_capitalist	
 				is_interest_group_type = ig_reactionaries			
 			}
 		}
@@ -510,6 +569,7 @@ REPLACE:movement_reactionary = {
 				has_ideology = ideology:ideology_protectionist
 				has_ideology = ideology:ideology_authoritarian
 				has_ideology = ideology:ideology_luddite
+				has_ideology = ideology:ideology_reactionary_anti_capitalist
 				interest_group ?= {
 					OR = {
 						has_ideology = ideology:ideology_reactionary
@@ -527,6 +587,7 @@ REPLACE:movement_reactionary = {
 					has_ideology = ideology:ideology_protectionist
 					has_ideology = ideology:ideology_traditionalist
 					has_ideology = ideology:ideology_luddite
+					has_ideology = ideology:ideology_reactionary_anti_capitalist
 				}
 			}
 			multiply = {

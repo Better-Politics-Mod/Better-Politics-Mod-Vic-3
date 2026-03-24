@@ -758,12 +758,18 @@ REPLACE:ideology_republican_leader = {
 			}
 			add = 25
 		}
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 25
+		}
 		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
 		if = {
 			limit = {
 				has_variable = hungarian_revolution_increased_liberalism
 			}
-			add = 50
+			add = 25
 		}
 
 		# Pedro JE victory
@@ -993,6 +999,20 @@ REPLACE:ideology_radical = {
 			if = {
 				limit = {
 					has_variable = spa_two_spains_liberal_victory
+				}
+				add = 10
+			}
+			# liberal and/or radical leaders have a higher spawn chance if you succeed in Portugal's Second Liberalism.
+			if = {
+				limit = {
+					has_variable = por_second_liberalism_victory
+				}
+				add = 10
+			}
+			# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+			if = {
+				limit = {
+					has_variable = hungarian_revolution_increased_liberalism
 				}
 				add = 10
 			}
@@ -1489,6 +1509,34 @@ REPLACE:ideology_feminist = {
 					value = 0.25
 				}
 			}
+			# liberal and/or radical leaders have a higher spawn chance if the Dreyfusards won.
+			if = {
+				limit = {
+					has_variable = dreyfusard_victory
+				}
+				add = 50
+			}
+			# liberal and/or radical leaders have a higher spawn chance if you win the Two Spains as the liberals.
+			if = {
+				limit = {
+					has_variable = spa_two_spains_liberal_victory
+				}
+				add = 50
+			}
+			# liberal and/or radical leaders have a higher spawn chance if you succeed in Portugal's Second Liberalism.
+			if = {
+				limit = {
+					has_variable = por_second_liberalism_victory
+				}
+				add = 50
+			}
+			# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+			if = {
+				limit = {
+					has_variable = hungarian_revolution_increased_liberalism
+				}
+				add = 50
+			}
 			# Pedro JE victory
 			if = {
 				limit = {
@@ -1498,26 +1546,13 @@ REPLACE:ideology_feminist = {
 				}
 				add = 50
 			}
-			value = {
-				value = 50
-				# more likely if character is a woman after mass propaganda
-				if = {
-					limit = {
-						owner = { has_technology_researched = mass_propaganda }
-						is_female = yes
-					}
-					multiply = {
-						value = 1.5
-					}
+			if = {
+				limit = {
+					owner = { has_technology_researched = mass_propaganda }
+					is_female = yes
 				}
-				# Pedro JE victory
-				if = {
-					limit = {
-						owner = {
-							has_variable = brz_enduring_empire
-						}
-					}
-					add = 50
+				multiply = {
+					value = 1.5
 				}
 			}
 		}
@@ -1541,6 +1576,35 @@ REPLACE:ideology_feminist = {
 			value = 50
 			# more likely if character is a woman after mass propaganda
 			if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law_or_variant = law_type:law_womens_suffrage
+						AND = {
+							country_has_voting_franchise = no
+							has_law_or_variant = law_type:law_women_in_the_workplace
+						}
+					}
+				}
+			}
+			add = -50
+		}
+		# more likely with limited women's rights
+			if = {
+				limit = {
+					owner = {
+						OR = {
+							has_law_or_variant = law_type:law_no_womens_rights
+							has_law_or_variant = law_type:law_women_own_property
+						}
+					}
+				}
+				multiply = {
+					value = 1.5
+				}
+			}
+			
+			if = {
 				limit = {
 					owner = { has_technology_researched = mass_propaganda }
 					is_female = yes
@@ -1548,15 +1612,6 @@ REPLACE:ideology_feminist = {
 				multiply = {
 					value = 1.25
 				}
-			}
-			# Pedro JE victory
-			if = {
-				limit = {
-					owner = {
-						has_variable = brz_enduring_empire
-					}
-				}
-				add = 50
 			}
 		}
 	}
@@ -2771,6 +2826,20 @@ REPLACE:ideology_social_democrat = {
 			}
 			add = 10
 		}
+		# liberal and/or radical leaders have a higher spawn chance if you succeed in Portugal's Second Liberalism.
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 10
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+		if = {
+			limit = {
+				has_variable = hungarian_revolution_increased_liberalism
+			}
+			add = 10
+		}
 		# Pedro JE victory
 		if = {
 			limit = {
@@ -3558,7 +3627,8 @@ REPLACE:ideology_fascist = {
 					any_scope_state = {
 						is_incorporated = yes
 						any_scope_pop = {
-							pop_acceptance < 40
+							pop_acceptance < acceptance_status_4
+							total_size >= 1000
 						}
 					}
 				}
@@ -3661,6 +3731,17 @@ REPLACE:ideology_fascist = {
 			limit = {
 				owner = {
 					c:BRZ ?= this
+				}
+			}
+			multiply = 0
+		}
+		# Minority cultures won't favor highly ethno-supremacist ideologies
+		if = {
+			limit = {
+				leader = {
+					culture = {
+						NOT = { is_primary_culture_of = prev.owner }
+					}
 				}
 			}
 			multiply = 0
@@ -4459,11 +4540,13 @@ REPLACE:ideology_ethno_nationalist = {
 		# More likely with unowned claims
 		if = {
 			limit = {
-				any_state = {
-					has_claim_by = root.owner
-				}
+				owner.number_of_claims > 0
 			}
-			add = 75
+			add = {
+				value = owner.number_of_claims
+				multiply = 25
+				max = 100
+			}
 		}
 		# More likely with a convenient scapegoat
 		if = {
@@ -4479,21 +4562,31 @@ REPLACE:ideology_ethno_nationalist = {
 			}
 			add = 50
 		}
-		# More likely with a convenient scapegoat and is angry without ethnostate
+		# More likely with a convenient scapegoat
 		if = {
 			limit = {
 				owner = {
-					NOT = { has_law_or_variant = law_type:law_ethnostate }
 					any_scope_state = {
 						is_incorporated = yes
 						any_scope_pop = {
-							pop_acceptance < 40
+							pop_acceptance < acceptance_status_4
 						}
 					}
 				}
-				ig_approval <= -5
 			}
-			add = 75
+			add = 50
+			if = { # And if angry without ethnostate
+				limit = {
+					owner = {
+						NOT = { has_law_or_variant = law_type:law_ethnostate }
+					}
+					ig_approval <= -5
+				}
+				subtract = {
+					value = ig_approval
+					multiply = 5
+				}
+			}
 		}
 		# More likely if angry and issues are relevant
 		if = {
@@ -5407,6 +5500,19 @@ REPLACE:ideology_humanitarian = {
 			}
 			add = 10
 		}
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 10
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+		if = {
+			limit = {
+				has_variable = hungarian_revolution_increased_liberalism
+			}
+			add = 10
+		}
 	}
 
 	non_interest_group_leader_trigger = {
@@ -5557,6 +5663,19 @@ REPLACE:ideology_humanitarian = {
 		if = {
 			limit = {
 				has_variable = spa_two_spains_liberal_victory
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 10
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+		if = {
+			limit = {
+				has_variable = hungarian_revolution_increased_liberalism
 			}
 			add = 10
 		}
@@ -6425,6 +6544,19 @@ REPLACE:ideology_liberal_leader = {
 			}
 			add = 25
 		}
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 25
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+		if = {
+			limit = {
+				has_variable = hungarian_revolution_increased_liberalism
+			}
+			add = 25
+		}
 	}
 
 	non_interest_group_leader_trigger = {
@@ -6799,6 +6931,19 @@ REPLACE:ideology_humanitarian_royalist = {
 		if = {
 			limit = {
 				has_variable = spa_two_spains_liberal_victory
+			}
+			add = 50
+		}
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 50
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+		if = {
+			limit = {
+				has_variable = hungarian_revolution_increased_liberalism
 			}
 			add = 50
 		}
@@ -7620,7 +7765,18 @@ REPLACE:ideology_traditionalist_minoritarian = {
 			}
 			add = -25
 		}
+
+		# Women won't favor highly patriarchal ideologies
+		if = {
+			limit = {
+				leader = {
+					is_female = yes
+				}
+			}
+			multiply = 0
+		}
 	}
+	
 }
 
 REPLACE:ideology_utilitarian_leader = {
@@ -7818,7 +7974,7 @@ REPLACE:ideology_sovereignist_leader = { # For colonised peoples
 	}
 
 	country_trigger = {
-		is_country_type = colonial
+		country_is_colonial_or_company = yes
 	}
 
 	interest_group_leader_trigger = {
@@ -7840,6 +7996,12 @@ REPLACE:ideology_sovereignist_leader = { # For colonised peoples
 	
 	non_interest_group_leader_weight = {
 		value = 100
+		if = {
+			limit = {
+				has_role = agitator
+			}
+			multiply = 2
+		}
 	}	
 }
 

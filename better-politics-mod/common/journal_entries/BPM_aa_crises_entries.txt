@@ -612,6 +612,8 @@ je_bpm_crises_rising_extremism = {
 		}
 	}
 
+	scripted_button = bpm_extremism_response_crackdown
+
 	on_weekly_pulse = {
 		effect = {
 			scope:journal_entry = {
@@ -637,8 +639,9 @@ je_bpm_crises_rising_extremism = {
 						# finishes in 6 months with 100% radicals 
 						# should last typically 10 ~ 18 months
 						add = {
-							value = 4
-							multiply = radical_fraction
+							value = 20
+							multiply = owner.radical_fraction
+							max = 4
 						}
 					}
 					clamp_variable = {
@@ -652,12 +655,12 @@ je_bpm_crises_rising_extremism = {
 				# These are the base of extremism
 				add_radicals = {
 					strata = lower
-					value = 0.004
+					value = 0.01
 				}
 			}
 			add_radicals = {
 				strata = lower
-				value = 0.001
+				value = 0.01
 			}
 			if = {
 				limit = {
@@ -672,6 +675,15 @@ je_bpm_crises_rising_extremism = {
 						divide = 100
 					}
 				}
+				scope:journal_entry = {
+					remove_modifier = bpm_crisis_extremism_extremist_boost
+					add_modifier = {
+						name = bpm_crisis_extremism_extremist_boost
+						is_decaying = yes
+						months = 60
+						multiplier = local_var:bpm_crisis_extremism_extremist_boost_mult
+					}
+				}
 				every_interest_group = {
 					remove_modifier = bpm_crisis_extremism_extremist_boost
 				}
@@ -681,11 +693,6 @@ je_bpm_crises_rising_extremism = {
 							bpm_ig_is_radical_opposition = yes
 							bpm_ig_is_very_radical_opposition = yes
 						}
-					}
-					add_modifier = {
-						name = bpm_crisis_extremism_extremist_boost
-						is_decaying = yes
-						multiplier = local_var:bpm_crisis_extremism_extremist_boost_mult
 					}
 					if = {
 						limit = {
@@ -697,15 +704,34 @@ je_bpm_crises_rising_extremism = {
 						add_modifier = {
 							name = bpm_crisis_extremism_extremist_boost
 							is_decaying = yes
+							months = 60
 							multiplier = { value = local_var:bpm_crisis_extremism_extremist_boost_mult multiply = 5 }
 						}
-
+					}
+					else = {
+						add_modifier = {
+							name = bpm_crisis_extremism_extremist_boost
+							is_decaying = yes
+							months = 60
+							multiplier = local_var:bpm_crisis_extremism_extremist_boost_mult
+						}
 					}
 				}
 			}
 			if = {
 				limit = {
 					scope:journal_entry.var:bpm_government_scandal_progress >= 50
+				}
+				every_interest_group = {
+					limit = {
+						bpm_ig_is_institutional = yes
+						bpm_ig_is_radical_opposition = no
+						bpm_ig_is_very_radical_opposition = no
+						NOT = {
+							has_ideology = ideology:ideology_bpm_strong_state
+						}
+					}
+					add_ideology = ideology_bpm_strong_state
 				}
 				recalculate_pop_ig_support = yes
 			}

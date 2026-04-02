@@ -4,7 +4,10 @@ REPLACE:movement_modernizer = {
 	
 	ideology = ideology_eco_modernizer_mov
 	character_ideologies = {
+		ideology_modernizer_leader
 		ideology_reformer
+		ideology_protectionist
+		ideology_market_liberal
 		ideology_cameralist
 		ideology_physiocrat
 		ideology_abolitionist
@@ -100,6 +103,7 @@ REPLACE:movement_modernizer = {
 		if = {
 			limit = {
 				OR = {
+					has_ideology = ideology:ideology_modernizer_leader
 					has_ideology = ideology:ideology_protectionist
 					has_ideology = ideology:ideology_reformer
 					has_ideology = ideology:ideology_sovereignist
@@ -115,6 +119,7 @@ REPLACE:movement_modernizer = {
 				OR = {
 					has_ideology = ideology:ideology_positivist
 					has_ideology = ideology:ideology_abolitionist
+					has_ideology = ideology:ideology_utopian
 				}
 			}
 			multiply = {
@@ -125,6 +130,7 @@ REPLACE:movement_modernizer = {
 			limit = {
 				interest_group ?= {
 					OR = {
+						has_ideology = ideology:ideology_cartist
 						has_ideology = ideology:ideology_modernizer
 						has_ideology = ideology:ideology_liberal
 						has_ideology = ideology:ideology_liberal_modern
@@ -342,6 +348,14 @@ REPLACE:movement_modernizer = {
 			desc = "BPM_CONSCIOUSNESS_LIBERAL"
 		}
 		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
+		multiply = { # "What are you doing?" factor
+			desc = "BACKWARDSNESS"
+			value = 1
+			add = {
+				value = years_since_game_start
+				divide = 100
+			}
+		}
 		if = {
 			limit = {
 				owner ?= {
@@ -406,6 +420,51 @@ REPLACE:movement_modernizer = {
 		weight = {
 			value = 1000
 		}		
+	}
+	additional_radicalism_factors = {
+		add = { value = bpm_additional_radicalism_factors desc = "bpm_additional_radicalism_factors" }
+		if = {
+			limit = {
+				owner = {
+					has_variable = wargoal_enforced_by_recognized_power
+				}
+			}
+			add = {
+				desc = "wargoal_pressed_by_recognized_power_tt"
+				value = 0.10
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					has_technology_researched = nationalism
+					is_country_type = unrecognized
+				}
+			}
+			add = {
+				desc = "unrecognized"
+				value = 0.10
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					any_neighbouring_state = {
+						owner = {
+							NOT = { THIS = ROOT.owner }
+							any_political_movement = {
+								bpm_movement_is_modernizer = yes
+								is_insurrectionary = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				desc = "NEIGHBOURING_COUNTRY_WITH_REVOLUTION"
+				value = 0.15
+			}
+		}
 	}		
 }
 
@@ -427,13 +486,35 @@ REPLACE:movement_royalist_constitutional = {
 		has_law = law_type:law_monarchy
 		country_has_voting_franchise = yes
 		NOT = {
-			c:FRA = this
+			any_political_movement = {
+				is_political_movement_type = movement_royalist_absolutist
+			}
+		}
+		NOT = {
+			c:FRA ?= this
 			civil_war_origin_country ?= c:FRA
 		}
 	}	
 	creation_weight = {
 		value = 100
-	}	
+		if = {
+			limit = {
+				owner ?= { # If a movement of this type exists in a neighbouring country, make it more likely to spawn here as well
+					any_neighbouring_state = {
+						owner = {
+							prestige > ROOT.owner.prestige
+							any_political_movement = {
+								is_political_movement_type = movement_royalist_constitutional
+							}
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
+	}
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
 	}
@@ -829,6 +910,25 @@ REPLACE:movement_royalist_constitutional = {
 				# }
 			}		
 		}
+		if = {
+			limit = {
+				owner = {
+					any_neighbouring_state = {
+						owner = {
+							NOT = { THIS = ROOT.owner }
+							any_political_movement = {
+								bpm_movement_is_liberal_bourgeois = yes
+								is_insurrectionary = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				desc = "NEIGHBOURING_COUNTRY_WITH_REVOLUTION"
+				value = 0.15
+			}
+		}
 	}	
 }
 
@@ -848,6 +948,7 @@ REPLACE:movement_liberal = {
 	
 	creation_trigger = {
 		NOT = { is_country_type = decentralized }
+		has_technology_researched = democracy
 	}	
 	creation_weight = {
 		value = 100
@@ -858,6 +959,23 @@ REPLACE:movement_liberal = {
 			}
 			multiply = {
 				value = 0.5
+			}
+		}
+		if = {
+			limit = {
+				owner ?= { # If a movement of this type exists in a neighbouring country, make it more likely to spawn here as well
+					any_neighbouring_state = {
+						owner = {
+							prestige > ROOT.owner.prestige
+							any_political_movement = {
+								is_political_movement_type = movement_liberal
+							}
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 2
 			}
 		}
 		if = {
@@ -881,7 +999,11 @@ REPLACE:movement_liberal = {
 				has_ideology = ideology:ideology_liberal_leader
 				has_ideology = ideology:ideology_republican_leader
 				has_ideology = ideology:ideology_radical
-				has_ideology = ideology:ideology_humanitarian		
+				has_ideology = ideology:ideology_humanitarian
+				has_ideology = ideology:ideology_reformer
+				has_ideology = ideology:ideology_utopian
+				has_ideology = ideology:ideology_modernizer_leader
+				has_ideology = ideology:ideology_positivist		
 				bpm_ig_is_liberal = yes		
 			}
 		}
@@ -892,6 +1014,10 @@ REPLACE:movement_liberal = {
 				has_ideology = ideology:ideology_republican_leader
 				has_ideology = ideology:ideology_radical
 				has_ideology = ideology:ideology_humanitarian
+				has_ideology = ideology:ideology_reformer
+				has_ideology = ideology:ideology_utopian
+				has_ideology = ideology:ideology_modernizer_leader
+				has_ideology = ideology:ideology_positivist
 				interest_group ?= {
 					bpm_ig_is_liberal = yes
 				}
@@ -1289,7 +1415,26 @@ REPLACE:movement_liberal = {
 					value = 0.1
 					desc = "IS_PRE_MODERN_ABSOLUTIST"
 				}
-			}			
+			}	
+			if = {
+				limit = {
+					owner = {
+						any_neighbouring_state = {
+							owner = {
+								NOT = { THIS = ROOT.owner }
+								any_political_movement = {
+									bpm_movement_is_liberal_bourgeois = yes
+									is_insurrectionary = yes
+								}
+							}
+						}
+					}
+				}
+				add = {
+					desc = "NEIGHBOURING_COUNTRY_WITH_REVOLUTION"
+					value = 0.15
+				}
+			}		
 		}
 	}		
 }
@@ -1322,6 +1467,23 @@ REPLACE:movement_radical = {
 			}
 			multiply = {
 				value = 20
+			}
+		}
+		if = {
+			limit = {
+				owner ?= { # If a movement of this type exists in a neighbouring country, make it more likely to spawn here as well
+					any_neighbouring_state = {
+						owner = {
+							prestige > ROOT.owner.prestige
+							any_political_movement = {
+								is_political_movement_type = movement_radical
+							}
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 2
 			}
 		}
 		if = {
@@ -1785,7 +1947,26 @@ REPLACE:movement_radical = {
 					value = -0.1
 					desc = "NO_INSTITUTION_police"
 				}		
-			}			
+			}	
+			if = {
+				limit = {
+					owner = {
+						any_neighbouring_state = {
+							owner = {
+								NOT = { THIS = ROOT.owner }
+								any_political_movement = {
+									bpm_movement_is_liberal_bourgeois = yes
+									is_insurrectionary = yes
+								}
+							}
+						}
+					}
+				}
+				add = {
+					desc = "NEIGHBOURING_COUNTRY_WITH_REVOLUTION"
+					value = 0.15
+				}
+			}		
 		}
 	}		
 }
@@ -1808,6 +1989,23 @@ REPLACE:movement_feminist = {
 	}	
 	creation_weight = {
 		value = 100
+		if = {
+			limit = {
+				owner ?= { # If a movement of this type exists in a neighbouring country, make it more likely to spawn here as well
+					any_neighbouring_state = {
+						owner = {
+							prestige > ROOT.owner.prestige
+							any_political_movement = {
+								is_political_movement_type = movement_feminist
+							}
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
 	}	
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
@@ -2118,7 +2316,7 @@ REPLACE:movement_feminist = {
 	}	
 }
 
-REPLACE:movement_market_liberal = {
+movement_market_liberal = {
 	category = movement_category_ideological
 	
 	ideology = ideology_eco_market_liberal_mov
@@ -2141,22 +2339,10 @@ REPLACE:movement_market_liberal = {
 		ig:ig_liberals ?= {
 			bpm_ig_is_marginal = no
 		}
-		trigger_if = {
-			limit = {
-				OR = {
-					this ?= c:FRA
-					civil_war_origin_country ?= c:FRA
-				}
-			}
-			OR = {
-				has_variable = monarchy_stamped_out_var
-				AND = {
-					OR = {
-						has_variable = legitimist_restoration_var
-						has_variable = orleanist_restoration_var
-					}
-					has_variable = one_true_french_dynasty
-				}
+		
+		any_political_movement = {
+			NOR = {
+				is_political_movement_type = movement_market_liberal
 			}
 		}
 	}	
@@ -2186,6 +2372,13 @@ REPLACE:movement_market_liberal = {
 	}	
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
+	}
+	disband_trigger = {
+		any_political_movement = {
+			OR = {
+				is_political_movement_type = movement_market_liberal
+			}
+		}
 	}
 	
 	character_support_trigger = {
@@ -2596,12 +2789,31 @@ REPLACE:movement_market_liberal = {
 					value = 0.1
 					desc = "IS_PRE_MODERN_ABSOLUTIST"
 				}
-			}			
+			}	
+			if = {
+				limit = {
+					owner = {
+						any_neighbouring_state = {
+							owner = {
+								NOT = { THIS = ROOT.owner }
+								any_political_movement = {
+									bpm_movement_is_liberal_bourgeois = yes
+									is_insurrectionary = yes
+								}
+							}
+						}
+					}
+				}
+				add = {
+					desc = "NEIGHBOURING_COUNTRY_WITH_REVOLUTION"
+					value = 0.15
+				}
+			}		
 		}
 	}		
 }
 
-REPLACE:movement_national_liberal = {
+movement_national_liberal = {
 	category = movement_category_ideological
 	
 	ideology = ideology_sta_national_liberal
@@ -2618,22 +2830,9 @@ REPLACE:movement_national_liberal = {
 		ig:ig_liberals ?= {
 			bpm_ig_is_marginal = no
 		}
-		trigger_if = {
-			limit = {
-				OR = {
-					this ?= c:FRA
-					civil_war_origin_country ?= c:FRA
-				}
-			}
-			OR = {
-				has_variable = monarchy_stamped_out_var
-				AND = {
-					OR = {
-						has_variable = legitimist_restoration_var
-						has_variable = orleanist_restoration_var
-					}
-					has_variable = one_true_french_dynasty
-				}
+		any_political_movement = {
+			NOR = {
+				is_political_movement_type = movement_bonapartist
 			}
 		}
 	}	
@@ -2653,14 +2852,21 @@ REPLACE:movement_national_liberal = {
 		add_movement_enthusiasm_modifier = yes
 	}
 	disband_trigger = {
-		AND = {
-			has_law = law_type:law_protectionism
-			OR = {
-				has_law = law_type:law_interventionism
-				has_law = law_type:law_command_economy
-				has_law = law_type:law_laissez_faire
+		OR = {
+			AND = {
+				has_law = law_type:law_protectionism
+				OR = {
+					has_law = law_type:law_interventionism
+					has_law = law_type:law_command_economy
+					has_law = law_type:law_laissez_faire
+				}
+				has_law = law_type:law_compulsory_primary_school
 			}
-			has_law = law_type:law_compulsory_primary_school
+			any_political_movement = {
+				OR = {
+					is_political_movement_type = movement_bonapartist
+				}
+			}
 		}
 	}
 	
@@ -2965,6 +3171,13 @@ REPLACE:movement_national_liberal = {
 		}		
 		min = 0
 
+		multiply = { # Range from x0.55 to 2.05
+			desc = "POP_CULTURE_FERVOR"
+			value = culture.culture_current_fervor
+			subtract = 30
+			multiply = 0.015
+			add = 1
+		}
 		multiply = {
 			value = 0.012
 			multiply = pop_acceptance
@@ -3069,5 +3282,42 @@ REPLACE:movement_national_liberal = {
 			value = 1000
 		}		
 	}		
+
+	additional_radicalism_factors = {
+		add = { value = bpm_additional_radicalism_factors desc = "bpm_additional_radicalism_factors" }
+		owner = {
+			if = {
+				limit = {
+					bpm_country_is_pre_modern_absolutist = yes
+				}
+				add = {
+					value = 0.1
+					desc = "IS_PRE_MODERN_ABSOLUTIST"
+				}
+			}	
+			if = {
+				limit = {
+					owner = {
+						any_neighbouring_state = {
+							owner = {
+								NOT = { THIS = ROOT.owner }
+								any_political_movement = {
+									OR = {
+										bpm_movement_is_liberal_bourgeois = yes
+										bpm_movement_is_nationalist = yes
+									}
+									is_insurrectionary = yes
+								}
+							}
+						}
+					}
+				}
+				add = {
+					desc = "NEIGHBOURING_COUNTRY_WITH_REVOLUTION"
+					value = 0.15
+				}
+			}		
+		}
+	}
 }
 

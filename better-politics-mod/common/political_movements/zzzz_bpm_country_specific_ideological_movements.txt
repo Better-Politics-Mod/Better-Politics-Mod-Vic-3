@@ -9,7 +9,7 @@ REPLACE:movement_orleanist = {
 	creation_trigger = {
 		exists = c:FRA
 		OR = {
-			c:FRA = this
+			c:FRA ?= this
 			civil_war_origin_country ?= c:FRA
 		}
 		NOR = {
@@ -25,6 +25,26 @@ REPLACE:movement_orleanist = {
 	}
 	creation_weight = {
 		value = 100
+		if = {
+			limit = {
+				owner ?= { # If a movement of this type exists in a neighbouring country, make it more likely to spawn here as well
+					any_neighbouring_state = {
+						owner = {
+							prestige > ROOT.owner.prestige
+							any_political_movement = {
+								OR = {
+									is_political_movement_type = movement_market_liberal
+									is_political_movement_type = movement_orleanist
+								}
+							}
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
 	}	
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
@@ -492,7 +512,7 @@ REPLACE:movement_bonapartist = {
 	creation_trigger = {
 		exists = c:FRA
 		OR = {
-			c:FRA = this
+			c:FRA ?= this
 			civil_war_origin_country ?= c:FRA
 		}
 		NOR = {
@@ -508,6 +528,26 @@ REPLACE:movement_bonapartist = {
 	}
 	creation_weight = {
 		value = 100
+		if = {
+			limit = {
+				owner ?= { # If a movement of this type exists in a neighbouring country, make it more likely to spawn here as well
+					any_neighbouring_state = {
+						owner = {
+							prestige > ROOT.owner.prestige
+							any_political_movement = {
+								OR = {
+									is_political_movement_type = movement_national_liberal
+									is_political_movement_type = movement_bonapartist
+								}
+							}
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
 	}	
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
@@ -778,6 +818,14 @@ REPLACE:movement_bonapartist = {
 		}		
 		min = 0
 
+		multiply = { # Range from x0.55 to 2.05
+			desc = "POP_CULTURE_FERVOR"
+			value = culture.culture_current_fervor
+			subtract = 30
+			multiply = 0.015
+			add = 1
+		}
+
 		multiply = {
 			value = 0.012
 			multiply = pop_acceptance
@@ -952,7 +1000,7 @@ REPLACE:movement_legitimist = {
 	creation_trigger = {
 		exists = c:FRA
 		OR = {
-			c:FRA = this
+			c:FRA ?= this
 			civil_war_origin_country ?= c:FRA
 		}
 		NOR = {
@@ -968,6 +1016,26 @@ REPLACE:movement_legitimist = {
 	}
 	creation_weight = {
 		value = 100
+		if = {
+			limit = {
+				owner ?= { # If a movement of this type exists in a neighbouring country, make it more likely to spawn here as well
+					any_neighbouring_state = {
+						owner = {
+							prestige > ROOT.owner.prestige
+							any_political_movement = {
+								OR = {
+									bpm_movement_is_reactionary_monarchist = yes
+									religion = rel:catholic
+								}
+							}
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
 	}	
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
@@ -1405,6 +1473,25 @@ REPLACE:movement_legitimist = {
 				divide = 100
 				multiply = -0.15
 			}
+		}
+		if = {
+			limit = {
+				owner = {
+					any_neighbouring_state = {
+						owner = {
+							NOT = { THIS = ROOT.owner }
+							any_political_movement = {
+								bpm_movement_is_reactionary_monarchist = yes
+								is_insurrectionary = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				desc = "NEIGHBOURING_COUNTRY_WITH_REVOLUTION"
+				value = 0.15
+			}
 		}	
 	}
 }
@@ -1435,6 +1522,26 @@ REPLACE:movement_carlist = {
 	}
 	creation_weight = {
 		value = 100
+		if = {
+			limit = {
+				owner ?= { # If a movement of this type exists in a neighbouring country, make it more likely to spawn here as well
+					any_neighbouring_state = {
+						owner = {
+							prestige > ROOT.owner.prestige
+							any_political_movement = {
+								OR = {
+									bpm_movement_is_reactionary_monarchist = yes
+									religion = rel:catholic
+								}
+							}
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
 	}
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
@@ -1894,7 +2001,25 @@ REPLACE:movement_carlist = {
 		}	
 	
 		state_weight = {
-			value = 1		
+			value = 1
+			
+			subtract = state_urbanization_rate
+			
+			if = {
+				limit = { is_capital = yes }
+				if = {
+					limit = { owner ?= { has_law = law_type:law_monarchy } }
+					multiply = 10.0
+				}
+				else = {
+					multiply = 0.1
+				}
+			}			
+		}
+
+		interest_group_can_join = {
+			bpm_ig_is_anti_democratic = yes
+			bpm_ig_is_monarchist = yes
 		}
 	}
 	
@@ -1984,6 +2109,26 @@ REPLACE:movement_carlist = {
 				desc = "INSURRECTIONARY_CARLISTS"
 			}
 		}
+
+		if = {
+			limit = {
+				owner = {
+					any_neighbouring_state = {
+						owner = {
+							NOT = { THIS = ROOT.owner }
+							any_political_movement = {
+								bpm_movement_is_reactionary_monarchist = yes
+								is_insurrectionary = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				desc = "NEIGHBOURING_COUNTRY_WITH_REVOLUTION"
+				value = 0.15
+			}
+		}
 	}
 }
 
@@ -2009,6 +2154,26 @@ REPLACE:movement_miguelist = {
 	}
 	creation_weight = {
 		value = 100
+		if = {
+			limit = {
+				owner ?= { # If a movement of this type exists in a neighbouring country, make it more likely to spawn here as well
+					any_neighbouring_state = {
+						owner = {
+							prestige > ROOT.owner.prestige
+							any_political_movement = {
+								OR = {
+									bpm_movement_is_reactionary_monarchist = yes
+									religion = rel:catholic
+								}
+							}
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 2
+			}
+		}
 	}
 	on_created = {
 		add_movement_enthusiasm_modifier = yes
@@ -2136,6 +2301,11 @@ REPLACE:movement_miguelist = {
 		}
 		religion = rel:catholic
 	}
+
+	can_pressure_interest_group = {
+		bpm_ig_is_left_wing = no
+	}
+
 
 	pop_support_factors = {
 		movement_support_low_urbanization
@@ -2429,7 +2599,25 @@ REPLACE:movement_miguelist = {
 		}	
 	
 		state_weight = {
-			value = 1		
+			value = 1
+			
+			subtract = state_urbanization_rate
+			
+			if = {
+				limit = { is_capital = yes }
+				if = {
+					limit = { owner ?= { has_law = law_type:law_monarchy } }
+					multiply = 10.0
+				}
+				else = {
+					multiply = 0.1
+				}
+			}			
+		}
+
+		interest_group_can_join = {
+			bpm_ig_is_anti_democratic = yes
+			bpm_ig_is_monarchist = yes
 		}
 	}
 	
@@ -2505,6 +2693,25 @@ REPLACE:movement_miguelist = {
 				value = "owner.relations(c:PAP)"
 				divide = 100
 				multiply = -0.15
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					any_neighbouring_state = {
+						owner = {
+							NOT = { THIS = ROOT.owner }
+							any_political_movement = {
+								bpm_movement_is_reactionary_monarchist = yes
+								is_insurrectionary = yes
+							}
+						}
+					}
+				}
+			}
+			add = {
+				desc = "NEIGHBOURING_COUNTRY_WITH_REVOLUTION"
+				value = 0.15
 			}
 		}
 	}
@@ -3013,6 +3220,28 @@ movement_kaikoku = {
 				add = {
 					value = 0.1
 					desc = "IS_PRE_MODERN_ABSOLUTIST"
+				}
+			}
+			if = {
+				limit = {
+					owner = {
+						any_neighbouring_state = {
+							owner = {
+								NOT = { THIS = ROOT.owner }
+								any_political_movement = {
+									OR = {
+										bpm_movement_is_modernizer = yes
+										culture ?= ROOT.culture
+									}
+									is_insurrectionary = yes
+								}
+							}
+						}
+					}
+				}
+				add = {
+					desc = "NEIGHBOURING_COUNTRY_WITH_REVOLUTION"
+					value = 0.15
 				}
 			}			
 		}

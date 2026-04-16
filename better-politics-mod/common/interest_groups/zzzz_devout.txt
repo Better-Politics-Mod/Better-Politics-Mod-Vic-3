@@ -223,6 +223,7 @@ REPLACE:ig_devout = {
 					country_has_state_religion = rel:sunni
 					# Ibadi Arab Zanzibar still gets a Sunni Devout IG to represent the non-Ibadi majority
 					c:ZAN ?= this
+					c:DEI ?= this
 				}
 			}
 			ig:ig_devout = { 
@@ -408,6 +409,12 @@ REPLACE:ig_devout = {
 				spanish filipino_hispanophone
 			}
 		}
+		rule = {
+			trigger = {
+				this ?= c:DEI
+			}
+			cultures = { balinese batak bornean dayak javan malay moluccan sumatran }
+		}
 	}
 
 	on_character_ig_membership = {
@@ -430,9 +437,17 @@ REPLACE:ig_devout = {
 		else_if = {
 			limit = {
 				owner = {
-					NOR = {
-						has_law_or_variant = law_type:law_total_separation
-						has_law = law_type:law_state_atheism
+					c:DEI ?= this
+				}
+			}
+			change_character_religion = rel:sunni
+		}
+
+		else_if = {
+			limit = {
+				owner = {
+					NOT = {
+						country_has_state_religion = rel:atheist
 					}
 				}
 			}
@@ -444,21 +459,26 @@ REPLACE:ig_devout = {
 	}
 		
 	pop_potential = {
-		OR = {
-			has_state_religion = yes
-			AND = {
-				exists = c:BIC
-				owner ?= c:BIC
-				has_pop_religion = hindu
-			}
-			AND = {
-				exists = c:ZAN
-				owner ?= c:ZAN
-				has_pop_religion = sunni
+		trigger_if = {
+			limit = { owner = { country_has_state_religion = rel:atheist } }
+			NOT = { 
+				has_pop_religion = atheist
 			}
 		}
-		NOT = { 
-			has_pop_religion = atheist
+		trigger_else_if = {
+			limit = { owner ?= c:BIC }
+			has_pop_religion = hindu
+		}
+		trigger_else_if = {
+			limit = { owner ?= c:ZAN }
+			has_pop_religion = sunni
+		}
+		trigger_else_if = {
+			limit = { owner ?= c:DEI }
+			has_pop_religion = sunni
+		}
+		trigger_else = {
+			has_state_religion = yes
 		}
 	}
 	

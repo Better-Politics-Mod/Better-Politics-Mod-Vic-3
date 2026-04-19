@@ -1,4 +1,4 @@
-REPLACE:movement_religious_majority = {
+﻿REPLACE:movement_religious_majority = {
 	category = movement_category_religious
 	
 	ideology = ideology_traditionalist
@@ -10,8 +10,12 @@ REPLACE:movement_religious_majority = {
 	can_cause_obstinance = yes
 
 	creation_trigger = {
-		NOT = {
+		NAND = {
 			country_has_state_religion = rel:atheist
+			religion_percent_country = {
+				target = root.country_definition.religion
+				value < 0.4
+			}
 		}
 	}	
 	creation_weight = {
@@ -36,19 +40,24 @@ REPLACE:movement_religious_majority = {
 	on_created = {}
 
 	disband_trigger = {
-		scope:political_movement ?= {
-			religion = {
-				NOT = { is_state_religion = root }
-			}		
+		NOR = {
+			scope:political_movement ?= {
+				religion = {
+					is_state_religion = root
+				}		
+			}
+			religion_percent_country = {
+				target = scope:political_movement.religion
+  				value < 0.4
+			}
 		}
+		
 	}
 
 	can_pressure_interest_group = {
 		bpm_ig_is_non_religious = no
-		trigger_if = {
-			limit = { 
-				is_interest_group_type = ig_christian_democrats
-			}
+		OR = {
+			NOT = { is_interest_group_type = ig_christian_democrats }
 			scope:political_movement = { 
 				religion = rel:catholic
 			}
@@ -56,7 +65,13 @@ REPLACE:movement_religious_majority = {
 	}
 	
 	religion_selection_trigger = {
-		is_state_religion = scope:country
+		trigger_if = {
+			limit = { scope:country = { country_has_state_religion = rel:atheist } }
+			this = scope:country.country_definition.religion
+		}
+		trigger_else = {
+			is_state_religion = scope:country
+		}
 	}
 	religion_selection_weight = {
 		value = 100
@@ -79,7 +94,11 @@ REPLACE:movement_religious_majority = {
 		if = {
 			limit = {
 				interest_group ?= {
-					is_interest_group_type = ig_devout
+					bpm_ig_is_moralist = yes
+					OR = {
+						is_interest_group_type = ig_devout
+						is_interest_group_type = ig_reactionaries
+					}
 				}
 			}
 			multiply = {
@@ -192,7 +211,7 @@ REPLACE:movement_religious_majority = {
 				desc = "POP_ACCEPTANCE"
 				value = pop_acceptance
 				divide = 100
-				add = 0.25						
+				add = 0.25
 			}		
 		}
 
@@ -212,12 +231,16 @@ REPLACE:movement_religious_majority = {
 			limit = {
 				owner ?= {
 					any_political_movement = {
-						is_political_movement_type = movement_legitimist
+						OR = {
+							is_political_movement_type = movement_legitimist
+							is_political_movement_type = movement_miguelist
+							is_political_movement_type = movement_carlist
+						}
 					}
 				}
 			}
 			multiply = {
-				value = 0.25
+				value = 0.1
 			}
 		}
 		if = {
@@ -393,7 +416,7 @@ REPLACE:movement_religious_majority = {
 			max = 0.5
 			min = 0
 			desc = "STANDARD_OF_LIVING_FOR_RELIGION"
-		}
+		}		
 
 		
 
@@ -439,19 +462,20 @@ REPLACE:movement_religious_minority = {
 		value = 200
 	}		
 	can_pressure_interest_group = {
-		OR = {
-			bpm_ig_is_moralist = no
-			owner = { country_has_state_religion = rel:atheist }
-			AND = {
-				is_interest_group_type = ig_christian_democrats
-				scope:political_movement = { 
-					religion = rel:catholic
-				}
+		bpm_ig_is_non_religious = no
+		trigger_if = {
+			limit = { is_interest_group_type = ig_christian_democrats }
+			scope:political_movement = { 
+				religion = rel:catholic
 			}
 		}
-		
-		bpm_ig_is_non_religious = no
-		bpm_ig_is_right_wing = no
+		trigger_else_if = {
+			limit = { 
+				NOT = { owner = { country_has_state_religion = rel:atheist } }
+			}	
+			bpm_ig_is_right_wing = no
+			bpm_ig_is_moralist = no
+		}
 	}
 
 	on_created = {}
@@ -512,6 +536,17 @@ REPLACE:movement_religious_minority = {
 	}
 	
 	religion_selection_trigger = {
+		NAND = {
+			this = scope:country.country_definition.religion
+			scope:country = {
+				country_has_state_religion = rel:atheist
+				religion_percent_country = {
+					target = root.country_definition.religion
+					value > 0.4
+				}
+			}
+		}
+
 		NOT = { is_state_religion = scope:country }
 		NOT = { rel:atheist = this }
 		scope:country = {
@@ -705,6 +740,24 @@ REPLACE:movement_religious_minority = {
 			multiply = {
 				value = 1.5
 				desc = "CORPORATISM_TECH"
+			}
+		}
+
+		if = {
+			limit = {
+				scope:political_movement.religion = rel:catholic
+				owner ?= {
+					any_political_movement = {
+						OR = {
+							is_political_movement_type = movement_legitimist
+							is_political_movement_type = movement_miguelist
+							is_political_movement_type = movement_carlist
+						}
+					}
+				}
+			}
+			multiply = {
+				value = 0.05
 			}
 		}
 

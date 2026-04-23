@@ -502,6 +502,7 @@ REPLACE:ideology_republican_leader = {
 		law_technocracy = neutral
 		law_military_junta = neutral
 		law_organic_democracy = strongly_disapprove
+		law_colonial_administration = strongly_disapprove
 	}	
 
 	lawgroup_bureaucracy = {
@@ -758,12 +759,18 @@ REPLACE:ideology_republican_leader = {
 			}
 			add = 25
 		}
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 25
+		}
 		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
 		if = {
 			limit = {
 				has_variable = hungarian_revolution_increased_liberalism
 			}
-			add = 50
+			add = 25
 		}
 
 		# Pedro JE victory
@@ -841,6 +848,7 @@ REPLACE:ideology_radical = {
 		law_technocracy = disapprove
 		law_military_junta = disapprove
 		law_organic_democracy = strongly_disapprove
+		law_colonial_administration = strongly_disapprove
 	}
 
 	lawgroup_free_speech = {
@@ -855,6 +863,14 @@ REPLACE:ideology_radical = {
 		law_no_home_affairs = approve
 		law_national_guard = strongly_disapprove
 		law_secret_police = strongly_disapprove
+	}
+
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_promote_democratic_values = aprrove
+		law_repeatable_culture_promote_socialist_values = disapprove
+		#law_repeatable_culture_promote_patriotic_values = approve
+		law_repeatable_culture_promote_absolutist_values = strongly_disapprove
+		law_repeatable_culture_promote_ultranationalist_values = strongly_disapprove
 	}
 
 	lawgroup_repeatable_politics = {
@@ -1025,7 +1041,9 @@ REPLACE:ideology_radical = {
 	}
 
 	non_interest_group_leader_trigger = {
-        ideology_radical_valid_trigger = yes
+        interest_group = { 
+			ideology_radical_valid_trigger = yes 
+		}
 		# Agitators should have an ideology at odds with current laws
 		NAND = {
 			has_role = agitator
@@ -1106,6 +1124,11 @@ REPLACE:ideology_reformer = {
 		law_repeatable_politics_great_terror = strongly_disapprove
 	}
 	
+	lawgroup_repeatable_economy = {
+		law_repeatable_economy_agricultural_investment = approve
+		law_repeatable_economy_public_works = approve
+	}
+
 	interest_group_leader_trigger = {
 		ideology_reformer_valid_trigger = yes
 	}
@@ -1516,7 +1539,11 @@ REPLACE:ideology_feminist = {
 					add = 50
 				}
 			}
+			multiply = {
+				value = 1.5
+			}
 		}
+		
 	}
 
 	non_interest_group_leader_trigger = {
@@ -1533,28 +1560,47 @@ REPLACE:ideology_feminist = {
 	}
 	
 	non_interest_group_leader_weight = {
-		value = {
-			value = 50
-			# more likely if character is a woman after mass propaganda
-			if = {
-				limit = {
-					owner = { has_technology_researched = mass_propaganda }
-					is_female = yes
-				}
-				multiply = {
-					value = 1.25
-				}
-			}
-			# Pedro JE victory
-			if = {
-				limit = {
-					owner = {
-						has_variable = brz_enduring_empire
+		value = 50
+		# more likely if character is a woman after mass propaganda
+		if = {
+		limit = {
+			owner = {
+				OR = {
+					has_law_or_variant = law_type:law_womens_suffrage
+					AND = {
+						country_has_voting_franchise = no
+						has_law_or_variant = law_type:law_women_in_the_workplace
 					}
 				}
-				add = 50
 			}
 		}
+		add = -50
+	}
+	# more likely with limited women's rights
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law_or_variant = law_type:law_no_womens_rights
+						has_law_or_variant = law_type:law_women_own_property
+					}
+				}
+			}
+			multiply = {
+				value = 1.5
+			}
+		}
+		
+		if = {
+			limit = {
+				owner = { has_technology_researched = mass_propaganda }
+				is_female = yes
+			}
+			multiply = {
+				value = 1.25
+			}
+		}
+			
 	}
 }
 
@@ -1588,18 +1634,56 @@ ideology_serfdom_reformer = {
 	interest_group_leader_weight = {
 		value = 50
 		if = {
-			limit = { is_interest_group_type = ig_landowners}
-			add = -45
+			limit = { 
+				OR = {
+					is_interest_group_type = ig_landowners
+					bpm_ig_is_pro_serfdom = yes
+				}
+			}
+			value = 0
 		}
 		if = {
 			limit = { owner = { var:bpm_political_stability <= 75 } }
-			add = 50
+			add = 25
 		}
 		if = {
 			limit = { owner = { var:bpm_political_stability <= 50 } }
+			add = 25
+		}
+		if = {
+			limit = {
+				owner = { 
+					radical_fraction = {
+						value >= 0.75
+						pop_type = peasants
+					} 
+				}
+			}
+			add = 100
+		}
+		else_if = {
+			limit = {
+				owner = {
+					radical_fraction = {
+						value >= 0.5
+						pop_type = peasants
+					}
+				}
+			}
 			add = 50
 		}
-
+		else_if = {
+			limit = {
+				owner = { 
+					radical_fraction = {
+						value >= 0.25
+						pop_type = peasants
+					}
+				}
+			}
+			add = 25
+		}
+		
 	}
 
 	# Character scope
@@ -1613,11 +1697,44 @@ ideology_serfdom_reformer = {
 		value = 50
 		if = {
 			limit = { owner = { var:bpm_political_stability <= 75 } }
-			add = 50
+			add = 25
 		}
 		if = {
 			limit = { owner = { var:bpm_political_stability <= 50 } }
+			add = 25
+		}
+		if = {
+			limit = {
+				owner = { 
+					radical_fraction = {
+						value >= 0.75
+						pop_type = peasants
+					} 
+				}
+			}
+			add = 100
+		}
+		else_if = {
+			limit = {
+				owner = {
+					radical_fraction = {
+						value >= 0.5
+						pop_type = peasants
+					}
+				}
+			}
 			add = 50
+		}
+		else_if = {
+			limit = {
+				owner = { 
+					radical_fraction = {
+						value >= 0.25
+						pop_type = peasants
+					}
+				}
+			}
+			add = 25
 		}
 		if = {
 			limit = { has_trait = tactful }
@@ -2301,6 +2418,7 @@ ideology_socialist_leader = {
 		law_military_junta = strongly_disapprove
 		law_technocracy = disapprove
 		law_organic_democracy = strongly_disapprove
+		law_colonial_administration = strongly_disapprove
 	}
 	
 	lawgroup_economic_system = {
@@ -2337,8 +2455,15 @@ ideology_socialist_leader = {
 		law_no_workers_rights = strongly_disapprove
 	}
 
+	lawgroup_work_time_regulations = {
+		law_unregulated_work_time = disapprove
+		law_token_time_regulations = neutral
+		law_limited_work_hours = approve
+		law_protected_leisure = approve
+	}
+
 	lawgroup_slavery = {
-		law_slavery_banned = approve
+		law_slavery_banned = neutral
 		law_debt_slavery = strongly_disapprove
 		law_slave_trade = strongly_disapprove
 		law_legacy_slavery = strongly_disapprove
@@ -2481,6 +2606,7 @@ ideology_syndicalist = {
 		law_military_junta = strongly_disapprove
 		law_technocracy = disapprove
 		law_organic_democracy = strongly_disapprove
+		law_colonial_administration = strongly_disapprove
 	}
 
 	lawgroup_economic_system = {
@@ -2499,6 +2625,12 @@ ideology_syndicalist = {
 		law_no_social_security = strongly_disapprove
 		law_wage_subsidies = approve
 		law_old_age_pension = strongly_approve
+	}
+	lawgroup_work_time_regulations = {
+		law_unregulated_work_time = strongly_disapprove
+		law_token_time_regulations = strongly_disapprove
+		law_limited_work_hours = disapprove
+		law_protected_leisure = neutral
 	}
 
 	lawgroup_governance_principles = {
@@ -2678,6 +2810,12 @@ REPLACE:ideology_social_democrat = {
 		law_wage_subsidies = approve
 		law_old_age_pension = strongly_approve
 	}
+	lawgroup_work_time_regulations = {
+		law_unregulated_work_time = strongly_disapprove
+		law_token_time_regulations = disapprove
+		law_limited_work_hours = neutral
+		law_protected_leisure = approve
+	}
 
 	lawgroup_labour_associations = {
 		law_combination_acts = strongly_disapprove
@@ -2767,6 +2905,20 @@ REPLACE:ideology_social_democrat = {
 			}
 			add = 10
 		}
+		# liberal and/or radical leaders have a higher spawn chance if you succeed in Portugal's Second Liberalism.
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 10
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+		if = {
+			limit = {
+				has_variable = hungarian_revolution_increased_liberalism
+			}
+			add = 10
+		}
 		# Pedro JE victory
 		if = {
 			limit = {
@@ -2835,6 +2987,12 @@ REPLACE:ideology_communist = {
 		law_worker_protections = strongly_approve
 		law_regulatory_bodies = neutral
 		law_no_workers_rights = strongly_disapprove
+	}
+	lawgroup_work_time_regulations = {
+		law_unregulated_work_time = strongly_disapprove
+		law_token_time_regulations = disapprove
+		law_limited_work_hours = neutral
+		law_protected_leisure = approve
 	}
 
 	lawgroup_land_reform = {
@@ -2950,20 +3108,17 @@ REPLACE:ideology_communist = {
 			}
 			multiply = 1.25
 		}
-		value = {
-			value = 100
-			if = {
-				limit = {
-					owner = { has_variable = communism_1_done }
-				}
-				multiply = 3
+		if = {
+			limit = {
+				owner = { has_variable = communism_1_done }
 			}
-			if = {
-				limit = {
-					owner = { has_variable = election_communist_support }
-				}
-				multiply = 2
+			multiply = 3
+		}
+		if = {
+			limit = {
+				owner = { has_variable = election_communist_support }
 			}
+			multiply = 2
 		}
 		# Syndicalism JE's influence shifts chances
 		multiply = {
@@ -3065,20 +3220,17 @@ REPLACE:ideology_communist = {
 				}
 				multiply = 1.25
 			}
-			value = {
-				value = 100
-				if = {
-					limit = {
-						owner = { has_variable = communism_1_done }
-					}
-					multiply = 3
+			if = {
+				limit = {
+					owner = { has_variable = communism_1_done }
 				}
-				if = {
-					limit = {
-						owner = { has_variable = election_communist_support }
-					}
-					multiply = 2
+				multiply = 3
+			}
+			if = {
+				limit = {
+					owner = { has_variable = election_communist_support }
 				}
+				multiply = 2
 			}
 			# Syndicalism JE's influence shifts chances
 			multiply = {
@@ -3513,6 +3665,14 @@ REPLACE:ideology_fascist = {
 		law_repeatable_culture_promote_absolutist_values = approve
 		law_repeatable_culture_promote_ultranationalist_values = strongly_approve
 	}
+
+	lawgroup_repeatable_military = {
+ 		law_repeatable_military_military_reform = neutral
+ 		law_repeatable_military_parades_and_drills = strongly_approve
+		law_repeatable_military_improve_soldier_conditions = strongly_disapprove
+ 		law_repeatable_military_army_defunding = strongly_disapprove
+ 		law_repeatable_military_war_propaganda = strongly_approve
+	}
 	
 	interest_group_leader_trigger = {
 		ideology_fascist_valid_trigger = yes
@@ -3554,7 +3714,8 @@ REPLACE:ideology_fascist = {
 					any_scope_state = {
 						is_incorporated = yes
 						any_scope_pop = {
-							pop_acceptance < 40
+							pop_acceptance < acceptance_status_4
+							total_size >= 1000
 						}
 					}
 				}
@@ -3657,6 +3818,17 @@ REPLACE:ideology_fascist = {
 			limit = {
 				owner = {
 					c:BRZ ?= this
+				}
+			}
+			multiply = 0
+		}
+		# Minority cultures won't favor highly ethno-supremacist ideologies
+		if = {
+			limit = {
+				leader = {
+					culture = {
+						NOT = { is_primary_culture_of = prev.owner }
+					}
 				}
 			}
 			multiply = 0
@@ -3855,6 +4027,7 @@ REPLACE:ideology_anarchist = {
 		law_technocracy = strongly_disapprove
 		law_military_junta = strongly_disapprove
 		law_organic_democracy = strongly_disapprove
+		law_colonial_administration = strongly_disapprove
 	}
 
 	lawgroup_economic_system = {	
@@ -4066,6 +4239,7 @@ ideology_anarchist_syndicalist = {
 		law_technocracy = strongly_disapprove
 		law_military_junta = strongly_disapprove
 		law_organic_democracy = strongly_disapprove
+		law_colonial_administration = strongly_disapprove
 	}
 
 	lawgroup_economic_system = {	
@@ -4257,6 +4431,7 @@ ideology_agrarian_socialist_leader = {
 		law_technocracy = disapprove
 		law_military_junta = disapprove
 		law_organic_democracy = strongly_disapprove
+		law_colonial_administration = strongly_disapprove
 	}
 
 	lawgroup_land_reform = {
@@ -4455,11 +4630,13 @@ REPLACE:ideology_ethno_nationalist = {
 		# More likely with unowned claims
 		if = {
 			limit = {
-				any_state = {
-					has_claim_by = root.owner
-				}
+				owner.number_of_claims > 0
 			}
-			add = 75
+			add = {
+				value = owner.number_of_claims
+				multiply = 25
+				max = 100
+			}
 		}
 		# More likely with a convenient scapegoat
 		if = {
@@ -4475,21 +4652,31 @@ REPLACE:ideology_ethno_nationalist = {
 			}
 			add = 50
 		}
-		# More likely with a convenient scapegoat and is angry without ethnostate
+		# More likely with a convenient scapegoat
 		if = {
 			limit = {
 				owner = {
-					NOT = { has_law_or_variant = law_type:law_ethnostate }
 					any_scope_state = {
 						is_incorporated = yes
 						any_scope_pop = {
-							pop_acceptance < 40
+							pop_acceptance < acceptance_status_4
 						}
 					}
 				}
-				ig_approval <= -5
 			}
-			add = 75
+			add = 50
+			if = { # And if angry without ethnostate
+				limit = {
+					owner = {
+						NOT = { has_law_or_variant = law_type:law_ethnostate }
+					}
+					ig_approval <= -5
+				}
+				subtract = {
+					value = ig_approval
+					multiply = 5
+				}
+			}
 		}
 		# More likely if angry and issues are relevant
 		if = {
@@ -4690,7 +4877,7 @@ REPLACE:ideology_market_liberal = {
 		law_command_economy = strongly_disapprove
 		law_cooperative_ownership = disapprove
 		law_industry_banned = strongly_disapprove
-		law_extraction_economy = strongly_disapprove
+		law_extraction_economy = disapprove
 	}
 	
 	lawgroup_childrens_rights = {
@@ -4710,6 +4897,13 @@ REPLACE:ideology_market_liberal = {
 		law_no_workers_rights = approve
 		law_regulatory_bodies = disapprove
 		law_worker_protections = strongly_disapprove
+	}
+
+	lawgroup_work_time_regulations = {
+		law_unregulated_work_time = neutral
+		law_token_time_regulations = neutral
+		law_limited_work_hours = disapprove
+		law_protected_leisure = disapprove
 	}
 
 	lawgroup_land_reform = {
@@ -4953,6 +5147,7 @@ REPLACE:ideology_authoritarian = {
 		law_autocracy = approve
 		law_military_junta = approve
 		law_organic_democracy = disapprove
+		law_colonial_administration = neutral
 	}
 
 	lawgroup_free_speech = {
@@ -5403,6 +5598,19 @@ REPLACE:ideology_humanitarian = {
 			}
 			add = 10
 		}
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 10
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+		if = {
+			limit = {
+				has_variable = hungarian_revolution_increased_liberalism
+			}
+			add = 10
+		}
 	}
 
 	non_interest_group_leader_trigger = {
@@ -5556,6 +5764,19 @@ REPLACE:ideology_humanitarian = {
 			}
 			add = 10
 		}
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 10
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+		if = {
+			limit = {
+				has_variable = hungarian_revolution_increased_liberalism
+			}
+			add = 10
+		}
 	}
 }
 
@@ -5610,11 +5831,11 @@ REPLACE:ideology_jacksonian_democrat = {
 
 	lawgroup_repeatable_culture = {
 		law_repeatable_culture_invite_foreign_experts = neutral
-		law_repeatable_culture_promote_democratic_values = approve
+		law_repeatable_culture_promote_democratic_values = strongly_approve
 		law_repeatable_culture_affirmative_action = strongly_disapprove
 		law_repeatable_culture_promote_socialist_values = strongly_disapprove
 		law_repeatable_culture_promote_patriotic_values = strongly_approve
-		law_repeatable_culture_promote_absolutist_values = neutral
+		law_repeatable_culture_promote_absolutist_values = strongly_disapprove
 		law_repeatable_culture_promote_ultranationalist_values = neutral
 	}
 
@@ -5803,7 +6024,7 @@ REPLACE:ideology_positivist = {
 	}
 	
 	lawgroup_repeatable_religion = {
-		law_repeatable_religion_promote_state_religion = strongly_disapprove
+		law_repeatable_religion_promote_state_religion = disapprove
 		law_repeatable_religion_anti_secular_reaction = strongly_disapprove
 		law_repeatable_religion_promote_secular_values = strongly_approve
 		law_repeatable_religion_anti_religious_violence = approve
@@ -5958,6 +6179,12 @@ REPLACE:ideology_land_reformer = {
 		law_commercialized_agriculture = neutral
 		law_peasant_proprietorship = approve
 		law_collectivized_agriculture = neutral
+	}
+
+	lawgroup_repeatable_economy = {
+		law_repeatable_economy_agricultural_investment = approve
+		law_repeatable_economy_peasant_corvee = strongly_disapprove
+		law_repeatable_economy_forced_industrialization = disapprove
 	}
 
 	interest_group_leader_trigger = {
@@ -6124,6 +6351,7 @@ REPLACE:ideology_integralist = {
 		law_anarchy = strongly_disapprove
 		law_military_junta = approve
 		law_organic_democracy = strongly_approve
+		law_colonial_administration = disapprove
 	}
 
 	lawgroup_centralization = {
@@ -6132,6 +6360,16 @@ REPLACE:ideology_integralist = {
 		law_federated = approve
 		law_confederated = strongly_approve
 		law_ad_hoc_centralization = neutral
+	}
+
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_invite_foreign_experts = disapprove
+		law_repeatable_culture_promote_democratic_values = disapprove
+		law_repeatable_culture_affirmative_action = neutral
+		law_repeatable_culture_promote_socialist_values = strongly_disapprove
+		law_repeatable_culture_promote_patriotic_values = approve
+		law_repeatable_culture_promote_absolutist_values = approve
+		law_repeatable_culture_promote_ultranationalist_values = neutral
 	}
 
 	lawgroup_repeatable_religion = {
@@ -6324,6 +6562,7 @@ REPLACE:ideology_liberal_leader = {
 		law_anarchy = strongly_disapprove
 		law_military_junta = strongly_disapprove
 		law_organic_democracy = strongly_disapprove
+		law_colonial_administration = disapprove
 	}
 	
 	lawgroup_bureaucracy = {
@@ -6421,6 +6660,19 @@ REPLACE:ideology_liberal_leader = {
 			}
 			add = 25
 		}
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 25
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+		if = {
+			limit = {
+				has_variable = hungarian_revolution_increased_liberalism
+			}
+			add = 25
+		}
 	}
 
 	non_interest_group_leader_trigger = {
@@ -6458,6 +6710,7 @@ REPLACE:ideology_corporatist_leader = {
 		law_anarchy = strongly_disapprove
 		law_military_junta = neutral
 		law_organic_democracy = approve
+		law_colonial_administration = disapprove
 	}
 
     lawgroup_education_system = {
@@ -6798,6 +7051,19 @@ REPLACE:ideology_humanitarian_royalist = {
 			}
 			add = 50
 		}
+		if = {
+			limit = {
+				has_variable = por_second_liberalism_victory
+			}
+			add = 50
+		}
+		# liberal and/or radical leaders have a higher spawn chance if the Hungarian Revolution was successful.
+		if = {
+			limit = {
+				has_variable = hungarian_revolution_increased_liberalism
+			}
+			add = 50
+		}
 	}
 
 	non_interest_group_leader_trigger = {
@@ -6871,6 +7137,14 @@ REPLACE:ideology_orleanist = {
 		law_repeatable_economy_peasant_corvee = disapprove
 		law_repeatable_economy_public_works = strongly_disapprove
 		law_repeatable_economy_forced_industrialization = strongly_disapprove
+	}
+
+	lawgroup_repeatable_politics = {
+		law_repeatable_politics_modernize_bureaucracy = approve
+		law_repeatable_politics_anti_corruption_drive = neutral
+		law_repeatable_politics_military_purge = neutral
+		law_repeatable_politics_bureaucratic_purge = disapprove
+		law_repeatable_politics_popular_concessions = disapprove
 	}
 
 	interest_group_leader_trigger = {
@@ -7001,6 +7275,13 @@ REPLACE:ideology_legitimist = {
 		law_right_of_assembly = disapprove
 		law_censorship = approve
 		law_outlawed_dissent = strongly_approve
+	}
+
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_promote_democratic_values = strongly_disapprove
+		law_repeatable_culture_promote_socialist_values = strongly_disapprove
+		law_repeatable_culture_invite_foreign_experts = yes
+		law_promote_absolutist_values = approve
 	}
 
 	lawgroup_repeatable_religion = {
@@ -7140,6 +7421,15 @@ REPLACE:ideology_bonapartist = {
  		law_repeatable_military_army_defunding = strongly_disapprove
  		law_repeatable_military_war_propaganda = approve
 	}
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_invite_foreign_experts = neutral
+		law_repeatable_culture_promote_democratic_values = neutral
+		law_repeatable_culture_affirmative_action = disapprove
+		law_repeatable_culture_promote_socialist_values = strongly_disapprove
+		law_repeatable_culture_promote_patriotic_values = strongly_approve
+		law_repeatable_culture_promote_absolutist_values = strongly_disapprove
+		law_repeatable_culture_promote_ultranationalist_values = neutral
+	}
 
 	interest_group_leader_trigger = {
 		# no monarchists in countries with strong republican tradition
@@ -7264,6 +7554,17 @@ ideology_donghak = {
 		law_free_trade = strongly_disapprove
 	}		
 
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_invite_foreign_experts = strongly_disapprove
+		law_repeatable_culture_promote_democratic_values = disapprove
+		law_repeatable_culture_affirmative_action = disapprove
+		law_repeatable_culture_promote_socialist_values = strongly_disapprove
+		law_repeatable_culture_promote_patriotic_values = approve
+		law_repeatable_culture_promote_absolutist_values = approve
+		law_repeatable_culture_promote_ultranationalist_values = approve
+	}
+
+
 	interest_group_leader_trigger = {
 		ideology_donghak_ideology_valid_trigger = yes
 	}
@@ -7332,6 +7633,14 @@ ideology_dove = {
 		law_premodern_diplomacy = disapprove
 	}
 	
+	lawgroup_repeatable_military = {
+ 		law_repeatable_military_military_reform = neutral
+ 		law_repeatable_military_parades_and_drills = disapprove
+		law_repeatable_military_improve_soldier_conditions = approve
+ 		law_repeatable_military_army_defunding = neutral
+ 		law_repeatable_military_war_propaganda = neutral
+	}
+
 	interest_group_leader_trigger = {
 		ideology_dove_ideology_leader_valid_trigger = yes
 	}
@@ -7404,7 +7713,7 @@ ideology_dove = {
 		# Agitators should have an ideology at odds with current laws
 		NAND = {
 			has_role = agitator
-			owner = { bpm_country_laws_foreign_policy_dove = no }
+			owner = { bpm_country_laws_foreign_policy_dove = yes }
 		}
 	}
 	
@@ -7429,6 +7738,14 @@ ideology_revolutionary_hawk = {
 		law_premodern_diplomacy = strongly_disapprove
 	}
 	
+
+	lawgroup_repeatable_military = {
+ 		law_repeatable_military_military_reform = approve
+ 		law_repeatable_military_parades_and_drills = neutral
+		law_repeatable_military_improve_soldier_conditions = approve
+ 		law_repeatable_military_army_defunding = strongly_disapprove
+ 		law_repeatable_military_war_propaganda = strongly_approve
+	}
 	interest_group_leader_trigger = {
 		ideology_revolutionary_hawk_valid_trigger = yes
 	}
@@ -7557,7 +7874,7 @@ REPLACE:ideology_traditionalist_minoritarian = {
 
 	lawgroup_repeatable_religion = {
 		law_repeatable_religion_promote_state_religion = strongly_disapprove
-		law_repeatable_religion_anti_secular_reaction = strongly_disapprove
+		law_repeatable_religion_anti_secular_reaction = neutral
 		law_repeatable_religion_promote_secular_values = strongly_disapprove
 		law_repeatable_religion_anti_religious_violence = strongly_disapprove
 	}
@@ -7616,7 +7933,18 @@ REPLACE:ideology_traditionalist_minoritarian = {
 			}
 			add = -25
 		}
+
+		# Women won't favor highly patriarchal ideologies
+		if = {
+			limit = {
+				leader = {
+					is_female = yes
+				}
+			}
+			multiply = 0
+		}
 	}
+	
 }
 
 REPLACE:ideology_utilitarian_leader = {
@@ -7624,6 +7952,10 @@ REPLACE:ideology_utilitarian_leader = {
 
 	character_ideology = yes
 	show_in_list = yes
+	lawgroup_distribution_of_power = {
+		law_colonial_administration = strongly_approve
+		law_technocracy = strongly_approve
+	}
 
 	lawgroup_childrens_rights = {
 		law_compulsory_primary_school = strongly_approve
@@ -7650,7 +7982,7 @@ REPLACE:ideology_utilitarian_leader = {
 		law_debt_slavery = strongly_disapprove		
 		law_slave_trade = strongly_disapprove
 		law_legacy_slavery = disapprove
-		law_colonial_slavery = disapprove
+		law_colonial_slavery = strongly_disapprove
 	}
 
 	lawgroup_taxation = {
@@ -7674,6 +8006,23 @@ REPLACE:ideology_utilitarian_leader = {
 		law_repeatable_economy_peasant_corvee = strongly_disapprove
 		law_repeatable_economy_public_works = approve
 		law_repeatable_economy_forced_industrialization = strongly_disapprove
+	}
+
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_invite_foreign_experts = approve
+		law_repeatable_culture_affirmative_action = approve
+		law_repeatable_culture_promote_democratic_values = disapprove
+		law_repeatable_culture_promote_absolutist_values = strongly_disapprove
+		law_repeatable_culture_promote_patriotic_values = strongly_disapprove
+		law_repeatable_culture_promote_socialist_values = strongly_disapprove
+		law_repeatable_culture_promote_ultranationalist_values = strongly_disapprove
+	}
+
+	lawgroup_repeatable_religion = {
+		law_repeatable_religion_promote_secular_values = approve
+		law_repeatable_religion_promote_state_religion = neutral
+		law_repeatable_religion_anti_religious_violence = disapprove
+		law_repeatable_religion_anti_secular_reaction = strongly_disapprove
 	}
 
 	country_trigger = {
@@ -7769,6 +8118,7 @@ REPLACE:ideology_sovereignist_leader = { # For colonised peoples
 	lawgroup_policing = {
 		law_local_police = approve
 		law_no_police = neutral
+		law_elected_police = neutral
 		law_dedicated_police = disapprove
 		law_militarized_police = strongly_disapprove
 	}	
@@ -7788,11 +8138,26 @@ REPLACE:ideology_sovereignist_leader = { # For colonised peoples
 	
 	lawgroup_citizenship = {
 		law_ethnostate = strongly_disapprove
-		law_national_supremacy = disapprove
-		law_racial_segregation = disapprove
-		law_cultural_exclusion = neutral
+		law_national_supremacy = neutral
+		law_racial_segregation = strognly_disapprove
+		law_cultural_exclusion = approve
 		law_multicultural = approve	
-		law_subjecthood = disapprove
+		law_subjecthood = strongly_disapprove
+	}
+
+	lawgroup_distribution_of_power = {
+		law_colonial_administration = strongly_diapprove
+	}
+
+	lawgroup_economic_system = {
+		law_traditionalism = strongly_diapprove
+		law_extraction_economy = strongly_diapprove
+		law_industry_banned = strongly_diapprove
+		law_agrarianism = disapprove
+		law_cooperative_ownership = disapprove
+		law_laissez_faire = neutral
+		law_interventionism = approve
+		law_command_economy = approve
 	}
 
 	lawgroup_repeatable_politics = {
@@ -7836,7 +8201,332 @@ REPLACE:ideology_sovereignist_leader = { # For colonised peoples
 	
 	non_interest_group_leader_weight = {
 		value = 100
+		if = {
+			limit = {
+				has_role = agitator
+			}
+			multiply = 2
+		}
 	}	
+}
+
+REPLACE:ideology_utopian = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_utopian.dds"
+
+	character_ideology = yes
+
+	lawgroup_labor_rights = {
+		law_worker_protections = strongly_approve
+		law_regulatory_bodies = approve
+		law_no_workers_rights = neutral
+	}
+	lawgroup_work_time_regulations = {
+		law_unregulated_work_time = strongly_disapprove
+		law_token_time_regulations = disapprove
+		law_limited_work_hours = neutral
+		law_protected_leisure = approve
+	}
+
+	lawgroup_distribution_of_power = {
+		law_universal_suffrage = strongly_approve
+		law_census_voting = approve
+		law_wealth_voting = neutral
+		law_technocracy = neutral
+		law_landed_voting = disapprove
+		law_anarchy = neutral
+		law_oligarchy = strongly_disapprove
+		law_autocracy = strongly_disapprove
+		law_organic_democracy = strongly_disapprove
+	}
+
+	lawgroup_governance_principles = {
+		law_monarchy = strongly_disapprove
+		law_presidential_republic = approve
+		law_parliamentary_republic = approve
+		law_corporate_state = neutral
+		law_theocracy = strongly_disapprove
+		law_council_republic = approve
+	}
+
+	lawgroup_economic_system = {
+		law_command_economy = approve
+		law_cooperative_ownership = strongly_approve
+		law_interventionism = approve
+		law_agrarianism = approve
+		law_traditionalism = neutral
+		law_laissez_faire = strongly_disapprove
+		law_industry_banned = neutral
+		law_extraction_economy = strongly_disapprove
+	}
+
+	lawgroup_land_reform = {
+		law_serfdom = strongly_disapprove
+		law_commercialized_agriculture = disapprove
+		law_tenant_farmers = disapprove
+		law_homesteading = approve
+		law_collectivized_agriculture = approve
+	}
+
+	lawgroup_slavery = {
+		law_slavery_banned = neutral
+		law_legacy_slavery = disapprove
+		law_colonial_slavery = disapprove
+		law_debt_slavery = strongly_disapprove
+		law_slave_trade = strongly_disapprove
+	}
+
+	country_trigger = {
+		has_technology_researched = egalitarianism
+		NOT = {
+			has_technology_researched = socialism
+			has_technology_researched = anarchism
+			has_technology_researched = corporatism
+		}
+	}
+
+	interest_group_leader_trigger = {
+		ideology_utopian_valid_trigger = yes
+	}
+	interest_group_leader_weight = {
+		value = 50
+		if = {
+			limit = {
+				is_interest_group_type = ig_intelligentsia
+			}
+			add = 25
+		}
+	}
+
+	non_interest_group_leader_trigger = {
+		# Agitator ideologies should disapprove of a current law
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law_or_variant = law_type:law_cooperative_ownership
+				has_law_or_variant = law_type:law_universal_suffrage
+				has_law_or_variant = law_type:law_worker_protections
+				OR = {
+					has_law_or_variant = law_type:law_collectivized_agriculture
+					has_law_or_variant = law_type:law_homesteading
+				}
+				OR = {
+					has_law_or_variant = law_type:law_presidential_republic
+					has_law_or_variant = law_type:law_parliamentary_republic
+					has_law_or_variant = law_type:law_council_republic
+				}
+			}
+		}
+		# Monarchs cannot be republicans
+		NAND = {
+			owner = {
+				has_law = law_type:law_monarchy
+			}
+			OR = {
+				is_ruler = yes
+				is_heir = yes
+			}
+		}
+		interest_group = {
+			ideology_utopian_valid_trigger = yes
+		}
+	}
+
+	non_interest_group_leader_weight = {
+		value = 50
+		if = {
+			limit = {
+				is_interest_group_type = ig_intelligentsia
+			}
+			add = 25
+		}
+	}
+}
+
+REPLACE:ideology_modernizer_leader = {
+	icon = "gfx/interface/icons/ideology_icons/ideology_leader/idealogy_leader_modernizer.dds"
+
+	character_ideology = yes
+
+	lawgroup_trade_policy = {
+		law_protectionism = approve
+		law_isolationism = strongly_disapprove
+		law_mercantilism = disapprove
+		law_free_trade = neutral
+	}
+
+	lawgroup_economic_system = {
+		law_extraction_economy = strongly_disapprove
+		law_cooperative_ownership = strongly_disapprove
+		law_command_economy = neutral
+		law_interventionism = approve
+		law_agrarianism = disapprove
+		law_traditionalism = strongly_disapprove
+		law_laissez_faire = neutral
+		law_industry_banned = strongly_disapprove
+	}
+
+	lawgroup_taxation = {
+		law_per_capita_based_taxation = approve
+		law_proportional_taxation = strongly_approve
+		law_graduated_taxation = strongly_approve
+		law_land_based_taxation = neutral
+		law_consumption_based_taxation = disapprove
+	}
+
+	lawgroup_education_system = {
+		law_public_schools = approve
+		law_private_schools = neutral
+		law_religious_schools = neutral
+		law_no_schools = disapprove
+	}
+
+	lawgroup_land_reform = {
+		law_serfdom = disapprove
+		law_tenant_farmers = neutral
+		law_homesteading = neutral
+		law_collectivized_agriculture = disapprove
+		law_commercialized_agriculture = approve
+	}
+
+
+	lawgroup_centralization = {
+		law_ad_hoc_centralization = strongly_disapprove
+	}
+
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_invite_foreign_experts = strongly_approve
+	}
+
+	lawgroup_repeatable_economy = {
+		law_repeatable_economy_forced_industrialization = neutral
+		law_repeatable_economy_public_works = approve
+	}
+
+	lawgroup_repeatable_politics = {
+		law_repeatable_politics_modernize_bureaucracy = approve
+		law_repeatable_politics_anti_corruption_drive = approve
+	}
+
+	lawgroup_repeatable_military = {
+		law_repeatable_military_military_reform = approve
+		law_repeatable_military_parades_and_drills = disapprove
+		law_repeatable_military_army_defunding = disapprove
+	}
+
+	country_trigger = {
+		has_technology_researched = academia
+	}
+
+	interest_group_leader_trigger = {
+		ideology_modernizer_leader_valid_trigger = yes
+	}
+
+	non_interest_group_leader_trigger = {
+		# Agitators should have an ideology at odds with current laws
+		NAND = {
+			has_role = agitator
+			owner = {
+				has_law_or_variant = law_type:law_protectionism
+				has_law_or_variant = law_type:law_compulsory_primary_school
+				has_law_or_variant = law_type:law_public_schools
+				has_law_or_variant = law_type:law_interventionism
+				has_law_or_variant = law_type:law_commercialized_agriculture
+				OR = {
+					has_law_or_variant = law_type:law_proportional_taxation
+					has_law_or_variant = law_type:law_graduated_taxation
+				}
+			}
+		}
+		interest_group = {
+			ideology_modernizer_leader_valid_trigger = yes
+		}
+	}
+
+	interest_group_leader_weight = {
+		value = 100
+		# More likely for Petty Bourgeoisie
+		if = {
+			limit = {
+				bpm_ig_is_urban_institutional = yes
+				bpm_ig_is_middle_institutional = yes
+			}
+			add = 50
+		}
+		# More likely if Unrecognized Country
+		if = {
+			limit = {
+				owner = {
+					is_country_type = unrecognized
+				}
+			}
+			add = 50
+		}
+		if = {
+			limit = {
+				bpm_ig_is_rural_institutional = yes
+			}
+			add = -50
+		}
+		# More likely in countries with a large urban center
+		if = {
+			limit = {
+				owner = {
+					any_scope_state = {
+						any_scope_building = {
+							is_building_type = building_urban_center
+							level >= 10
+						}
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				has_variable = por_increased_regenerator_likelihood
+			}
+			add = {
+				value = var:por_increased_regenerator_likelihood
+			}
+		}
+	}
+
+	non_interest_group_leader_weight = {
+		value = 100
+		# More likely if Unrecognized Country
+		if = {
+			limit = {
+				owner = {
+					is_country_type = unrecognized
+				}
+			}
+			add = 50
+		}
+		# More likely in countries with a large urban center
+		if = {
+			limit = {
+				owner = {
+					any_scope_state = {
+						any_scope_building = {
+							is_building_type = building_urban_center
+							level >= 10
+						}
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group = {
+					has_variable = por_increased_regenerator_likelihood
+				}
+			}
+			add = {
+				value = interest_group.var:por_increased_regenerator_likelihood
+			}
+		}
+	}
 }
 
 REPLACE:ideology_despotic_utopian = {
@@ -7886,6 +8576,22 @@ REPLACE:ideology_despotic_utopian = {
 		law_free_trade = disapprove
 	}
 
+	lawgroup_repeatable_culture = {
+		law_invite_foreign_experts = disapprove
+		law_repeatable_culture_promote_democratic_values = disapprove
+		law_repeatable_culture_promote_socialist_values = disapprove
+		law_repeatable_culture_promote_patriotic_values = approve
+		law_repeatable_culture_promote_absolutist_values = strongly_disapprove
+		law_repeatable_culture_promote_ultranationalist_values = strongly_disapprove
+	}
+
+	lawgroup_repeatable_religion = {
+		law_repeatable_religion_promote_state_religion = strongly_disapprove
+		law_repeatable_religion_anti_secular_reaction = strongly_disapprove
+		law_repeatable_religion_promote_secular_values = strongly_approve
+		law_repeatable_religion_anti_religious_violence = approve
+	}
+
 	interest_group_leader_trigger = {
 		ideology_despotic_utopian_valid_trigger = yes
 	}
@@ -7901,7 +8607,6 @@ REPLACE:ideology_despotic_utopian = {
 						has_law_or_variant = law_type:law_autocracy
 						has_law_or_variant = law_type:law_oligarchy
 						has_law_or_variant = law_type:law_technocracy
-						has_law_or_variant = law_type:law_single_party_state
 					}
 					has_law_or_variant = law_type:law_multicultural
 					has_law_or_variant = law_type:law_isolationism
@@ -7943,7 +8648,6 @@ REPLACE:ideology_despotic_utopian = {
 						has_law_or_variant = law_type:law_autocracy
 						has_law_or_variant = law_type:law_oligarchy
 						has_law_or_variant = law_type:law_technocracy
-						has_law_or_variant = law_type:law_single_party_state
 					}
 					has_law_or_variant = law_type:law_multicultural
 					has_law_or_variant = law_type:law_isolationism
@@ -8151,7 +8855,27 @@ ideology_reactionary_anti_capitalist = {
 		law_wage_subsidies = approve
 		law_old_age_pension = strongly_approve
 	}
+
+	lawgroup_work_time_regulations = {
+		law_unregulated_work_time = disapprove
+		law_token_time_regulations = approve
+		law_limited_work_hours = neutral
+		law_protected_leisure = disapprove
+	}
 	
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_invite_foreign_experts = disapprove
+		law_repeatable_culture_promote_democratic_values = strongly_disapprove
+		law_repeatable_culture_promote_socialist_values = strongly_disapprove
+	}
+
+	lawgroup_repeatable_religion = {
+		law_repeatable_religion_promote_state_religion = approve
+		law_repeatable_religion_anti_secular_reaction = approve
+		law_repeatable_religion_promote_secular_values = strongly_disapprove
+		law_repeatable_religion_anti_religious_violence = strongly_disapprove
+	}
+
 	interest_group_leader_trigger = {
 		ideology_reactionary_anti_capitalist_valid_trigger = yes
 	}
@@ -8270,7 +8994,6 @@ REPLACE:ideology_carlist = {
 	lawgroup_distribution_of_power = {
 		law_oligarchy = approve
 		law_autocracy = strongly_approve # Were opposed to absolutism, but the game defines Oligarchy as a bourgeois system
-		law_single_party_state = strongly_disapprove
 		law_landed_voting = disapprove
 		law_wealth_voting = strongly_disapprove
 		law_census_voting = strongly_disapprove
@@ -8302,6 +9025,25 @@ REPLACE:ideology_carlist = {
 		law_federated = approve
 		law_confederated = neutral
 		law_ad_hoc_centralization = disapprove
+	}
+
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_promote_democratic_values = strongly_disapprove
+		law_repeatable_culture_promote_socialist_values = strongly_disapprove
+		law_repeatable_culture_invite_foreign_experts
+		law_promote_absolutist_values = approve
+	}
+
+	lawgroup_repeatable_religion = {
+		law_repeatable_religion_promote_state_religion = approve
+		law_repeatable_religion_anti_secular_reaction = strongly_approve
+		law_repeatable_religion_promote_secular_values = strongly_disapprove
+		law_repeatable_religion_anti_religious_violence = strongly_disapprove
+	}
+	lawgroup_repeatable_politics = {
+		law_repeatable_politics_modernize_bureaucracy = disapprove
+		law_repeatable_politics_popular_concessions = strongly_disapprove
+		law_repeatable_politics_anti_corruption_drive = disapprove
 	}
 
 	country_trigger = {
@@ -8521,7 +9263,6 @@ REPLACE:ideology_miguelist = {
 	lawgroup_distribution_of_power = {
 		law_oligarchy = approve
 		law_autocracy = strongly_approve # Were opposed to absolutism, but the game defines Oligarchy as a bourgeois system
-		law_single_party_state = strongly_disapprove
 		law_landed_voting = disapprove
 		law_wealth_voting = strongly_disapprove
 		law_census_voting = strongly_disapprove
@@ -8553,6 +9294,26 @@ REPLACE:ideology_miguelist = {
 		law_federated = disapprove
 		law_confederated = disapprove
 		law_ad_hoc_centralization = disapprove
+	}
+
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_promote_democratic_values = strongly_disapprove
+		law_repeatable_culture_promote_socialist_values = strongly_disapprove
+		law_repeatable_culture_invite_foreign_experts = disapprove
+		law_promote_absolutist_values = approve
+	}
+
+	lawgroup_repeatable_religion = {
+		law_repeatable_religion_promote_state_religion = approve
+		law_repeatable_religion_anti_secular_reaction = strongly_approve
+		law_repeatable_religion_promote_secular_values = strongly_disapprove
+		law_repeatable_religion_anti_religious_violence = strongly_disapprove
+	}
+
+	lawgroup_repeatable_politics = {
+		law_repeatable_politics_modernize_bureaucracy = disapprove
+		law_repeatable_politics_popular_concessions = strongly_disapprove
+		law_repeatable_politics_anti_corruption_drive = disapprove
 	}
 
 	country_trigger = {
@@ -8746,6 +9507,26 @@ REPLACE:ideology_ilustrado_leader = { 	# Flavoured variant of Liberal and Anti-C
 
 	character_ideology = yes
 
+	lawgroup_distribution_of_power = {
+		law_universal_suffrage = neutral
+		law_census_voting = approve
+		law_wealth_voting = approve
+		law_landed_voting = neutral
+		law_technocracy = disapprove
+		law_oligarchy = disapprove
+		law_autocracy = strongly_disapprove
+		law_anarchy = strongly_disapprove
+		law_military_junta = strongly_disapprove
+		law_organic_democracy = strongly_disapprove
+		law_colonial_administration = neutral 
+	}
+	
+	lawgroup_bureaucracy = {
+		law_elected_bureaucrats = approve
+		law_appointed_bureaucrats = approve
+		law_hereditary_bureaucrats = disapprove
+	}
+
 	lawgroup_citizenship = {
 		law_multicultural = disapprove
 		law_ethnostate = strongly_disapprove
@@ -8774,6 +9555,23 @@ REPLACE:ideology_ilustrado_leader = { 	# Flavoured variant of Liberal and Anti-C
 		law_right_of_assembly = approve
 		law_censorship = disapprove
 		law_outlawed_dissent = strongly_disapprove
+	}
+
+	lawgroup_repeatable_religion = {
+		law_repeatable_religion_promote_state_religion = strongly_disapprove
+		law_repeatable_religion_anti_secular_reaction = strongly_disapprove
+		law_repeatable_religion_promote_secular_values = strongly_approve
+		law_repeatable_religion_anti_religious_violence = disapprove
+	}
+
+	lawgroup_repeatable_culture = {
+		law_repeatable_culture_invite_foreign_experts = approve
+		law_repeatable_culture_promote_democratic_values = approve
+		law_repeatable_culture_affirmative_action = strongly_approve
+		law_repeatable_culture_promote_socialist_values = strongly_disapprove
+		law_repeatable_culture_promote_patriotic_values = neutral
+		law_repeatable_culture_promote_absolutist_values = disapprove
+		law_repeatable_culture_promote_ultranationalist_values = strongly_disapprove
 	}
 
 	country_trigger = {

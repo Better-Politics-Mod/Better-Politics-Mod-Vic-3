@@ -166,6 +166,7 @@
 # 	should_be_pinned_by_default = no
 # }
 
+# Roll: 980-1000
 je_bpm_crises_government_scandal = {
 	icon = "gfx/interface/icons/event_icons/event_scales.dds"
 
@@ -219,7 +220,7 @@ je_bpm_crises_government_scandal = {
 				text = "Random Chance"
 				AND = {
 					has_variable = bpm_scandal_roll
-					var:bpm_scandal_roll >= 98
+					var:bpm_scandal_roll >= 980
 				}
 			}
 			hidden_trigger = {
@@ -450,3 +451,334 @@ je_bpm_crises_government_scandal = {
 	should_be_pinned_by_default = no
 }
 
+# Condition:
+# LabCon > 25 & LibCon > 75
+# Is not Council Republic
+# Has Elections
+# |-War with <20 support
+# |-0.2% of country population as casualties 
+# OR
+# |-Extremist IG with >1% support
+# |-Other valid crisis with >50% progress (Scandal)
+# (i.e. in a country of 40,000,000 people, 80,000 casualties would trigger the crisis)
+# Force Spawns Fascists and Communists if not spawned
+# Boosts extremist IG support and clout
+# Boosts revs
+je_bpm_crises_rising_extremism = {
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	group = je_group_bpm_crises
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_crises_rising_extremism_desc_low
+				trigger = {
+					scope:journal_entry.var:bpm_government_scandal_progress <= 10
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_crises_rising_extremism_desc_medium
+				trigger = {
+					scope:journal_entry.var:bpm_government_scandal_progress > 10
+					scope:journal_entry.var:bpm_government_scandal_progress < 50
+				}
+			}
+			triggered_desc = {
+				desc = je_bpm_crises_rising_extremism_desc_high
+				trigger = {
+					scope:journal_entry.var:bpm_government_scandal_progress >= 50
+				}
+			}
+		}
+	}
+
+	can_deactivate = yes
+
+	modifiers_while_active = {
+		# add modifiers
+	}
+
+	is_shown_when_inactive = {
+		# this should always be yes
+		always = yes
+	}
+
+	possible = {
+		hidden_trigger = {
+			scope:journal_entry = {
+				NOT = {
+					has_variable = bpm_crisis_ended
+				}
+			}
+		}
+		OR = {
+			AND = {
+				OR = {
+					custom_tooltip = {
+						text = "bpm_country_has_rising_extremist_during_crisis"
+						bpm_country_has_rising_extremist_during_crisis = yes
+					}
+					custom_tooltip = {
+						text = "bpm_country_has_devastating_war"
+						bpm_country_has_devastating_war = yes
+					}
+				}
+				custom_tooltip = {
+					text = "bpm_country_extremist_exist_or_would_spawn"
+					bpm_country_extremist_exist_or_would_spawn = yes
+				}
+				any_interest_group = {
+					is_in_government = yes
+					is_powerful = yes
+					custom_tooltip = {
+						text = "bpm_not_anti_establishment_tt"
+						bpm_ig_is_radical_opposition = no
+					}
+					custom_tooltip = {
+						text = "bpm_not_extremist_tt"
+						bpm_ig_is_very_radical_opposition = no
+					}
+				}
+			}
+			hidden_trigger = {
+				has_journal_entry = je_bpm_crises_rising_extremism
+			}
+		}
+		# hidden_trigger = {
+		# 	#game_date > 1842.1.1
+		# }
+	}
+
+
+	immediate = {
+		scope:journal_entry = {
+			set_variable = {
+				name = bpm_government_scandal_progress
+				value = 0
+			}
+			set_variable = {
+				name = bpm_government_scandal_progress_toadd
+				value = {
+					integer_range = {
+						min = 0
+						max = 20
+					}
+				}
+			}
+			set_variable = {
+				name = bpm_crisis_extremism_end_timer
+				value = 0
+			}
+		}
+		if = {
+			limit = {
+				bpm_consciousness_liberal_percent > 0.75
+				bpm_consciousness_labor > 0.35
+			}
+			bpm_do_fascist_split = yes
+			bpm_do_socialist_split = yes
+			bpm_do_revsoc_split = yes
+		}
+		every_interest_group = {
+			limit = {
+				is_in_government = yes
+				is_powerful = yes
+				custom_tooltip = {
+					text = "bpm_not_anti_establishment_tt"
+					bpm_ig_is_radical_opposition = no
+				}
+				custom_tooltip = {
+					text = "bpm_not_extremist_tt"
+					bpm_ig_is_very_radical_opposition = no
+				}
+			}
+			scope:journal_entry = {
+				add_to_variable_list = {
+					name = bpm_government_igs_involved_in_scandal
+					target = prev
+				}
+			}
+		}
+	}
+	
+	invalid = {
+		scope:journal_entry = {
+			OR = {
+				NOT = {
+					any_in_list = {
+						variable = bpm_government_igs_involved_in_scandal
+						is_in_government = yes
+					}
+				}
+				has_variable = bpm_crisis_ended
+			}
+		}
+	}
+
+	scripted_button = bpm_extremism_response_crackdown
+
+	on_weekly_pulse = {
+		effect = {
+			scope:journal_entry = {
+				# Add initial progress from event trigger
+				if = {
+					limit = {
+						has_variable = bpm_government_scandal_progress_toadd
+					}
+					change_variable = {
+						name = bpm_government_scandal_progress
+						add = scope:journal_entry.var:bpm_government_scandal_progress_toadd
+					}
+					remove_variable = bpm_government_scandal_progress_toadd
+				}
+			}
+			if = {
+				limit = {
+					scope:journal_entry.var:bpm_government_scandal_progress < 100
+				}
+				scope:journal_entry = {
+					change_variable = {
+						name = bpm_government_scandal_progress
+						# finishes in 6 months with 100% radicals 
+						# should last typically 10 ~ 18 months
+						add = {
+							value = 20
+							multiply = owner.radical_fraction
+							max = 4
+						}
+					}
+					clamp_variable = {
+						name = bpm_government_scandal_progress
+						min = 0
+						max = 100
+					}
+				}
+			}
+			else = {
+				# These are the base of extremism
+				add_radicals = {
+					strata = lower
+					value = 0.01
+				}
+				scope:journal_entry = { 
+					change_variable = {
+						name = bpm_crisis_extremism_end_timer
+						add = 1
+					}
+					if = {
+						limit = {
+							var:bpm_crisis_extremism_end_timer >= 12
+						}
+						set_variable = {
+							name = bpm_crisis_ended
+							days = 180
+						}
+					}
+				}
+			}
+			add_radicals = {
+				strata = lower
+				value = 0.01
+			}
+			if = {
+				limit = {
+					scope:journal_entry.var:bpm_government_scandal_progress >= 10
+				}
+				set_local_variable = {
+					name = bpm_crisis_extremism_extremist_boost_mult
+					value = {
+						value = scope:journal_entry.var:bpm_government_scandal_progress
+						min = 0
+						max = 100
+						divide = 100
+					}
+				}
+				scope:journal_entry = {
+					remove_modifier = bpm_crisis_extremism_extremist_boost
+					add_modifier = {
+						name = bpm_crisis_extremism_extremist_boost
+						is_decaying = yes
+						months = 60
+						multiplier = local_var:bpm_crisis_extremism_extremist_boost_mult
+					}
+				}
+				every_interest_group = {
+					remove_modifier = bpm_crisis_extremism_extremist_boost
+				}
+				every_interest_group = {
+					limit = {
+						OR = {
+							bpm_ig_is_radical_opposition = yes
+							bpm_ig_is_very_radical_opposition = yes
+						}
+					}
+					if = {
+						limit = {
+							type = {
+								is_interest_group_type = ig_fascists
+								is_interest_group_type = ig_revolutionist_socialists
+							}
+						}
+						add_modifier = {
+							name = bpm_crisis_extremism_extremist_boost
+							is_decaying = yes
+							months = 60
+							multiplier = { value = local_var:bpm_crisis_extremism_extremist_boost_mult multiply = 5 }
+						}
+					}
+					else = {
+						add_modifier = {
+							name = bpm_crisis_extremism_extremist_boost
+							is_decaying = yes
+							months = 60
+							multiplier = local_var:bpm_crisis_extremism_extremist_boost_mult
+						}
+					}
+				}
+			}
+			if = {
+				limit = {
+					scope:journal_entry.var:bpm_government_scandal_progress >= 50
+				}
+				every_interest_group = {
+					limit = {
+						bpm_ig_is_institutional = yes
+						bpm_ig_is_radical_opposition = no
+						bpm_ig_is_very_radical_opposition = no
+						NOT = {
+							has_ideology = ideology:ideology_bpm_strong_state
+						}
+					}
+					add_ideology = ideology_bpm_strong_state
+				}
+				recalculate_pop_ig_support = yes
+			}
+		}
+	}
+
+	current_value = {
+		value = scope:journal_entry.var:bpm_government_scandal_progress
+	}
+
+	complete = {
+		hidden_trigger = {
+			always = no
+		}
+		OR = {
+			custom_tooltip = "Successful Crackdown"
+			custom_tooltip = "Reached 100 for 3 months"
+		}
+	}
+
+	goal_add_value = {
+		value = {
+			value = 100
+			subtract = scope:journal_entry.var:bpm_government_scandal_progress
+		}
+	}
+
+	progressbar = yes
+
+	should_be_pinned_by_default = no
+}

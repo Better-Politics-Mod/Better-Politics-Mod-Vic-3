@@ -1,4 +1,4 @@
-fronts = ["urban", "popular", "liberal", "republican", "labor", "socialist", "reactionary", "fascist", "nationalist", "peasant"]
+fronts = ["urban", "popular", "liberal", "republican", "labor", "socialist", "reactionary", "fascist", "nationalist", "peasant", "bureaucratic"]
 
 # creates code that looks like
 # bpm_add_ig_to_front = {

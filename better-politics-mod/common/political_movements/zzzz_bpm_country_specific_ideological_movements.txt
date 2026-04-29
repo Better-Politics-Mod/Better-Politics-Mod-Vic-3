@@ -2843,3 +2843,341 @@ movement_kaikoku = {
 		}
 	}		
 }
+
+REPLACE:movement_tokugawa_loyalist = {
+	category = movement_category_ideological
+
+	ideology = ideology_tokugawa_loyalist_movement
+	character_ideologies = {
+		ideology_authoritarian
+	}
+
+	disband_trigger = {
+		OR = {
+			has_variable = monarchy_stamped_out_var
+			has_variable = japan_emperor_restored
+		}
+	}
+
+	on_disbanded = {
+
+	}
+
+	creation_trigger = {
+		country_has_primary_culture = cu:japanese
+		has_law = law_type:law_bakufu
+		OR = {
+			c:JAP ?= this
+			AND = {
+				is_subject = yes
+				c:JAP ?= top_overlord
+			}
+		}
+	}
+	creation_weight = {
+		value = 1000
+	}
+	on_created = {
+		add_movement_enthusiasm_modifier = yes
+	}
+
+	character_support_trigger = {
+		OR = {
+			AND = {
+				has_ideology = ideology:ideology_authoritarian
+				scope:interest_group ?= {
+					law_stance = {
+						law = law_type:law_autocracy
+						value > neutral
+					}
+				}
+			}
+			AND = {
+				scope:interest_group ?= {
+					has_ideology = ideology:ideology_bakufu
+				}
+				law_stance = {
+					law = law_type:law_autocracy
+					value >= neutral
+				}
+			}
+			AND = {
+				scope:interest_group ?= {
+					has_hierarchic_ideology = yes
+				}
+				law_stance = {
+					law = law_type:law_autocracy
+					value >= neutral
+				}
+			}
+		}
+	}
+
+	character_support_weight = {
+		value = 200
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_royalist
+			}
+			multiply = {
+				value = 5
+			}
+		}
+	}
+
+	pop_support_trigger = {
+		NOT = {
+			is_pop_type = slaves
+		}
+	}
+
+	pop_support_factors = {
+		movement_support_loyalism
+		movement_support_ruler_popularity
+		movement_support_low_urbanization
+		movement_support_high_literacy
+		movement_support_officers
+		movement_support_aristocrats
+		movement_support_farmers
+		movement_support_daimyo_loyalty_high
+		movement_support_daimyo_loyalty_low # Conditional
+	}
+
+	pop_support_weight = {
+		if = {
+			limit = {
+				exists = scope:political_movement
+				scope:political_movement ?= {
+						OR = {
+							is_being_suppressed = yes
+							is_being_bolstered = yes
+						}
+					}
+				}
+			if = {
+				limit = {
+					scope:political_movement = {
+						is_being_suppressed = yes
+					}
+				}
+				add = {
+					value = suppression_base_value
+					multiply = {
+						value = -0.5
+						add = owner.modifier:country_suppression_attraction_factor
+					}
+					desc = "concept_suppressed"
+				}
+			}
+			else = {
+				add = {
+					value = bolstering_base_value
+					multiply = {
+						value = 0.5
+						add = owner.modifier:country_bolster_attraction_factor
+					}
+					desc = "concept_bolstered"
+				}
+			}
+		}
+		add = {
+			desc = "URBAN_STATE" # Increases support in rural states, decreases in urban
+			value = 0.5
+			subtract = state.state_urbanization_rate
+			multiply = 10
+		}
+
+		add = {
+			desc = "POP_LOYALISTS" # Increases support amongst loyal pops
+			value = pop_loyalist_fraction
+			multiply = 10
+		}
+
+		if = {
+			limit = {
+				is_pop_type = aristocrats
+			}
+			add = {
+				value = 25
+				desc = "POP_ARISTOCRATS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = farmers
+			}
+			add = {
+				value = 10
+				desc = "POP_FARMERS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = officers
+			}
+			add = {
+				value = 35
+				desc = "POP_OFFICERS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = soldiers
+			}
+			add = {
+				value = 5
+				desc = "POP_SOLDIERS"
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = peasants
+			}
+			add = {
+				value = 10
+				desc = "POP_PEASANTS"
+			}
+		}
+
+		if = {
+			limit = {
+				owner ?= {
+					has_law = law_type:law_monarchy
+				}
+				owner.ruler ?= {
+					NOT = { has_trait = trait_child }
+					law_stance = {
+						law = law_type:law_autocracy
+						value > neutral
+					}
+				}
+			}
+			multiply = { # Popularity of the Shogun
+				owner = {
+					random_scope_character = {
+						limit = {has_role = bpm_character_role_hog}
+						value = popularity
+					}
+				}
+				multiply = 0.01
+				add = 1
+				min = 0.2
+				max = 1.8
+				desc = "RULER_POPULARITY"
+			}
+		}
+		else_if = {
+			limit = {
+				owner ?= {
+					has_law = law_type:law_monarchy
+				}
+				owner.ruler ?= {
+					has_trait = trait_child
+					law_stance = {
+						law = law_type:law_autocracy
+						value > neutral
+					}
+				}
+			}
+			multiply = {
+				value = 0.75
+				desc = "RULER_IS_CHILD"
+			}
+		}
+
+		multiply = { # Illiterate pops participate at 1/10 the rate of fully literate pops
+			desc = "POP_LITERACY"
+			value = literacy_rate
+			add = 0.2
+			max = 0.7 # Starts more powerful but caps out early
+		}
+
+		if = {
+			limit = {
+				owner = {
+					has_variable = wargoal_enforced_by_recognized_power
+				}
+			}
+			multiply = {
+				value = 0.75
+				desc = "wargoal_pressed_by_recognized_power_tt"
+			}
+		}
+
+		multiply = { # Daimyo loyalty is quite important
+			value = 0.5
+			add = state.state_daimyo_loyalty
+			desc = "LOYALTY_OF_STATE_DAIMYO"
+		}
+	}
+
+	revolution = {
+		possible = {
+			political_movement_support >= 0.05
+		}
+
+		weight = {
+			value = 1000
+		}
+
+		state_weight = {
+			if = {
+				limit = {
+					state_daimyo_loyalty_impact_tokugawa > 0
+				}
+				add = state_daimyo_loyalty_impact_tokugawa
+			}
+			else = {
+				multiply = 0
+			}
+		}
+	}
+
+	# Cannot secede
+
+	additional_radicalism_factors = {
+		owner ?= {
+			if = {
+				limit = {
+					has_law = law_type:law_monarchy
+				}
+
+				if = {
+					limit = {
+						OR = {
+							is_enacting_law = law_type:law_presidential_republic
+							is_enacting_law = law_type:law_parliamentary_republic
+							is_enacting_law = law_type:law_corporate_state
+							is_enacting_law = law_type:law_theocracy
+							is_enacting_law = law_type:law_council_republic
+						}
+					}
+
+					add = {
+						value = 0.25
+						desc = "MONARCHY_BEING_ABOLISHED"
+					}
+				}
+			}
+			if = {
+				limit = {
+					NOT = {
+						has_law = law_type:law_bakufu
+					}
+					NOT = {
+						any_interest_group = {
+							is_in_government = yes
+							leader = {
+								has_variable = house_tokugawa
+							}
+						}
+					}
+				}
+				add = {
+					desc = "tokugawa_not_in_government_tt"
+					value = 0.25
+				}
+			}
+		}
+	}
+}

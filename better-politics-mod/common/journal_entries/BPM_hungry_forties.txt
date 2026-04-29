@@ -1,0 +1,253 @@
+﻿REPLACE_OR_CREATE:je_the_hungry_forties = {
+
+	group = je_group_bpm_crises
+	icon = "gfx/interface/icons/goods_icons/prestige_goods/generic_grain_prestige.dds"
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_bpm_crises_hungry_forties_desc
+			}
+		}
+	}
+
+	is_shown_when_inactive = {
+		is_in_geographic_region = geographic_region_europe
+		game_date <= 1848.1.1
+	}
+
+	scripted_button = bpm_hungry_forties_pursue_free_trade
+	scripted_button = bpm_hungry_forties_export_bans
+	scripted_button = bpm_hungry_forties_intervention
+
+	can_deactivate = yes
+
+	immediate = {
+		trigger_event = { id = bpm_hungry_forties.1 popup = yes }
+		trigger_event = { id = bpm_hungry_forties.2 popup = yes days = 300 }
+		scope:journal_entry = {
+			set_variable = {
+				name = bpm_hungry_forties_impact
+				value = 0
+			}
+		}
+		set_global_variable = hungry_forties_var
+		set_global_variable = BPM_hungry_forties_have_happened
+		set_global_variable = {
+			name = BPM_hungry_forties_first_365_days
+			days = 365
+		}
+		scope:journal_entry = {
+			add_modifier = {
+				name = bpm_crisis_impact_of_hunger
+				multiplier = {
+					value = scope:journal_entry.var:bpm_hungry_forties_impact
+					max = 75
+				}
+			}
+		}
+	}
+
+	possible = {
+		hidden_trigger = {
+			scope:journal_entry = {
+				NOT = {
+					has_variable = bpm_crisis_ended
+				}
+			}
+		}
+		custom_tooltip = {
+			text = BPM_hungry_forties_triggered_tt
+			has_global_variable = hungry_forties_var
+		}
+		#always = yes
+	}
+
+	complete = {
+		custom_tooltip = {
+			text = je_bpm_crises_the_hungry_forties_have_ended
+			NOT = {
+				any_state = {
+					owner = ROOT
+					OR = {
+						has_harvest_condition = disease_outbreak
+						has_harvest_condition = drought
+					}
+				}
+			}
+			NOT = {
+				has_global_variable = BPM_hungry_forties_first_365_days
+			}
+		}
+	}
+
+	on_complete = {
+		remove_global_variable = hungry_forties_var
+		every_state = {
+			limit = {
+				has_variable = BPM_impacted_by_the_hungry_forties
+			}
+			add_modifier = {
+				name = bpm_crisis_hunger_remains
+				years = 1
+			}
+		}
+	}
+
+	current_value = {
+		value = scope:journal_entry.var:bpm_hungry_forties_impact
+	}
+
+	goal_add_value = {
+		value = {
+			value = 100
+			subtract = scope:journal_entry.var:bpm_hungry_forties_impact
+		}
+	}
+
+	on_weekly_pulse = {
+		random_events = {
+			100 = 0
+			20 = bpm_hungry_forties.3
+			10 = bpm_hungry_forties.4
+		}
+		effect = {
+			every_state = {
+				limit = {
+					is_in_geographic_region = geographic_region_europe
+					OR = {
+						has_harvest_condition = disease_outbreak
+						has_harvest_condition = drought
+					}
+				}
+				set_variable = BPM_impacted_by_the_hungry_forties
+			}
+			scope:journal_entry = {
+				remove_modifier = bpm_crisis_impact_of_hunger
+				# Add initial progress from event trigger
+				if = {
+					limit = {
+						has_variable = bpm_hungry_forties_impact_toadd
+					}
+					change_variable = {
+						name = bpm_hungry_forties_impact
+						add = scope:journal_entry.var:bpm_hungry_forties_impact_toadd
+					}
+					remove_variable = bpm_hungry_forties_impact_toadd
+				}
+			}
+			if = {
+				limit = {
+					scope:journal_entry.var:bpm_hungry_forties_impact < 100
+				}
+				scope:journal_entry = {
+					change_variable = { ### The main way how we count the rising "impact" of the lack of food, better do things!
+						name = bpm_hungry_forties_impact
+						add = {
+							value = 12.3456
+							multiply = ROOT.bpm_country_fraction_below_expected_sol
+							multiply = ROOT.bpm_country_fraction_below_expected_sol
+						}
+					}
+					change_variable = { ### Loyalists decrease the impact of political anger by hunger
+						name = bpm_hungry_forties_impact
+						subtract = {
+							value = ROOT.loyalist_fraction
+							multiply = 25
+							divide = 2
+							round_to = 0.01
+						}
+					}
+					if = {
+						limit = {
+							any_state = {
+								owner = ROOT
+								OR = {
+									has_harvest_condition = disease_outbreak
+									has_harvest_condition = drought
+								}
+							}
+						}
+						change_variable = { ### No Hungry Forties riots direct causes can be found
+							name = bpm_hungry_forties_impact
+							subtract = {
+								value = 0.25
+							}
+						}
+					}
+
+					### Pops are glad to see the state just do literally anything
+
+					if = { 
+						limit = {
+							owner = {
+								has_modifier = bpm_crisis_free_trade_measures
+							}
+						}
+						change_variable = { ### 
+							name = bpm_hungry_forties_impact
+							subtract = {
+								value = 0.05
+							}
+						}
+					}
+
+					if = {
+						limit = {
+							owner = {
+								has_modifier = bpm_crisis_ban_on_exports_of_foodstuffs
+							}
+						}
+						change_variable = { ### 
+							name = bpm_hungry_forties_impact
+							subtract = {
+								value = 0.05
+							}
+						}
+					}
+
+					if = {
+						limit = {
+							owner = {
+								has_modifier = bpm_crisis_funds_loans_charity
+							}
+						}
+						change_variable = { ### 
+							name = bpm_hungry_forties_impact
+							subtract = {
+								value = 0.1
+							}
+						}
+					}
+					
+					clamp_variable = {
+						name = bpm_hungry_forties_impact
+						min = 0
+						max = 100
+					}
+				}
+			}
+			scope:journal_entry = {
+				add_modifier = {
+					name = bpm_crisis_impact_of_hunger
+					multiplier = {
+						value = scope:journal_entry.var:bpm_hungry_forties_impact
+						max = 75
+					}
+				}
+			}
+		}
+	}
+
+	progressbar = yes
+
+	should_be_pinned_by_default = no
+
+	#event_outcome_timeout_desc = {
+	#	first_valid = {
+	#		triggered_desc = {
+	#			desc = event_effects_hungry_forties.2_tt
+	#		}
+	#	}
+	#}
+}

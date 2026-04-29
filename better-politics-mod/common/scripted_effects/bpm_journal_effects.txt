@@ -259,46 +259,6 @@ bpm_socialist_electoralism_update_baseline_target = {
 	}
 }
 
-bpm_je_march_to_radicalism_progress_update = {
-	# Adding progress to springtime of peoples for every radical agitator
-	if = {
-		limit = { 
-			has_global_variable = bpm_je_march_to_radicalism_progress
-			NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
-			country_rank = rank_value:great_power
-			bpm_country_is_in_europe = yes
-		}
-		every_scope_character = {
-			limit = {
-				OR = {
-					has_role = agitator
-					has_role = politician
-				}
-				OR = {
-					bpm_leader_is_radical_leftist = yes
-					interest_group = {
-						bpm_ig_is_radical_left = yes
-					}
-				}
-				interest_group = {
-					bpm_ig_is_marginal = no
-				}
-			}
-			change_global_variable = {
-				name = bpm_je_march_to_radicalism_progress
-				add = 1
-			}
-		}
-		change_global_variable = {
-			name = bpm_je_march_to_radicalism_progress
-			add = {
-				value = bpm_country_fraction_below_expected_sol
-				multiply = 6
-			}
-		}
-	}
-}
-
 bpm_je_second_intl_progress_rate_update = {
 	set_global_variable = { name = bpm_je_second_intl_progress_rate value = 0 }
 	set_global_variable = { name = bpm_je_second_intl_progress_from_base value = -1.0 } # Base rate
@@ -859,5 +819,153 @@ bpm_je_christian_democrats_independence_update = {
 		name = independence_from_church_variable
 		max = 100
 		min = 0
+	}
+}
+
+##### Springtime of the Peoples Rework:
+### Monthly Effects
+
+bpm_je_march_to_radicalism_progress_monthly_update = {
+	if = {
+		limit = { 
+			has_global_variable = bpm_je_march_to_radicalism_progress
+			NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+			bpm_country_is_in_europe = yes
+			OR = {
+				has_law_or_variant = law_type:law_autocracy
+				has_law_or_variant = law_type:law_landed_voting
+			}
+		}
+		### Clout of Moderate Liberals and Radical Liberals
+		change_global_variable = {
+			name = bpm_je_march_to_radicalism_progress
+			add = {
+				value = owner.ig:ig_liberals.ig_clout
+				divide = 2
+			}
+		}
+		change_global_variable = {
+			name = bpm_je_march_to_radicalism_progress
+			add = {
+				value = owner.ig:ig_radicals.ig_clout
+				divide = 1.5
+			}
+		}
+	}
+	if = {
+		limit = { 
+			has_global_variable = bpm_je_march_to_radicalism_progress
+			NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+			bpm_country_is_in_europe = yes
+		}
+		### Political Strength * Activism of Liberal, Liberal-Nationalist and Radical Movements
+		every_political_movement = {
+			limit = {
+				is_political_movement_type = movement_liberal
+			}
+			change_global_variable = {
+				name = bpm_je_march_to_radicalism_progress
+				add = {
+					value = this.political_movement_support
+					multiply = this.political_movement_radicalism
+					divide = 1.5
+				}
+			}
+		}
+		every_political_movement = {
+			limit = {
+				is_political_movement_type = movement_radical
+			}
+			change_global_variable = {
+				name = bpm_je_march_to_radicalism_progress
+				add = {
+					value = this.political_movement_support
+					multiply = this.political_movement_radicalism
+					divide = 2.5
+				}
+			}
+		}
+		every_political_movement = {
+			limit = {
+				is_political_movement_type = movement_national_liberal
+			}
+			change_global_variable = {
+				name = bpm_je_march_to_radicalism_progress
+				add = {
+					value = this.political_movement_support
+					multiply = this.political_movement_radicalism
+					divide = 2
+				}
+			}
+		}
+	}
+	if = {
+		limit = { 
+			has_global_variable = bpm_je_march_to_radicalism_progress
+			NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+			bpm_country_is_in_europe = yes
+			country_rank = rank_value:great_power
+		}
+		### Liberal Consiousness in Great Powers
+		change_global_variable = {
+			name = bpm_je_march_to_radicalism_progress
+			add = {
+				value = owner.var:bpm_consciousness_liberal
+				multiply = 0.25
+				divide = 125
+			}
+		}
+	}
+}
+
+bpm_je_march_to_radicalism_progress_half_yearly = {
+	if = {
+		limit = { 
+			has_global_variable = bpm_je_march_to_radicalism_progress
+			NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+			bpm_country_is_in_europe = yes
+		}
+		### Radical or Socialist or Radical/Republican Agitators
+
+		every_scope_character = {
+			limit = {
+				has_role = agitator
+				OR = {
+					law_stance = {
+						law = law_type:law_parliamentary_republic
+						value > neutral
+					}
+					interest_group = {
+						law_stance = {
+							law = law_type:law_parliamentary_republic
+							value > neutral
+						}
+					}
+				}
+			}
+			change_global_variable = { 
+				name = bpm_je_march_to_radicalism_progress 
+				add = 0.5
+			}
+		}
+	}
+
+	if = {
+		limit = { 
+			has_global_variable = bpm_je_march_to_radicalism_progress
+			NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+			bpm_country_is_in_europe = yes
+			OR = {
+				country_rank = rank_value:great_power
+				country_rank = rank_value:major_power
+			}
+		}
+		change_global_variable = {
+			name = bpm_je_march_to_radicalism_progress
+			add = {
+				value = bpm_country_fraction_below_expected_sol
+				multiply = 2.5
+			}
+		}
 	}
 }

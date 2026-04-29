@@ -42,23 +42,48 @@ raj.1 = {
 		name = raj.1.a
 		default_option = yes
 		custom_tooltip = activate_british_raj
-		if = {
-			limit = {
-				has_diplomatic_pact = {
-					who = c:BIC
-					type = chartered_company
+		hidden_effect = {
+			# Remove the East India Company's ownership of the BIC country and then disband the company
+			scope:company_country ?= {
+				owning_company ?= {
+					if = {
+						limit = {
+							is_company_type = company_type:company_east_india_company
+						}
+						remove_owned_country = scope:company_country
+						owner ?= {
+							remove_company = prev.type
+						}
+					}
 				}
-			}
-			c:BIC ?= {
+				set_country_type = colonial
 				decrease_autonomy = yes
 			}
 		}
-		c:BIC = {
+		show_as_tooltip = {
+			remove_company = company_type:company_east_india_company
+			create_diplomatic_pact = {
+				country = c:BIC
+				type = colony
+			}
+		}
+		c:BIC ?= {
 			set_variable = doctrine_of_lapse_ended
 			custom_tooltip = doctrine_of_lapse_disabled
-			remove_modifier = modifier_india_company_rule
+			hidden_effect = { bpm_set_colony_law = yes }
+			if = {
+				limit = {
+					has_modifier = modifier_india_company_rule
+				}
+				remove_modifier = modifier_india_company_rule
+			}
+			if = { # Should never happen, but just in case
+				limit = {
+					has_modifier = modifier_india_company_rule_upgraded
+				}
+				remove_modifier = modifier_india_company_rule_upgraded
+			}
 			add_modifier = modifier_india_crown_rule
-			bpm_set_colony_law = yes
 			if = {
 				limit = {
 					NOT = {
@@ -104,10 +129,15 @@ raj.1 = {
 			if = {
 				limit = {
 					game_date < 1862.1.1
+					NOT = {
+						has_variable = canning_var
+					}
 				}
-				create_character = { 
+				set_variable = canning_var
+				create_character = {
 					template = BIC_charles_canning
 					on_created = {
+						set_variable = { name = colonial_governor_term value = 0 }
 						set_as_interest_group_leader = yes
 						set_character_as_ruler = yes
 					}
@@ -116,20 +146,26 @@ raj.1 = {
 			else_if = {
 				limit = {
 					game_date < 1879.1.1
+					NOT = {
+						has_variable = lawrence_var
+					}
 				}
-				create_character = { 
+				set_variable = lawrence_var
+				create_character = {
 					template = BIC_john_lawrence
 					on_created = {
+						set_variable = { name = colonial_governor_term value = 0 }
 						set_as_interest_group_leader = yes
 						set_character_as_ruler = yes
 					}
 				}
 			}
 			else = {
-				create_character = { 
+				create_character = {
 					culture = cu:british
 					interest_group = ig:ig_industrialists
 					on_created = {
+						set_variable = { name = colonial_governor_term value = 0 }
 						set_as_interest_group_leader = yes
 						set_character_as_ruler = yes
 					}

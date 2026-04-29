@@ -100,6 +100,20 @@ widget = {
 	container = {
 		parentanchor = center
 		resizeparent = yes
+		onmousehierarchyenter = "[AccessHighlightManager.HighlightAdjacentPorts(SeaNodeMarker.GetProvince.Self)]"
+		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+
+		### Debug data for ai navy
+		textbox = {
+			visible = "[SeaNodeMarker.HasAIDebugInfo]"
+			raw_text = "[SeaNodeMarker.GetAIDebugInfo]"
+			position = { 32 0 }
+			minimumsize = { 120 -1 }
+			autoresize = yes
+			align = nobaseline
+			multiline = yes
+			elide = right
+		}
 
 		### network interaction
 		button = {
@@ -118,7 +132,7 @@ widget = {
 			size = { 250% 250% }
 			alpha = 0.8
 			texture ="gfx/interface/map_markers/round_highlight_green.dds"
-			visible = "[And(SeaNodeMarker.IsValidInteractionNode, Not(SeaNodeMarker.IsActiveInteractionNode))]"
+			visible = "[And3(SeaNodeMarker.IsValidInteractionNode, SeaNodeMarker.IsClickableInteractionNode, Not(SeaNodeMarker.IsActiveInteractionNode))]"
 			onclick = "[SeaNodeMarker.SelectInteractionClick]"
 			parentanchor = center
 			position = { 0 0 }
@@ -167,7 +181,7 @@ widget = {
 				parentanchor = center
 				alpha = 0.5
 				using = tooltip_above
-				tooltip = "[SeaNodeMarker.GetSupplyNetworkTooltip]"
+				tooltip = "SEA_NODE_TOOLTIP"
 			}
 
 			### no supply - in interaction
@@ -199,7 +213,7 @@ widget = {
 				size = { 18 18 }
 				parentanchor = center
 				using = tooltip_above
-				tooltip = "[SeaNodeMarker.GetSupplyNetworkTooltip]"
+				tooltip = "SEA_NODE_TOOLTIP"
 			}
 
 			### has supply - in interaction
@@ -222,8 +236,8 @@ widget = {
 				onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
 				size = { 100% 100% }
 				using = tooltip_above
-				tooltip = "[SeaNodeMarker.GetSupplyNetworkTooltip]"
-				
+				tooltip = "SEA_NODE_TOOLTIP"
+
 				icon = {
 					visible = "[SeaNodeMarker.IsSelected]"
 					size = { 25 25 }
@@ -252,7 +266,7 @@ widget = {
 				size = { 25 25 }
 				parentanchor = center
 				using = tooltip_above
-				tooltip = "[SeaNodeMarker.GetSupplyNetworkTooltip]"
+				tooltip = "SEA_NODE_TOOLTIP"
 			}
 
 			### no supply - in interaction
@@ -285,7 +299,7 @@ widget = {
 				size = { 30 30 }
 				parentanchor = center
 				using = tooltip_above
-				tooltip = "[SeaNodeMarker.GetSupplyNetworkTooltip]"
+				tooltip = "SEA_NODE_TOOLTIP"
 			}
 
 			### has supply - in interaction
@@ -317,7 +331,7 @@ widget = {
 					alwaystransparent = yes
 				}
 				using = tooltip_above
-				tooltip = "[SeaNodeMarker.GetSupplyNetworkTooltip]"
+				tooltip = "SEA_NODE_TOOLTIP"
 			}
 		}
 	}
@@ -329,7 +343,6 @@ widget = {
 	layer = layer_map_markers
 	allow_outside = yes
 	max_update_rate = 8
-
 	container = {
 		parentanchor = center
 		resizeparent = yes
@@ -344,16 +357,46 @@ widget = {
 
 		movement_marker_click_vfx = {}
 
-		### Green circle highlight
+		### Green circle highlight with existing naval mission and valid sea region addition
 		button = {
-			visible = "[SeaNodeMovementMarker.CanDeploySelectedFormationsToSeaNode]"
+			visible = "[SeaNodeMovementMarker.GetSeaNode.WouldAddSeaRegionToSelectedFleetMissions]"
 			size = { 250% 250% }
 			alpha = 0.8
 			onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
-			onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.GetDeploySelectedFormationsCommand )]"
+			onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.AddSeaRegionToSelectedFleetMissions )]"
+			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
+			rightclicksound = "event:/SFX/UI/Military/naval_mission_settings_confirm"
+			parentanchor = center
+			position = { 0 0 }
+			texture ="gfx/interface/map_markers/round_highlight_green.dds"
+		}
+
+		### Green circle highlight with no existing naval mission
+		button = {
+			visible = "[SeaNodeMovementMarker.GetSeaNode.WouldAssignSelectedFleetsToNewMissionWithoutConfirmation('naval_mission_type_project_power')]"
+			size = { 250% 250% }
+			alpha = 0.8
+			onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
+			onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.AssignSelectedFleetsToNewMissionInRegion('naval_mission_type_project_power') )]"
 			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
 			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
 			rightclicksound = "event:/SFX/UI/Military/formation_actions_deploy_to_sea_node"
+			parentanchor = center
+			position = { 0 0 }
+			texture ="gfx/interface/map_markers/round_highlight_green.dds"
+		}
+
+		### Green circle highlight with existing naval mission and invalid sea region addition
+		button = {
+			visible = "[SeaNodeMovementMarker.GetSeaNode.WouldAssignSelectedFleetsToNewMissionWithConfirmation('naval_mission_type_project_power')]"
+			size = { 250% 250% }
+			alpha = 0.8
+			onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
+			onrightclick = "[PopupManager.AskConfirmationWithSound( SeaNodeMovementMarker.GetSeaNode.AssignSelectedFleetsToNewMissionInRegion('naval_mission_type_project_power'), 'event:/SFX/UI/Military/formation_actions_deploy_to_sea_node' )]"
+			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
+			rightclicksound = "event:/SFX/UI/Global/select"
 			parentanchor = center
 			position = { 0 0 }
 			texture ="gfx/interface/map_markers/round_highlight_green.dds"
@@ -378,136 +421,20 @@ widget = {
 		}
 
 		### ZOOM FAR
-		container = {
+		movement_marker_knob = {
 			visible = "[IsZoomLevelFar]"
-
-			### no supply - with right-click
-			button = {
-				visible = "[And(Not(SeaNodeMovementMarker.HasActiveSupplyNetwork), SeaNodeMovementMarker.CanDeploySelectedFormationsToSeaNode)]"
-				parentanchor = center
-				size = { 15 15 }
-				onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
-				onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.GetDeploySelectedFormationsCommand )]"
-				onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
-				onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
-				rightclicksound = "event:/SFX/UI/Military/formation_actions_deploy_to_sea_node"
-				texture = "gfx/interface/map_markers/sea_node.dds"
-				using = sea_node_framed_button_gfx
-				using = default_button_animation
-				using = select_button_sound
-				framesize = { 60 60 }
-				alpha = 0.5
-			}
-
-			### has supply - with right-click
-			button = {
-				visible = "[And(SeaNodeMovementMarker.HasActiveSupplyNetwork, SeaNodeMovementMarker.CanDeploySelectedFormationsToSeaNode)]"
-				parentanchor = center
-				size = { 18 18 }
-				onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
-				onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.GetDeploySelectedFormationsCommand )]"
-				onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
-				onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
-				rightclicksound = "event:/SFX/UI/Military/formation_actions_deploy_to_sea_node"
-				texture = "gfx/interface/map_markers/sea_node_have_supply.dds"
-				using = sea_node_framed_button_gfx
-				using = default_button_animation
-				using = select_button_sound
-				framesize = { 60 60 }
-			}
-
-			### no supply - without right-click
-			button = {
-				visible = "[And(Not(SeaNodeMovementMarker.HasActiveSupplyNetwork), Not(SeaNodeMovementMarker.CanDeploySelectedFormationsToSeaNode))]"
-				parentanchor = center
-				size = { 15 15 }
-				onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
-				texture = "gfx/interface/map_markers/sea_node.dds"
-				using = sea_node_framed_button_gfx
-				using = default_button_animation
-				using = select_button_sound
-				framesize = { 60 60 }
-				alpha = 0.5
-			}
-
-			### has supply - without right-click
-			button = {
-				visible = "[And(SeaNodeMovementMarker.HasActiveSupplyNetwork, Not(SeaNodeMovementMarker.CanDeploySelectedFormationsToSeaNode))]"
-				parentanchor = center
-				size = { 18 18 }
-				onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
-				texture = "gfx/interface/map_markers/sea_node_have_supply.dds"
-				using = sea_node_framed_button_gfx
-				using = default_button_animation
-				using = select_button_sound
-				framesize = { 60 60 }
-			}
 		}
 
 		### ZOOM NEAR
-		container = {
+		movement_marker_knob = {
 			visible = "[Not(IsZoomLevelFar)]"
 
-			### no supply - with right-click
-			button = {
-				visible = "[And(Not(SeaNodeMovementMarker.HasActiveSupplyNetwork), SeaNodeMovementMarker.CanDeploySelectedFormationsToSeaNode)]"
-				parentanchor = center
+			blockoverride "no_supply_size" {
 				size = { 25 25 }
-				onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
-				onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.GetDeploySelectedFormationsCommand )]"
-				onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
-				onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
-				rightclicksound = "event:/SFX/UI/Military/formation_actions_deploy_to_sea_node"
-				texture = "gfx/interface/map_markers/sea_node.dds"
-				using = sea_node_framed_button_gfx
-				using = default_button_animation
-				using = select_button_sound
-				framesize = { 60 60 }
-				alpha = 0.5
 			}
 
-			### has supply - with right-click
-			button = {
-				visible = "[And(SeaNodeMovementMarker.HasActiveSupplyNetwork, SeaNodeMovementMarker.CanDeploySelectedFormationsToSeaNode)]"
-				parentanchor = center
+			blockoverride "has_supply_size" {
 				size = { 30 30 }
-				onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
-				onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.GetDeploySelectedFormationsCommand )]"
-				onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
-				onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
-				rightclicksound = "event:/SFX/UI/Military/formation_actions_deploy_to_sea_node"
-				texture = "gfx/interface/map_markers/sea_node_have_supply.dds"
-				using = sea_node_framed_button_gfx
-				using = default_button_animation
-				using = select_button_sound
-				framesize = { 60 60 }
-			}
-
-			### no supply - without right-click
-			button = {
-				visible = "[And(Not(SeaNodeMovementMarker.HasActiveSupplyNetwork), Not(SeaNodeMovementMarker.CanDeploySelectedFormationsToSeaNode))]"
-				parentanchor = center
-				size = { 25 25 }
-				onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
-				texture = "gfx/interface/map_markers/sea_node.dds"
-				using = sea_node_framed_button_gfx
-				using = default_button_animation
-				using = select_button_sound
-				framesize = { 60 60 }
-				alpha = 0.5
-			}
-
-			### has supply - without right-click
-			button = {
-				visible = "[And(SeaNodeMovementMarker.HasActiveSupplyNetwork, Not(SeaNodeMovementMarker.CanDeploySelectedFormationsToSeaNode))]"
-				parentanchor = center
-				size = { 30 30 }
-				onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
-				texture = "gfx/interface/map_markers/sea_node_have_supply.dds"
-				using = sea_node_framed_button_gfx
-				using = default_button_animation
-				using = select_button_sound
-				framesize = { 60 60 }
 			}
 		}
 	}
@@ -635,11 +562,11 @@ container = {
 	datacontext = "[CountryMarker.GetCountry]"
 	layer = layer_map_markers
 	max_update_rate = 8
-	
+
 	flowcontainer = {
 		visible = "[Not(Country.IsLocalPlayer)]"
 		minimumsize = { 23 23 }
-		
+
 		tiny_flag = {
 			parentanchor = vcenter
 			using = visible_diplomatic_marker_show_extra_info
@@ -657,7 +584,7 @@ container = {
 			datamodel = "[Country.AccessActiveDiplomaticPactTypes]"
 			parentanchor = vcenter
 			using = visible_diplomatic_marker_show_extra_info
-			
+
 			item = {
 				flowcontainer = {
 					datamodel = "[ContextualDiplomaticActionType.AccessCountry.AccessActiveDiplomaticPacts( ContextualDiplomaticActionType.Self )]"
@@ -690,7 +617,7 @@ container = {
 				size = { 23 23 }
 				parentanchor = vcenter
 				visible = "[Not(Country.IsColonizable)]"
-				
+
 				icon = {
 					size = { 100% 100% }
 					texture = "gfx/interface/icons/ai_attitude_icons/human.dds"
@@ -732,7 +659,7 @@ container = {
 				using = is_not_colonizable_and_has_either_relations_or_relationship_change
 				parentanchor = vcenter
 				spacing = 2
-				
+
 				textbox = {
 					tooltip = "COUNTRY_RELATIONS_TOOLTIP"
 					text = "[Country.GetRelationsWith( GetPlayer )|+=]"
@@ -754,7 +681,7 @@ container = {
 					raw_text = "@arrow_down!"
 					autoresize = yes
 					align = nobaseline
-					parentanchor = vcenter	
+					parentanchor = vcenter
 				}
 			}
 		}
@@ -995,195 +922,220 @@ container = {
 
 ### STRATEGIC REGION
 container = {
-	name = "strategic_region_marker"
-	ignoreinvisible = yes
-	onmousehierarchyenter = "[AccessHighlightManager.HighlightStrategicRegion(StrategicRegionMarker.GetStrategicRegion)]"
-	onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
-	alwaystransparent = no
-	using = clickthrough_blocker
-	layer = layer_map_markers
-	max_update_rate = 8
-	parentanchor = bottom|hcenter
+    name = "strategic_region_marker"
+    ignoreinvisible = yes
+    onmousehierarchyenter = "[AccessHighlightManager.HighlightStrategicRegion(StrategicRegionMarker.GetStrategicRegion)]"
+    onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+    layer = layer_map_markers
+    max_update_rate = 8
+    parentanchor = bottom|hcenter
+    datacontext = "[StrategicRegionMarker.GetStrategicRegion]"
+    datacontext = "[StrategicRegionMarker.AccessStrategicRegion.AccessFirstDiplomaticPlay.AccessWar]"
 
-	### BACKGROUND (HAS INTEREST)
-	widget = {
-		size = { 100% 100% }
-		datacontext = "[StrategicRegionMarker.GetStrategicRegion]"
-		visible = "[GetPlayer.HasInterestIn( StrategicRegion.Self )]"
+    tooltipwidget = {
+        FancyTooltip_StrategicRegion = {}
+    }
 
-		background = {
-			using = paper_bg
-		}
-	}
+    flowcontainer = {
+        direction = vertical
+        bottomtotop = yes
+        spacing = -16
 
-	### BACKGROUND (NO INTEREST)
-	widget = {
-		size = { 100% 100% }
-		datacontext = "[StrategicRegionMarker.GetStrategicRegion]"
-		visible = "[Not(GetPlayer.HasInterestIn( StrategicRegion.Self ))]"
+        ### CONTENT
+        flowcontainer = {
+        	visible = "[Not(IsZoomLevelFar)]"
+            parentanchor = hcenter
+            direction = vertical
+            margin = { 10 8 }
+            spacing = 7
 
-		background = {
-			using = default_background
-		}
-	}
+            background = {
+                using = bg_bronze_with_frame
+            }
 
-	### CONTENT
-	flowcontainer = {
-		direction = vertical
-		margin = { 7 7 }
-		spacing = 7
+            textbox = {
+                visible = "[IsZoomLevelNear]"
+                multiline = yes
+                autoresize = yes
+                align = hcenter|nobaseline
+                parentanchor = top|hcenter
+                margin = { 25 0 }
+                margin_top = 5
+                using = fontsize_large
+                raw_text = "#BOLD [StrategicRegion.GetNameNoFormatting]#!"
+            }
 
-		textbox = {
-			multiline = yes
-			datacontext = "[StrategicRegionMarker.GetStrategicRegion]"
-			raw_text = "#BOLD [StrategicRegion.GetNameNoFormatting]#!"
-			autoresize = yes
-			align = hcenter|nobaseline
-			parentanchor = top|hcenter
-			margin = { 25 0 }
-			visible = "[IsZoomLevelNear]"
-			using = fontsize_large
+            ### COUNTRIES WITH INTEREST - More than 4
+            flowcontainer = {
+                visible = "[GreaterThan_int32(GetDataModelSize(StrategicRegion.GetCountriesWithInterest), '(int32)4')]"
+                spacing = 2
+                parentanchor = hcenter
 
-			tooltipwidget = {
-				FancyTooltip_StrategicRegion = {}
-			}
-		}
+                flowcontainer = {
+                    name = "interest_marker_box"
+                    parentanchor = vcenter
+                    datamodel = "[DataModelFirst(StrategicRegion.GetCountriesWithInterest, '(int32)3')]"
 
-		### NATIONS WITH INTEREST MARKERS
-		dynamicgridbox = {
-			parentanchor = hcenter
-			flipdirection = yes
-			name = "interest_marker_box"
-			datamodel = "[StrategicRegionMarker.GetStrategicRegion.GetInterests]"
-			datamodel_wrap = 8
-			visible = "[Not(IsDataModelEmpty(StrategicRegionMarker.GetStrategicRegion.GetInterests))]"
+                    item = {
+                        container = {
+                            country_with_interest_map_marker_item = {}
+                        }
+                    }
+                }
 
-			item = {
-				container = {
-					tooltip = "INTEREST_MARKER_TOOLTIP"
-					using = tooltip_above
-					datacontext = "[StrategicRegionMarker.GetStrategicRegion]"
+                textbox = {
+                    parentanchor = vcenter
+                    align = nobaseline
+                    autoresize = yes
+                    raw_text = "#v [GetDataModelSize(DataModelSkipFirst(StrategicRegion.GetCountriesWithInterest, '(int32)3'))|=]#!"
+                }
+            }
 
-					### ZOOMED OUT
-					widget = {
-						visible = "[Not(IsZoomLevelNear)]"
-						size = { 35 33 }
+            ### COUNTRIES WITH INTEREST - 4 or less
+            flowcontainer = {
+                name = "interest_marker_box"
+                visible = "[LessThan_int32(GetDataModelSize(StrategicRegion.GetCountriesWithInterest), '(int32)5')]"
+                parentanchor = hcenter
+                datamodel = "[StrategicRegion.GetCountriesWithInterest]"
+                item = {
+                    container = {
+                        country_with_interest_map_marker_item = {}
+                    }
+                }
+            }
 
-						tiny_flag = {
-							position = { 0 -2 }
-							visible = "[Not(Interest.IsActive)]"
-							datacontext = "[Interest.GetOwner]"
-							blockoverride "tooltip" {}
-							parentanchor = center
-							alpha = 0.3
-						}
-						tiny_flag = {
-							position = { 0 -2 }
-							visible = "[Interest.IsActive]"
-							datacontext = "[Interest.GetOwner]"
-							blockoverride "tooltip" {}
-							parentanchor = center
-						}
+            ### DIPLO PLAY
+            flowcontainer = {
+                visible = "[StrategicRegion.HasDiplomaticPlay]"
+                using = default_list_position
+                margin_top = 5
 
-						widget = {
-							size = { 25 4 }
-							position = { 0 12 }
-							visible = "[Interest.ShouldShowProgressBar]"
-							parentanchor = center
+                diplomatic_play_item = {
+                    visible = "[Not(StrategicRegionMarker.GetStrategicRegion.GetFirstDiplomaticPlay.HasEscalatedIntoWar)]"
+                    datacontext = "[StrategicRegionMarker.AccessStrategicRegion.AccessFirstDiplomaticPlay]"
+                }
 
-							bad_progressbar_horizontal = {
-								visible = "[Interest.IsActive]"
-								size = { 100% 100% }
-								blockoverride "values" {
-									min = 0
-									max = 1
-									value = "[Interest.GetProgress]"
-								}
-							}
+                war_item = {
+                    visible = "[StrategicRegionMarker.GetStrategicRegion.GetFirstDiplomaticPlay.HasEscalatedIntoWar]"
+                    blockoverride "datacontext" {
+                        datacontext = "[StrategicRegionMarker.AccessStrategicRegion.AccessFirstDiplomaticPlay.AccessWar]"
+                    }
+                }
+            }
+        }
 
-							default_progressbar_horizontal = {
-								visible = "[Not(Interest.IsActive)]"
-								size = { 100% 100% }
-								blockoverride "values" {
-									min = 0
-									max = 1
-									value = "[Interest.GetProgress]"
-								}
-							}
-						}
-					}
+        ### Interest Tier Icon
+        container = {
+            parentanchor = hcenter
+            datacontext = "[GetPlayer]"
+            datacontext = "[GetPlayer.GetCurrentInterestTierTypeIn(StrategicRegion.Self)]"
+            visible = "[Or(NotZero_CFixedPoint(Country.GetTargetInvolvementIn(StrategicRegion.Self)), NotZero_CFixedPoint(Country.GetCurrentInvolvementIn(StrategicRegion.Self)))]"
 
-					### ZOOMED IN
-					widget = {
-						size = { 65 52 }
-						visible = "[IsZoomLevelNear]"
+            button = {
+                size = { 65 65 }
+                onclick = "[InformationPanelBar.OpenStrategicRegionPanel(StrategicRegion.Self)]"
+                texture = "gfx/interface/map_markers/strategic_region_map_marker.dds"
 
-						small_flag = {
-							position = { 0 -5 }
-							visible = "[Not(Interest.IsActive)]"
-							datacontext = "[Interest.GetOwner]"
-							blockoverride "tooltip" {}
-							parentanchor = center
-							alpha = 0.5
-						}
-						small_flag = {
-							position = { 0 -5 }
-							visible = "[Interest.IsActive]"
-							datacontext = "[Interest.GetOwner]"
-							blockoverride "tooltip" {}
-							parentanchor = center
-						}
-
-						widget = {
-							size = { 46 6 }
-							position = { 0 18 }
-							visible = "[Interest.ShouldShowProgressBar]"
-							parentanchor = center
-
-							bad_progressbar_horizontal = {
-								visible = "[Interest.IsActive]"
-								size = { 100% 100% }
-								blockoverride "values" {
-									min = 0
-									max = 1
-									value = "[Interest.GetProgress]"
-								}
-							}
-
-							default_progressbar_horizontal = {
-								visible = "[Not(Interest.IsActive)]"
-								size = { 100% 100% }
-								blockoverride "values" {
-									min = 0
-									max = 1
-									value = "[Interest.GetProgress]"
-								}
-							}
-						}
-					}
+                tooltipwidget = {
+					FancyTooltip_InterestTierTypeWithCountryAndStrategicRegionContext = {}
 				}
-			}
-		}
 
-		### DIPLO PLAY
-		flowcontainer = {
-			using = default_list_position
-			visible = "[StrategicRegionMarker.GetStrategicRegion.HasDiplomaticPlay]"
-			margin_top = 5
+                button = {
+                    parentanchor = center
+                    alwaystransparent = yes
+                    texture = "[InterestTierType.GetSmallIcon]"
+                    size = { 80% 80% }
+                }
 
-			diplomatic_play_item = {
-				visible = "[Not(StrategicRegionMarker.GetStrategicRegion.GetFirstDiplomaticPlay.HasEscalatedIntoWar)]"
-				datacontext = "[StrategicRegionMarker.AccessStrategicRegion.AccessFirstDiplomaticPlay]"
-			}
+                state = {
+                    name = "big"
+                    trigger_when = "[IsZoomLevelNear]"
+                    size = { 65 65 }
+                    duration = 0.2
+                }
 
-			war_item = {
-				visible = "[StrategicRegionMarker.GetStrategicRegion.GetFirstDiplomaticPlay.HasEscalatedIntoWar]"
-				blockoverride "datacontext" {
-					datacontext = "[StrategicRegionMarker.AccessStrategicRegion.AccessFirstDiplomaticPlay.AccessWar]"
-				}
-			}
-		}
-	}
+                state = {
+                    name = "mid"
+                    trigger_when = "[IsZoomLevelMid]"
+                    size = { 40 40 }
+                    duration = 0.2
+                }
+
+                state = {
+                    name = "small"
+                    trigger_when = "[IsZoomLevelFar]"
+                    size = { 40 40 }
+                    duration = 0.2
+                }
+
+                button = {
+                    visible = "[GreaterThan_CFixedPoint(Country.GetTargetInvolvementIn(StrategicRegion.Self), Country.GetCurrentInvolvementIn(StrategicRegion.Self))]"
+                    parentanchor = vcenter
+                    size = { 25 25 }
+                    alwaystransparent = yes
+                    texture = "gfx/interface/icons/generic_icons/trend_up.dds"
+                    position = { -5 0 }
+
+                    state = {
+                        name = "big"
+                        trigger_when = "[IsZoomLevelNear]"
+                        size = { 25 25 }
+                        position = { -2 0 }
+                        duration = 0.2
+                    }
+
+                    state = {
+                        name = "mid"
+                        trigger_when = "[IsZoomLevelMid]"
+                        size = { 20 20 }
+                        position = { -5 0 }
+                        duration = 0.2
+                    }
+
+                    state = {
+                        name = "small"
+                        trigger_when = "[IsZoomLevelFar]"
+                        size = { 15 15 }
+                        position = { 0 0 }
+                        duration = 0.2
+                    }
+                }
+
+                button = {
+                    visible = "[LessThan_CFixedPoint(Country.GetTargetInvolvementIn(StrategicRegion.Self), Country.GetCurrentInvolvementIn(StrategicRegion.Self))]"
+                    parentanchor = vcenter
+                    size = { 20 20 }
+                    alwaystransparent = yes
+                    texture = "gfx/interface/icons/generic_icons/trend_downdown.dds"
+                    position = { -5 0 }
+
+                    state = {
+                        name = "big"
+                        trigger_when = "[IsZoomLevelNear]"
+                        size = { 25 25 }
+                        position = { -2 0 }
+                        duration = 0.2
+                    }
+
+                    state = {
+                        name = "mid"
+                        trigger_when = "[IsZoomLevelMid]"
+                        size = { 20 20 }
+                        position = { -5 0 }
+                        duration = 0.2
+                    }
+
+                    state = {
+                        name = "small"
+                        trigger_when = "[IsZoomLevelFar]"
+                        size = { 15 15 }
+                        position = { 0 0 }
+                        duration = 0.2
+                    }
+                }
+            }
+        }
+    }
 }
 
 ### DIPLOMATIC PLAY
@@ -1219,7 +1171,7 @@ container = {
 		icon = {
 			parentanchor = bottom
 			size = { 100% 50% }
-			
+
 			background = {
 				using = fade_center_colored
 				color = "[DiplomaticPlay.GetTarget.GetMapColor]"
@@ -1364,8 +1316,122 @@ container = {
 	max_update_rate = 8
 	parentanchor = bottom|hcenter
 	datacontext = "[StrategicRegionMarker.AccessStrategicRegion.AccessFirstDiplomaticPlay.AccessWar]"
-			
+
 	outliner_war_item = {}
+}
+
+### Interests
+container = {
+	name = "interest_marker"
+	ignoreinvisible = yes
+	onmousehierarchyenter = "[AccessHighlightManager.HighlightStrategicRegion(StrategicRegionMarker.GetStrategicRegion)]"
+	onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+	alwaystransparent = no
+	using = clickthrough_blocker
+	layer = layer_map_markers
+	max_update_rate = 8
+	parentanchor = bottom|hcenter
+	datacontext = "[StrategicRegionMarker.AccessStrategicRegion.AccessFirstDiplomaticPlay.AccessWar]"
+	datacontext = "[StrategicRegionMarker.GetStrategicRegion]"
+	datacontext = "[GetMapPerspectiveCountry.GetCurrentInterestTierTypeIn(StrategicRegion.Self)]"
+	datacontext = "[GetMapPerspectiveCountry]"
+
+	container = {
+		button = {
+			size = { 60 60 }
+			onclick = "[InformationPanelBar.OpenStrategicRegionPanel(StrategicRegion.Self)]"
+			texture = "gfx/interface/map_markers/strategic_region_map_marker.dds"
+
+			tooltipwidget = {
+				FancyTooltip_InterestTierTypeWithCountryAndStrategicRegionContext = {}
+			}
+
+			icon = {
+				parentanchor = center
+				texture = "[InterestTierType.GetSmallIcon]"
+				size = { 80% 80% }
+			}
+
+			state = {
+				name = "big"
+				trigger_when = "[IsZoomLevelNear]"
+				size = { 60 60 }
+				duration = 0.2
+			}
+
+			state = {
+				name = "mid"
+				trigger_when = "[IsZoomLevelMid]"
+				size = { 40 40 }
+				duration = 0.2
+			}
+
+			state = {
+				name = "small"
+				trigger_when = "[IsZoomLevelFar]"
+				size = { 40 40 }
+				duration = 0.2
+			}
+
+			button = {
+				visible = "[GreaterThan_CFixedPoint(Country.GetTargetInvolvementIn(StrategicRegion.Self), Country.GetCurrentInvolvementIn(StrategicRegion.Self))]"
+				parentanchor = vcenter|left
+				size = { 20 20 }
+				alwaystransparent = yes
+				texture = "gfx/interface/icons/generic_icons/trend_up.dds"
+
+				state = {
+					name = "big"
+					trigger_when = "[IsZoomLevelNear]"
+					size = { 20 20 }
+					duration = 0.2
+				}
+
+				state = {
+					name = "mid"
+					trigger_when = "[IsZoomLevelMid]"
+					size = { 15 15 }
+					duration = 0.2
+				}
+
+				state = {
+					name = "small"
+					trigger_when = "[IsZoomLevelFar]"
+					size = { 10 10 }
+					duration = 0.2
+				}
+			}
+
+			button = {
+				visible = "[LessThan_CFixedPoint(Country.GetTargetInvolvementIn(StrategicRegion.Self), Country.GetCurrentInvolvementIn(StrategicRegion.Self))]"
+				parentanchor = vcenter|left
+				size = { 20 20 }
+				alwaystransparent = yes
+				texture = "gfx/interface/icons/generic_icons/trend_downdown.dds"
+
+				state = {
+					name = "big"
+					trigger_when = "[IsZoomLevelNear]"
+					size = { 20 20 }
+					duration = 0.2
+				}
+
+				state = {
+					name = "mid"
+					trigger_when = "[IsZoomLevelMid]"
+					size = { 15 15 }
+					duration = 0.2
+				}
+
+				state = {
+					name = "small"
+					trigger_when = "[IsZoomLevelFar]"
+					size = { 10 10 }
+					duration = 0.2
+				}
+			}
+		}
+	}
 }
 
 
@@ -1622,14 +1688,14 @@ container = {
 	layer = layer_map_markers
 	max_update_rate = 8
 	parentanchor = bottom|hcenter
-	
+
 	button = {
 		tooltip = "GOODS_OUTPUT_PENALTY_TOOLTIP"
 		visible = "[Or(IsZoomLevelNear, EqualTo_int32(Building.GetState.GetNumBuildingsAffectedByGoodsShortage, '(int32)1'))]"
 
 		onclick = "[InformationPanelBar.OpenBuildingDetailsPanel(Building.AccessSelf)]"
 		onrightclick = "[RightClickMenuManager.ShowForBuilding(Building.AccessSelf)]"
-		
+
 		size = { 45 23 }
 
 		icon = {
@@ -1699,7 +1765,7 @@ button = {
 			blockoverride "indicator_icon_size" {
 				size = { 25 25 }
 			}
-		}	
+		}
 	}
 }
 
@@ -1988,7 +2054,7 @@ flowcontainer = {
 		visible = "[IsZoomLevelNear]"
 		size = { 3 3 }
 	}
-	
+
 	widget = {
 		visible = "[IsZoomLevelNear]"
 		using = default_list_position
@@ -2145,50 +2211,57 @@ container = {
 					alwaystransparent = yes
 					size = { 95 30 }
 
-					tiny_flag = {
+					flowcontainer = {
+						spacing = 10
+						margin_left = 5
 						parentanchor = left|vcenter
-						position = { 5 0 }
 
-						blockoverride "onhover" {}
-						using = tooltip_ws
-					}
+						tiny_flag = {
+							parentanchor = left|vcenter
 
-					textbox = {
-						raw_text = "[Battle.GetAttackerSide.GetNumUnits|0v]#!"
-						autoresize = yes
-						align = right|nobaseline
-						parentanchor = right|vcenter
-						position = { -25 0 }
-					}
-
-					manpower_bar = {
-						size = { 5 20 }
-						position  = { -15 0 }
-						parentanchor = right|vcenter
-
-						blockoverride "manpower_values" {
-							max = "[Battle.GetStartingAttackerManpower]"
-							value = "[Battle.CalcCurrentAttackerManpower]"
+							blockoverride "onhover" {}
+							using = tooltip_ws
 						}
 
-						blockoverride "manpower_tooltip" {
-							tooltip = "BATTLE_MANPOWER_ATTACKER_TOOLTIP"
+						textbox = {
+							raw_text = "[Battle.GetAttackerSide.GetNumUnits|0v]#!"
+							autoresize = yes
+							align = right|nobaseline
+							parentanchor = right|vcenter
 						}
-					}
 
-					white_progressbar_vertical = {
-						size = { 5 20 }
-						position  = { -5 0 }
-						tooltip = "BATTLE_MORALE_TOOLTIP"
-						parentanchor = right|vcenter
+						flowcontainer = {
+							spacing = 5
+							parentanchor = left|vcenter
 
-						blockoverride "values" {
-							min = 0
-							max = 1
-							value = "[FixedPointToFloat( BattleParticipant.GetMorale )]"
-						}
-						blockoverride "color" {
-							color = "[GetMoraleColorVec( BattleParticipant.GetMorale )]"
+							manpower_bar = {
+								size = { 5 20 }
+								parentanchor = right|vcenter
+
+								blockoverride "manpower_values" {
+									max = "[Battle.GetStartingAttackerManpower]"
+									value = "[Battle.CalcCurrentAttackerManpower]"
+								}
+
+								blockoverride "manpower_tooltip" {
+									tooltip = "BATTLE_MANPOWER_ATTACKER_TOOLTIP"
+								}
+							}
+
+							white_progressbar_vertical = {
+								size = { 5 20 }
+								tooltip = "BATTLE_MORALE_TOOLTIP"
+								parentanchor = right|vcenter
+
+								blockoverride "values" {
+									min = 0
+									max = 1
+									value = "[FixedPointToFloat( BattleParticipant.GetMorale )]"
+								}
+								blockoverride "color" {
+									color = "[GetMoraleColorVec( BattleParticipant.GetMorale )]"
+								}
+							}
 						}
 					}
 				}
@@ -2208,48 +2281,55 @@ container = {
 					alwaystransparent = yes
 					size = { 95 30 }
 
-					tiny_flag = {
-						parentanchor = right|vcenter
-						position = { -5 0 }
-						blockoverride "onhover" {}
-					}
-
-					textbox = {
-						raw_text = "[Battle.GetDefenderSide.GetNumUnits|0v]#!"
-						autoresize = yes
-						align = left|nobaseline
+					flowcontainer = {
+						spacing = 15
+						margin_left = 10
 						parentanchor = left|vcenter
-						position = { 25 0 }
-					}
 
-					manpower_bar = {
-						size = { 5 20 }
-						position  = { 15 0 }
-						parentanchor = vcenter
+						flowcontainer = {
+							spacing = 5
+							parentanchor = left|vcenter
 
-						blockoverride "manpower_values" {
-							max = "[Battle.GetStartingDefenderManpower]"
-							value = "[Battle.CalcCurrentDefenderManpower]"
+							white_progressbar_vertical = {
+								size = { 5 20 }
+								tooltip = "BATTLE_MORALE_TOOLTIP"
+								parentanchor = vcenter
+
+								blockoverride "values" {
+									min = 0
+									max = 1
+									value = "[FixedPointToFloat( BattleParticipant.GetMorale )]"
+								}
+								blockoverride "color" {
+									color = "[GetMoraleColorVec( BattleParticipant.GetMorale )]"
+								}
+							}
+
+							manpower_bar = {
+								size = { 5 20 }
+								parentanchor = vcenter
+
+								blockoverride "manpower_values" {
+									max = "[Battle.GetStartingDefenderManpower]"
+									value = "[Battle.CalcCurrentDefenderManpower]"
+								}
+
+								blockoverride "manpower_tooltip" {
+									tooltip = "BATTLE_MANPOWER_DEFENDER_TOOLTIP"
+								}
+							}
 						}
 
-						blockoverride "manpower_tooltip" {
-							tooltip = "BATTLE_MANPOWER_DEFENDER_TOOLTIP"
+						textbox = {
+							raw_text = "[Battle.GetDefenderSide.GetNumUnits|0v]#!"
+							autoresize = yes
+							align = left|nobaseline
+							parentanchor = left|vcenter
 						}
-					}
 
-					white_progressbar_vertical = {
-						size = { 5 20 }
-						position  = { 5 0 }
-						tooltip = "BATTLE_MORALE_TOOLTIP"
-						parentanchor = vcenter
-
-						blockoverride "values" {
-							min = 0
-							max = 1
-							value = "[FixedPointToFloat( BattleParticipant.GetMorale )]"
-						}
-						blockoverride "color" {
-							color = "[GetMoraleColorVec( BattleParticipant.GetMorale )]"
+						tiny_flag = {
+							parentanchor = left|vcenter
+							blockoverride "onhover" {}
 						}
 					}
 				}
@@ -2358,9 +2438,437 @@ container = {
 	}
 }
 
-### MILITARY FORMATION MARKER
+### NAVAL BATTLE
+container = {
+	name = "naval_battle_marker"
+	using = clickthrough_blocker
+	layer = layer_map_markers
+	max_update_rate = 8
+	parentanchor = bottom|hcenter
+
+	### ONGOING NAVAL BATTLE
+	container = {
+		datacontext = "[NavalBattleMarker.GetBattle]"
+		visible = "[Or(Or(IsMapModeSelected( 'mm_military' ), IsMapModeSelected( 'mm_military_with_past_battles' )), NavalBattle.IsRelevantForCountry( GetMetaPlayer.GetPlayedOrObservedCountry.Self ))]"
+
+		onmousehierarchyenter = "[AccessHighlightManager.HighlightNavalBattle(NavalBattle.Self)]"
+		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+		alwaystransparent = no
+
+		parentanchor = bottom|hcenter
+
+		button = {
+			onclick = "[InformationPanelBar.OpenNavalBattlePanel( NavalBattleMarker.GetBattle.AccessSelf )]"
+			size = { 100% 100% }
+		}
+
+		### BATTLE INFO SMALLER VERSION
+		widget = {
+			visible = "[And(NavalBattle.IsBeingHighlighted, IsZoomLevelMid)]"
+			size = { 0 30 }
+
+			state = {
+				name = _show
+				size = { 130 30 }
+				duration = 0.2
+				alpha = 1
+				using = Animation_Curve_Default
+			}
+			state = {
+				name = _hide
+				size = { 0 30 }
+				duration = 0.2
+				alpha = 0
+				using = Animation_Curve_Default
+			}
+
+			### attackers
+			icon = {
+				datacontext = "[NavalBattle.AccessAttackerBattleParticipant]"
+				datacontext = "[NavalBattle.GetAttackerSide]"
+				using = colored_panel
+				color = "[NavalBattleParticipant.AccessCountry.GetMilitaryInterfaceColor]"
+				alwaystransparent = yes
+				size = { 50% 30 }
+				parentanchor = left|vcenter
+
+				textbox = {
+					position = { -40 0 }
+					raw_text = "[NavalBattle.GetAttackerSide.GetNumShips|0v]#!"
+					autoresize = yes
+					align = right|nobaseline
+					parentanchor = right|vcenter
+					tooltip = "NAVAL_BATTLE_MAPMARKER_NUM_SHIPS_TOOLTIP"
+				}
+
+				white_progressbar_vertical = {
+					size = { 5 20 }
+					position  = { -25 0 }
+					tooltip = "NAVAL_BATTLE_MAPMARKER_PERCENTAGE_SHIPS_TOOLTIP"
+					parentanchor = right|vcenter
+
+					blockoverride "values" {
+						min = 0
+						max = 1
+						value = "[FixedPointToFloat( NavalBattle.GetAttackerRemaingShipsFraction )]"
+					}
+					blockoverride "color" {
+						color = "[GetMoraleColorVec( NavalBattle.GetAttackerRemaingShipsFraction )]"
+					}
+				}
+			}
+
+			### defenders
+			icon = {
+				datacontext = "[NavalBattle.AccessDefenderBattleParticipant]"
+				datacontext = "[NavalBattle.GetDefenderSide]"
+				using = colored_panel
+				color = "[NavalBattleParticipant.AccessCountry.GetMilitaryInterfaceColor]"
+				alwaystransparent = yes
+				size = { 50% 30 }
+				parentanchor = right|vcenter
+
+				textbox = {
+					position = { 40 0 }
+					raw_text = "[NavalBattle.GetDefenderSide.GetNumShips|0v]#!"
+					autoresize = yes
+					align = left|nobaseline
+					parentanchor = left|vcenter
+					tooltip = "NAVAL_BATTLE_MAPMARKER_NUM_SHIPS_TOOLTIP"
+				}
+
+				white_progressbar_vertical = {
+					size = { 5 20 }
+					position  = { 25 0 }
+					tooltip = "NAVAL_BATTLE_MAPMARKER_PERCENTAGE_SHIPS_TOOLTIP"
+					parentanchor = vcenter
+
+					blockoverride "values" {
+						min = 0
+						max = 1
+						value = "[FixedPointToFloat( NavalBattle.GetDefenderRemaingShipsFraction )]"
+					}
+					blockoverride "color" {
+						color = "[GetMoraleColorVec( NavalBattle.GetDefenderRemaingShipsFraction )]"
+					}
+				}
+			}
+		}
+
+		### BATTLE INFO LARGER VERSION
+		widget = {
+			visible = "[And(IsZoomLevelNear, NavalBattle.IsBeingHighlighted)]"
+			size = { 0 40 }
+
+			state = {
+				name = _show
+				size = { 270 40 }
+				duration = 0.2
+				alpha = 1
+				using = Animation_Curve_Default
+			}
+			state = {
+				name = _hide
+				size = { 0 40 }
+				duration = 0.2
+				alpha = 0
+				using = Animation_Curve_Default
+			}
+
+			### attackers
+			widget = {
+				size = { 50% 100% }
+				parentanchor = left|vcenter
+				datacontext = "[NavalBattle.AccessAttackerBattleParticipant]"
+				position = { -20 0 }
+
+				icon = {
+					parentanchor = left|vcenter
+					using = colored_panel
+					datacontext = "[NavalBattleParticipant.AccessCountry]"
+					datacontext = "[NavalBattle.GetAttackerSide]"
+					color = "[Country.GetMilitaryInterfaceColor]"
+					alwaystransparent = yes
+					size = { 135 35 }
+
+					flowcontainer = {
+						spacing = 10
+						margin_left = 5
+						parentanchor = left|vcenter
+
+						tiny_flag = {
+							parentanchor = left|vcenter
+
+							blockoverride "onhover" {}
+							using = tooltip_ws
+						}
+
+						flowcontainer = {
+							direction = vertical
+							parentanchor = left|vcenter
+
+							textbox = {
+								autoresize = yes
+								align = hcenter|nobaseline
+								using = fontsize_small
+								text = "NAVAL_BATTLE_MAPMARKER_AVERAGE_HULL_DAMAGE"
+								tooltip = "NAVAL_BATTLE_SIDE_AVERAGE_HULL_DAMAGE_TOOLTIP"
+							}
+
+							textbox = {
+								autoresize = yes
+								align = hcenter|nobaseline
+								using = fontsize_small
+								text = "NAVAL_BATTLE_MAPMARKER_AVERAGE_ARMOR"
+								tooltip = "NAVAL_BATTLE_SIDE_AVERAGE_ARMOR_TOOLTIP"
+							}
+						}
+
+						vertical_divider = {}
+
+						textbox = {
+							raw_text = "[NavalBattle.GetAttackerSide.GetNumShips|0v]"
+							autoresize = yes
+							align = left|nobaseline
+							parentanchor = left|vcenter
+							tooltip = "NAVAL_BATTLE_MAPMARKER_NUM_SHIPS_TOOLTIP"
+						}
+
+						white_progressbar_vertical = {
+							size = { 5 20 }
+							tooltip = "NAVAL_BATTLE_MAPMARKER_PERCENTAGE_SHIPS_TOOLTIP"
+							parentanchor = left|vcenter
+
+							blockoverride "values" {
+								min = 0
+								max = 1
+								value = "[FixedPointToFloat( NavalBattle.GetAttackerRemaingShipsFraction )]"
+							}
+							blockoverride "color" {
+								color = "[GetMoraleColorVec( NavalBattle.GetAttackerRemaingShipsFraction )]"
+							}
+						}
+					}
+				}
+			}
+
+			### defenders
+			widget = {
+				size = { 50% 100% }
+				parentanchor = right|vcenter
+				datacontext = "[NavalBattle.AccessDefenderBattleParticipant]"
+				position = { 20 0 }
+
+				icon = {
+					parentanchor = right|vcenter
+					using = colored_panel
+					datacontext = "[NavalBattleParticipant.AccessCountry]"
+					datacontext = "[NavalBattle.GetDefenderSide]"
+					color = "[Country.GetMilitaryInterfaceColor]"
+					alwaystransparent = yes
+					size = { 135 35 }
+
+					flowcontainer = {
+						spacing = 10
+						margin_right = 5
+						parentanchor = right|vcenter
+
+						white_progressbar_vertical = {
+							size = { 5 20 }
+							tooltip = "NAVAL_BATTLE_MAPMARKER_PERCENTAGE_SHIPS_TOOLTIP"
+							parentanchor = left|vcenter
+
+							blockoverride "values" {
+								min = 0
+								max = 1
+								value = "[FixedPointToFloat( NavalBattle.GetDefenderRemaingShipsFraction )]"
+							}
+							blockoverride "color" {
+								color = "[GetMoraleColorVec( NavalBattle.GetDefenderRemaingShipsFraction )]"
+							}
+						}
+
+						textbox = {
+							raw_text = "[NavalBattle.GetDefenderSide.GetNumShips|0v]"
+							autoresize = yes
+							align = left|nobaseline
+							parentanchor = left|vcenter
+							tooltip = "NAVAL_BATTLE_MAPMARKER_NUM_SHIPS_TOOLTIP"
+						}
+
+						vertical_divider = {}
+
+						flowcontainer = {
+							direction = vertical
+							parentanchor = left|vcenter
+
+							textbox = {
+								autoresize = yes
+								align = hcenter|nobaseline
+								using = fontsize_small
+								text = "NAVAL_BATTLE_MAPMARKER_AVERAGE_HULL_DAMAGE"
+								tooltip = "NAVAL_BATTLE_SIDE_AVERAGE_HULL_DAMAGE_TOOLTIP"
+							}
+
+							textbox = {
+								autoresize = yes
+								align = hcenter|nobaseline
+								using = fontsize_small
+								text = "NAVAL_BATTLE_MAPMARKER_AVERAGE_ARMOR"
+								tooltip = "NAVAL_BATTLE_SIDE_AVERAGE_ARMOR_TOOLTIP"
+							}
+						}
+
+						tiny_flag = {
+							parentanchor = left|vcenter
+
+							blockoverride "onhover" {}
+							using = tooltip_ws
+						}
+					}
+				}
+			}
+		}
+
+		widget = {
+			size = { 40 40 }
+			parentanchor = bottom|hcenter
+
+			icon = {
+				size = { 120% 120% }
+				parentanchor = center
+				visible = "[NavalBattle.IsBeingHighlighted]"
+				texture = "gfx/interface/map_markers/round_highlight.dds"
+			}
+
+			state = {
+                name = "big"
+                trigger_when = "[IsZoomLevelNear]"
+                size = { 40 40 }
+                duration = 0.2
+            }
+
+            state = {
+                name = "mid"
+                trigger_when = "[IsZoomLevelMid]"
+                size = { 34 34 }
+                duration = 0.2
+            }
+
+            state = {
+                name = "small"
+                trigger_when = "[IsZoomLevelFar]"
+                size = { 30 30 }
+                duration = 0.2
+            }
+		}
+
+		icon = {
+			size = { 40 40 }
+			texture = "[NavalBattle.GetBattleIcon]"
+			tooltip = "[NavalBattle.GetStatusString]"
+			using = tooltip_above
+			parentanchor = bottom|hcenter
+
+			state = {
+                name = "big"
+                trigger_when = "[IsZoomLevelNear]"
+                size = { 40 40 }
+                duration = 0.2
+            }
+
+            state = {
+                name = "mid"
+                trigger_when = "[IsZoomLevelMid]"
+                size = { 34 34 }
+                duration = 0.2
+            }
+
+            state = {
+                name = "small"
+                trigger_when = "[IsZoomLevelFar]"
+                size = { 30 30 }
+                duration = 0.2
+            }
+
+			textbox = {
+				visible = "[ObjectsEqual(NavalBattle.GetAttacker, GetPlayer.Self)]"
+				raw_text = "@unit_offense!"
+				parentanchor = top|hcenter
+				autoresize = yes
+				position = { 0 -24 }
+			}
+
+			textbox = {
+				visible = "[ObjectsEqual(NavalBattle.GetDefender, GetPlayer.Self)]"
+				raw_text = "@unit_defense!"
+				parentanchor = top|hcenter
+				autoresize = yes
+				position = { 0 -24 }
+			}
+		}
+	}
+}
+
+container = {
+	name = "past_naval_battle_marker"
+	datacontext = "[PastNavalBattleMarker.GetNavalBattle]"
+	using = clickthrough_blocker
+	layer = layer_map_markers
+	max_update_rate = 8
+	onmousehierarchyenter = "[AccessHighlightManager.HighlightNavalBattle(NavalBattle.Self)]"
+	onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+	alwaystransparent = no
+	parentanchor = bottom|hcenter
+
+	widget = {
+		size = { 40 30 }
+		datacontext = "[NavalBattle.GetWinner]"
+		color = "[Country.GetMilitaryInterfaceColor]"
+		onmousehierarchyenter = "[AccessHighlightManager.HighlightNavalBattle(NavalBattle.Self)]"
+		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+		parentanchor = bottom|hcenter
+
+		icon = {
+			size = { 45 45 }
+			parentanchor = center
+			visible = "[NavalBattle.IsBeingHighlighted]"
+			texture = "gfx/interface/map_markers/round_highlight.dds"
+		}
+
+		icon = {
+			size = { 35 35 }
+			texture = "[NavalBattle.GetBattleIcon]"
+			tooltip = "[NavalBattle.GetStatusString]"
+			parentanchor = center
+			alpha = 0.75
+		}
+
+		tiny_flag = {
+			visible = "[Country.IsValid]"
+			parentanchor = center
+		}
+
+		textbox = {
+			visible = "[Not(Country.IsValid)]"
+			raw_text = "?"
+			align = hcenter|nobaseline
+			size = { 100% 100% }
+		}
+
+		button = {
+			size = { 100% 100% }
+			tooltip = "[NavalBattle.GetStatusString]"
+			onclick = "[InformationPanelBar.OpenNavalBattlePanel( PastNavalBattleMarker.GetNavalBattle.AccessSelf )]"
+		}
+	}
+}
+
+
+
+### LAND FORMATION MARKER
 button = {
-	name = "military_formation_marker"
+	name = "land_formation_marker"
 	parentanchor = bottom|hcenter
 	datacontext = "[FormationMarker.GetFirstMilitaryFormation]"
 	onrightclick = "[RightClickMenuManager.ToggleMilitaryFormation(MilitaryFormation.AccessSelf, PdxGuiWidget.AccessSelf)]"
@@ -2375,7 +2883,7 @@ button = {
 	blockoverride "nib_visibility" {
 		visible = "[FormationMarker.IsAnyFormationTraveling]"
 	}
-	
+
 	click_modifiers = {
 		ondefault = "[FormationMarker.OnLeftClick]"
 		onshift = "[FormationMarker.OnShiftClick]"
@@ -2398,27 +2906,27 @@ button = {
 
 	container = {
 		resizeparent = yes
-		
+
 		background = {
 			using = colored_panel
 			color = "[MilitaryFormation.GetCountry.GetMilitaryInterfaceColor]"
 			alpha = 0.8
 		}
-		
+
 		widget = {
 			visible = "[Not(FormationMarker.HasMultipleFormations)]"
 			size = { 100% 100% }
-			
+
 			tooltipwidget = {
 				FancyTooltip_MilitaryFormation_MapMarker = {}
 			}
 		}
-		
+
 		widget = {
 			visible = "[FormationMarker.HasMultipleFormations]"
 			size = { 100% 100% }
 			tooltip = "[FormationMarker.GetSummaryTooltip]"
-		}			
+		}
 
 		# LARGE MARKER
 		flowcontainer = {
@@ -2451,15 +2959,6 @@ button = {
 				margin_right = 5
 
 				icon = {
-					visible = "[MilitaryFormation.IsArmy]"
-					parentanchor = hcenter
-					size = { 32 32 }
-					color = "[MilitaryFormation.GetFlagColor]"
-					texture = "[MilitaryFormation.GetFlag]"
-				}
-
-				icon = {
-					visible = "[MilitaryFormation.IsFleet]"
 					parentanchor = hcenter
 					size = { 32 32 }
 					color = "[MilitaryFormation.GetFlagColor]"
@@ -2483,26 +2982,18 @@ button = {
 				parentanchor = vcenter
 				spacing = 4
 				margin = { 0 3 }
-				margin_left = 10 
+				margin_left = 10
 
 				flowcontainer = {
 					parentanchor = hcenter
 					spacing = 5
 
 					icon = {
-						visible = "[FormationMarker.IsArmy]"
 						size = { 23 23 }
 						texture = "gfx/interface/icons/generic_icons/battalions.dds"
 						parentanchor = vcenter
 					}
 
-					icon = {
-						visible = "[FormationMarker.IsFleet]"
-						size = { 23 23 }
-						texture = "gfx/interface/icons/generic_icons/flotillas.dds"
-						parentanchor = vcenter
-					}
-					
 					textbox = {
 						text = "MARKER_COMBAT_UNITS_TYPE_AND_NUM"
 						using = transparent_if_unmobilized_in_conflict
@@ -2520,13 +3011,13 @@ button = {
 						manpower_bar = {
 							size = { 6 30 }
 							parentanchor = vcenter
-							
+
 							blockoverride "manpower_values" {
 								max = "[FormationMarker.CalcMaxManpower]"
 								value = "[FormationMarker.CalcCurrentManpower]"
 							}
 
-							blockoverride "manpower_tooltip" {}							
+							blockoverride "manpower_tooltip" {}
 						}
 					}
 
@@ -2544,12 +3035,12 @@ button = {
 						}
 
 						textbox = {
-							raw_text = "@unit_defense! [FormationMarker.CalcAverageAvailableDefense|0v]"
 							autoresize = yes
 							align = nobaseline
 							using = fontsize_small
 							minimumsize = { 40 -1 }
 							margin_right = 3
+							raw_text = "@unit_defense! [FormationMarker.CalcAverageAvailableDefense|0v]"
 						}
 					}
 
@@ -2557,7 +3048,7 @@ button = {
 						visible = "[LessThan_CFixedPoint(FormationMarker.CalcAverageOrganizationPercentage, '(CFixedPoint)1')]"
 						parentanchor = vcenter
 						size = { 6 30 }
-						
+
 						blockoverride "organization_value" {
 							value = "[FixedPointToFloat( FormationMarker.CalcAverageOrganizationPercentage )]"
 						}
@@ -2571,7 +3062,7 @@ button = {
 						visible = "[LessThan_CFixedPoint(FormationMarker.CalcAverageMorale, '(CFixedPoint)1')]"
 						parentanchor = vcenter
 						size = { 6 30 }
-						
+
 						blockoverride "morale_value" {
 							value = "[FixedPointToFloat( FormationMarker.CalcAverageMorale )]"
 						}
@@ -2599,15 +3090,6 @@ button = {
 				}
 
 				icon = {
-					visible = "[FormationMarker.IsArmy]"
-					parentanchor = vcenter
-					size = { 25 25 }
-					color = "[MilitaryFormation.GetFlagColor]"
-					texture = "[MilitaryFormation.GetFlag]"
-				}
-
-				icon = {
-					visible = "[FormationMarker.IsFleet]"
 					parentanchor = vcenter
 					size = { 25 25 }
 					color = "[MilitaryFormation.GetFlagColor]"
@@ -2640,7 +3122,7 @@ button = {
 					text = "MARKER_COMBAT_UNITS_TYPE_AND_NUM_WITH_ICON"
 				}
 			}
-		}	
+		}
 	}
 
 	icon = {
@@ -2648,6 +3130,215 @@ button = {
 		using = highlighted_square_selection
 	}
 }
+
+
+### FLEET FORMATION MARKER
+button = {
+	name = "fleet_formation_marker"
+	parentanchor = bottom|hcenter
+	datacontext = "[FleetFormationMarker.GetFirstMilitaryFormation]"
+	onrightclick = "[RightClickMenuManager.ToggleMilitaryFormation(MilitaryFormation.AccessSelf, PdxGuiWidget.AccessSelf)]"
+
+	onmousehierarchyenter = "[AccessHighlightManager.HighlightMilitaryFormation( MilitaryFormation.Self )]"
+	onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+
+	layer = layer_map_markers
+	max_update_rate = 8
+	using = small_nib
+
+	blockoverride "nib_visibility" {
+		visible = "[FleetFormationMarker.IsAnyFormationTraveling]"
+	}
+
+	click_modifiers = {
+		ondefault = "[FleetFormationMarker.OnLeftClick]"
+		onshift = "[FleetFormationMarker.OnShiftClick]"
+		onctrl = "[FleetFormationMarker.OnCtrlClick]"
+	}
+
+	container = {
+		resizeparent = yes
+
+		background = {
+			using = colored_panel
+			color = "[MilitaryFormation.GetCountry.GetMilitaryInterfaceColor]"
+			alpha = 0.8
+		}
+
+		widget = {
+			visible = "[Not(FleetFormationMarker.HasMultipleFormations)]"
+			size = { 100% 100% }
+
+			tooltipwidget = {
+				FancyTooltip_MilitaryFormation_MapMarker = {}
+			}
+		}
+
+		widget = {
+			visible = "[FleetFormationMarker.HasMultipleFormations]"
+			size = { 100% 100% }
+			tooltip = "[FleetFormationMarker.GetSummaryTooltip]"
+		}
+
+		# LARGE MARKER
+		flowcontainer = {
+			visible = "[Or( FleetFormationMarker.IsAnyFormationHighlighted, MilitaryFormation.IsSelected)]"
+			margin = { 1 1 }
+			minimumsize = { 100 -1 }
+			margin_left = 8
+
+			tiny_flag_no_interact = {
+				parentanchor = vcenter
+				datacontext = "[MilitaryFormation.GetCountry]"
+			}
+
+			flowcontainer = {
+				visible = "[Not(FleetFormationMarker.HasMultipleFormations)]"
+				parentanchor = vcenter
+				direction = vertical
+				margin_right = 5
+
+				icon = {
+					visible = "[Not(MilitaryFormation.GetShipList.IsToRetrofit)]"
+					parentanchor = hcenter
+					size = { 32 32 }
+					color = "[MilitaryFormation.GetFlagColor]"
+					texture = "[MilitaryFormation.GetFlag]"
+				}
+
+				icon = {
+					visible = "[MilitaryFormation.GetShipList.IsToRetrofit]"
+					parentanchor = hcenter
+					size = { 32 32 }
+					texture = "gfx/interface/icons/formation_order_icons/upgrade.dds"
+				}
+
+				textbox = {
+					visible = "[MilitaryFormation.IsTraveling]"
+					parentanchor = hcenter
+					autoresize = yes
+					align = hcenter|nobaseline
+					using = fontsize_small
+					text = "[MilitaryFormation.GetTravelTimeLeftLabel]"
+				}
+			}
+
+			vertical_divider = {}
+
+			flowcontainer = {
+				direction = vertical
+				parentanchor = vcenter
+				spacing = 4
+				margin = { 0 3 }
+				margin_left = 10
+
+				flowcontainer = {
+					parentanchor = hcenter
+					spacing = 5
+
+					icon = {
+						size = { 23 23 }
+						texture = "gfx/interface/icons/generic_icons/flotillas.dds"
+						parentanchor = vcenter
+					}
+
+					textbox = {
+						raw_text = "[FleetFormationMarker.GetNumShips|v]"
+						autoresize = yes
+						align = nobaseline
+						parentanchor = vcenter
+						margin_right = 5
+					}
+
+					flowcontainer = {
+						parentanchor = vcenter
+						direction = vertical
+
+						### DAMAGE
+						textbox = {
+							autoresize = yes
+							align = nobaseline
+							using = fontsize_small
+							minimumsize = { 40 -1 }
+							margin_right = 3
+							raw_text = "@ship_damage! #v [MilitaryFormation.GetShipList.GetDamageAverage|0]#!"
+						}
+
+						### ARMOR
+						textbox = {
+							autoresize = yes
+							align = nobaseline
+							using = fontsize_small
+							minimumsize = { 40 -1 }
+							margin_right = 3
+							raw_text = "@ship_armor! #v [FleetFormationMarker.GetArmorAverage|0]#!"
+						}
+					}
+
+					### HIT POINTS
+					hit_points_bar = {
+						visible = "[LessThan_CFixedPoint(FleetFormationMarker.GetHitPointsPercentage, '(CFixedPoint)1')]"
+						parentanchor = vcenter
+						size = { 6 30 }
+
+						blockoverride "hit_points_value" {
+							value = "[FixedPointToFloat(FleetFormationMarker.GetHitPointsPercentage)]"
+						}
+
+						blockoverride "hit_points_color" {
+							color = "[GetMoraleColorVec(FleetFormationMarker.GetHitPointsPercentage)]"
+						}
+					}
+				}
+			}
+		}
+
+		flowcontainer = {
+			visible = "[And(Not(FleetFormationMarker.IsAnyFormationHighlighted), Not(MilitaryFormation.IsSelected))]"
+
+			flowcontainer = {
+				visible = "[Not(IsZoomLevelFar)]"
+
+				icon = {
+					parentanchor = vcenter
+					size = { 25 25 }
+					color = "[MilitaryFormation.GetFlagColor]"
+					texture = "[MilitaryFormation.GetFlag]"
+				}
+			}
+
+			flowcontainer = {
+				direction = vertical
+				parentanchor = vcenter
+
+				textbox = {
+					visible = "[Not(IsZoomLevelFar)]"
+					autoresize = yes
+					align = nobaseline
+					margin_right = 5
+					raw_text = "[FleetFormationMarker.GetNumShips|v]"
+				}
+
+				textbox = {
+					visible = "[IsZoomLevelFar]"
+					minimumsize = { 36 -1 }
+					autoresize = yes
+					align = hcenter|nobaseline
+					using = fontsize_small
+					margin = { 4 2 }
+					raw_text = "@ships![Nbsp][FleetFormationMarker.GetNumShips|v]"
+				}
+			}
+		}
+	}
+
+	icon = {
+		visible = "[Or(FleetFormationMarker.IsAnyFormationHighlighted, MilitaryFormation.IsSelected)]"
+		using = highlighted_square_selection
+	}
+}
+
+
 
 ### FRONT MARKER
 container = {
@@ -2738,7 +3429,7 @@ container = {
 
 			blockoverride "vfx_entity_instance" {
 				entity_instance = vfx_entity_ui_onhover_front_formation_movement
-				
+
 			}
 		}
 
@@ -2777,7 +3468,7 @@ container = {
 	}
 
 	button = {
-		visible = "[Not(FrontMovementMarker.CanDeploySelectedFormationsToFront)]"
+		visible = "[And(Not(FrontMovementMarker.CanDeploySelectedFormationsToFront), Not(FrontMovementMarker.RequiresNavalTransportForSelectedFormations))]"
 		parentanchor = bottom|hcenter
 		onmousehierarchyenter = "[AccessHighlightManager.HighlightFront(Front.Self)]"
 		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
@@ -2786,8 +3477,9 @@ container = {
 		onclick = "[InformationPanelBar.OpenFrontPanel(FrontMovementMarker.GetFront.Self)]"
 	}
 
+	# Deploy to front directly
 	button = {
-		visible = "[FrontMovementMarker.CanDeploySelectedFormationsToFront]"
+		visible = "[And(FrontMovementMarker.CanDeploySelectedFormationsToFront, Not(FrontMovementMarker.RequiresNavalTransportForSelectedFormations))]"
 		parentanchor = bottom|hcenter
 		onmousehierarchyenter = "[AccessHighlightManager.HighlightFront(Front.Self)]"
 		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
@@ -2795,6 +3487,20 @@ container = {
 		tooltip = "FRONT_MOVEMENT_MARKER_TOOLTIP"
 		onclick = "[InformationPanelBar.OpenFrontPanel(FrontMovementMarker.GetFront.Self)]"
 		onrightclick = "[Execute( Front.GetDeploySelectedFormationsCommand )]"
+		onrightclick = "[PdxGuiWidget.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+		rightclicksound = "event:/SFX/UI/Military/formation_actions_deploy_to_front"
+	}
+
+	# Naval transport fallback - open transport planner
+	button = {
+		visible = "[FrontMovementMarker.RequiresNavalTransportForSelectedFormations]"
+		parentanchor = bottom|hcenter
+		onmousehierarchyenter = "[AccessHighlightManager.HighlightFront(Front.Self)]"
+		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+		size = { 70 70 }
+		tooltip = "FRONT_MOVEMENT_MARKER_TOOLTIP"
+		onclick = "[InformationPanelBar.OpenFrontPanel(FrontMovementMarker.GetFront.Self)]"
+		onrightclick = "[FrontMovementMarker.ShowTransportPlannerForSelectedFormation]"
 		onrightclick = "[PdxGuiWidget.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
 		rightclicksound = "event:/SFX/UI/Military/formation_actions_deploy_to_front"
 	}
@@ -2971,7 +3677,7 @@ container = {
 		FancyTooltip_PoliticalMovement = {}
 	}
 
-	### REVOLUTION VFX 
+	### REVOLUTION VFX
 	widget = {
 		size = { 70 70 }
 		parentanchor = hcenter
@@ -3129,6 +3835,74 @@ container = {
 	}
 }
 
+### NAVAL MISSION
+container = {
+	name = "naval_mission_marker"
+	using = clickthrough_blocker
+	alwaystransparent = no
+	ignoreinvisible = yes
+	layer = layer_map_markers
+	max_update_rate = 8
+	parentanchor = bottom|hcenter
+
+	flowcontainer = {
+		direction = vertical
+		visible = "[Not(IsDataModelEmpty(NavalMissionMarker.AccessNavalMissionTypes))]"
+
+		flowcontainer = {
+			datamodel = "[NavalMissionMarker.AccessNavalMissionTypes]"
+			datamodel_reuse_widgets = yes
+			parentanchor = hcenter
+			spacing = 5
+			margin_top = 2
+
+			item = {
+				button_icon_round = {
+					size = { 40 40 }
+					onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(NavalMissionMarker.GetProvince.Self, 'navy')]"
+					onrightclick = "[RightClickMenuManager.ToggleFleetsOnMissionInSeaRegion(NavalMissionMarker.Self, NavalMissionType.Self, PdxGuiWidget.AccessSelf, 'fleets_on_mission_in_sea_region')]"
+					tooltip = "NAVAL_MISSION_MARKER_TOOLTIP"
+
+					state = {
+	                    name = "big"
+	                    trigger_when = "[IsZoomLevelNear]"
+	                    size = { 40 40 }
+	                    duration = 0.2
+	                }
+
+	                state = {
+	                    name = "mid"
+	                    trigger_when = "[IsZoomLevelMid]"
+	                    size = { 36 36 }
+	                    duration = 0.2
+	                }
+
+	                state = {
+	                    name = "small"
+	                    trigger_when = "[IsZoomLevelFar]"
+	                    size = { 34 34 }
+	                    duration = 0.2
+	                }
+
+					blockoverride "icon" {
+						texture = "[NavalMissionType.GetIcon]"
+					}
+
+					blockoverride "icon_size" {
+						size = { 75% 75% }
+					}
+
+					action_selection_number = {
+						blockoverride "text" {
+							text = "[NavalMissionMarker.GetNumFleetsOnMissionType(NavalMissionType.Self)]"
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 ### NATIONAL FOCUS
 flowcontainer = {
 	name = "decree_marker"
@@ -3183,7 +3957,7 @@ container = {
 
 	flowcontainer = {
 		visible = "[MapInteractions.HasAnyActiveMapInteraction]"
-		
+
 		background = {
 			using = text_edit_bg
 		}
@@ -3241,7 +4015,7 @@ container = {
 		blockoverride "nib_visibility" {
 			visible = "[Or(IsZoomLevelNear, And(Not(IsZoomLevelNear), Not(Or(IsMapModeSelected('mm_default'), IsMapModeSelected('mm_ongoing_diplo_play')))))]"
 		}
-		
+
 		flowcontainer = {
 			datamodel = "[HarvestConditionRegionMarker.GetHarvestConditionAreas]"
 			spacing = 5
@@ -3336,7 +4110,7 @@ container = {
 
 	container = {
 		visible = "[Or(GetMetaPlayer.IsPlayedOrObservedCountry(Country.Self), Hq.IsBeingHighlighted)]"
-		
+
 		using = small_nib
 		blockoverride "nib_visibility" {
 			visible = "[IsZoomLevelNear]"
@@ -3374,7 +4148,7 @@ container = {
 
 			container = {
 				visible = "[GetMetaPlayer.IsPlayedOrObservedCountry(Country.Self)]"
-				
+
 				textbox = {
 					text = "[Hq.GetCombatUnitsIcon] [Hq.GetNameNoFlagNoConcept]"
 					autoresize = yes
@@ -3385,7 +4159,7 @@ container = {
 					parentanchor = hcenter
 					visible = "[IsZoomLevelMid]"
 				}
-				
+
 				textbox = {
 					text = "[Hq.GetCombatUnitsIcon] [Hq.GetName]"
 					visible = "[IsZoomLevelNear]"
@@ -3472,11 +4246,40 @@ button = {
 				visible = "[Not(Or(HQMovementMarker.IsAllSelectedFormationsLocation, HQMovementMarker.IsAllSelectedFormationsTarget))]"
 				onmousehierarchyenter = "[AccessHighlightManager.HighlightHQ(Hq.Self)]"
 				onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
-			
+
+				# Station in State without confirmation
 				button = {
+					visible = "[And(Not(ShouldAskConfirmation(Hq.GetStationSelectedFormationsCommand)), Not(HQMovementMarker.RequiresNavalTransportForSelectedFormations))]"
 					enabled = "[HQMovementMarker.CanStationSelectedFormationsInHQ]"
 					size = { 100% 100% }
-					onrightclick = "[Execute( Hq.GetStationSelectedFormationsCommand )]"
+					rightclick_modifiers = {
+						ondefault = "[Execute( Hq.GetStationSelectedFormationsCommand )]"
+						onctrl = "[HQMovementMarker.ShowTransportPlannerForSelectedFormation]"
+					}
+					onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+					rightclicksound = "event:/SFX/UI/Military/formation_actions_station_at_hq"
+					using = default_button
+				}
+
+				# Station in State with confirmation
+				button = {
+					visible = "[And(ShouldAskConfirmation(Hq.GetStationSelectedFormationsCommand), Not(HQMovementMarker.RequiresNavalTransportForSelectedFormations))]"
+					enabled = "[HQMovementMarker.CanStationSelectedFormationsInHQ]"
+					size = { 100% 100% }
+					rightclick_modifiers = {
+						ondefault = "[PopupManager.AskConfirmationWithSound( Hq.GetStationSelectedFormationsCommand, 'event:/SFX/UI/Military/formation_actions_station_at_hq' )]"
+						onctrl = "[HQMovementMarker.ShowTransportPlannerForSelectedFormation]"
+					}
+					onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+					rightclicksound = "event:/SFX/UI/Global/select"
+					using = default_button
+				}
+
+				# Naval transport fallback - open transport planner
+				button = {
+					visible = "[HQMovementMarker.RequiresNavalTransportForSelectedFormations]"
+					size = { 100% 100% }
+					onrightclick = "[HQMovementMarker.ShowTransportPlannerForSelectedFormation]"
 					onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
 					rightclicksound = "event:/SFX/UI/Military/formation_actions_station_at_hq"
 					using = default_button
@@ -3534,7 +4337,7 @@ container = {
 
 	container = {
 		visible = "[Or(And(Not(Invasion.HasEnded), Invasion.IsRelevantForCountry( GetMetaPlayer.GetPlayedOrObservedCountry.Self )), Invasion.IsBeingHighlighted)]"
-		
+
 		onmousehierarchyenter = "[AccessHighlightManager.HighlightInvasion(Invasion.Self)]"
 		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
 		onmousehierarchyenter = "[GetVariableSystem.Set(Concatenate('placeholder_naval_invasion_highlight_', Invasion.GetName), 'true')]"
@@ -3676,7 +4479,7 @@ container = {
 						### FLEETS
 						textbox = {
 							visible = "[Invasion.IsNavalInvasion]"
-							raw_text = "@flotillas! [Invasion.GetNumInvadingFleetsUnits|v]"
+							raw_text = "@ships! [Invasion.GetNumInvadingFleetsUnits|v]"
 							alpha = "[TransparentIfZero_int32(Invasion.GetNumInvadingFleetsUnits)]"
 							autoresize = yes
 							align = right|nobaseline
@@ -3723,7 +4526,7 @@ container = {
 						### FLEETS
 						textbox = {
 							visible = "[Invasion.IsNavalInvasion]"
-							raw_text = "@flotillas! [Invasion.GetNumDefendingFleetsUnits|v]"
+							raw_text = "@ships! [Invasion.GetNumDefendingFleetsUnits|v]"
 							alpha = "[TransparentIfZero_int32(Invasion.GetNumDefendingFleetsUnits)]"
 							autoresize = yes
 							align = nobaseline
@@ -3833,7 +4636,7 @@ container = {
 
 		textbox = {
 			visible = "[GreaterThan_CFixedPoint(State.GetTaxationRevenue, '(CFixedPoint)0')]"
-			
+
 			raw_text = "#variable [State.GetTaxationRevenue|+=d]#!"
 			using = state_taxation_revenue_with_table
 
@@ -3911,7 +4714,7 @@ container = {
 			parentanchor = center
 			size = { 45 45 }
 
-			vfx = {			
+			vfx = {
 				blockoverride "parent_anchor" {
 					parentanchor = center
 				}
@@ -3932,7 +4735,7 @@ container = {
 			parentanchor = center
 			size = { 45 45 }
 
-			vfx = {			
+			vfx = {
 				blockoverride "parent_anchor" {
 					parentanchor = center
 				}
@@ -3954,7 +4757,7 @@ container = {
 			parentanchor = center
 			size = { 45 45 }
 
-			vfx = {			
+			vfx = {
 				blockoverride "parent_anchor" {
 					parentanchor = center
 				}
@@ -3976,7 +4779,7 @@ container = {
 			parentanchor = hcenter
 			size = { 75 75 }
 
-			vfx = {			
+			vfx = {
 				blockoverride "parent_anchor" {
 					parentanchor = center
 				}
@@ -3997,7 +4800,7 @@ container = {
 			parentanchor = hcenter
 			size = { 75 75 }
 
-			vfx = {			
+			vfx = {
 				blockoverride "parent_anchor" {
 					parentanchor = center
 				}
@@ -4018,7 +4821,7 @@ container = {
 			parentanchor = hcenter
 			size = { 75 75 }
 
-			vfx = {			
+			vfx = {
 				blockoverride "parent_anchor" {
 					parentanchor = center
 				}
@@ -4070,7 +4873,7 @@ container = {
 					}
 					blockoverride "entity_instance" {
 						entity_instance = vfx_entity_ui_powerbloc_map_marker_name_label
-					}			
+					}
 				}
 
 				button= {
@@ -4140,7 +4943,7 @@ container = {
 					}
 					blockoverride "entity_instance" {
 						entity_instance = vfx_entity_ui_powerbloc_map_marker_name_label
-					}			
+					}
 				}
 
 				button= {
@@ -4190,12 +4993,12 @@ container = {
 			visible = "[Not(IsZoomLevelFar)]"
 			parentanchor = hcenter
 			size = { 75 75 }
-			
+
 			button = {
 				size = { 100% 100% }
 				onclick = "[InformationPanelBar.OpenPowerBlocPanel(PowerBloc.Self)]"
 			}
-		}	
+		}
 	}
 }
 
@@ -4368,7 +5171,7 @@ widget = {
 		margin = { 7 7 }
 		direction = vertical
 		datacontext = "[StateMarker.GetGoods.WithStateContext( State.Self )]"
-		
+
 		textbox = {
 			text = "[State.GetPotentialProductionForCountry(Goods.Self, GetPlayer.Self)|vD]"
 			visible = "[GreaterThan_CFixedPoint(State.GetPotentialProductionForCountry(Goods.Self, GetPlayer.Self), '(CFixedPoint)0')]"
@@ -4399,7 +5202,7 @@ widget = {
 		direction = vertical
 		datacontext = "[StateMarker.GetGoods.WithStateContext( State.Self )]"
 		#tooltip = "[Goods.GetStatePriceDesc]"
-		
+
 		textbox = {
 			text = "[State.GetNumProduced(Goods.Self)|0v]"
 			visible = "[GreaterThan_CFixedPoint(State.GetNumProduced(Goods.Self), '(CFixedPoint)0')]"
@@ -4429,7 +5232,7 @@ widget = {
 		margin = { 7 7 }
 		direction = vertical
 		datacontext = "[StateMarker.GetGoods.WithStateContext( State.Self )]"
-		
+
 		textbox = {
 			text = "[SelectLocalization(Goods.HasGoodsShortage, '@goods_shortage! ', '')][State.GetNumConsumed(Goods.Self)|0v]"
 			visible = "[GreaterThan_CFixedPoint(State.GetNumConsumed(Goods.Self), '(CFixedPoint)0')]"
@@ -4546,7 +5349,7 @@ types map_marker_types
 	type movement_marker_hover_vfx = widget {
 		size = { 100% 100% }
 
-		vfx = {			
+		vfx = {
 			blockoverride "parent_anchor" {
 				parentanchor = center
 			}
@@ -4603,6 +5406,477 @@ types map_marker_types
 				duration = 0.4
 				alpha = 0
 				using = Animation_Curve_Default
+			}
+		}
+	}
+
+	type movement_marker_knob_button = button {
+		parentanchor = center
+
+		onclick = "[InformationPanelBar.OpenSeaRegionPanelTab(SeaNodeMovementMarker.GetSeaNode.Self, 'navy')]"
+
+		using = sea_node_framed_button_gfx
+		using = default_button_animation
+		using = select_button_sound
+		framesize = { 60 60 }
+	}
+
+	type movement_marker_knob = container {
+		### no supply - right click adds sea region to current mission(s)
+		movement_marker_knob_button = {
+			visible = "[And(Not(SeaNodeMovementMarker.HasActiveSupplyNetwork), SeaNodeMovementMarker.GetSeaNode.WouldAddSeaRegionToSelectedFleetMissions)]"
+
+			block "no_supply_size" {
+				size = { 15 15 }
+			}
+
+			onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.AddSeaRegionToSelectedFleetMissions )]"
+			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
+			rightclicksound = "event:/SFX/UI/Military/naval_mission_settings_confirm"
+			texture = "gfx/interface/map_markers/sea_node.dds"
+			alpha = 0.5
+		}
+
+		### has supply - right click adds sea region to current mission(s)
+		movement_marker_knob_button = {
+			visible = "[And(SeaNodeMovementMarker.HasActiveSupplyNetwork, SeaNodeMovementMarker.GetSeaNode.WouldAddSeaRegionToSelectedFleetMissions)]"
+
+			block "has_supply_size" {
+				size = { 18 18 }
+			}
+
+			onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.AddSeaRegionToSelectedFleetMissions )]"
+			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
+			rightclicksound = "event:/SFX/UI/Military/naval_mission_settings_confirm"
+			texture = "gfx/interface/map_markers/sea_node_have_supply.dds"
+		}
+
+		### no supply - right click assigns a new mission without confirmation
+		movement_marker_knob_button = {
+			visible = "[And(Not(SeaNodeMovementMarker.HasActiveSupplyNetwork), SeaNodeMovementMarker.GetSeaNode.WouldAssignSelectedFleetsToNewMissionWithoutConfirmation('naval_mission_type_project_power'))]"
+
+			block "no_supply_size" {
+				size = { 15 15 }
+			}
+
+			onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.AssignSelectedFleetsToNewMissionInRegion('naval_mission_type_project_power') )]"
+			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
+			rightclicksound = "event:/SFX/UI/Military/formation_actions_deploy_to_sea_node"
+			texture = "gfx/interface/map_markers/sea_node.dds"
+			alpha = 0.5
+		}
+
+		### has supply - right click assigns a new mission without confirmation
+		movement_marker_knob_button = {
+			visible = "[And(SeaNodeMovementMarker.HasActiveSupplyNetwork, SeaNodeMovementMarker.GetSeaNode.WouldAssignSelectedFleetsToNewMissionWithoutConfirmation('naval_mission_type_project_power'))]"
+
+			block "has_supply_size" {
+				size = { 18 18 }
+			}
+
+			onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.AssignSelectedFleetsToNewMissionInRegion('naval_mission_type_project_power') )]"
+			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
+			rightclicksound = "event:/SFX/UI/Military/formation_actions_deploy_to_sea_node"
+			texture = "gfx/interface/map_markers/sea_node_have_supply.dds"
+		}
+
+		### no supply - right click assigns a new mission with confirmation
+		movement_marker_knob_button = {
+			visible = "[And(Not(SeaNodeMovementMarker.HasActiveSupplyNetwork), SeaNodeMovementMarker.GetSeaNode.WouldAssignSelectedFleetsToNewMissionWithConfirmation('naval_mission_type_project_power'))]"
+
+			block "no_supply_size" {
+				size = { 15 15 }
+			}
+
+			onrightclick = "[PopupManager.AskConfirmationWithSound( SeaNodeMovementMarker.GetSeaNode.AssignSelectedFleetsToNewMissionInRegion('naval_mission_type_project_power'), 'event:/SFX/UI/Military/formation_actions_deploy_to_sea_node' )]"
+			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
+			rightclicksound = "event:/SFX/UI/Global/select"
+			texture = "gfx/interface/map_markers/sea_node.dds"
+			alpha = 0.5
+		}
+
+		### has supply - right click assigns a new mission with confirmation
+		movement_marker_knob_button = {
+			visible = "[And(SeaNodeMovementMarker.HasActiveSupplyNetwork, SeaNodeMovementMarker.GetSeaNode.WouldAssignSelectedFleetsToNewMissionWithConfirmation('naval_mission_type_project_power'))]"
+
+			block "has_supply_size" {
+				size = { 18 18 }
+			}
+
+			onrightclick = "[PopupManager.AskConfirmationWithSound( SeaNodeMovementMarker.GetSeaNode.AssignSelectedFleetsToNewMissionInRegion('naval_mission_type_project_power'), 'event:/SFX/UI/Military/formation_actions_deploy_to_sea_node' )]"
+			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
+			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
+			rightclicksound = "event:/SFX/UI/Global/select"
+			texture = "gfx/interface/map_markers/sea_node_have_supply.dds"
+		}
+
+		### no supply - without right-click
+		movement_marker_knob_button = {
+			visible = "[And3(Not(SeaNodeMovementMarker.HasActiveSupplyNetwork), Not(SeaNodeMovementMarker.GetSeaNode.WouldAddSeaRegionToSelectedFleetMissions), Not(Or(SeaNodeMovementMarker.GetSeaNode.WouldAssignSelectedFleetsToNewMissionWithoutConfirmation('naval_mission_type_project_power'), SeaNodeMovementMarker.GetSeaNode.WouldAssignSelectedFleetsToNewMissionWithConfirmation('naval_mission_type_project_power'))))]"
+
+			block "no_supply_size" {
+				size = { 15 15 }
+			}
+
+			texture = "gfx/interface/map_markers/sea_node.dds"
+			alpha = 0.5
+		}
+
+		### has supply - without right-click
+		movement_marker_knob_button = {
+			visible = "[And3(SeaNodeMovementMarker.HasActiveSupplyNetwork, Not(SeaNodeMovementMarker.GetSeaNode.WouldAddSeaRegionToSelectedFleetMissions), Not(Or(SeaNodeMovementMarker.GetSeaNode.WouldAssignSelectedFleetsToNewMissionWithoutConfirmation('naval_mission_type_project_power'), SeaNodeMovementMarker.GetSeaNode.WouldAssignSelectedFleetsToNewMissionWithConfirmation('naval_mission_type_project_power'))))]"
+
+			block "has_supply_size" {
+				size = { 18 18 }
+			}
+
+			texture = "gfx/interface/map_markers/sea_node_have_supply.dds"
+		}
+	}
+
+	type country_with_interest_map_marker_item = container {
+		parentanchor = center
+		tooltip = "COUNTRY_INTEREST_TOOLTIP"
+		using = tooltip_se
+		datacontext = "[Country.GetCurrentInterestTierTypeIn(StrategicRegion.Self)]"
+
+		### ZOOMED OUT
+		widget = {
+			visible = "[Not(IsZoomLevelNear)]"
+			size = { 35 33 }
+
+			tiny_flag = {
+				position = { 0 -2 }
+				blockoverride "tooltip" {}
+				parentanchor = center
+
+				blockoverride "additional_flag_properties" {
+					button = {
+						parentanchor = bottom
+						size = { 25 25 }
+						position = { -8 8 }
+						alwaystransparent = yes
+						texture = "[InterestTierType.GetSmallIcon]"
+
+						state = {
+	                        name = "big"
+	                        trigger_when = "[IsZoomLevelNear]"
+	                        size = { 25 25 }
+	                        duration = 0.2
+	                    }
+
+	                    state = {
+	                        name = "mid"
+	                        trigger_when = "[IsZoomLevelMid]"
+	                        size = { 20 20 }
+	                        duration = 0.2
+	                    }
+
+	                    state = {
+	                        name = "small"
+	                        trigger_when = "[IsZoomLevelFar]"
+	                        size = { 15 15 }
+	                        duration = 0.2
+	                    }
+					}
+				}
+			}
+		}
+
+		### ZOOMED IN
+		widget = {
+			visible = "[IsZoomLevelNear]"
+			size = { 65 52 }
+
+			small_flag = {
+				position = { 0 -5 }
+				blockoverride "tooltip" {}
+				parentanchor = center
+
+				blockoverride "additional_flag_properties" {
+					button = {
+						parentanchor = bottom
+						size = { 35 35 }
+						position = { -12 12 }
+						alwaystransparent = yes
+						texture = "[InterestTierType.GetSmallIcon]"
+					}
+				}
+			}
+		}
+	}
+}
+
+### STRAIT
+container = {
+	name = "strait_marker"
+	using = clickthrough_blocker
+	layer = layer_map_markers
+	max_update_rate = 8
+	parentanchor = bottom|hcenter
+
+	container = {
+		parentanchor = bottom|hcenter
+		datacontext = "[StraitMarker.GetStrait]"
+		onmousehierarchyenter = "[AccessHighlightManager.HighlightStrait(Strait.Self)]"
+		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+		alwaystransparent = no
+		using = tooltip_ne
+
+		tooltipwidget = {
+			FancyTooltip_Strait = {}
+		}
+
+		### Zoom levels Mid & Near
+		widget = {
+			parentanchor = bottom|hcenter
+			size = { 30 30 }
+
+            state = {
+                name = "big"
+                trigger_when = "[Not(IsZoomLevelFar)]"
+                size = { 40 40 }
+                duration = 0.2
+            }
+
+            state = {
+                name = "small"
+                trigger_when = "[IsZoomLevelFar]"
+                size = { 30 30 }
+                duration = 0.2
+            }
+
+			widget = {
+				visible = "[Strait.IsBeingHighlighted]"
+				size = { 100% 100% }
+				parentanchor = bottom|hcenter
+
+				icon = {
+					size = { 125% 125% }
+					parentanchor = center
+					texture = "gfx/interface/map_markers/round_highlight.dds"
+				}
+			}
+
+			### Big Flags
+			widget = {
+				visible = "[And(Strait.IsBeingHighlighted, Not(IsZoomLevelFar))]"
+				parentanchor = center
+				size = { 0 28 }
+
+				background = {
+					using = entry_bg_simple_solid
+				}
+
+				state = {
+					name = "_show"
+					size = { 104 28 }
+					duration = 0.2
+					alpha = 1
+					using = Animation_Curve_Default
+				}
+
+				state = {
+					name = "_hide"
+					size = { 0 28 }
+					duration = 0.2
+					alpha = 0
+					using = Animation_Curve_Default
+				}
+
+				# Controller is subject - show overlord
+				tiny_flag_no_interact = {
+					visible = "[Strait.GetFirstState.GetController.IsSubject]"
+					parentanchor = vcenter
+					position = { 5 0 }
+					datacontext = "[Strait.GetFirstState.GetController.GetTopOverlord]"
+				}
+
+				tiny_flag_no_interact = {
+					visible = "[Strait.GetSecondState.GetController.IsSubject]"
+					parentanchor = vcenter|right
+					position = { -5 0 }
+					datacontext = "[Strait.GetSecondState.GetController.GetTopOverlord]"
+				}
+				
+				# Controller is independent
+				tiny_flag_no_interact = {
+					visible = "[Not(Strait.GetFirstState.GetController.IsSubject)]"
+					parentanchor = vcenter
+					position = { 5 0 }
+					datacontext = "[Strait.GetFirstState.GetController]"
+				}
+
+				tiny_flag_no_interact = {
+					visible = "[Not(Strait.GetSecondState.GetController.IsSubject)]"
+					parentanchor = vcenter|right
+					position = { -5 0 }
+					datacontext = "[Strait.GetSecondState.GetController]"
+				}
+			}
+
+			### Small Flags
+			widget = {
+				visible = "[And(Strait.IsBeingHighlighted, IsZoomLevelFar)]"
+				parentanchor = center
+				size = { 0 20 }
+
+				background = {
+					using = entry_bg_simple_solid
+				}
+
+				state = {
+					name = "_show"
+					size = { 80 20 }
+					duration = 0.2
+					alpha = 1
+					using = Animation_Curve_Default
+				}
+
+				state = {
+					name = "_hide"
+					size = { 0 20 }
+					duration = 0.2
+					alpha = 0
+					using = Animation_Curve_Default
+				}
+
+				miniature_flag_no_interact = {
+					parentanchor = vcenter
+					position = { 5 0 }
+					datacontext = "[Strait.GetFirstState.GetController]"
+				}
+
+				miniature_flag_no_interact = {
+					parentanchor = vcenter|right
+					position = { -5 0 }
+					datacontext = "[Strait.GetSecondState.GetController]"
+				}
+			}
+
+			button = {
+				parentanchor = bottom|hcenter
+				size = { 100% 100% }
+				onclick = "[InformationPanelBar.OpenStraitPanel( StraitMarker.GetStrait.AccessSelf )]"
+				texture = "gfx/interface/backgrounds/round_button_bg.dds"
+
+
+				button = {
+					visible = "[Strait.HasOpenAccess(GetPlayer.Self)]"
+					parentanchor = center
+					size = { 80% 80% }
+					alwaystransparent = yes
+					texture = "[Strait.GetAccessOpenIcon]"
+				}
+
+				button = {
+					visible = "[Strait.HasNoMilitaryAccess(GetPlayer.Self)]"
+					parentanchor = center
+					size = { 100% 100% }
+					alwaystransparent = yes
+					texture = "[Strait.GetAccessNoMilitaryIcon]"
+				}
+
+				button = {
+					visible = "[Strait.HasNoAccess(GetPlayer.Self)]"
+					parentanchor = center
+					size = { 100% 100% }
+					alwaystransparent = yes
+					texture = "[Strait.GetAccessClosedIcon]"
+				}
+			}
+		}
+
+		### Zoom Level Far & Player has no Access
+		container = {
+			visible = no
+			parentanchor = bottom|hcenter
+
+			widget = {
+				visible = "[Strait.IsBeingHighlighted]"
+				size = { 30 30 }
+				parentanchor = bottom|hcenter
+
+				icon = {
+					size = { 40 40 }
+					parentanchor = center
+					texture = "gfx/interface/map_markers/round_highlight.dds"
+				}
+			}
+
+			widget = {
+				visible = "[Strait.IsBeingHighlighted]"
+				parentanchor = center
+				size = { 0 20 }
+
+				background = {
+					using = entry_bg_simple_solid
+				}
+
+				state = {
+					name = _show
+					size = { 80 20 }
+					duration = 0.2
+					alpha = 1
+					using = Animation_Curve_Default
+				}
+
+				state = {
+					name = _hide
+					size = { 0 20 }
+					duration = 0.2
+					alpha = 0
+					using = Animation_Curve_Default
+				}
+
+				miniature_flag_no_interact = {
+					parentanchor = vcenter
+					position = { 5 0 }
+					datacontext = "[Strait.GetFirstState.GetController]"
+				}
+
+				miniature_flag_no_interact = {
+					parentanchor = vcenter|right
+					position = { -5 0 }
+					datacontext = "[Strait.GetSecondState.GetController]"
+				}
+			}
+
+			button = {
+				parentanchor = bottom|hcenter
+				size = { 30 30 }
+				onclick = "[InformationPanelBar.OpenStraitPanel( StraitMarker.GetStrait.AccessSelf )]"
+				texture = "gfx/interface/backgrounds/round_button_bg.dds"
+
+
+				button = {
+					visible = "[Strait.HasOpenAccess(GetPlayer.Self)]"
+					parentanchor = center
+					size = { 100% 100% }
+					alwaystransparent = yes
+					texture = "gfx/interface/buttons/button_icons/unlock.dds"
+				}
+
+				button = {
+					visible = "[Strait.HasNoMilitaryAccess(GetPlayer.Self)]"
+					parentanchor = center
+					size = { 100% 100% }
+					alwaystransparent = yes
+					texture = "gfx/interface/icons/generic_icons/population.dds" #todo PRCAL-41308 - Add icon for No Military here
+				}
+
+				button = {
+					visible = "[Strait.HasNoAccess(GetPlayer.Self)]"
+					parentanchor = center
+					size = { 100% 100% }
+					alwaystransparent = yes
+					texture = "gfx/interface/buttons/button_icons/lock.dds"
+				}
 			}
 		}
 	}

@@ -12,7 +12,7 @@ def map_over_rows(df):
     # Iterate over columns (fronts)
     for front in df.columns:
         base_text = """
-bpm_front_attraction_dispatch_mov_bpm_front_WWW = {
+bpm_front_attraction_dispatch_WWW_mov = {
     type = political_movement
 """.replace("WWW", front.lower())
         

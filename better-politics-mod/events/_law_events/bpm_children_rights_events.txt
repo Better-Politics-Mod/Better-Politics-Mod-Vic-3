@@ -491,6 +491,7 @@ children_rights_events.4 = { #ragged schools / advancement
 	}
 
 	cancellation_trigger = {
+		exists = scope:current_law_scope
 		NOT = { currently_enacting_law = scope:current_law_scope }
 	}
 
@@ -531,15 +532,25 @@ children_rights_events.5 = { #pay for your school supplies / stall
 
 	trigger = {
 		OR = {
+			is_enacting_law = law_type:law_compulsory_primary_school
 			is_enacting_law = law_type:law_religious_schools
 			is_enacting_law = law_type:law_public_schools
 		}
 		OR = {
 			has_law = law_type:law_child_labor_allowed
-			has_law = law_type:law_compulsory_primary_school
+			has_law = law_type:law_restricted_child_labor
+			has_law = law_type:law_no_schools
 		}
 		NOT = { has_modifier = school_supplies_modifier }
 		NOT = { has_modifier = no_school_supplies_modifier }
+		NOT = {
+			currently_enacting_law = {
+				OR = {
+					has_amendment = amendment_type:amendment_provided_school_supplies
+					has_amendment = amendment_type:amendment_unfunded_school_supplies
+				}
+			}
+		}
 		any_interest_group = { 
 			bpm_ig_neutral_to_approves_enactment = yes
 		}
@@ -561,6 +572,15 @@ children_rights_events.5 = { #pay for your school supplies / stall
 			}
 			save_scope_as = children_I_have_forgotten_what_this_event_is_about_scope
 		}
+		random_interest_group = {
+			limit = {
+				OR = {
+					is_in_government = yes
+					is_interest_group_type = ig_petty_bourgeoisie
+				}
+			}
+			save_scope_as = school_supplies_ig
+		}
 	}
 
 	cancellation_trigger = {
@@ -569,9 +589,12 @@ children_rights_events.5 = { #pay for your school supplies / stall
 
 	option = { #we can fund them
 		name = children_rights_events.5.a
-		add_modifier = {
-			name = bpm_school_supplies_modifier
-			days = normal_modifier_time
+		currently_enacting_law = {
+			add_amendment = {
+				type = amendment_provided_school_supplies
+				sponsor = scope:school_supplies_ig
+				cooldown = 60
+			}
 		}
 	}
 
@@ -588,9 +611,14 @@ children_rights_events.5 = { #pay for your school supplies / stall
 			add_enactment_modifier = {
 				name = no_school_supplies_modifier
 			}
+			currently_enacting_law = {
+				add_amendment = {
+					type = amendment_unfunded_school_supplies
+					sponsor = scope:school_supplies_ig
+					cooldown = 60
+				}
+			}
 		}
-
-
 	}
 }
 
@@ -623,6 +651,8 @@ children_rights_events.6 = { #gatekeeping education / debate
 		}
 		OR = {
 			has_law = law_type:law_private_schools
+			has_law = law_type:law_child_labor_allowed
+			has_law = law_type:law_restricted_child_labor
 			has_law = law_type:law_no_schools
 		}
 		NOT = { has_modifier = no_gatekeeping }
@@ -711,7 +741,7 @@ children_rights_events.6 = { #gatekeeping education / debate
 				name = no_gatekeeping
 			}
 		}
-		scope:gatekeeper_ig = {
+		scope:gatekeeper_ig ?= {
 			add_modifier = {
 				name = gatekeeping_education_no
 				days = normal_modifier_time

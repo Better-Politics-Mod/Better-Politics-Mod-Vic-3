@@ -12,6 +12,10 @@ REPLACE:movement_modernizer = {
 	
 	creation_trigger = {
 		has_technology_researched = academia
+		trigger_if = {
+			limit = { this ?= c:JAP }
+			has_variable = meiji_var
+		}
 		OR = {
 			AND = {
 				bpm_performance_significant_country = yes
@@ -25,7 +29,7 @@ REPLACE:movement_modernizer = {
 						is_subject = no
 						is_country_type = recognized
 						OR = {
-							bpm_country_is_in_europe = yes
+							is_in_geographic_region = geographic_region_europe
 							bpm_country_is_in_new_world = yes
 						}
 					}
@@ -33,8 +37,8 @@ REPLACE:movement_modernizer = {
 			}
 			AND = {
 				OR = {
-					country_is_in_south_america = yes
-					country_is_in_central_america = yes
+					is_in_geographic_region = geographic_region_south_america
+					is_in_geographic_region = geographic_region_central_america
 				}
 				country_rank <= rank_value:major_power
 			}
@@ -61,34 +65,15 @@ REPLACE:movement_modernizer = {
 	}
 	
 	character_support_trigger = {
-		trigger_if = {
-			limit = {
-				is_in_exile_pool = yes
-			}
-			OR = {
-				has_ideology = ideology:ideology_reformer
-				has_ideology = ideology:ideology_protectionist
-				has_ideology = ideology:ideology_positivist
-				has_ideology = ideology:ideology_abolitionist
-				has_ideology = ideology:ideology_market_liberal
-				has_ideology = ideology:ideology_sovereignist
-				bpm_ig_is_liberal = yes
-			}
-		}
-		trigger_else = {
-			OR = {
-				has_ideology = ideology:ideology_reformer
-				has_ideology = ideology:ideology_protectionist
-				has_ideology = ideology:ideology_positivist
-				has_ideology = ideology:ideology_abolitionist
-				has_ideology = ideology:ideology_market_liberal
-				has_ideology = ideology:ideology_sovereignist
-				interest_group ?= {
-					OR = {
-						bpm_ig_is_liberal = yes
-					}
-				}
-			}
+		bpm_character_is_traditional_econ = no
+		OR = {
+			has_ideology = ideology:ideology_reformer
+			has_ideology = ideology:ideology_protectionist
+			has_ideology = ideology:ideology_positivist
+			has_ideology = ideology:ideology_abolitionist
+			has_ideology = ideology:ideology_market_liberal
+			has_ideology = ideology:ideology_sovereignist
+			bpm_ig_is_liberal = yes
 		}
 	}
 	character_support_weight = {
@@ -335,9 +320,10 @@ REPLACE:movement_modernizer = {
 		}
 		multiply = {
 			value = owner.bpm_consciousness_liberal_percent
+			min = 0.5
 			desc = "BPM_CONSCIOUSNESS_LIBERAL"
 		}
-		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
+		
 		if = {
 			limit = {
 				owner ?= {
@@ -423,7 +409,10 @@ REPLACE:movement_royalist_constitutional = {
 	creation_trigger = {
 		has_law = law_type:law_monarchy
 		country_has_voting_franchise = yes
-		NOT = { c:FRA ?= this }
+		NOT = {
+			c:FRA = this
+			civil_war_origin_country ?= c:FRA
+		}
 	}	
 	creation_weight = {
 		value = 100
@@ -676,9 +665,10 @@ REPLACE:movement_royalist_constitutional = {
 		min = 0
 		multiply = {
 			value = owner.bpm_consciousness_liberal_percent
+			min = 0.5
 			desc = "BPM_CONSCIOUSNESS_LIBERAL"
 		}
-		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
+		
 		if = {
 			limit = {
 				owner ?= {
@@ -750,10 +740,9 @@ REPLACE:movement_royalist_constitutional = {
 		}
 	}
 	
-      	secession = {
-		possible = { 
-                          always = no 
-                         scope:clout <= 0
+	secession = {
+		possible = {
+			always = no
 		}
 		
 		weight = {
@@ -814,14 +803,14 @@ REPLACE:movement_royalist_constitutional = {
 						desc = "MONARCHY_BEING_ABOLISHED"
 					}					
 				}
-				else = {
-					add = { # Only care about legitimacy in the context of a monarchy that isn't under direct threat
-						value = 50
-						subtract = legitimacy
-						multiply = 0.005
-						desc = "concept_legitimacy"
-					}				
-				}
+				# else = {
+				# 	add = { # Only care about legitimacy in the context of a monarchy that isn't under direct threat
+				# 		value = 50
+				# 		subtract = legitimacy
+				# 		multiply = 0.005
+				# 		desc = "concept_legitimacy"
+				# 	}				
+				# }
 			}		
 		}
 	}	
@@ -857,7 +846,7 @@ REPLACE:movement_liberal = {
 		}
 		if = {
 			limit = {
-				country_is_in_europe = yes
+				is_in_geographic_region = geographic_region_europe
 			}
 			multiply = 1000
 		}
@@ -1169,8 +1158,7 @@ REPLACE:movement_liberal = {
 		}
 		if = {
 			limit = {
-				exists = ig:ig_liberals
-				ig:ig_liberals ?= {
+				owner.ig:ig_liberals ?= {
 					ig_clout > 0.15
 					bpm_ig_is_establishment = yes
 				}
@@ -1178,7 +1166,7 @@ REPLACE:movement_liberal = {
 			multiply = {
 				value = 2
 				subtract = {
-					value = ig:ig_liberals.ig_approval
+					value = owner.ig:ig_liberals.ig_approval
 					divide = 20
 				}
 				divide = 2
@@ -1187,9 +1175,10 @@ REPLACE:movement_liberal = {
 		}
 		multiply = {
 			value = owner.bpm_consciousness_liberal_percent
+			min = 0.5
 			desc = "BPM_CONSCIOUSNESS_LIBERAL"
 		}
-		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
+		
 		if = {
 			limit = {
 				owner ?= {
@@ -1633,8 +1622,7 @@ REPLACE:movement_radical = {
 
 		if = {
 			limit = {
-				exists = ig:ig_radicals
-				ig:ig_radicals ?= {
+				owner.ig:ig_radicals ?= {
 					ig_clout > 0.15
 					bpm_ig_is_establishment = yes
 				}
@@ -1642,7 +1630,7 @@ REPLACE:movement_radical = {
 			multiply = {
 				value = 2
 				subtract = {
-					value = ig:ig_radicals.ig_approval
+					value = owner.ig:ig_radicals.ig_approval
 					divide = 20
 				}
 				divide = 2
@@ -1651,9 +1639,10 @@ REPLACE:movement_radical = {
 		}
 		multiply = {
 			value = owner.bpm_consciousness_liberal_percent
+			min = 0.5
 			desc = "BPM_CONSCIOUSNESS_LIBERAL"
 		}
-		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
+		
 		if = {
 			limit = {
 				owner ?= {
@@ -2047,9 +2036,10 @@ REPLACE:movement_feminist = {
 		}
 		multiply = {
 			value = owner.bpm_consciousness_liberal_percent
+			min = 0.5
 			desc = "BPM_CONSCIOUSNESS_LIBERAL"
 		}
-		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
+		
 		if = {
 			limit = {
 				owner ?= {
@@ -2116,7 +2106,7 @@ REPLACE:movement_feminist = {
 	}	
 }
 
-REPLACE:movement_market_liberal = {
+movement_market_liberal = {
 	category = movement_category_ideological
 	
 	ideology = ideology_eco_market_liberal_mov
@@ -2138,6 +2128,24 @@ REPLACE:movement_market_liberal = {
 		exists = ig:ig_liberals
 		ig:ig_liberals ?= {
 			bpm_ig_is_marginal = no
+		}
+		trigger_if = {
+			limit = {
+				OR = {
+					this ?= c:FRA
+					civil_war_origin_country ?= c:FRA
+				}
+			}
+			OR = {
+				has_variable = monarchy_stamped_out_var
+				AND = {
+					OR = {
+						has_variable = legitimist_restoration_var
+						has_variable = orleanist_restoration_var
+					}
+					has_variable = one_true_french_dynasty
+				}
+			}
 		}
 	}	
 	creation_weight = {
@@ -2174,6 +2182,7 @@ REPLACE:movement_market_liberal = {
 				is_in_exile_pool = yes
 			}
 			OR = {
+				bpm_character_is_capitalist_econ = yes
 				has_ideology = ideology:ideology_market_liberal
 				has_ideology = ideology:ideology_liberal_leader
 				has_ideology = ideology:ideology_republican_leader
@@ -2183,6 +2192,7 @@ REPLACE:movement_market_liberal = {
 		}
 		trigger_else = {
 			OR = {
+				bpm_character_is_capitalist_econ = yes
 				has_ideology = ideology:ideology_market_liberal
 				has_ideology = ideology:ideology_liberal_leader
 				#has_ideology = ideology:ideology_republican_leader
@@ -2460,8 +2470,7 @@ REPLACE:movement_market_liberal = {
 		}
 		if = {
 			limit = {
-				exists = ig:ig_market_liberals
-				ig:ig_market_liberals ?= {
+				owner.ig:ig_market_liberals ?= {
 					ig_clout > 0.15
 					bpm_ig_is_establishment = yes
 				}
@@ -2469,7 +2478,7 @@ REPLACE:movement_market_liberal = {
 			multiply = {
 				value = 2
 				subtract = {
-					value = ig:ig_market_liberals.ig_approval
+					value = owner.ig:ig_market_liberals.ig_approval
 					divide = 20
 				}
 				divide = 2
@@ -2478,9 +2487,10 @@ REPLACE:movement_market_liberal = {
 		}
 		multiply = {
 			value = owner.bpm_consciousness_liberal_percent
+			min = 0.5
 			desc = "BPM_CONSCIOUSNESS_LIBERAL"
 		}
-		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
+		
 		if = {
 			limit = {
 				owner ?= {
@@ -2582,7 +2592,7 @@ REPLACE:movement_market_liberal = {
 	}		
 }
 
-REPLACE:movement_national_liberal = {
+movement_national_liberal = {
 	category = movement_category_ideological
 	
 	ideology = ideology_sta_national_liberal
@@ -2598,6 +2608,24 @@ REPLACE:movement_national_liberal = {
 		exists = ig:ig_liberals
 		ig:ig_liberals ?= {
 			bpm_ig_is_marginal = no
+		}
+		trigger_if = {
+			limit = {
+				OR = {
+					this ?= c:FRA
+					civil_war_origin_country ?= c:FRA
+				}
+			}
+			OR = {
+				has_variable = monarchy_stamped_out_var
+				AND = {
+					OR = {
+						has_variable = legitimist_restoration_var
+						has_variable = orleanist_restoration_var
+					}
+					has_variable = one_true_french_dynasty
+				}
+			}
 		}
 	}	
 	creation_weight = {
@@ -2947,8 +2975,7 @@ REPLACE:movement_national_liberal = {
 
 		if = {
 			limit = {
-				exists = ig:ig_national_liberals
-				ig:ig_national_liberals ?= {
+				owner.ig:ig_national_liberals ?= {
 					ig_clout > 0.15
 					bpm_ig_is_establishment = yes
 				}
@@ -2956,7 +2983,7 @@ REPLACE:movement_national_liberal = {
 			multiply = {
 				value = 2
 				subtract = {
-					value = ig:ig_national_liberals.ig_approval
+					value = owner.ig:ig_national_liberals.ig_approval
 					divide = 20
 				}
 				divide = 2
@@ -2965,9 +2992,10 @@ REPLACE:movement_national_liberal = {
 		}
 		multiply = {
 			value = owner.bpm_consciousness_liberal_percent
+			min = 0.5
 			desc = "BPM_CONSCIOUSNESS_LIBERAL"
 		}
-		multiply = { value = BPM_LIBERAL_STRENGTH desc = BPM_LIBERAL_AND_CONS } 
+		
 		if = {
 			limit = {
 				owner ?= {

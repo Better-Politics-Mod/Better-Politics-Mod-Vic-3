@@ -1,4 +1,4 @@
-# Requires the $VARIABLE$ and $VARIABLE$_baseline_target to be set
+﻿# Requires the $VARIABLE$ and $VARIABLE$_baseline_target to be set
 # $RATE$ is how fast the variable ends up changing to the trend 
 bpm_handle_baseline_target_trend = {
 	if = {
@@ -256,6 +256,46 @@ bpm_socialist_electoralism_update_baseline_target = {
 	clamp_variable = {
 		name = bpm_je_socialist_electoralism_baseline_target
 		min = 0 max = 100
+	}
+}
+
+bpm_je_march_to_radicalism_progress_update = {
+	# Adding progress to springtime of peoples for every radical agitator
+	if = {
+		limit = { 
+			has_global_variable = bpm_je_march_to_radicalism_progress
+			NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+			country_rank = rank_value:great_power
+			is_in_geographic_region = geographic_region_europe
+		}
+		every_scope_character = {
+			limit = {
+				OR = {
+					has_role = agitator
+					has_role = politician
+				}
+				OR = {
+					bpm_leader_is_radical_leftist = yes
+					interest_group = {
+						bpm_ig_is_radical_left = yes
+					}
+				}
+				interest_group = {
+					bpm_ig_is_marginal = no
+				}
+			}
+			change_global_variable = {
+				name = bpm_je_march_to_radicalism_progress
+				add = 1
+			}
+		}
+		change_global_variable = {
+			name = bpm_je_march_to_radicalism_progress
+			add = {
+				value = bpm_country_fraction_below_expected_sol
+				multiply = 6
+			}
+		}
 	}
 }
 
@@ -620,34 +660,37 @@ bpm_je_christian_or_democrat_je_update = {
 	change_variable = {
 		name = independence_from_church_variable
 		add = {
-			desc = "BPM_BASE_VALUE"
-			value = 0.1
-		}
-		add = {
-			if = {
-				limit = {
-					NOT = {
-						country_has_state_religion = rel:catholic
-					}
-				}
-				value = -0.2
+			value = 0
+			add = {
+				desc = "BPM_BASE_VALUE"
+				value = 0.1
 			}
-		}
-
-		add = {
-			if = {
-				limit = { 
-					OR = { 
-						ig:ig_christian_democrats.var:bpm_movement_liberal_pressure > 0.1
-						OR = {
-							var:bpm_liberal_movement.political_movement_support >= 0.1
-							var:bpm_liberal_movement.political_movement_radicalism >= 0.2
+			add = {
+				if = {
+					limit = {
+						NOT = {
+							country_has_state_religion = rel:catholic
 						}
 					}
+					value = -0.2
 				}
-				value = 20
-				multiply = ig:ig_christian_democrats.var:bpm_movement_liberal_pressure
-				divide = 20
+			}
+	
+			add = {
+				if = {
+					limit = { 
+						OR = { 
+							ig:ig_christian_democrats.var:bpm_movement_liberal_pressure > 0.1
+							OR = {
+								var:bpm_liberal_movement.political_movement_support >= 0.1
+								var:bpm_liberal_movement.political_movement_radicalism >= 0.2
+							}
+						}
+					}
+					value = 20
+					multiply = ig:ig_christian_democrats.var:bpm_movement_liberal_pressure
+					divide = 20
+				}
 			}
 		}
 	}
@@ -685,7 +728,7 @@ bpm_je_christian_democrats_independence_update = {
 
 	if = {
 		limit = {
-			limit = { exists = ig:ig_christian_democrats  }
+			exists = ig:ig_christian_democrats
 		}
 		change_variable = {
 			name = independence_from_church_variable

@@ -28,6 +28,7 @@
 		ideology_theocrat
 		ideology_serfdom_reformer
 		ideology_royalist
+		ideology_reactionary_anti_capitalist
 	}
 	
 	enable = {
@@ -77,6 +78,17 @@
 			}
 			cultures = {
 				british scottish irish
+			}
+		}
+		rule = {
+			trigger = {
+				c:PHI ?= this
+				any_primary_culture = {
+					cu:spanish = this
+				}
+			}
+			cultures = {
+				spanish
 			}
 		}
 	}
@@ -219,7 +231,7 @@
 			}
 
 			multiply = { # Graves de communi re was released. Time to implode whole parties and organizations.
-				desc = POP_GRAVES_DE_COMMUNI
+				desc = "Graves de communi re was released"
 				value = 1.0
 				if = { 
 					limit = { 
@@ -260,60 +272,65 @@
 				}
 			}
 		}
-
+		
 		if = {
 			limit = { owner = { bpm_performance_significant_country = yes } }
-			add = {
-				desc = "SLAVERY_SUPPORTERS"
-				if = {
-					limit = {
-						pop_has_primary_culture = yes
-						state = { is_slave_state = yes }
+			if = {
+				limit = { scope:interest_group = { bpm_ig_is_pro_slavery = yes } }
+				add = {
+					desc = "SLAVERY_SUPPORTERS"
+					if = {
+						limit = {
+							OR = {
+								pop_acceptance >= acceptance_status_4
+								is_pop_type = aristocrats
+							}
+							state = { is_slave_state = yes }
+						}
+						value = 200
 					}
-					value = 200
-				}
-				else_if = {
-					limit = {
-						owner = { has_law = law_type:law_colonial_slavery }
-						state = { is_incorporated = yes }
-						is_pop_type = aristocrats
+					else_if = {
+						limit = {
+							owner = { has_law = law_type:law_colonial_slavery }
+							state = { is_incorporated = yes }
+							is_pop_type = aristocrats
+						}
+						value = 100
 					}
-					value = 100
 				}
-			}
 
-			add = {
-				desc = "SLAVERY_DETRACTORS"
-				if = {
-					limit = {
-						owner = {
-							NAND = {
-								has_law_or_variant = law_type:law_slavery_banned
+				add = {
+					desc = "SLAVERY_DETRACTORS"
+					if = {
+						limit = {
+							owner = {
 								has_law_or_variant = law_type:law_colonial_slavery
 							}
-						}
-						NOT = { is_pop_type = aristocrats }
-						OR = {
-							#pop_has_primary_culture = no
-							pop_acceptance <= acceptance_status_3
-							state = { is_slave_state = no }
-						}
-					}
-					value = -150
-				}
-				else_if = {
-					limit = {
-						owner = { has_law = law_type:law_colonial_slavery }
-						OR = {
-							#pop_has_primary_culture = no
 							pop_acceptance <= acceptance_status_3
 							state = { is_incorporated = no }
+							NOT = { is_pop_type = aristocrats }
 						}
-						NOT = { is_pop_type = aristocrats }
+						value = -150
 					}
-					value = -150
+					else_if = {
+						limit = {
+							owner = {  
+								NOR = { 
+									has_law_or_variant = law_type:law_slavery_banned
+									has_law_or_variant = law_type:law_colonial_slavery
+								}
+							}
+							NOT = { is_pop_type = aristocrats }
+							OR = {
+								pop_acceptance <= acceptance_status_3
+								state = { is_slave_state = no }
+							}
+						}
+						value = -150
+					}
 				}
 			}
+			
 			multiply = {
 				desc = "LEADER_POPULARITY"
 				scope:interest_group = {

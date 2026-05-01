@@ -1,4 +1,4 @@
-﻿REPLACE:ig_landowners = {
+REPLACE:ig_landowners = {
 	color = hsv{ 0.78 0.1 0.5 }
 	texture = "gfx/interface/icons/ig_icons/landowners.dds"
 	layer = "revolution_dynamic_landowners"
@@ -100,6 +100,16 @@
 				set_interest_group_name = ig_landed_gentry
 			}
 		}
+		# Polish Landowners
+		# else_if = {
+		# 	limit = {
+		# 		country_has_primary_culture = cu:polish
+		# 	}
+		# 	ig:ig_landowners ?= {
+		# 		remove_ideology = ideology_paternalistic
+		# 		add_ideology = ideology_magnatial
+		# 	}
+		# }
 		# Yangban Officials
 		# else_if = {
 		# 	limit = {
@@ -125,9 +135,31 @@
 			limit = {
 				country_has_primary_culture = cu:spanish
 			}
-			ig:ig_landowners = {
-				bpm_remove_all_rel_ideologies = yes
-				add_ideology = ideology_rel_radical_moralist
+			if = {
+				limit = {
+					OR = {
+						c:SPC ?= this
+						has_variable = spain_carlist_victory
+					}
+				}
+				ig:ig_landowners ?= {
+					add_ideology = ideology_carlist_ig
+					bpm_remove_all_rel_ideologies = yes
+					add_ideology = ideology_rel_radical_moralist
+					bpm_remove_all_dop_ideologies = yes
+					add_ideology = ideology_dop_autocrat
+				}
+			}
+			if = {
+				limit = {
+					c:SPA ?= this # Only liberal Spain
+					NOT = { has_variable = spain_carlist_victory }
+				}
+				ig:ig_landowners ?= {
+					add_ideology = ideology_moderantist
+					bpm_remove_all_rel_ideologies = yes
+					add_ideology = ideology:ideology_rel_moralist
+				}
 			}
 		}
 		# Aristocracy of Officials
@@ -172,6 +204,19 @@
 				bpm_ig_make_caudillismo = yes
 			}
 		}
+		else_if = {
+			limit = {
+				country_has_primary_culture = cu:boer
+				NOT = {
+					NOT = { any_primary_culture = { cu:boer = this } }
+				}
+			}
+			ig:ig_landowners ?= {
+				bpm_ig_make_republican_paternalistic = yes
+				remove_ideology = ideology_paternalistic
+				add_ideology = ideology_republican_paternalistic
+			}
+		}
 		# India
 		else_if = {
 			limit = {
@@ -184,6 +229,53 @@
 			}
 			ig:ig_landowners = {
 				set_interest_group_name = ig_zamindars
+			}
+		}
+		else_if = {
+			limit = {
+				c:ZAN ?= this
+				any_primary_culture = { cu:bedouin = this }
+				NOT = { any_primary_culture = { cu:swahili = this } }
+			}
+			ig:ig_landowners ?= {
+				set_interest_group_name = ig_wamanga
+			}
+		}
+		# Magnates
+		else_if = {
+			limit = {
+				has_dlc_feature = ip3_content
+				any_primary_culture = {
+					OR = {
+						cu:polish = this
+						cu:lithuanian = this
+						cu:hungarian = this
+					}
+				}
+			}
+			ig:ig_landowners ?= {
+				set_interest_group_name = ig_magnates
+			}
+		}
+		# Daimyo
+		else_if = {
+			limit = {
+				country_has_primary_culture = cu:japanese
+			}
+			ig:ig_landowners ?= {
+				set_interest_group_name = ig_daimyo
+				add_ideology = ideology_japan_hierarchic
+				add_ideology = ideology_japan_paternalistic
+			}
+		}
+		# Boyars
+		else_if = {
+			limit = {
+				has_dlc_feature = ip3_content
+				country_has_primary_culture = cu:romanian
+			}
+			ig:ig_landowners ?= {
+				set_interest_group_name = ig_boyars
 			}
 		}
 
@@ -213,6 +305,41 @@
 				bedouin
 			}
 		}
+		rule = {
+			trigger = {
+				c:PHI ?= this
+				NOT = { has_variable = je_philippines_main_reliance_happened }
+				NOT = { any_primary_culture = { cu:filipino = this } }
+				NOT = { any_primary_culture = { cu:filipino_hispanophone = this } }
+				any_primary_culture = { cu:spanish = this }
+			}
+			cultures = {
+				spanish filipino_mestizo
+			}
+		}
+		rule = {
+			trigger = {
+				c:PHI ?= this
+				any_primary_culture = {
+					AND = {
+						cu:spanish = this
+						cu:filipino_hispanophone = this
+					}
+				}
+			}
+			cultures = {
+				spanish filipino_hispanophone
+			}
+		}
+		rule = {
+			trigger = {
+				c:SIL ?= this
+				any_primary_culture = {
+					has_discrimination_trait_group = heritage_group_european
+				}
+			}
+			cultures = { akan fulbe kissi mande }
+		}
 	}
 
 	on_character_ig_membership = {}
@@ -237,48 +364,46 @@
 	
 	pop_weight = {
 		value = 0
-
-		add = {
-			desc = "SLAVERY_DETRACTORS"
-			if = {
-				limit = {
-					owner = {
-							NAND = {
-								has_law_or_variant = law_type:law_slavery_banned
-								has_law_or_variant = law_type:law_colonial_slavery
-							} 
-					}
-					NOT = { is_pop_type = aristocrats }
-					OR = {
-						#pop_has_primary_culture = no
-						pop_acceptance <= acceptance_status_3
-						state = { is_slave_state = no }
-					}
-				}
-				value = -300
-			}
-			else_if = {
-				limit = {
-					owner = {
-						has_law = law_type:law_colonial_slavery
-					}
-					OR = {
-						#pop_has_primary_culture = no
+		if = {
+			limit = { scope:interest_group = { bpm_ig_is_pro_slavery = yes } }
+			add = {
+				desc = "SLAVERY_DETRACTORS"
+				if = {
+					limit = {
+						owner = {
+							has_law_or_variant = law_type:law_colonial_slavery
+						}
 						pop_acceptance <= acceptance_status_3
 						state = { is_incorporated = no }
+						NOT = { is_pop_type = aristocrats }
 					}
-					NOT = { is_pop_type = aristocrats }
+					value = -300
 				}
-				value = -300
+				else_if = {
+					limit = {
+						owner = { 
+							NOR = { 
+								has_law_or_variant = law_type:law_slavery_banned
+								has_law_or_variant = law_type:law_colonial_slavery
+							}
+						}
+						NOT = { is_pop_type = aristocrats }
+						OR = {
+							pop_acceptance <= acceptance_status_3
+							state = { is_slave_state = no }
+						}
+					}
+					value = -300
+				}
 			}
 		}
-
 		if = {
 			limit = {
 				is_pop_type = aristocrats
 				NOT = { owner = { country_has_state_religion = rel:confucian } }
 			}
 			add = {
+				# desc = "RURAL_UPPER_CLASS" # Gotta find a way to fix this post update
 				desc = "POP_ARISTOCRATS_CON"
 				value = 250
 			}
@@ -290,10 +415,10 @@
 				}
 			}
 			else_if = {
-				limit = { state = { is_incorporated = yes } owner = { has_law_or_variant= law_type:law_colonial_slavery } }
+				limit = { state = { is_incorporated = yes } owner = { has_law_or_variant = law_type:law_colonial_slavery } }
 				add = {
 					desc = "SLAVEHOLDERS"
-					value = 200
+					value = 100
 				}
 			}
 		}

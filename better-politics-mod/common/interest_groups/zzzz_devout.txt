@@ -1,4 +1,4 @@
-﻿REPLACE:ig_devout = {
+REPLACE:ig_devout = {
 	color = hsv{ 0.47 0.1 0.5 }
 	texture = "gfx/interface/icons/ig_icons/devout.dds"
 	layer = "revolution_dynamic_devout"
@@ -43,7 +43,7 @@
 				country_has_primary_culture = cu:japanese
 			}
 			ig:ig_devout = {
-				set_interest_group_name = ig_buddhist_monks
+				set_interest_group_name = ig_jisha
 				bpm_ig_make_buddhist_moralist = yes
 			}
 		}
@@ -66,6 +66,20 @@
 			}
 			ig:ig_devout = {
 				set_interest_group_name = ig_christian_missionaries
+				add_ideology = ideology_eco_modernizer
+			}
+		}
+		# London Missionary Society (in South Africa)
+		else_if = {
+			limit = {
+				country_has_state_religion = rel:protestant
+				OR = {
+					c:WBL ?= this
+					c:PHL ?= this
+				}
+			}
+			ig:ig_devout = {
+				set_interest_group_name = ig_london_missionary_society
 				add_ideology = ideology_eco_modernizer
 			}
 		}
@@ -122,6 +136,16 @@
 			}
 			ig:ig_devout = {
 				set_interest_group_name = ig_church_of_norway
+			}
+		}
+		# Church of Finland
+		else_if = {
+			limit = {
+				country_has_state_religion = rel:protestant
+				country_has_primary_culture = cu:finnish
+			}
+			ig:ig_devout ?= {
+				set_interest_group_name = ig_church_of_finland
 			}
 		}
 		# Church of Sweden
@@ -194,7 +218,14 @@
 		}
 		# Sunni Ulema
 		else_if = {
-			limit = { country_has_state_religion = rel:sunni }
+			limit = {
+				OR = {
+					country_has_state_religion = rel:sunni
+					# Ibadi Arab Zanzibar still gets a Sunni Devout IG to represent the non-Ibadi majority
+					c:ZAN ?= this
+					c:DEI ?= this
+				}
+			}
 			ig:ig_devout = { 
 				set_interest_group_name = ig_sunni_madrasahs
 			}
@@ -204,6 +235,22 @@
 			limit = { country_has_state_religion = rel:shiite }
 			ig:ig_devout = { 
 				set_interest_group_name = ig_shia_madrasahs
+			}
+		}
+		# Ibadi Ulema
+		else_if = {
+			limit = {
+				country_has_state_religion = rel:ibadi
+				NOT = { c:ZAN ?= this }
+			}
+			ig:ig_devout ?= {
+				set_interest_group_name = ig_ibadi_madrasahs
+				bpm_remove_all_dop_ideologies = yes
+				add_ideology = ideology_dop_oligarch
+				bpm_remove_all_sta_ideologies = yes
+				add_ideology = ideology_sta_decentralized_state
+				bpm_remove_all_gov_ideologies = yes
+				add_ideology = ideology_gov_theocrat
 			}
 		}
 		# Oriental Orthodox Church
@@ -280,7 +327,7 @@
 		else_if = {
 			limit = { country_has_state_religion = rel:sikh }
 			ig:ig_devout = {
-				set_interest_group_name = ig_sikh_priesthood
+				set_interest_group_name = ig_granthis
 				bpm_ig_make_sikh_moralist = yes
 			}
 		}
@@ -321,6 +368,53 @@
 				yankee dixie british hawaiian
 			}
 		}
+		rule = {
+			trigger = {
+				country_has_state_religion = rel:protestant
+				OR = {
+					c:WBL ?= this
+					c:PHL ?= this
+				}
+				c:GBR ?= {
+					country_rank >= rank_value:major_power
+				}
+			}
+			cultures = {
+				british scottish
+			}
+		}
+		rule = {
+			trigger = {
+				c:PHI ?= this
+				NOT = { has_variable = je_philippines_main_reliance_happened }
+				NOT = { any_primary_culture = { cu:filipino = this } }
+				NOT = { any_primary_culture = { cu:filipino_hispanophone = this } }
+				any_primary_culture = { cu:spanish = this }
+			}
+			cultures = {
+				spanish filipino_mestizo
+			}
+		}
+		rule = {
+			trigger = {
+				c:PHI ?= this
+				any_primary_culture = {
+					AND = {
+						cu:spanish = this
+						cu:filipino_hispanophone = this
+					}
+				}
+			}
+			cultures = {
+				spanish filipino_hispanophone
+			}
+		}
+		rule = {
+			trigger = {
+				this ?= c:DEI
+			}
+			cultures = { balinese batak bornean dayak javan malay moluccan sumatran }
+		}
 	}
 
 	on_character_ig_membership = {
@@ -343,9 +437,17 @@
 		else_if = {
 			limit = {
 				owner = {
-					NOR = {
-						has_law_or_variant = law_type:law_total_separation
-						has_law = law_type:law_state_atheism
+					c:DEI ?= this
+				}
+			}
+			change_character_religion = rel:sunni
+		}
+
+		else_if = {
+			limit = {
+				owner = {
+					NOT = {
+						country_has_state_religion = rel:atheist
 					}
 				}
 			}
@@ -357,21 +459,26 @@
 	}
 		
 	pop_potential = {
-		OR = {
-			has_state_religion = yes
-			AND = {
-				exists = c:BIC
-				owner ?= c:BIC
-				has_pop_religion = hindu
-			}
-			AND = {
-				exists = c:ZAN
-				owner ?= c:ZAN
-				has_pop_religion = sunni
+		trigger_if = {
+			limit = { owner = { country_has_state_religion = rel:atheist } }
+			NOT = { 
+				has_pop_religion = atheist
 			}
 		}
-		NOT = { 
-			has_pop_religion = atheist
+		trigger_else_if = {
+			limit = { owner ?= c:BIC }
+			has_pop_religion = hindu
+		}
+		trigger_else_if = {
+			limit = { owner ?= c:ZAN }
+			has_pop_religion = sunni
+		}
+		trigger_else_if = {
+			limit = { owner ?= c:DEI }
+			has_pop_religion = sunni
+		}
+		trigger_else = {
+			has_state_religion = yes
 		}
 	}
 	

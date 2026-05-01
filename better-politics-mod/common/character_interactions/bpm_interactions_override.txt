@@ -3,10 +3,10 @@
 	clicksound = "event:/SFX/UI/Military/command_grant"
 
 	potential = {
-		is_ruler = yes
+		is_ruler_of_own_country = yes
 		NOR = {
-			has_role = general
-			has_role = admiral
+			has_role_of_type = general
+			has_role_of_type = admiral
 		}
 		owner ?= scope:actor
 		NOT = { has_variable = bpm_untouchable_char }
@@ -54,7 +54,7 @@ REPLACE:grant_leadership_to_agitator = {
 
 	potential = {
 		has_dlc_feature = agitators
-		has_role = agitator
+		has_role_of_type = agitator
 		owner ?= scope:actor
 		NOT = { has_variable = bpm_untouchable_char }
 		interest_group = {
@@ -137,9 +137,9 @@ REPLACE:grant_command_to_agitator = {
 
 	potential = {
 		has_dlc_feature = agitators
-		has_role = agitator
-		NOT = { has_role = general }
-		NOT = { has_role = admiral }
+		has_role_of_type = agitator
+		NOT = { has_role_of_type = general }
+		NOT = { has_role_of_type = admiral }
 		owner ?= scope:actor
 		NOT = { has_variable = bpm_untouchable_char }
 	}
@@ -210,13 +210,13 @@ REPLACE:exile_character = {
 		exists = owner
 		# Cannot exile pure commanders, we have the retire interaction for that
 		OR = {
-			has_role = politician
-			has_role = agitator
+			has_role_of_type = politician
+			has_role_of_type = agitator
 		}
 		hidden_trigger = { # BPM addition: Making AI incapable of exiling non-institutional politicians unless they are a great power
 			OR = {
 				NOT = { has_variable = bpm_character_in_institutional_ig_var }
-				has_role = agitator
+				has_role_of_type = agitator
 				owner ?= {
 					OR = {
 						country_rank >= rank_value:great_power	
@@ -225,8 +225,8 @@ REPLACE:exile_character = {
 				}
 			}
 		}
-		is_ruler = no
-		is_heir = no
+		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
 		NOT = { has_variable = bpm_untouchable_char }
 	}
 
@@ -234,7 +234,7 @@ REPLACE:exile_character = {
 
 	possible = {
 		OR = {
-			has_role = agitator
+			has_role_of_type = agitator
 			interest_group = {
 				is_in_government = no
 				is_insurrectionary = no
@@ -313,25 +313,25 @@ REPLACE:exile_character = {
 		hidden_effect = {
 			if = {
 				limit = {
-					NOT = { has_role = agitator }
+					NOT = { has_role_of_type = agitator }
 				}
 				add_character_role = agitator
 			}
 			if = {
 				limit = {
-					has_role = general
+					has_role_of_type = general
 				}
 				remove_character_role = general
 			}
 			if = {
 				limit = {
-					has_role = admiral
+					has_role_of_type = admiral
 				}
 				remove_character_role = admiral
 			}
 			if = {
 				limit = {
-					has_role = politician
+					has_role_of_type = politician
 				}
 				set_as_interest_group_leader = no
 				remove_character_role = politician
@@ -751,14 +751,13 @@ REPLACE:arrange_accident = {
 	potential = {
 		is_in_exile_pool = no
 		is_in_void = no
-		is_ruler = no
+		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
 		OR = {
-			is_heir = yes
-			has_role = general
-			has_role = admiral
-			has_role = politician
-			has_role = agitator
-			has_role = executive
+			has_role_of_type = general
+			has_role_of_type = admiral
+			has_role_of_type = politician
+			has_role_of_type = agitator
 		}
 		is_immortal = no
 	}
@@ -809,10 +808,40 @@ REPLACE:arrange_accident = {
 			limit = {
 				exists = owner.institution:institution_home_affairs
 			}
-			random_list = {
-				40 = {
-					modifier = {
-						if = {
+			50 = {
+				owner ?= {
+					post_notification = arranged_accident_failed
+				}
+				custom_tooltip = assassination_attempt_failed_tt
+			}
+			25 = {
+				custom_tooltip = assassination_attempt_failed_loud_tt
+				owner ?= {
+					add_radicals = {
+						value = very_large_radicals
+						interest_group = scope:relevant_ig
+					}
+				}
+				if = {
+					limit = {
+						character_supports_political_movement = yes
+					}
+					this.political_movement = {
+						add_modifier = {
+							name = modifier_government_accident_attempt
+							days = long_modifier_time
+						}
+					}
+				}
+				else_if = {
+					limit = {
+						has_role_of_type = politician
+						THIS.interest_group = {
+							interest_group_supports_political_movement = yes
+						}
+					}
+					owner ?= {
+						random_political_movement = {
 							limit = {
 								owner.institution:institution_home_affairs.investment >= 2
 							}
@@ -1122,7 +1151,7 @@ REPLACE:resign_from_office = {
 	potential = {
 		has_dlc_feature = voice_of_the_people_content
 		owner ?= scope:actor
-		is_ruler = yes
+		is_ruler_of_own_country = yes
 		owner ?= {
 			NOR = {
 				has_law = law_type:law_monarchy

@@ -1,0 +1,333 @@
+﻿REPLACE:je_meiji_restoration_proclaim_imperial_restoration = {
+	name = je_meiji_restoration_proclaim_imperial_restoration
+	desc = je_meiji_restoration_proclaim_imperial_restoration_desc
+
+	visible = {
+		has_journal_entry = je_meiji_restoration
+	}
+
+	possible = {
+		OR = {
+			custom_tooltip = {
+				text = sufficient_pressure_from_sonno_joi_tt
+				any_political_movement = {
+					is_political_movement_type = movement_meiji_restorationist
+					political_movement_radicalism > define:NPolitics|RADICALISM_PROTESTING_THRESHOLD
+				}
+			}
+			custom_tooltip = {
+				text = ruler_is_modernizer_or_mitogaku_tt
+				any_scope_character = {
+					has_role = bpm_character_role_hog
+					OR = {
+						has_ideology = ideology:ideology_modernizer_leader
+						has_ideology = ideology:ideology_mitogaku
+					}
+				}
+			}
+			AND = {
+				custom_tooltip = {
+					text = kobu_gattai_trigger_tt
+					has_variable = kobu_gattai
+				}
+				custom_tooltip = {
+					text = shogun_imperial_marriage_tt
+					has_variable = japan_completed_imperial_marriage
+				}
+			}
+		}
+		NOT = {
+			has_gov_regency = yes
+		}
+		has_law = law_type:law_bakufu
+		custom_tooltip = {
+			text = shogunate_has_a_vision_tt
+			OR = {
+				has_variable = kobu_gattai
+				has_variable = kogi_yoron
+			}
+		}
+		is_not_in_civil_war = yes
+		custom_tooltip = {
+			text = not_already_used_this_interaction_tt
+			NOT = {
+				has_variable = je_meiji_restoration_proclaim_imperial_restoration_var
+			}
+		}
+	}
+
+	selected = {
+		has_variable = je_meiji_restoration_proclaim_imperial_restoration_var
+	}
+
+	effect = {
+		if = {
+			limit = {
+				has_variable = kobu_gattai
+			}
+			custom_tooltip = meiji_restoration_restore_emperor_1_tt
+		}
+		else_if = {
+			limit = {
+				has_variable = kogi_yoron
+			}
+			custom_tooltip = meiji_restoration_restore_emperor_2_tt
+		}
+		trigger_event = {
+			id = ep2_meiji.5
+		}
+		custom_tooltip = {
+			text = meiji_restoration_restore_emperor_warning_tt
+		}
+		set_variable = je_meiji_restoration_proclaim_imperial_restoration_var
+	}
+
+	ai_chance = {
+		value = 1
+		if = {
+			limit = {
+				any_political_movement = {
+					is_political_movement_type = movement_meiji_restorationist
+					political_movement_radicalism > define:NPolitics|RADICALISM_PROTESTING_THRESHOLD
+				}
+			}
+			add = 5
+		}
+		else_if = {
+			limit = {
+				any_political_movement = {
+					is_political_movement_type = movement_meiji_restorationist
+					political_movement_radicalism > define:NPolitics|RADICALISM_MILITANT_THRESHOLD
+				}
+			}
+			add = 25
+		}
+		add = { # -15 to 5
+			value = government_legitimacy
+			subtract = 75
+			divide = 5
+		}
+		if = {
+			limit = {
+				has_variable = kogi_yoron
+				ruler ?= {
+					OR = {
+						has_ideology = ideology:ideology_modernizer_leader
+						has_ideology = ideology:ideology_mitogaku
+					}
+				}
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				has_variable = kobu_gattai
+				NOT = {
+					has_variable = japan_completed_imperial_marriage
+				}
+			}
+			add = -6
+		}
+	}
+}
+
+REPLACE:je_meiji_restoration_decide_shogunate_strategy = {
+	name = je_meiji_restoration_decide_shogunate_strategy
+	desc = je_meiji_restoration_decide_shogunate_strategy_desc
+
+	visible = {
+		has_journal_entry = je_meiji_restoration
+	}
+
+	cooldown = { days = normal_modifier_time }
+
+	possible = {
+		has_law = law_type:law_bakufu
+		NOT = {
+			has_gov_regency = yes
+		}
+		trigger_if = {
+			limit = {
+				has_variable = kobu_gattai
+			}
+			custom_tooltip = {
+				text = traditionalist_shogun_warning_present_tt
+				random_scope_character = {
+					limit = {has_role = bpm_character_role_hog}
+					NOT = {has_ideology = ideology:ideology_traditionalist}
+				}
+			}
+		}
+		is_not_in_civil_war = yes
+	}
+
+	effect = {
+		if = {
+			limit = {
+				NOR = {
+					has_variable = kobu_gattai
+					has_variable = kogi_yoron
+				}
+			}
+			trigger_event = {
+				id = ep2_meiji.2
+			}
+			custom_tooltip = shape_of_shogunate_conditions_future_tt
+		}
+		else_if = {
+			limit = {
+				has_variable = kobu_gattai
+			}
+			custom_tooltip = kogi_yoron_tt
+			custom_tooltip = kogi_yoron_2_tt
+			remove_variable = kobu_gattai
+			set_variable = kogi_yoron
+		}
+		else_if = {
+			limit = {
+				has_variable = kogi_yoron
+			}
+			custom_tooltip = kobu_gattai_tt
+			custom_tooltip = kobu_gattai_2_tt
+			remove_variable = kogi_yoron
+			set_variable = kobu_gattai
+		}
+		if = {
+			limit = {
+				random_scope_character = {
+					limit = {has_role = bpm_character_role_hog}
+					has_ideology = ideology:ideology_traditionalist
+				}
+			}
+			custom_tooltip = traditionalist_shogun_warning_tt
+		}
+	}
+
+	ai_chance = {
+		value = -5
+		if = {
+			limit = {
+				any_political_movement = {
+					is_political_movement_type = movement_meiji_restorationist
+				}
+			}
+			every_political_movement = {
+				limit = {
+					is_political_movement_type = movement_meiji_restorationist
+				}
+				add = {
+					value = this.political_movement_radicalism
+					divide = 5
+				}
+			}
+		}
+		if = {
+			limit = {
+				ruler ?= {
+					OR = {
+						has_ideology = ideology:ideology_modernizer_leader
+						has_ideology = ideology:ideology_mitogaku
+					}
+				}
+			}
+			add = 25
+		}
+		else_if = {
+			limit = {
+				ruler ?= {
+					NOT = {
+						has_ideology = ideology:ideology_traditionalist
+					}
+				}
+			}
+			add = 10
+		}
+	}
+}
+
+REPLACE:je_meiji_restoration_imperial_marriage = {
+	name = je_meiji_restoration_imperial_marriage
+	desc = je_meiji_restoration_imperial_marriage_desc
+
+	visible = {
+		has_journal_entry = je_meiji_restoration
+	}
+
+	possible = {
+		has_law = law_type:law_bakufu
+		legitimacy > 50
+		custom_tooltip = {
+			text = kobu_gattai_trigger_tt
+			has_variable = kobu_gattai
+		}
+		NOT = {
+			has_gov_regency = yes
+		}
+		is_not_in_civil_war = yes
+		custom_tooltip = {
+			text = not_already_used_this_interaction_tt
+			NOT = {
+				has_variable = je_meiji_restoration_imperial_marriage_var
+			}
+		}
+	}
+
+	selected = {
+		has_variable = je_meiji_restoration_imperial_marriage_var
+	}
+
+	effect = {
+		set_variable = je_meiji_restoration_imperial_marriage_var
+		trigger_event = {
+			id = ep2_meiji.3
+		}
+		custom_tooltip = je_meiji_restoration_imperial_marriage_conditions_tt
+	}
+
+	ai_chance = {
+		value = 10 # If available, the AI should do this
+	}
+}
+
+REPLACE:je_end_edo_system_button = {
+	name = "je_end_edo_system_button_name"
+	desc = "je_end_edo_system_button_desc"
+
+	visible = {
+		has_social_hierarchy = edo_system
+	}
+
+	possible = {
+		has_law_or_variant = law_type:law_lax_edo_system
+		custom_tooltip = {
+			text = bpm_cab_synergy_value_ge_50
+			bpm_cab_synergy_value >= 50
+		}
+		# No one in government would prefer a stricter enforcement of the Edo System
+		NOT = {
+			any_interest_group = {
+				is_in_government = yes
+				custom_tooltip = {
+					text = edo_system_not_support_enforcement_tt
+					NOR = {
+		                law_enactment_stance = {
+		                    law = law_type:law_intermediate_edo_system
+		                    value <= neutral
+		                }
+		                law_enactment_stance = {
+		                    law = law_type:law_strict_edo_system
+		                    value <= neutral
+		                }
+					}
+				}
+			}
+		}
+	}
+
+	effect = {
+		custom_tooltip = {
+			text = edo_system_ends_tt
+			trigger_event = { id = set_hierarchy_event.3 }
+		}
+	}
+}

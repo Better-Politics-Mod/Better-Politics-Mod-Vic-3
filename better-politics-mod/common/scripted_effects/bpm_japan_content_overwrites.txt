@@ -1,0 +1,553 @@
+﻿REPLACE:meiji_civil_war_effects = {
+	# Root = Country
+	# scope:target = Uprising country
+	if = {
+		limit = {
+			var:emperor_var ?= {
+				NOT = {
+					owner ?= ROOT
+				}
+			}
+		}
+		var:emperor_var ?= { # Get back here
+			transfer_character = ROOT
+            set_character_as_ruler = yes
+		}
+	}
+	if = {
+		limit = {
+			has_variable_list = daimyos_list
+		}
+		every_in_list = {
+			limit = {
+				AND = { # Daimyo on the opposing side whose states did not defect
+					NOT = {
+						owner ?= ROOT
+					}
+					var:daimyo_var ?= { # Their state region
+						any_scope_state = {
+							owner ?= ROOT
+						}
+					}
+				}
+			}
+			variable = daimyos_list
+			transfer_character = ROOT # Get back here
+		}
+		every_in_list = {
+			limit = {
+				AND = { # Daimyo on this side whose states did defect
+					owner ?= ROOT
+					var:daimyo_var ?= { # Their state region
+						NOT = {
+							any_scope_state = {
+								owner ?= ROOT
+							}
+						}
+					}
+				}
+			}
+			variable = daimyos_list
+			transfer_character = scope:target # Get outta here
+		}
+	}
+	if = {
+		limit = {
+			scope:target ?= {
+				country_has_monarchy_law = yes
+			}
+		}
+		scope:target ?= {
+			every_scope_character = {
+				limit = {
+					has_variable = daimyo_var
+				}
+				add_character_role = character_role_magnate # Restore Daimyo status manually
+				if = {
+					limit = {
+						this.interest_group ?= {
+							leader ?= {
+								NOT = {
+									has_variable = daimyo_var
+								}
+							}
+						}
+					}
+					interest_group.leader ?= {
+						remove_character_role = character_role_ig_leader
+					}
+					set_as_interest_group_leader = yes
+					add_character_role = character_role_ig_leader
+				}
+			}
+		}
+	}
+	if = {
+		limit = {
+			scope:target ?= {
+				has_law = law_type:law_monarchy
+				var:civil_war_type_var ?= movement_type:movement_meiji_restorationist
+			}
+		}
+		if = {
+			limit = {
+				scope:target ?= {
+					random_scope_character = {
+                        limit = {has_role = bpm_character_role_hog}
+						is_historical = no # A historical non-daimyo is totally fine
+						NOT = {
+							has_variable = daimyo_var
+						}
+					}
+				}
+			}
+			ordered_in_list = {
+				limit = {
+					scope:target ?= owner
+				}
+				variable = daimyos_list
+				order_by = prominence
+				position = 0
+				add_character_role = character_role_ruler
+			}
+		}
+		scope:target ?= {
+			if = {
+				limit = {
+					has_law = law_type:law_isolationism
+				}
+				activate_law = law_type:law_sakoku
+			}
+		}
+		if = {
+			limit = {
+				has_law_or_variant = law_type:law_answers_to_legislature
+			}
+			trigger_event = { id = ep2_meiji.41 popup = yes }
+		}
+		else = {
+			scope:target ?= {
+				set_variable = sonnojoi_contrast_color # So that the Sonnojoi use a different colour than the Empire
+			}
+		}
+	}
+	if = {
+		limit = {
+			scope:target ?= {
+				has_law = law_type:law_monarchy
+				var:civil_war_type_var ?= movement_type:movement_tokugawa_loyalist
+			}
+		}
+		scope:target ?= {
+			if = {
+				limit = {
+					has_law = law_type:law_peasant_levies
+				}
+				activate_law = law_type:law_warrior_caste
+			}
+		}
+		if = {
+			limit = {
+				country_is_abolishing_bakufu = yes
+			}
+			currently_enacting_law = {
+				ROOT = {
+					activate_law = currently_enacting_law.type
+				}
+			}
+		}
+		if = {
+			limit = {
+                always = yes
+				#NOT = {
+				#	has_law = law_type:law_bakufu
+				#}
+			}
+			if = {
+				limit = {
+					any_character = { # This is a sin, but necessary
+						has_variable = former_shogun_var
+					}
+				}
+				random_character = {
+					limit = {
+						has_variable = former_shogun_var
+					}
+					if = {
+						limit = {
+							NOT = {
+								scope:target ?= owner
+							}
+						}
+						transfer_character = scope:target
+					}
+					bpm_set_headofgov_sticky = yes
+				}
+			}
+			trigger_event = { id = ep2_meiji.4 popup = yes }
+		}
+	}
+	# Ezochi always sides with the Matsumae
+	if = {
+		limit = {
+			exists = c:EZO
+			c:EZO ?= { is_player = no }
+		}
+		if = {
+			limit = {
+				p:x40BDB8.state ?= {
+					owner ?= scope:target
+				}
+				c:EZO ?= { top_overlord ?= ROOT }
+			}
+			scope:target ?= {
+				transfer_subject = c:EZO
+			}
+			random_diplomatic_play = {
+				limit = {
+					is_diplomatic_play_type = dp_revolution
+					initiator ?= {
+						scope:target ?= this
+					}
+				}
+				if = {
+					limit = {
+						initiator ?= {
+							scope:target ?= this
+						}
+					}
+					add_initiator_backers = { c:EZO }
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				p:x40BDB8.state ?= {
+					owner ?= ROOT
+				}
+				c:EZO ?= { top_overlord ?= scope:target }
+			}
+			ROOT ?= {
+				transfer_subject = c:EZO
+			}
+			random_diplomatic_play = {
+				limit = {
+					is_diplomatic_play_type = dp_revolution
+					initiator ?= {
+						scope:target ?= this
+					}
+				}
+				if = {
+					limit = {
+						initiator ?= {
+							scope:target ?= this
+						}
+					}
+					add_target_backers = { c:EZO }
+				}
+			}
+		}
+	}
+}
+
+REPLACE:japan_generate_scripted_heirs = {
+	if = {
+		limit = {
+			ruler = {
+				has_variable = house_yamato
+			}
+		}
+		if = {
+			limit = {
+				game_date >= 1831.7.22
+				NOT = { has_variable = heir_komei_spawned }
+				ruler ?= {
+					has_template = JAP_ninko_yamato
+				}
+			}
+			set_variable = heir_komei_spawned
+			create_character = {
+				template = JAP_komei_yamato
+				on_created = {
+					replace_character_roles = { add = { heir } remove_all = yes }
+				}
+			}
+		}
+		if = {
+			limit = {
+				game_date >= 1852.11.3
+				NOT = { has_variable = heir_meiji_spawned }
+				ruler ?= {
+					has_template = JAP_komei_yamato
+				}
+			}
+			set_variable = heir_meiji_spawned
+			create_character = {
+				template = JAP_meiji_yamato
+				on_created = {
+					replace_character_roles = { add = { heir } remove_all = yes }
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				game_date >= 1879.8.31
+				NOT = { has_variable = heir_taisho_spawned }
+				ruler ?= {
+					has_template = JAP_meiji_yamato
+				}
+			}
+			set_variable = heir_taisho_spawned
+			create_character = {
+				template = JAP_taisho_yamato
+				on_created = {
+					replace_character_roles = { add = { heir } remove_all = yes }
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				game_date >= 1901.4.29
+				NOT = { has_variable = heir_showa_spawned }
+				ruler ?= {
+					has_template = JAP_taisho_yamato
+				}
+			}
+			set_variable = heir_showa_spawned
+			create_character = {
+				template = JAP_showa_yamato
+				on_created = {
+					replace_character_roles = { add = { heir } remove_all = yes }
+				}
+			}
+		}
+	}
+    if = {
+		limit = {
+            has_law_or_variant = law_type:law_answers_to_legislature
+			random_scope_character = {
+                limit = {has_role = bpm_character_role_hog}
+				has_variable = house_tokugawa
+			}
+		}
+		if = {
+			limit = {
+				NOT = { has_variable = heir_iesada_spawned }
+				random_scope_character = {
+                    limit = {has_role = bpm_character_role_hog}
+					has_template = JAP_ieyoshi_tokugawa
+				}
+			}
+			set_variable = heir_iesada_spawned
+			create_character = {
+				template = JAP_iesada_tokugawa
+				on_created = {
+				    owner = {
+				    	set_variable = {
+				    		name = bpm_hog_heir
+				    		value = prev
+				    	}
+				    }
+					add_character_role = bpm_character_role_protege
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				NOT = { has_dlc_feature = ep2_content } # Iesada's heir is handled by event in EP2
+				game_date >= 1846.7.16
+				NOT = { has_variable = heir_iemochi_spawned }
+				ruler ?= {
+					has_template = JAP_iesada_tokugawa
+				}
+			}
+			set_variable = heir_iemochi_spawned
+			create_character = {
+				template = JAP_iemochi_tokugawa
+				on_created = {
+					owner = {
+				    	set_variable = {
+				    		name = bpm_hog_heir
+				    		value = prev
+				    	}
+				    }
+					add_character_role = bpm_character_role_protege
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				game_date >= 1863.8.24
+				game_date < 1879.8.24
+				NOT = { has_variable = heir_yoshinobu_spawned }
+				ruler ?= {
+					has_template = JAP_iemochi_tokugawa
+				}
+			}
+			set_variable = heir_yoshinobu_spawned
+			create_character = {
+				template = JAP_yoshinobu_tokugawa
+				on_created = {
+					owner = {
+				    	set_variable = {
+				    		name = bpm_hog_heir
+				    		value = prev
+				    	}
+				    }
+					add_character_role = bpm_character_role_protege
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				game_date >= 1879.8.24 # Date of majority
+				NOT = { has_variable = heir_iesato_spawned }
+				ruler ?= {
+					OR = {
+						has_template = JAP_iemochi_tokugawa
+						has_template = JAP_yoshinobu_tokugawa
+					}
+				}
+			}
+			set_variable = heir_iesato_spawned
+			create_character = {
+				template = JAP_iesato_tokugawa
+				on_created = {
+					owner = {
+				    	set_variable = {
+				    		name = bpm_hog_heir
+				    		value = prev
+				    	}
+				    }
+					add_character_role = bpm_character_role_protege
+				}
+			}
+		}
+	}
+}
+
+REPLACE:country_generate_japanese_shogun = {
+	if = {
+		limit = {
+			year < 1841
+		}
+		create_character = {
+			template = JAP_ienari_tokugawa
+		}
+		create_character = {
+			template = JAP_ieyoshi_tokugawa
+		}
+	}
+	else_if = {
+		limit = {
+			year >= 1841
+			year < 1853
+		}
+		create_character = {
+			template = JAP_ieyoshi_tokugawa
+			on_created = {
+				bpm_set_headofgov_sticky = yes
+			}
+		}
+		create_character = {
+			template = JAP_iesada_tokugawa
+			on_created = {
+				owner = {
+					set_variable = {
+						name = bpm_hog_heir
+						value = prev
+					}
+				}
+				add_character_role = bpm_character_role_protege
+			}
+		}
+		set_variable = heir_iesada_spawned
+	}
+	else_if = {
+		limit = {
+			year >= 1853
+			year < 1859
+		}
+		create_character = {
+			template = JAP_iesada_tokugawa
+			on_created = {
+				bpm_set_headofgov_sticky = yes
+			}
+		}
+		create_character = {
+			template = JAP_iemochi_tokugawa
+			on_created = {
+				owner = {
+					set_variable = {
+						name = bpm_hog_heir
+						value = prev
+					}
+				}
+				add_character_role = bpm_character_role_protege
+			}
+		}
+		set_variable = heir_iemochi_spawned
+	}
+	else_if = {
+		limit = {
+			year >= 1859
+			year < 1867
+		}
+		create_character = {
+			template = JAP_iemochi_tokugawa
+			on_created = {
+				bpm_set_headofgov_sticky = yes
+			}
+		}
+		create_character = {
+			template = JAP_yoshinobu_tokugawa
+			on_created = {
+				owner = {
+					set_variable = {
+						name = bpm_hog_heir
+						value = prev
+					}
+				}
+				add_character_role = bpm_character_role_protege
+			}
+		}
+		set_variable = heir_yoshinobu_spawned
+	}
+	else_if = {
+		limit = {
+			year >= 1867
+			year < 1879
+		}
+		create_character = {
+			template = JAP_yoshinobu_tokugawa
+			on_created = {
+				bpm_set_headofgov_sticky = yes
+			}
+		}
+		create_character = {
+			template = JAP_iesato_tokugawa
+			on_created = {
+				owner = {
+					set_variable = {
+						name = bpm_hog_heir
+						value = prev
+					}
+				}
+				add_character_role = bpm_character_role_protege
+			}
+		}
+		set_variable = heir_iesato_spawned
+	}
+	else_if = {
+		limit = {
+			year >= 1879
+			year < 1940
+		}
+		create_character = {
+			template = JAP_iesato_tokugawa
+			on_created = {
+				bpm_set_headofgov_sticky = yes
+			}
+		}
+	}
+}

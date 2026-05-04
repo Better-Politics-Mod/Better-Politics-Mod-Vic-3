@@ -156,3 +156,203 @@ REPLACE:character_role_ig_leader = {
 		character_prominence_add = 5
 	}
 }
+
+REPLACE:character_role_magnate = {
+	texture = "gfx/interface/icons/character_role_icons/magnate.dds"
+
+	type = magnate
+	priority = 10
+
+	auto_assigned = yes
+	
+	title_format = custom
+	title_preposition = PREP_IN
+	
+	spawn_characters_to_pool = yes
+	
+	pool_spawn_target_country_wide = {
+		value = country_rank # (0 = decentralized, 7 = great power)
+		
+		# Subtracting by 1 and dividing by 2 results in:
+		# Great Power = 3 magnates
+		# Major Power/Unrecognized Major Power = 2 magnates
+		# Minor Power/Unrecognized Regional Power = 1 magnate
+		# Others = no magnates
+		subtract = 1
+		divide = 2 
+	}
+	
+	# root = country
+	holding_scores = {
+		holding_manor_houses_score = {
+			type = "building_manor_house"
+			score = {
+				value = 100
+				if = {
+					limit = {
+						scope:is_monarch = yes
+					}
+					add = 10000
+				}
+				else_if = {
+					limit = {
+						scope:interest_group ?= { 
+							OR = {
+								is_interest_group_type = ig_landowners	
+								AND = {
+									bpm_ig_is_pro_slavery = yes
+									bpm_ig_is_urban_institutional = no # Brazil
+								}
+							}
+						}
+					}
+					add = 1000
+				}
+				else_if = {
+					limit = {
+						bpm_ig_is_agrarian = yes
+						#bpm_ig_is_peasant = no
+					}
+					add = 500
+				}
+				# else_if = {
+				# 	limit = {
+				# 		bpm_ig_is_peasant = yes
+				# 	}
+				# 	add = 350
+				# }
+				else_if = {
+					limit = {
+						is_interest_group_type = ig_armed_forces
+					}
+					if = {
+						limit = {
+							owner = { has_law_or_variant = law_type:law_aristocratic_officers }
+						}
+						add = 300
+					}
+					else_if = {
+						limit = {
+							owner = { has_law_or_variant = law_type:law_purchased_officers }
+						}
+						add = 200
+					}
+					else = {
+						add = 100
+					}
+				}
+				else_if = {
+					limit = {
+						is_interest_group_type = ig_devout
+					}
+					add = 300
+				}
+				else_if = {
+					limit = {
+						is_interest_group_type = ig_christian_democrats
+					}
+					add = 200
+				}
+				if = {
+					limit = {
+						OR = {
+							bpm_ig_is_socialist = yes
+							has_ideology = ideology:ideology_eco_centralized_economy
+						}
+					}
+					multiply = 0
+				}
+				if = {
+					limit = {
+						scope:state ?= { NOT = { has_building = building_manor_house } }
+					}
+					multiply = 0
+				}						
+			}
+		}
+		holding_financial_districts_score = {
+			type = "building_financial_district"
+			score = {
+				value = 100				
+				if = {
+					limit = {
+						scope:interest_group ?= { is_interest_group_type = ig_industrialists }
+					}
+					add = 1000
+				}
+				else_if = {
+					limit = {
+						OR = {
+							is_interest_group_type = ig_market_liberals
+							has_ideology = ideology:ideology_eco_laissez_faire
+						}
+					}
+					add = 300
+				}
+				else_if = {
+					limit = {
+						scope:interest_group ?= { 
+							OR = {
+								bpm_ig_is_moderate_liberal = yes
+								bpm_ig_is_liberal_conservative = yes
+								bpm_ig_is_moderate_conservative = yes
+								
+							}
+						}
+					}
+					add = 400
+				}
+				else_if = {
+					limit = {
+						bpm_ig_is_radical_right = yes
+					}
+					add = 300
+				}
+				else_if = {
+					limit = {
+						bpm_ig_is_radical_liberal = yes
+					}
+					add = 250
+				}
+				else_if = {
+					limit = {
+						bpm_ig_is_agrarian = no
+						OR = {
+							is_interest_group_type = ig_trade_unions
+							bpm_ig_is_moderate_socialist = yes
+						}
+					}
+					add = 250
+				}	
+				else_if = {
+					limit = {
+						OR = {
+							has_ideology = ideology:ideology_eco_centralized_economy
+							bpm_ig_is_radical_socialist = yes
+						}
+					}
+					add = 50
+				}
+				else_if = {
+					limit = {
+						is_interest_group_type = ig_christian_democrats
+						bpm_ig_is_agrarian = no
+					}
+					add = 200
+				}
+				if = {
+					limit = {
+						bpm_ig_is_agrarian = yes
+					}
+					multiply = 0.5
+				}
+				if = {
+					limit = {
+						scope:state ?= { NOT = { has_building = building_financial_district } }
+					}
+					multiply = 0
+				}				
+			}
+		}			
+	}
+}

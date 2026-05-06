@@ -1,0 +1,1072 @@
+# COPY-PASTED FOR NOW
+@panel_width_minus_20 = 520
+@panel_width_minus_10 = 530			# used to be 530
+@panel_width = 540  				# used to be 460
+@panel_width_half = 270				# used to be 230
+@panel_width_plus_10 = 550  		# used to be 470
+@panel_width_plus_14 = 554			# used to be 474
+@panel_width_plus_14_half = 277		# used to be 237
+@panel_width_plus_20 = 560			# used to be 480
+@panel_width_plus_30 = 570			# used to be 490
+@panel_width_plus_70 = 610			# used to be 530
+
+types country_panel_types
+{
+    type country_panel_information_content = flowcontainer {
+		margin_top = 10
+		minimumsize = { @panel_width_plus_14 -1 }
+		using = default_list_position
+		direction = vertical
+
+		### TOP INFO
+		container = {
+			parentanchor = hcenter
+			minimumsize = { @panel_width_minus_10 542 }
+			maximumsize = { @panel_width_minus_10 -1 }
+
+			# FLAG
+			widget = {
+				position = { 5 0 }
+				size = { 340 100% }
+
+				icon = {
+					size = { 340 100% }
+					position = { 3 0 }
+					texture = "gfx/interface/flag/fancy_flag_country_view.dds"
+				}
+
+				block "clickable" {
+					button = {
+						using = flag_button_glow
+						size = { 270 200 }
+						position = { -12 -2 }
+						using = tooltip_es
+						alpha = 0.3
+
+						tooltipwidget = {
+							FancyTooltip_Country = {}
+						}
+
+						onclick = "[Country.AccessCapital.ZoomToCapital]"
+						onrightclick = "[RightClickMenuManager.ShowForCountry(Country.AccessSelf)]"
+						block "onhover" {
+							onmousehierarchyenter = "[AccessHighlightManager.HighlightCountry(Country.Self)]"
+							onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+						}
+
+						block "sound" {
+							using = flag_button_sound
+						}
+					}
+				}
+
+				# 3D flag, we want to render at a high resolution and downscale
+				# This increases the quality of the rendered gui flag
+				# Size can be modified but needs to be 16:9 due to how its rendered (converted 3d object)
+				flag_3d_faded_animated = {
+					position = { 5 13 }
+					size = { 550 309 }	# Rendersize
+					scale = 0.57		# Downscale
+				}
+			}
+
+
+
+			flowcontainer = {
+				parentanchor = bottom
+				spacing = 10
+				direction = vertical
+
+				flowcontainer = {
+					parentanchor = right
+
+					spacing = -2 #this flowcontainer is a BIT too wide compared to the government info below it
+
+					# DIPLOMATIC PACTS
+					flowcontainer = {
+						datamodel = "[Country.AccessActiveDiplomaticPactTypes]"
+						direction = vertical
+						parentanchor = bottom
+
+						item = {
+							flowcontainer = {
+								datamodel = "[ContextualDiplomaticActionType.AccessCountry.AccessActiveDiplomaticPacts( ContextualDiplomaticActionType.Self )]"
+								item = {
+									flowcontainer = {
+										visible = "[ObjectsEqual(GetPlayer.Self, ContextualDiplomaticPact.GetOtherCountry)]"
+
+										icon = {
+											size =  { 45 45 }
+											texture = "gfx/interface/backgrounds/round_button_bg.dds"
+
+											icon = {
+												parentanchor = center
+												size = { 75% 75% }
+												texture = "[ContextualDiplomaticActionType.GetDiplomaticActionType.GetTexture]"
+												tooltip = "[ContextualDiplomaticPact.GetTooltip]"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					flowcontainer = {
+						spacing = -100
+						#RULER PORTRAIT
+						character_portrait_large_torso = {
+							visible = "[Or(GetScriptedGui('bpm_ruler_dominant_gui').IsShown(GuiScope.SetRoot(Country.MakeScope).End), GetScriptedGui('bpm_ruler_hog_balance_gui').IsShown(GuiScope.SetRoot(Country.MakeScope).End))]"
+							parentanchor = bottom
+							datacontext = "[Country.AccessRuler]"
+							blockoverride "show_hat" {}
+							blockoverride "highlight" {}
+						}
+						character_portrait_large_torso = {
+							visible = "[GetScriptedGui('bpm_hog_dominant_gui').IsShown(GuiScope.SetRoot(Country.MakeScope).End)]"
+							parentanchor = bottom
+							datacontext = "[Country.MakeScope.Var('bpm_headofgov').GetCharacter]"
+							blockoverride "show_hat" {}
+							blockoverride "highlight" {}
+						}
+						character_portrait_small_torso = {
+							visible = "[GetScriptedGui('bpm_ruler_hog_balance_gui').IsShown(GuiScope.SetRoot(Country.MakeScope).End)]"
+							parentanchor = bottom
+							datacontext = "[Country.MakeScope.Var('bpm_headofgov').GetCharacter]"
+							blockoverride "show_hat" {}
+							blockoverride "highlight" {}
+						}
+						character_portrait_small_torso = {
+							visible = "[GetScriptedGui('bpm_hog_dominant_gui').IsShown(GuiScope.SetRoot(Country.MakeScope).End)]"
+							parentanchor = bottom
+							datacontext = "[Country.AccessRuler]"
+							blockoverride "show_hat" {}
+							blockoverride "highlight" {}
+						}
+					}
+				}
+
+				#GOVERNMENT
+				flowcontainer = {
+					direction = vertical
+					minimumsize = { 260 -1 }
+					margin_top = 10
+					spacing = 10
+					margin_bottom = 5
+
+					using = main_bg
+
+					flowcontainer = {
+						margin_left = 10
+						spacing = 10
+
+						icon = {
+							parentanchor = vcenter
+							texture = "gfx/interface/icons/generic_icons/in_government_icon.dds"
+							size = { 40 40 }
+						}
+						textbox = {
+							parentanchor = vcenter
+							autoresize = yes
+							multiline = yes
+							maximumsize = { 200 -1 }
+							minimumsize = { 200 -1 }
+							text = "COUNTRY_GOVERNMENT"
+							align = nobaseline
+							elide = right
+						}
+					}
+
+					dynamicgridbox = {
+						datamodel = "[CountryPanel.GetCountry.AccessInterestGroupsInGovernment]"
+						datamodel_wrap = 4
+						flipdirection = yes
+
+						item = {
+							widget = {
+								size = { 61 65 }
+
+								flowcontainer = {
+									parentanchor = hcenter
+									direction = vertical
+									tooltip = "CLOUT_PIECHART"
+									spacing = 2
+
+									widget = {
+										size = { 33 33 }
+										parentanchor = hcenter
+
+										ig_button = {
+											visible = "[Country.IsPlayer]"
+											size = { 100% 100% }
+											blockoverride "in_government_icon"{}
+										}
+										ig_icon = {
+											visible = "[Not(Country.IsPlayer)]"
+											size = { 100% 100% }
+											blockoverride "in_government_icon"{}
+										}
+									}
+									textbox = {
+										text = "[InterestGroup.GetClout|%1]"
+										autoresize = yes
+										parentanchor = hcenter
+										align = nobaseline
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			#MILITARY
+			flowcontainer = {
+				parentanchor = right
+				position = { 0 30 }
+				direction = horizontal
+
+				mobilization_icon = {
+					size = { 60 60 }
+					parentanchor = vcenter
+				}
+
+				flowcontainer = {
+					direction = vertical
+					visible = no
+
+					textbox = {
+						autoresize = yes
+						datacontext = "[CountryPanel.GetCountry]"
+						visible = "[CountryPanel.GetCountry.IsColonizable]"
+						raw_text = "#variable @battalions![Country.CalcConscriptableBattalions|0]#! "
+						tooltip = "PANEL_MILITARY_NATIVE_POTENTIAL_BATTALIONS_TOOLTIP"
+						using = fontsize_mega
+						minimumsize = { 60 -1 }
+						align = right|nobaseline
+						parentanchor = right
+						margin_left = 10
+						margin_right = 5
+					}
+
+					textbox = {
+						autoresize = yes
+						visible = "[Not(CountryPanel.GetCountry.IsColonizable)]"
+						raw_text = "@battalions! [Country.GetRegularBattalions|v] + [Country.CalcConscriptableBattalions|v]"
+						tooltip = "PANEL_MILITARY_ARMY_OVERVIEW_TOOLTIP"
+						using = fontsize_mega
+						minimumsize = { 60 -1 }
+						align = right|nobaseline
+						parentanchor = right
+						margin_left = 10
+						margin_right = 5
+					}
+
+					textbox = {
+						autoresize = yes
+						visible = "[Not(CountryPanel.GetCountry.IsColonizable)]"
+						raw_text = "#variable @ships! [Country.GetNumShips|0]#!"
+						tooltip = "PANEL_MILITARY_NAVY_CURRENT_SHIPS_TOOLTIP"
+						using = fontsize_mega
+						minimumsize = { 60 -1 }
+						align = right|nobaseline
+						parentanchor = right
+						margin_left = 10
+						margin_right = 5
+					}
+				}
+			}
+
+			#ROWS OF STATS
+			flowcontainer = {
+				spacing =  1
+				direction =  vertical
+				parentanchor = right
+				position = { 0 11 }
+
+				country_stats_entry = {
+					blockoverride "stats_tooltip" {
+						tooltip = "[Country.GetRankTooltip]"
+					}
+
+					blockoverride "entire_icon" {
+						rank_badge = {
+							size = { 50 50 }
+							parentanchor = right|vcenter
+
+							blockoverride "rank_text" {
+								raw_text = "#BOLD [Country.GetCountryScorePositionDesc]"
+							}
+							blockoverride "rank_text_2" {
+								raw_text = "#BOLD [Country.GetCountryScorePositionDesc]"
+								visible = no
+							}
+						}
+					}
+
+					blockoverride "information_icon" {
+						texture = "gfx/interface/icons/generic_icons/gdp.dds"
+					}
+
+					blockoverride "stats_label" {
+						text = "[concept_rank]"
+					}
+
+					blockoverride "stats_value" {
+						raw_text = "#v [Country.GetRank]#!"
+					}
+
+					blockoverride "textsize" {
+						size = { 160 20 }
+						elide = right
+						fontsize_min = 15
+					}
+				}
+
+				#COMPANY
+				country_stats_entry = {
+					visible = "[Country.HasOwningCompany]"
+					datacontext = "[Country.GetOwningCompany]"
+
+					blockoverride "stats_tooltip" {
+						tooltipwidget = {
+							FancyTooltip_Company = {}
+						}
+					}
+
+					### COMPANY ICON
+					blockoverride "entire_icon" {
+						button_icon_round = {
+							parentanchor = right|vcenter
+							position = { -5 0 }
+							onclick = "[InformationPanelBar.OpenCompanyPanel(Company.Self)]"
+
+							blockoverride "size" {
+								size = { 45 45 }
+							}
+
+							blockoverride "icon_size" {
+								size = { 65% 65% }
+							}
+
+							blockoverride "icon" {
+								texture = "[Company.GetCompanyType.GetIcon]"
+							}
+						}
+					}
+
+					blockoverride "stats_label" {
+						text = "[concept_company]"
+					}
+
+					blockoverride "stats_value" {
+						text = "[Company.GetNameNoIcon]"
+					}
+				}
+
+				#POWER BLOC
+				country_stats_entry = {
+					visible = "[Country.IsInPowerBloc]"
+					datacontext = "[Country.GetPowerBloc]"
+
+					blockoverride "stats_tooltip" {
+						tooltipwidget = {
+							FancyTooltip_PowerBloc = {}
+						}
+					}
+
+					### POWER BLOC EMBLEM BUTTON
+					blockoverride "entire_icon" {
+						button_icon_round = {
+							parentanchor = right|vcenter
+							position = { -5 0 }
+							onclick = "[InformationPanelBar.OpenPowerBlocPanelTab( PowerBloc.Self, 'default' )]"
+							onrightclick = "[RightClickMenuManager.ShowForPowerBloc( PowerBloc.AccessSelf )]"
+
+							blockoverride "size" {
+								size = { 45 45 }
+							}
+
+							blockoverride "icon_size" {
+								size = { 80% 80% }
+							}
+
+							blockoverride "icon" {
+								texture = "[PowerBloc.GetFlag.GetMediumPowerBlocCoaTexture]"
+								frame = "[PowerBloc.GetFlag.GetMediumPowerBlocCoaFrame]"
+								framesize = "[GetMediumPowerBlocCoaFrameSize]"
+							}
+						}
+					}
+
+					blockoverride "stats_label" {
+						text = "[concept_power_bloc]"
+					}
+
+					blockoverride "stats_value" {
+						text = "[PowerBloc.GetNameNoIcon]"
+					}
+
+					blockoverride "stats_rank" {
+						text = "POWER_BLOC_RANK_FORMATTED"
+					}
+				}
+
+				#NOT IN A POWER BLOC - LEVERAGE
+				country_stats_entry = {
+					visible = "[Not(Country.IsInPowerBloc)]"
+
+					blockoverride "stats_tooltip" {
+						tooltip = "NO_POWER_BLOC_TOOLTIP"
+					}
+
+					blockoverride "entire_icon" {
+						icon = {
+							texture = "gfx/interface/main_hud/powerblocs.dds"
+							size = { 50 50 }
+							parentanchor = right|vcenter
+						}
+					}
+
+					blockoverride "stats_label" {
+						text = "[concept_power_bloc]"
+					}
+
+					blockoverride "stats_value" {
+						text = "COUNTRY_PANEL_LEVERAGE_LABEL"
+					}
+				}
+
+				#LEVERAGE - Country is a leader of a Power Bloc
+				country_stats_entry = {
+					visible = "[And(Country.GetPowerBloc.IsLeader(Country.Self), Not(Country.IsLocalPlayer))]"
+
+					blockoverride "stats_tooltip" {
+						tooltip = "LEVERAGE_ON_LEADER_NOT_APPLICABLE"
+					}
+
+					blockoverride "information_icon" {
+						texture = "gfx/interface/icons/generic_icons/leverage.dds"
+					}
+
+					blockoverride "stats_label" {
+						text = "YOUR_LEVERAGE"
+					}
+
+					blockoverride "stats_value" {
+						text = "NONE"
+						default_format = "#title"
+					}
+				}
+
+				#LEVERAGE - Country is NOT a leader of a Power Bloc
+				country_stats_entry = {
+					visible = "[And(Not(Country.GetPowerBloc.IsLeader(Country.Self)), Not(Country.IsLocalPlayer))]"
+
+					blockoverride "stats_tooltip" {
+						tooltipwidget = {
+							RegularTooltip_Leverage = {
+								datacontext = "[GetPlayer.GetPowerBloc]"
+
+								blockoverride "has_power_bloc_context_visibility" {
+									visible = "[GetPlayer.IsInPowerBloc]"
+								}
+
+								blockoverride "have_no_power_bloc" {
+									custom_tooltip_textbox = {
+										visible = "[Not(GetPlayer.IsInPowerBloc)]"
+										text = "PLAYER_IS_NOT_IN_A_POWER_BLOC"
+									}
+								}
+							}
+						}
+					}
+
+					blockoverride "information_icon" {
+						texture = "gfx/interface/icons/generic_icons/leverage.dds"
+					}
+
+					blockoverride "stats_label" {
+						text = "YOUR_LEVERAGE"
+					}
+
+					blockoverride "stats_value" {
+						text = "COUNTRY_PANEL_LEVERAGE_VALUE"
+					}
+				}
+
+				#BATTALIONS
+				country_stats_entry = {
+					visible = "[Not(CountryPanel.GetCountry.IsColonizable)]"
+					alpha = "[TransparentIfZero_int32(Country.GetBattalions)]"
+
+					blockoverride "stats_tooltip" {
+						tooltip = "PANEL_MILITARY_ARMY_OVERVIEW_TOOLTIP"
+					}
+					blockoverride "information_icon" {
+						texture = "gfx/interface/icons/generic_icons/battalions.dds"
+					}
+					blockoverride "stats_label" {
+						text = "BATTALIONS"
+					}
+					blockoverride "stats_value" {
+						text = "[Country.GetRegularBattalions|v] + [Country.CalcConscriptableBattalions|v]"
+					}
+
+					blockoverride "stats_rank" {
+						text = "[Country.GetBattalionsRanking]"
+					}
+				}
+
+				#BATTALIONS (COLONIZABLE)
+				country_stats_entry = {
+					visible = "[CountryPanel.GetCountry.IsColonizable]"
+					alpha = "[TransparentIfZero_int32(Country.CalcConscriptableBattalions)]"
+
+					blockoverride "stats_tooltip" {
+						tooltip = "PANEL_MILITARY_NATIVE_POTENTIAL_BATTALIONS_TOOLTIP"
+					}
+					blockoverride "information_icon" {
+						texture = "gfx/interface/icons/generic_icons/battalions.dds"
+					}
+					blockoverride "stats_label" {
+						text = "BATTALIONS"
+					}
+					blockoverride "stats_value" {
+						raw_text = "#variable [Country.CalcConscriptableBattalions]#!"
+					}
+
+					blockoverride "stats_rank" {
+						text = "[Country.GetBattalionsRanking]"
+					}
+				}
+
+				#SHIPS
+				country_stats_entry = {
+					alpha = "[TransparentIfZero_int32(Country.GetNumShips)]"
+					blockoverride "stats_tooltip" {
+						tooltip = "PANEL_MILITARY_NAVY_CURRENT_SHIPS_TOOLTIP"
+					}
+					blockoverride "information_icon" {
+						texture = "gfx/interface/icons/generic_icons/flotillas.dds"
+					}
+					blockoverride "stats_label" {
+						text = "SHIPS_CONCEPT"
+					}
+					blockoverride "stats_value" {
+						raw_text = "#variable [Country.GetNumShips|0]#!"
+					}
+
+					blockoverride "stats_rank" {
+						text = "[Country.GetShipsRanking]"
+					}
+				}
+
+				#GDP
+				country_stats_entry = {
+					onmousehierarchyenter = "[SetTempMapModeByKey('mm_gdp')]"
+					onmousehierarchyleave = "[RemoveTempMapMode]"
+					alwaystransparent = no
+
+					blockoverride "stats_tooltip" {
+						using = GDP_tooltip_with_graph
+					}
+					blockoverride "information_icon" {
+						texture = "gfx/interface/icons/generic_icons/gdp.dds"
+					}
+					blockoverride "stats_label" {
+						text = "COUNTRY_GDP_ONE_LINE"
+					}
+					blockoverride "stats_value" {
+						raw_text = "DOMESTIC_COUNTRY_GDP"
+					}
+
+					blockoverride "stats_rank" {
+						text = "[Country.GetGDPRanking]"
+					}
+				}
+
+				#GDP Ownership
+				country_stats_entry = {
+					onmousehierarchyenter = "[SetTempMapModeByKey('mm_gdp_ownership_ratio')]"
+					onmousehierarchyleave = "[RemoveTempMapMode]"
+					alwaystransparent = no
+
+					blockoverride "stats_tooltip" {
+						tooltip = "COUNTRY_GDP_OWNERSHIP_TOOLTIP"
+					}
+					blockoverride "information_icon" {
+						texture = "gfx/interface/buttons/button_icons/foreign_invest.dds"
+					}
+					blockoverride "stats_label" {
+						text = "[concept_gdp_ownership]"
+					}
+					blockoverride "stats_value" {
+						raw_text = "COUNTRY_ALL_OWNERSHIP"
+					}
+
+					blockoverride "stats_rank" {}
+				}
+
+				##POPULATION
+				country_stats_entry = {
+					onmousehierarchyenter = "[SetTempMapModeByKey('mm_population')]"
+					onmousehierarchyleave = "[RemoveTempMapMode]"
+					alwaystransparent = no
+
+					blockoverride "stats_tooltip" {
+						using = population_tooltip_with_graph
+					}
+					blockoverride "information_icon" {
+						texture = "gfx/interface/icons/generic_icons/population.dds"
+					}
+					blockoverride "stats_label" {
+						text = "COUNTRY_POPULATION_ONE_LINE"
+					}
+					blockoverride "stats_value" {
+						raw_text = "#v [Country.GetTotalPopulation|D]#!"
+					}
+					blockoverride "stats_rank" {
+						text = "[Country.GetPopulationRanking]"
+					}
+				}
+
+				##LITERACY
+				country_stats_entry = {
+					onmousehierarchyenter = "[SetTempMapModeByKey('mm_literacy')]"
+					onmousehierarchyleave = "[RemoveTempMapMode]"
+					alwaystransparent = no
+
+					blockoverride "stats_tooltip" {
+						tooltip = "LITERACY_TOOLTIP"
+					}
+					blockoverride "information_icon" {
+						texture = "gfx/interface/icons/generic_icons/literacy.dds"
+					}
+					blockoverride "stats_label" {
+						text = "COUNTRY_LITERACY_ONE_LINE"
+					}
+					blockoverride "stats_value" {
+						raw_text = "#v [Country.GetIncorporatedLiteracyRate|%1]#!"
+					}
+					blockoverride "stats_rank" {
+						text = "[Country.GetIncorporatedLiteracyRanking]"
+					}
+				}
+
+				##STANDARD OF LIVING
+				country_stats_entry = {
+					onmousehierarchyenter = "[SetTempMapModeByKey('mm_standard_of_living')]"
+					onmousehierarchyleave = "[RemoveTempMapMode]"
+					alwaystransparent = no
+
+					blockoverride "stats_tooltip" {
+						using = average_standard_of_living_tooltip_with_graph
+					}
+
+					blockoverride "stats_label" {
+						text = "COUNTRY_SOL_ONE_LINE"
+					}
+
+					blockoverride "stats_rank" {
+						text = "[Country.GetStandardOfLivingRanking]"
+					}
+
+					blockoverride "entire_icon" {}
+
+					blockoverride "icon_hack" {
+						widget = {
+							position = { -10 0 }
+							parentanchor = right|vcenter
+							size = { 35 30 }
+							scissor = yes
+
+							textbox = {
+								size = { 100 30 }
+								elide = right
+								align = nobaseline
+								position = { 0 0 }
+								fontsize = 29
+								raw_text = "[LabelingHelper.GetIconForStandardOfLivingCFixedPoint(Country.GetAverageSoLByPopulation)|v] ([Country.GetAverageSoLByPopulation|v])"
+							}
+						}
+					}
+
+					blockoverride "stats_value" {
+						raw_text = "[LabelingHelper.GetLabelForStandardOfLivingNoIconCFixedPoint(Country.GetAverageSoLByPopulation)|v] ([Country.GetAverageSoLByPopulation|v1])"
+					}
+				}
+
+				##RELIGION
+				country_stats_entry = {
+					blockoverride "stats_tooltip" {}
+
+					blockoverride "information_icon" {
+						texture = "[Country.GetStateReligion.GetTexture]"
+					}
+					blockoverride "stats_label" {
+						text = "COUNTRY_RELIGIONS_ONE_LINE"
+					}
+					blockoverride "stats_value" {
+						raw_text = "#v [Country.GetStateReligion.GetNameNoIcon]#!"
+					}
+				}
+
+				##CULTURE
+				country_stats_entry = {
+					blockoverride "stats_tooltip" {
+						tooltip = "[Country.GetPrimaryCulturesDesc]"
+					}
+
+					blockoverride "information_icon" {
+						texture = "gfx/interface/population/pop_culture.dds"
+					}
+					blockoverride "stats_label" {
+						text = "COUNTRY_CULTURES_ONE_LINE"
+					}
+					blockoverride "stats_value" {
+						raw_text = "#v [Country.GetPrimaryCulturesDesc]#!"
+					}
+				}
+			}
+		}
+
+		widget = {
+			size = { 10 10 }
+		}
+
+		attitude_info = {
+			visible = "[Country.IsColonizable]"
+		}
+
+		widget = {
+			size = { 10 10 }
+			visible = "[Country.IsColonizable]"
+		}
+
+		# BEHAVIOR
+		flowcontainer = {
+			using = is_not_player_and_not_colonizable_country
+			direction = vertical
+			parentanchor = hcenter
+
+			default_header = {
+				blockoverride "text" {
+					text = "BEHAVIOR"
+				}
+			}
+
+			flowcontainer = {
+				parentanchor = hcenter
+				margin_top = 10
+				margin_bottom = 10
+
+				# ATTITUDE / INFAMY
+				flowcontainer = {
+					direction = vertical
+					minimumsize = { @panel_width_half -1 }
+					spacing = 10
+
+					# ATTITUDE
+					flowcontainer = {
+						visible = "[And(Not(Country.IsColonizable), Not(Country.IsLocalPlayer))]"
+						spacing = 10
+						margin_left = 10
+
+						textbox = {
+							parentanchor = vcenter
+							autoresize = yes
+							align = nobaseline
+							minimumsize = { 70 -1 }
+							maximumsize = { 70 -1 }
+							fontsize_min = 12
+							elide = right
+							text = "ATTITUDE"
+						}
+
+						widget = {
+							size = { 45 45 }
+
+							block "context" {
+								datacontext = "[CountryPanel.GetCountry]"
+							}
+
+							icon = {
+								size = { 100% 100% }
+								texture = "gfx/interface/icons/ai_attitude_icons/human.dds"
+								visible = "[Country.IsPlayer]"
+								tooltip = "ai_attitude_human_tooltip"
+							}
+
+							icon = {
+								size = { 100% 100% }
+								texture = "[Country.GetAttitudeTowards(GetPlayer).GetTexture]"
+								visible = "[Not(Country.IsPlayer)]"
+								tooltip = "[Country.GetAttitudeTowards(GetPlayer).GetTooltip]"
+							}
+						}
+
+						textbox = {
+							visible = "[Country.IsPlayer]"
+							parentanchor = vcenter
+							align = nobaseline
+							autoresize = yes
+							max_width = 130
+							fontsize_min = 12
+							elide = right
+							text = "ai_attitude_human"
+							tooltip = "ai_attitude_human_tooltip"
+						}
+
+						textbox = {
+							visible = "[Not(Country.IsPlayer)]"
+							parentanchor = vcenter
+							align = nobaseline
+							autoresize = yes
+							max_width = 130
+							fontsize_min = 12
+							elide = right
+							text = "[Country.GetAttitudeTowards(GetPlayer).GetName]"
+							tooltip = "[Country.GetAttitudeTowards(GetPlayer).GetTooltip]"
+						}
+					}
+
+					divider_clean = {
+						blockoverride "size" {
+							size =  { 250 2 }
+						}
+					}
+
+					# TENSION
+					flowcontainer = {
+						visible = "[Country.IsColonizable]"
+						spacing = 10
+						tooltip = "[GetPlayer.GetTensionTooltip( Country.Self )]"
+
+						textbox = {
+							parentanchor = vcenter
+							minimumsize = { 70 -1 }
+							maximumsize = { 70 -1 }
+							autoresize = yes
+							align = nobaseline
+							default_format = "#title"
+							fontsize_min = 12
+							elide = right
+							text = "TENSION"
+						}
+
+						icon = {
+							size = { 45 45 }
+							texture = "[GetPlayer.GetTensionIconTexture( Country.Self )]"
+						}
+
+						textbox = {
+							parentanchor = vcenter
+							autoresize = yes
+							align = nobaseline
+							max_width = 130
+							fontsize_min = 12
+							elide = right
+							raw_text = "#BOLD [Country.GetTensionWithDesc( GetPlayer )]#!"
+						}
+					}
+
+					# RELATIONS
+					flowcontainer = {
+						spacing = 10
+						margin_left = 10
+						name = "tutorial_highlight_country_diplomacy_tab_relations"
+						tooltip = "COUNTRY_RELATIONS_TOOLTIP"
+						visible = "[And(Not(Country.IsColonizable),Not(Country.IsLocalPlayer))]"
+
+						textbox = {
+							parentanchor = vcenter
+							minimumsize = { 70 -1 }
+							maximumsize = { 70 -1 }
+							autoresize = yes
+							align = nobaseline
+							default_format = "#title"
+							fontsize_min = 12
+							elide = right
+							text = "RELATIONS"
+						}
+
+						icon = {
+							size = { 45 45 }
+							texture = "[GetPlayer.GetRelationsIconTexture( Country.Self )]"
+						}
+
+						textbox = {
+							parentanchor = vcenter
+							autoresize = yes
+							align = nobaseline
+							max_width = 130
+							fontsize_min = 12
+							elide = right
+							raw_text = "#BOLD [Country.GetRelationsWithDesc( GetPlayer )]#!"
+						}
+					}
+
+					divider_clean = {
+						blockoverride "size" {
+							size =  { 250 2 }
+						}
+					}
+
+					# INFAMY
+					flowcontainer = {
+						spacing = 10
+						margin_left = 10
+						tooltip = "[Country.GetInfamyDesc]"
+						visible = "[Not(Country.IsColonizable)]"
+						onmousehierarchyenter = "[SetTempMapModeByKey('mm_infamy')]"
+						onmousehierarchyleave = "[RemoveTempMapMode]"
+						alwaystransparent = no
+
+						textbox = {
+							parentanchor = vcenter
+							minimumsize = { 70 -1 }
+							maximumsize = { 70 -1 }
+							autoresize = yes
+							align = nobaseline
+							default_format = "#title"
+							fontsize_min = 12
+							elide = right
+							text = "INFAMY"
+						}
+
+						icon = {
+							size = { 45 45 }
+							texture = "[Country.GetInfamyIconTexture]"
+						}
+
+						textbox = {
+							parentanchor = vcenter
+							autoresize = yes
+							align = nobaseline
+							max_width = 130
+							fontsize_min = 12
+							elide = right
+							raw_text = "#BOLD [Country.GetInfamyLabel|-]#!"
+						}
+					}
+
+					divider_clean = {
+						blockoverride "size" {
+							size =  { 250 2 }
+						}
+					}
+				}
+
+				vertical_divider = {
+					parentanchor = vcenter
+					using = is_not_player_and_not_colonizable_country
+
+					blockoverride "size" {
+						size = { 2 120% }
+					}
+				}
+
+				# AI STRATEGIES
+				flowcontainer = {
+					using = is_not_player_and_not_colonizable_country
+					datamodel = "[Country.AccessStrategies]"
+					direction = vertical
+					margin_left = 10
+					spacing = 10
+
+					item = {
+						flowcontainer = {
+							direction = vertical
+							minimumsize = { @panel_width_half -1 }
+							spacing = 10
+
+							flowcontainer = {
+								tooltip = "[AIStrategy.GetTooltip(Country.Self)]"
+								spacing = 10
+
+								widget = {
+									parentanchor = vcenter
+									size = { 45 45 }
+
+									icon = {
+										size = { 100% 100% }
+										texture = "gfx/interface/backgrounds/round_frame_dec.dds"
+									}
+									icon = {
+										size = { 75% 75% }
+										texture = "[AIStrategy.GetTexture]"
+										parentanchor = center
+									}
+								}
+
+								textbox = {
+									parentanchor = vcenter
+									autoresize = yes
+									text = "[AIStrategy.GetName]"
+									align = nobaseline
+									maximumsize = { 200 -1 }
+									elide = right
+									fontsize_min = 12
+								}
+							}
+
+							divider_clean = {
+								blockoverride "size" {
+									size =  { 250 2 }
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		### TIMED MODIFIERS
+		default_header = {
+			visible = "[Not(IsDataModelEmpty(Country.GetTimedModifiers))]"
+			blockoverride "text" {
+				text = "MODIFIERS"
+			}
+		}
+
+		flowcontainer = {
+			visible = "[Not(IsDataModelEmpty(Country.GetTimedModifiers))]"
+			datamodel = "[Country.GetTimedModifiers]"
+			margin_top = 10
+			spacing = 5
+			minimumsize = { @panel_width -1 }
+			parentanchor = hcenter
+			direction = vertical
+
+			item = {
+				container = {
+					minimumsize = { @panel_width -1 }
+					tooltip = "[TimedModifier.GetTooltip]"
+
+					flowcontainer = {
+						spacing = 10
+
+						icon = {
+							texture = "[TimedModifier.GetIcon]"
+							size = { 25 25 }
+						}
+
+						textbox = {
+							text = "[TimedModifier.GetName]"
+							autoresize = yes
+							align = nobaseline
+							parentanchor = vcenter
+						}
+					}
+
+					textbox = {
+						text = "[TimedModifier.GetRemainingDuration]"
+						autoresize = yes
+						align = nobaseline
+						parentanchor = right|vcenter
+					}
+				}
+			}
+		}
+	}
+}

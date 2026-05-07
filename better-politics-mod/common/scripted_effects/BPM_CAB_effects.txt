@@ -295,7 +295,8 @@ bpm_choose_hog = {
             remove_character_role = bpm_character_role_protege
         }
         post_notification = bpm_dictatorial_hog_top
-        bpm_create_hog_heir_hook = yes
+        remove_variable = bpm_hog_heir
+        bpm_do_hog_transition = yes
     }
     else_if = {
         limit = {
@@ -310,6 +311,21 @@ bpm_choose_hog = {
     else = {
         bpm_choose_hog_others = yes
     }
+    if = {
+		limit = {
+            has_law_or_variant = law_type:law_answers_to_legislature
+            has_law = law_type:law_advisory_body
+			var:bpm_headofgov ?= {
+                is_adult = no
+            }
+		}
+		owner = {
+			trigger_event = {
+				id = hog_regency.1
+				popup = yes
+			}
+		}
+	}
 }
 
 bpm_choose_hog_others = {
@@ -337,31 +353,7 @@ bpm_choose_hog_others = {
             var:bpm_headofgov ?= {
                 set_variable = bpm_headofgov_sticky
             }
-            bpm_create_hog_heir_hook = yes
-            create_character = {
-                #heir = yes
-                #first_name = Ieyoshi
-                #last_name = Tokugawa
-                #historical = yes
-                #birth_date = 1793.6.22
-                age = 23
-                interest_group = var:bpm_headofgov.interest_group
-                #ideology = ideology_traditionalist
-                #traits = {
-                #	meticulous
-                #	pious
-                #}
-                on_created = {
-                    owner = {
-                        set_variable = {
-                            name = bpm_hog_heir
-                            value = prev
-                        }
-                    }
-                    add_character_role = bpm_character_role_protege
-                    place_character_in_void = 10000
-                }
-            }
+            bpm_do_hog_transition = yes
         }
         else_if = {
             limit = {
@@ -386,6 +378,42 @@ bpm_choose_hog_others = {
 
     bpm_reload_institution_modifiers_hog = yes
     bpm_reload_interim_penalty = yes
+}
+
+bpm_do_hog_transition = {
+    if = {
+        limit = {
+            var:bpm_hog_heir ?= {
+                NOT = { is_character_alive = yes}
+            }
+        }
+        remove_variable = bpm_hog_heir
+    }
+    
+    if = {
+        limit = {
+            NOT = {
+                has_variable = bpm_hog_heir
+            }
+            has_law_or_variant = law_type:law_answers_to_legislature
+            has_law = law_type:law_advisory_body
+        }
+        bpm_create_hog_heir_hook = yes
+    }
+    else_if = {
+        limit = {
+            has_variable = bpm_hog_heir
+            NAND = {
+                has_law_or_variant = law_type:law_answers_to_legislature
+                has_law = law_type:law_advisory_body
+            }
+        }
+        remove_variable = bpm_hog_heir
+        every_scope_character = {
+			limit = {has_role = bpm_character_role_protege}
+			remove_character_role = bpm_character_role_protege
+		}
+    }
 }
 
 bpm_fill_cabinet_pool = {
@@ -849,24 +877,28 @@ bpm_add_character_to_cabinet_shared_effect_extra = {
 }
 
 bpm_appoint_as_hog = {
-    owner = {
-        bpm_clear_hog = yes
+    save_scope_as = char_in_question
+    custom_tooltip = {
+        text = appoint_as_hog_tt
+        owner = {
+            bpm_clear_hog = yes
+            set_variable = {
+                name = bpm_headofgov
+                value = prev
+            }
+        }
+        add_character_role = bpm_character_role_hog
         set_variable = {
-            name = bpm_headofgov
-            value = prev
+            name = bpm_headofgov_sticky
         }
-    }
-    add_character_role = bpm_character_role_hog
-    set_variable = {
-        name = bpm_headofgov_sticky
-    }
-    if = {
-        limit = {
-            NOT = { interest_group.leader ?= THIS }
+        if = {
+            limit = {
+                NOT = { interest_group.leader ?= THIS }
+            }
         }
+        set_variable = bpm_appointed_headofgov
+        owner = { bpm_reload_interim_penalty = yes }
     }
-    set_variable = bpm_appointed_headofgov
-    owner = { bpm_reload_interim_penalty = yes }
 }
 
 bpm_unappoint_as_hog = {

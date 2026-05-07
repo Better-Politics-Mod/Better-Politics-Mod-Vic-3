@@ -215,6 +215,7 @@ bpm_fire_minfor_effect = {
 }
 
 bpm_auto_cabinet_appoint = {
+	bpm_auto_cabinet_appoint_pm = yes
 	bpm_auto_cabinet_appoint_subp = { m = mineco }
 	bpm_auto_cabinet_appoint_subp = { m = minint }
 	bpm_auto_cabinet_appoint_subp = { m = minsoc }
@@ -378,3 +379,85 @@ bpm_get_ministerial_candidate = {
 		}
 	}
 }
+
+bpm_auto_cabinet_appoint_pm = {
+	clear_saved_scope = bpm_newmin
+	if = {
+		limit = {
+			has_law = law_type:law_answers_to_legislature
+		}
+		random_scope_character = {
+			limit = {
+				has_variable = bpm_character_role_hog
+			}
+			save_scope_as = bpm_new_ruler_scope
+		}
+	}
+	else = {
+		ruler = {
+			save_scope_as = bpm_new_ruler_scope
+		}
+	}
+
+	if = {
+		limit = {
+			OR = {
+				NOT = { has_variable = bpm_headofgov }
+				NOT = { exists = var:bpm_headofgov }
+				var:bpm_$m$ ?= {
+					is_character_alive = no
+				}
+			}
+		}
+		ordered_scope_character = {
+			limit = {
+				interest_group = {
+					custom_tooltip = {
+						text = "bpm_not_anti_establishment_tt"
+						bpm_ig_is_radical_opposition = no
+					}
+					custom_tooltip = {
+						text = "bpm_not_extremist_tt"
+						bpm_ig_is_very_radical_opposition = no
+					}
+				}
+				bpm_char_can_be_hog = yes
+				bpm_ig_is_institutional = yes
+			}
+			order_by = prominence
+			position = 0
+			set_local_variable = {
+				name = bpm_cabappt_candidate
+				value = this
+			}
+		}
+	
+		if = {
+			limit = {
+				NOT = {
+					has_local_variable = bpm_cabappt_candidate
+				}
+			}
+			create_character = {
+				interest_group = owner.ruler.interest_group
+            	save_scope_as = bpm_selchar
+			}
+			scope:bpm_selchar = {
+				set_local_variable = {
+					name = bpm_cabappt_candidate
+					value = this
+				}
+			}
+		}
+		set_local_variable = {
+			name = bpm_minname
+			value = flag:bpm_headofgov
+		}
+		local_var:bpm_cabappt_candidate = {
+			save_scope_as = bpm_newmin
+			bpm_appoint_as_hog = yes
+		}
+		#post_notification = bpm_minister_replaced
+	}
+}
+

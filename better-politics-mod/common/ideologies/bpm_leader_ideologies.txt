@@ -3775,6 +3775,7 @@ ideology_socialist_leader = {
 		law_anti_strike_laws = strongly_disapprove
 		law_right_to_associate = approve
 		law_socialist_labor_unions = disapprove
+		law_factory_councils = approve
 		law_syndicalism = neutral
 	}
 
@@ -3818,7 +3819,10 @@ ideology_socialist_leader = {
 	}
 	
 	interest_group_leader_weight = {
-		value = 15
+		value = {
+			add = 15
+			desc = "base_value"
+		}
 		# Unlikely after reformist/revolutionist split
 		if = {
 			limit = {
@@ -3826,28 +3830,71 @@ ideology_socialist_leader = {
 					has_variable = local_revsocs_split_var
 				}
 			}
-			add = -250
+			add = {
+				value = -250
+				desc = "Revoulionists After Second International"
+			}
+		}
+		else = {
+			# More likely if issues are relevant
+			if = {
+				limit = {
+					owner.ideology_communist_disfavoured_laws > 0
+				}
+				add = {
+					value = owner.ideology_communist_disfavoured_laws
+					multiply = 8
+					desc = "DISFAVORED_LAWS"
+				}
+			}
+
+			# Less likely if issues are not relevant
+			if = {
+				limit = {
+					owner.ideology_communist_favoured_laws > 0
+				}
+				subtract = {
+					value = owner.ideology_communist_favoured_laws
+					multiply = 8
+					desc = "FAVORED_LAWS"
+				}
+			}
+		}
+		add = {
+			value = owner.radical_fraction
+			multiply = 50
+			desc = "COUNTRY_RADICALS"
 		}
 		# more likely for socialists
 		if = {
 			limit = {
 				bpm_ig_is_socialist = yes
 			}
-			add = 50
+			add = {
+				value = 50
+				desc = [concept_bpm_ig_is_socialist]
+			}
 		}
 		# somewhat more likely for proletarians
 		if = {
 			limit = {
 				bpm_ig_is_proletarian = yes
 			}
-			add = 80
+			add = {
+				value = 80
+				desc = "[concept_bpm_ig_is_proletarian]"
+			}
 		}
 		# very angry IG's more likely to turn to more radical socialism
 		if = {
 			limit = {
 				ig_approval <= -5
 			}
-			add = 10
+			subtract = {
+				value = ig_approval
+				multiply = 3
+				desc = "IG_APPROVAL_BELOW_UNHAPPY"
+			}
 		}
 		# more likely for discontent trade unions outside of council republic
 		if = {
@@ -3859,6 +3906,32 @@ ideology_socialist_leader = {
 				}
 			}
 			add = 80
+		}
+		# More likely when SoL is low outside of council republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law_or_variant = law_type:law_council_republic }
+					average_sol <= 10
+				}
+			}
+			add = {
+				value = 50
+				desc = "SOL_BELOW_EXPECTED"
+			}
+		}
+		# National Liberation Alliance
+		if = {
+			limit = {
+				owner = {
+					has_variable = national_liberation_alliance_variable
+					has_journal_entry = je_new_republic
+				}
+			}
+			multiply = {
+				value = 1.25
+				desc = "NATIONAL_LIBERATION_ALLIANCE"
+			}
 		}
 		# Syndicalism JE's influence shifts chances
 		multiply = {
@@ -3876,6 +3949,7 @@ ideology_socialist_leader = {
 			} else = {
 				value = 1
 			}
+			desc = "bpm_je_syndicalism"
 		}
 	}
 
@@ -3907,6 +3981,114 @@ ideology_socialist_leader = {
 	
 	non_interest_group_leader_weight = {
 		value = 15
+		# Unlikely after reformist/revolutionist split
+		if = {
+			limit = {
+				owner = {
+					has_variable = local_revsocs_split_var
+				}
+			}
+			add = -250
+		}
+		else = {
+			# More likely if issues are relevant
+			if = {
+				limit = {
+					owner.ideology_communist_disfavoured_laws > 0
+				}
+				add = {
+					value = owner.ideology_communist_disfavoured_laws
+					multiply = 8
+				}
+			}
+
+			# Less likely if issues are not relevant
+			if = {
+				limit = {
+					owner.ideology_communist_favoured_laws > 0
+				}
+				subtract = {
+					value = owner.ideology_communist_favoured_laws
+					multiply = 8
+				}
+			}
+		}
+		add = {
+			value = owner.radical_fraction
+			multiply = 50
+		}
+		# more likely for socialists
+		if = {
+			limit = {
+				bpm_ig_is_socialist = yes
+			}
+			add = 50
+		}
+		# somewhat more likely for proletarians
+		if = {
+			limit = {
+				bpm_ig_is_proletarian = yes
+			}
+			add = 80
+		}
+		# very angry IG's more likely to turn to more radical socialism
+		if = {
+			limit = {
+				ig_approval <= -5
+			}
+			subtract = {
+				value = ig_approval
+				multiply = 3
+			}
+		}
+		# more likely for discontent trade unions outside of council republic
+		if = {
+			limit = {
+				is_interest_group_type = ig_trade_unions
+				ig_approval <= 0
+				owner = {
+					NOT = { has_law_or_variant = law_type:law_council_republic }
+				}
+			}
+			add = 80
+		}
+		# More likely when SoL is low outside of council republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law_or_variant = law_type:law_council_republic }
+					average_sol <= 10
+				}
+			}
+			add = 50
+		}
+		# National Liberation Alliance
+		if = {
+			limit = {
+				owner = {
+					has_variable = national_liberation_alliance_variable
+					has_journal_entry = je_new_republic
+				}
+			}
+			multiply = 1.25
+		}
+		# Syndicalism JE's influence shifts chances
+		multiply = {
+			if = {
+				limit = { 
+					owner = { 
+						has_variable = bpm_je_syndicalism 
+						var:bpm_je_syndicalism >= 33
+					}
+				}
+				add = 66
+				subtract = owner.var:bpm_je_syndicalism
+				add = 33
+				divide = 66
+			} else = {
+				value = 1
+		}
+		}
 	}
 }
 
@@ -3974,6 +4156,7 @@ ideology_syndicalist = {
 		law_corporatized_unions = disapprove
 		law_anti_strike_laws = disapprove
 		law_right_to_associate = approve
+		law_factory_councils = approve
 		law_socialist_labor_unions = disapprove
 		law_syndicalism = strongly_approve
 	}
@@ -3991,36 +4174,74 @@ ideology_syndicalist = {
 	}
 	
 	interest_group_leader_weight = {
-		value = 15
-		# Unlikely after reformist/revolutionist split
+		value = {
+			add = 15
+			desc = "base_value"
+		}
 		if = {
 			limit = {
-				owner = {
-					has_variable = local_revsocs_split_var
-				}
+				owner.ideology_syndicalist_disflavored_laws > 0
 			}
-			add = -250
+			add = {
+				value = owner.ideology_syndicalist_disflavored_laws
+				multiply = 10
+				desc = "DISFAVORED_LAWS"
+			}
 		}
+
+		# Less likely if issues are not relevant
+		if = {
+			limit = {
+				owner.ideology_syndicalist_flavored_laws > 0
+			}
+			subtract = {
+				value = owner.ideology_syndicalist_flavored_laws
+				multiply = 10
+				desc = "FAVORED_LAWS"
+			}
+		}
+		# Unlikely after reformist/revolutionist split
+		# if = {
+		# 	limit = {
+		# 		owner = {
+		# 			has_variable = local_revsocs_split_var
+		# 		}
+		# 	}
+		# 	add = {
+		# 		value = -250
+		# 		desc = "Revoulionists After Second International"
+		# 	}
+		# }
 		# more likely for socialists
 		if = {
 			limit = {
 				bpm_ig_is_socialist = yes
 			}
-			add = 110
+			add = {
+				value = 110
+				desc = [concept_bpm_ig_is_socialist]
+			}
 		}
 		# somewhat more likely for proletarians
 		if = {
 			limit = {
 				bpm_ig_is_proletarian = yes
 			}
-			add = 80
+			add = {
+				value = 80
+				desc = "[concept_bpm_ig_is_proletarian]"
+			}
 		}
 		# very angry IG's more likely to turn to more radical socialism
 		if = {
 			limit = {
 				ig_approval <= -5
 			}
-			add = 10
+			subtract = {
+				value = ig_approval
+				multiply = 3
+				desc = "IG_APPROVAL_BELOW_UNHAPPY"
+			}
 		}
 		# more likely for discontent trade unions outside of council republic
 		if = {
@@ -4037,13 +4258,48 @@ ideology_syndicalist = {
 		if = {
 			limit = {
 				owner = {
-					OR = {
-						has_global_variable = bpm_syndicalism_legitimized
-						has_law_or_variant = law_type:law_syndicalism
-					}
+					has_law_or_variant = law_type:law_syndicalism
 				}
 			}
-			add = 110
+			add = {
+				value = 110
+				desc = "law_syndicalism"				
+			}
+		}
+		else_if = {
+			limit = {
+				has_global_variable = bpm_syndicalism_legitimized
+			}
+			add = {
+				value = 110
+				desc = "Syndicalism_legitimized"				
+			}
+		}
+		# More likely when SoL is low outside of council republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law_or_variant = law_type:law_council_republic }
+					average_sol <= 10
+				}
+			}
+			add = {
+				value = 50
+				desc = "SOL_BELOW_EXPECTED"
+			}
+		}
+		# National Liberation Alliance
+		if = {
+			limit = {
+				owner = {
+					has_variable = national_liberation_alliance_variable
+					has_journal_entry = je_new_republic
+				}
+			}
+			multiply = {
+				value = 1.25
+				desc = "NATIONAL_LIBERATION_ALLIANCE"
+			}
 		}
 		# Syndicalism JE's influence shifts chances
 		multiply = {
@@ -4057,6 +4313,7 @@ ideology_syndicalist = {
 				subtract = 33
 				divide = 66
 			}
+			desc = "bpm_je_syndicalism"
 		}
 	}
 
@@ -4088,6 +4345,121 @@ ideology_syndicalist = {
 	
 	non_interest_group_leader_weight = {
 		value = 15
+		if = {
+			limit = {
+				owner.ideology_syndicalist_disflavored_laws > 0
+			}
+			add = {
+				value = owner.ideology_syndicalist_disflavored_laws
+				multiply = 10
+			}
+		}
+
+		# Less likely if issues are not relevant
+		if = {
+			limit = {
+				owner.ideology_syndicalist_flavored_laws > 0
+			}
+			subtract = {
+				value = owner.ideology_syndicalist_flavored_laws
+				multiply = 10
+			}
+		}
+		# Unlikely after reformist/revolutionist split
+		# if = {
+		# 	limit = {
+		# 		owner = {
+		# 			has_variable = local_revsocs_split_var
+		# 		}
+		# 	}
+		# 	add = {
+		# 		value = -250
+		# 		desc = "Revoulionists After Second International"
+		# 	}
+		# }
+		# more likely for socialists
+		if = {
+			limit = {
+				bpm_ig_is_socialist = yes
+			}
+			add = 110
+		}
+		# somewhat more likely for proletarians
+		if = {
+			limit = {
+				bpm_ig_is_proletarian = yes
+			}
+			add = 80
+		}
+		# very angry IG's more likely to turn to more radical socialism
+		if = {
+			limit = {
+				ig_approval <= -5
+			}
+			subtract = {
+				value = ig_approval
+				multiply = 3
+			}
+		}
+		# more likely for discontent trade unions outside of council republic
+		if = {
+			limit = {
+				is_interest_group_type = ig_trade_unions
+				ig_approval <= 0
+				owner = {
+					NOT = { has_law_or_variant = law_type:law_council_republic }
+				}
+			}
+			add = 80
+		}
+		# More likely if syndicalism is legitimized or living under syndicalism
+		if = {
+			limit = {
+				owner = {
+					has_law_or_variant = law_type:law_syndicalism
+				}
+			}
+			add = 110
+		}
+		else_if = {
+			limit = {
+				has_global_variable = bpm_syndicalism_legitimized
+			}
+			add = 110
+		}
+		# More likely when SoL is low outside of council republic
+		if = {
+			limit = {
+				owner = {
+					NOT = { has_law_or_variant = law_type:law_council_republic }
+					average_sol <= 10
+				}
+			}
+			add = 50
+		}
+		# National Liberation Alliance
+		if = {
+			limit = {
+				owner = {
+					has_variable = national_liberation_alliance_variable
+					has_journal_entry = je_new_republic
+				}
+			}
+			multiply = 1.25
+		}
+		# Syndicalism JE's influence shifts chances
+		multiply = {
+			value = 0
+			if = {
+				limit = { 
+					owner = { has_variable = bpm_je_syndicalism }
+					owner.var:bpm_je_syndicalism >= 33
+				}
+				add = owner.var:bpm_je_syndicalism
+				subtract = 33
+				divide = 66
+			}
+		}
 	}
 }
 
@@ -4146,6 +4518,7 @@ REPLACE:ideology_social_democrat = {
 		law_right_to_associate = approve
 		law_socialist_labor_unions = disapprove
 		law_syndicalism = neutral
+		law_factory_councils = neutral
 	}
 
 	lawgroup_repeatable_economy = {
@@ -4470,6 +4843,7 @@ REPLACE:ideology_communist = {
 		law_right_to_associate = approve
 		law_socialist_labor_unions = approve
 		law_syndicalism = neutral
+		law_factory_councils = neutral
 	}
 
 	lawgroup_repeatable_economy = {
@@ -4499,7 +4873,7 @@ REPLACE:ideology_communist = {
 	
 	interest_group_leader_weight = {
 		value = {
-			add = 100
+			add = 50
 			if = {
 				limit = {
 					owner = { has_variable = communism_1_done }
@@ -4519,6 +4893,29 @@ REPLACE:ideology_communist = {
 			value = owner.radical_fraction
 			multiply = 50
 			desc = "COUNTRY_RADICALS"
+		}
+		# More likely if issues are relevant
+		if = {
+			limit = {
+				owner.ideology_communist_disfavoured_laws > 0
+			}
+			add = {
+				value = owner.ideology_communist_disfavoured_laws
+				multiply = 8
+				desc = "DISFAVORED_LAWS"
+			}
+		}
+
+		# Less likely if issues are not relevant
+		if = {
+			limit = {
+				owner.ideology_communist_favoured_laws > 0
+			}
+			subtract = {
+				value = owner.ideology_communist_favoured_laws
+				multiply = 8
+				desc = "FAVORED_LAWS"
+			}
 		}
 		# Very likely for revsocs after Second Intl
 		if = {
@@ -4639,7 +5036,7 @@ REPLACE:ideology_communist = {
 	
 	non_interest_group_leader_weight = {
 		value = {
-			value = 100
+			value = 50
 			if = {
 				limit = {
 					owner = { has_variable = communism_1_done }
@@ -4657,6 +5054,27 @@ REPLACE:ideology_communist = {
 		add = {
 			value = owner.radical_fraction
 			multiply = 50
+		}
+		# More likely if issues are relevant
+		if = {
+			limit = {
+				owner.ideology_communist_disfavoured_laws > 0
+			}
+			add = {
+				value = owner.ideology_communist_disfavoured_laws
+				multiply = 8
+			}
+		}
+
+		# Less likely if issues are not relevant
+		if = {
+			limit = {
+				owner.ideology_communist_favoured_laws > 0
+			}
+			subtract = {
+				value = owner.ideology_communist_favoured_laws
+				multiply = 8
+			}
 		}
 		# Very likely for revsocs after Second Intl
 		if = {
@@ -4804,6 +5222,7 @@ REPLACE:ideology_vanguardist = {
 		law_right_to_associate = neutral
 		law_socialist_labor_unions = strongly_approve
 		law_syndicalism = neutral
+		law_factory_councils = neutral
 	}
 
 	lawgroup_party_laws = {
@@ -5852,6 +6271,7 @@ REPLACE:ideology_anarchist = {
 		law_right_to_associate = approve
 		law_socialist_labor_unions = disapprove
 		law_syndicalism = neutral
+		law_factory_councils = approve
 	}
 
 	lawgroup_repeatable_economy = {
@@ -6290,6 +6710,7 @@ ideology_anarchist_syndicalist = {
 		law_anti_strike_laws = strongly_disapprove
 		law_right_to_associate = approve
 		law_socialist_labor_unions = disapprove
+		law_factory_councils = approve
 		law_syndicalism = strongly_approve
 	}
 
@@ -6496,6 +6917,8 @@ ideology_agrarian_socialist_leader = {
 	interest_group_leader_weight = {
 		value = 10
 		# More likely for agrarian populists and anarchists
+		# More likely if issues are relevant
+		
 		if = {
 			limit = {
 				owner = {
@@ -10205,6 +10628,7 @@ REPLACE:ideology_corporatist_leader = {
 		law_right_to_associate = strongly_disapprove
 		law_socialist_labor_unions = strongly_disapprove
 		law_syndicalism = strongly_disapprove
+		law_factory_councils = strongly_disapprove
 	}
 	
 	interest_group_leader_trigger = {
@@ -12727,17 +13151,64 @@ ideology_reconstructionist = {
 	}
 
 	interest_group_leader_weight = {
-		value = 100
+		value = 150
+		if = {
+			limit = {
+				bpm_ig_is_institutional = yes
+			}
+			add = {
+				value = -50
+				desc = "[concept_bpm_ig_is_institutional]"
+			}
+		}
+		if = {
+			limit = {
+				NAND = {
+					has_law_or_variant = law_type:law_dedicated_police
+					has_law_or_variant = law_type:law_cultural_exclusion
+					has_law_or_variant = law_type:law_appointed_bureaucrats
+					has_law_or_variant = law_type:law_devolved
+					has_law_or_variant = law_type:law_slavery_banned
+				}
+			}
+			add = {
+				value = 150
+				desc = "DISFLAVORED_LAWS"
+			}
+		}
+
 		if = {
 			limit = {
 				owner = { has_journal_entry = je_bpm_second_revolution }
 			}
-			add = -100
+			multiply = 0
 		}
 	}
 
 	non_interest_group_leader_weight = {
-		value = 100
+		value = 150
+		if = {
+			limit = {
+				bpm_ig_is_institutional = yes
+			}
+			add = {
+				value = -50
+				
+			}
+		}
+		if = {
+			limit = {
+				NAND = {
+					has_law_or_variant = law_type:law_dedicated_police
+					has_law_or_variant = law_type:law_cultural_exclusion
+					has_law_or_variant = law_type:law_appointed_bureaucrats
+					has_law_or_variant = law_type:law_devolved
+					has_law_or_variant = law_type:law_slavery_banned
+				}
+			}
+			add = 150
+		}
+
 		# less likely if issues are not relevant
 		if = {
 			limit = {
@@ -12747,7 +13218,7 @@ ideology_reconstructionist = {
 					}
 				}
 			}
-			add = -100
+			multiply = 0
 		}
 	}
 }
@@ -12817,13 +13288,19 @@ ideology_reactionary_anti_capitalist = {
 	}
 	
 	interest_group_leader_weight = {
-		value = 50
+		value = {
+			add = 50
+			desc = "base_value"
+		}
 		if = {
 			limit = {
 				bpm_ig_is_liberal = yes
 				NOT = { is_interest_group_type = ig_national_liberals }	
 			}
-			add = -50
+			add = {
+				value = -50
+				desc = "[concept_bpm_ig_is_liberal]"
+			}
 		}
 		if = {
 			limit = {

@@ -88,6 +88,9 @@ bpm_choose_front_ig_subp = {
 		limit = {
 			scope:selected_ig ?= {
 				bpm_interest_group_is_activated = yes
+				NOT = {
+					has_modifier = bpm_adapting_to_new_regime
+				}
 				# Tiny unorganized IGs won't join revolutions
 				OR = {
 					ig_clout > 0.005
@@ -127,6 +130,9 @@ bpm_choose_front_ig_subp = {
 		}
 
 	}
+	else = {
+		bpm_remove_ig_from_all_fronts = yes
+	}
 }
 
 bpm_choose_front_mov_subp = {
@@ -143,6 +149,7 @@ bpm_choose_front_mov_subp = {
 				# Movements will only join revolutions over 50% radicalism and some support
 				political_movement_radicalism > 0.5
 				political_movement_support > 0.05
+				NOT = { has_modifier = bpm_adapting_to_new_regime_mov }
 				count > 0
 			}
 		}
@@ -168,6 +175,9 @@ bpm_choose_front_mov_subp = {
 		else = {
 			bpm_remove_mov_from_all_fronts = yes
 		}
+	}
+	else = {
+		bpm_remove_mov_from_all_fronts = yes
 	}
 }
 
@@ -1432,10 +1442,17 @@ bpm_reduce_cell_level = {
 	}
 }
 
+bpm_destroy_all_cells = {
+	remove_modifier = bpm_revcell_$front$_lv1
+	remove_modifier = bpm_revcell_$front$_lv2
+	remove_modifier = bpm_revcell_$front$_lv3
+}
+
 bpm_increase_or_shrink_cell_level = {
-	scope:bpm_front_$front$ = {
+	flag:bpm_front_$front$ = {
 		save_scope_as = selected_front_name
 	}
+
 	if = {
 		limit = {
 			NOT = {
@@ -1495,6 +1512,41 @@ bpm_increase_or_shrink_cell_level = {
 	}
 }
 
+bpm_cache_size_level = {
+	if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv1
+		}
+		set_variable = {
+			name = bpm_front_$front$_current_cell_level
+			value = 1
+		}
+	}
+	else_if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv2
+		}
+		set_variable = {
+			name = bpm_front_$front$_current_cell_level
+			value = 2
+		}
+	}
+	else_if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv3
+		}
+		set_variable = {
+			name = bpm_front_$front$_current_cell_level
+			value = 3
+		}
+	}
+	else = {
+		set_variable = {
+			name = bpm_front_$front$_current_cell_level
+			value = 0
+		}
+	}
+}
 
 bpm_shrink_or_grow_in_states = {
 	if = {
@@ -1537,6 +1589,11 @@ bpm_shrink_or_grow_in_states = {
 				set_variable = bpm_je_is_urgent
 			}
 			bpm_increase_cell_level = { front = $front$ }
+		}
+	}
+	every_scope_state = {
+		bpm_apply_to_all_fronts = {
+			effect = bpm_cache_size_level
 		}
 	}
 }

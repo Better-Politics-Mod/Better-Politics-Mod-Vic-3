@@ -10,7 +10,10 @@ tt = """
 		adjective = ATL_ADJ
 		priority = 1
 		trigger = {
-			scope:actor ?= { var:bpm_country_revolutionary_front = flag:bpm_front_YYY }
+			scope:actor ?= { 
+				has_variable = bpm_country_revolutionary_front
+				var:bpm_country_revolutionary_front = flag:bpm_front_YYY 
+			}
 		}
 	}
 """
@@ -25,7 +28,7 @@ DXXX = {
 }
 """.replace("VVV", rest)
 res = ""
-for i in range(0, 100):
+for i in range(0, 1):
     res += t.replace("XXX", str("{:02d}".format(i)))
 
 with open("support-scripts/bpmgendyn.txt", "w") as f:

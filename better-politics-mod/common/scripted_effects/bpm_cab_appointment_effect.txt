@@ -1,4 +1,4 @@
-bpm_appoint_mineco_effect = {
+﻿bpm_appoint_mineco_effect = {
 	owner = {
 		if = {
 			limit = {
@@ -231,7 +231,7 @@ bpm_auto_cabinet_appoint_subp = {
 		}
 		random_scope_character = {
 			limit = {
-				has_variable = bpm_character_role_hog
+				has_role = bpm_character_role_hog
 			}
 			save_scope_as = bpm_new_ruler_scope
 		}
@@ -253,6 +253,25 @@ bpm_auto_cabinet_appoint_subp = {
 			}
 		}
 		if = {
+			limit = {
+				has_variable = $m$_locked_to
+			}
+			ordered_scope_character = {
+				limit = {
+					interest_group = {
+						owner.var:$m$_locked_to ?= this
+					}
+					bpm_char_can_be_minister = yes
+				}
+				order_by = prominence
+				position = 0
+				set_local_variable = {
+					name = bpm_cabappt_candidate
+					value = this
+				}
+			}
+		}
+		else_if = {
 			limit = {
 				has_variable = bpm_cabappt_strategy
 				var:bpm_cabappt_strategy ?= flag:bpm_greedy_ruler
@@ -387,11 +406,11 @@ bpm_auto_cabinet_appoint_pm = {
 	clear_saved_scope = bpm_newmin
 	if = {
 		limit = {
-			has_law = law_type:law_answers_to_legislature
+			has_law_or_variant = law_type:law_answers_to_legislature
 		}
 		random_scope_character = {
 			limit = {
-				has_variable = bpm_character_role_hog
+				has_role = bpm_character_role_hog
 			}
 			save_scope_as = bpm_new_ruler_scope
 		}
@@ -404,11 +423,18 @@ bpm_auto_cabinet_appoint_pm = {
 
 	if = {
 		limit = {
-			OR = {
-				NOT = { has_variable = bpm_headofgov }
-				NOT = { exists = var:bpm_headofgov }
-				var:bpm_headofgov ?= {
-					is_character_alive = no
+			AND = {
+				OR = {
+					has_law_or_variant = law_type:law_appointed_by_hos
+					has_law_or_variant = law_type:law_appointed_on_advice 
+					# protege sucession already handled in bpm_do_hog_transition
+				}
+				OR = {
+					NOT = { has_variable = bpm_headofgov }
+					var:bpm_headofgov ?= {
+						is_character_alive = no
+					}
+					bpm_ruler_is_acting_as_interim_head_of_government = yes
 				}
 			}
 		}

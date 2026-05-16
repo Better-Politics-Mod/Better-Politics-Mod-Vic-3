@@ -3734,6 +3734,9 @@ bpm_springtime_of_the_peoples.10 = { # Cinque giornate di Milano, March 18th-22n
 			ruler = {
 				kill_character = yes
 			}
+			ig:ig_liberals.leader = {
+				kill_character = yes
+			}
 
 			create_character = {
 				template = RSM_Daniele_Manin
@@ -5054,17 +5057,17 @@ bpm_springtime_of_the_peoples.22 = { # Ferdinand's Self-Coup, May 13-15th 1848
 				bpm_add_movement_interaction = { int = socialist_split }
 				
 				bpm_springtime_make_country_child_of_the_revolution = yes
-			}
-
-			random_character_in_exile_pool = {
-				limit = {
-					has_variable = giuseppe_ricardi_the_leader
+				
+				random_character_in_exile_pool = {
+					limit = {
+						has_variable = giuseppe_ricardi_the_leader
+					}
+					transfer_character = c:BPM_CAL
+					remove_character_role = agitator
+					add_character_role = politician
+					set_as_interest_group_leader = yes
+					set_character_as_ruler = yes
 				}
-				transfer_character = c:BPM_CAL
-				add_character_role = politician
-				remove_character_role = agitator
-				set_as_interest_group_leader = yes
-				set_character_as_ruler = yes
 			}
 		}
 	}
@@ -12817,7 +12820,6 @@ bpm_springtime_italian_unification.1 = {
 	}
 
 	immediate = {
-		bpm_calculate_florence_parliament_seats = yes
 		c:AUS = {
 			save_scope_as = austria_country_scope
 		}
@@ -12997,6 +12999,47 @@ bpm_springtime_italian_unification.4 = {
 	}
 }
 
+bpm_springtime_italian_unification.5 = {
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.5.t
+	desc = bpm_springtime_italian_unification.5.d
+	flavor = bpm_springtime_italian_unification.5.f
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		
+	}
+
+	immediate = {
+		
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.5.a
+
+		default_option = yes
+	}
+}
+
 bpm_springtime_italian_unification.6 = {
 	type = country_event
 	placement = ROOT
@@ -13043,29 +13086,31 @@ bpm_springtime_italian_unification.6 = {
 			}
 			set_global_variable = bpm_springtime_italy_federation_proposed
 		}
-		set_global_variable = {
-			name = bpm_florence_parliament_progress
-			value = 0
-		}
+		
 		c:SAR = {
 			save_scope_as = 1848_sardinia_piedmont_country
 		}
+		set_global_variable = bpm_florence_assembly_territorial_debates
+		if = {
+			limit = {
+				global_var:bpm_florence_parliament_progress < 25
+			}
+			set_global_variable = {
+				name = bpm_florence_parliament_progress
+				value = 25
+			}
+		}
+		set_global_variable = {
+			name = bpm_florence_slight_cooldown
+			days = 2
+		}
+		set_global_variable = bpm_florence_assembly_debating_a_law
 	}
 
 	option = {
 		name = bpm_springtime_italian_unification.6.a
 
 		default_option = yes
-
-		set_global_variable = bpm_florence_assembly_debating_a_law
-
-		custom_tooltip = {
-			text = bpm_springtime_italy_progress_increases_by_25_tt
-			change_global_variable = {
-				name = bpm_florence_parliament_progress
-				add = 25
-			}
-		}
 	}
 }
 
@@ -13121,34 +13166,69 @@ bpm_springtime_italian_unification.7 = {
 	dlc = dlc_bpm
 
 	trigger = {
-		
+		global_var:bpm_florence_parliament_progress >= 50
+		has_global_variable = bpm_florence_assembly_territorial_debates
 	}
 
 	immediate = {
 		if = {
 			limit = {
-				bpm_springtime_sardinian_hegemonist_seats > bpm_springtime_anti_sardinian_seats
+				this ?= c:SAR
 			}
-			set_global_variable = bpm_florence_assembly_as_before
-		}
-		else_if = {
-			limit = {
-				bpm_springtime_sardinian_hegemonist_seats <= bpm_springtime_anti_sardinian_seats
+			random_list = {
+				1 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_sardinian_hegemonist_seats > bpm_springtime_anti_sardinian_seats
+							}
+							add = 15
+						}
+					}
+					set_global_variable = bpm_florence_assembly_as_before
+				}
+				5 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_sardinian_hegemonist_seats <= bpm_springtime_anti_sardinian_seats
+							}
+							add = 20
+						}
+					}
+					set_global_variable = bpm_florence_assembly_everything_split
+				}
 			}
-			set_global_variable = bpm_florence_assembly_everything_split
 		}
 
 		if = {
 			limit = {
-				bpm_springtime_independent_sicilian_seats > bpm_springtime_compromise_sicily_seats
+				this ?= c:SAR
 			}
-			set_global_variable = bpm_florence_assembly_sicily_independence
-		}
-		else_if = {
-			limit = {
-				bpm_springtime_independent_sicilian_seats <= bpm_springtime_compromise_sicily_seats
+			random_list = {
+				5 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_independent_sicilian_seats > bpm_springtime_compromise_sicily_seats
+							}
+							add = 10
+						}
+					}
+					set_global_variable = bpm_florence_assembly_sicily_independence
+				}
+				2 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_independent_sicilian_seats <= bpm_springtime_compromise_sicily_seats
+							}
+							add = 9
+						}
+					}
+					set_global_variable = bpm_florence_assembly_compromise_var
+				}
 			}
-			set_global_variable = bpm_florence_assembly_compromise_var
 		}
 
 		c:SAR = {
@@ -13274,21 +13354,39 @@ bpm_springtime_italian_unification.8 = {
 	dlc = dlc_bpm
 
 	trigger = {
-		
+		global_var:bpm_florence_parliament_progress >= 75
+		has_global_variable = bpm_florence_assembly_territorial_debates
 	}
 
 	immediate = {
 		if = {
 			limit = {
-				bpm_springtime_states_rights_local_law > bpm_springtime_central_state_local_law
+				this ?= c:SAR
 			}
-			set_global_variable = bpm_florence_assembly_states_rights
-		}
-		else_if = {
-			limit = {
-				bpm_springtime_states_rights_local_law <= bpm_springtime_central_state_local_law
+			random_list = {
+				3 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_states_rights_local_law > bpm_springtime_central_state_local_law
+							}
+							add = 15
+						}
+					}
+					set_global_variable = bpm_florence_assembly_states_rights
+				}
+				2 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_states_rights_local_law <= bpm_springtime_central_state_local_law
+							}
+							add = 12
+						}
+					}
+					set_global_variable = bpm_florence_assembly_strong_federal
+				}
 			}
-			set_global_variable = bpm_florence_assembly_strong_federal
 		}
 
 		c:SAR = {
@@ -13349,7 +13447,8 @@ bpm_springtime_italian_unification.9 = {
 	dlc = dlc_bpm
 
 	trigger = {
-		
+		global_var:bpm_florence_parliament_progress >= 100
+		has_global_variable = bpm_florence_assembly_territorial_debates
 	}
 
 	immediate = {
@@ -13370,10 +13469,1455 @@ bpm_springtime_italian_unification.9 = {
 		c:SIC.ruler = {
 			save_scope_as = ferdinian_2nd_of_two_sicilies
 		}
+		remove_global_variable = bpm_florence_assembly_territorial_debates
 	}
 
 	option = {
 		name = bpm_springtime_italian_unification.9.a
+
+		if = {
+			limit = {
+				this ?= c:SAR
+			}
+			set_global_variable = {
+				name = bpm_florence_parliament_progress
+				value = 0
+			}
+		}
+
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.10 = {
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.10.t
+	desc = bpm_springtime_italian_unification.10.d
+	flavor = bpm_springtime_of_the_peoples.101.f
+
+	event_image = {
+		video = "europenorthamerica_london_center"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		
+	}
+
+	immediate = {
+		set_global_variable = bpm_springtime_civil_rights_bill_proposed
+		c:SAR = {
+			save_scope_as = 1848_sardinia_piedmont_country
+		}
+		set_global_variable = bpm_florence_assembly_civil_rights_debates
+		if = {
+			limit = {
+				global_var:bpm_florence_parliament_progress = 10
+			}
+			set_global_variable = {
+				name = bpm_florence_parliament_progress
+				value = 10
+			}
+		}
+		set_global_variable = {
+			name = bpm_florence_slight_cooldown
+			days = 2
+		}
+		set_global_variable = bpm_florence_assembly_debating_a_law
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.10.a
+
+		custom_tooltip = bpm_springtime_10_whole_percent
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.11 = {
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.11.t
+	desc = {
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.11.desc_always
+			trigger = {
+				always = yes
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.11.desc_religious
+			trigger = {
+				has_global_variable = bpm_florence_assembly_religious_compromise
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.11.desc_secular
+			trigger = {
+				has_global_variable = bpm_florence_assembly_secular_freedoms
+			}
+		}
+	}
+	flavor = bpm_springtime_of_the_peoples.101.f
+
+	event_image = {
+		video = "southamerica_christianity"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		global_var:bpm_florence_parliament_progress >= 25
+		has_global_variable = bpm_florence_assembly_civil_rights_debates
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				this ?= c:SAR
+			}
+			random_list = {
+				2 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_florence_right_of_the_assembly > bpm_springtime_florence_left_of_the_assembly
+							}
+							add = 15
+						}
+					}
+					set_global_variable = bpm_florence_assembly_religious_compromise
+				}
+				2 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_florence_right_of_the_assembly < bpm_springtime_florence_left_of_the_assembly
+							}
+							add = 10
+						}
+					}
+					set_global_variable = bpm_florence_assembly_secular_freedoms
+				}
+			}
+		}
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.11.a
+
+		custom_tooltip = {
+			text = bpm_decrease_national_unity_by_3
+			je:je_italia_fara_de_se = {
+				add_progress = {
+					name = bpm_italy_national_unity_progress_bar
+					value = -3
+				}
+			}
+		}
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.12 = {
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.12.t
+	desc = {
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.12.desc_always
+			trigger = {
+				always = yes
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.12.desc_free
+			trigger = {
+				has_global_variable = bpm_florence_assembly_freetrade
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.12.desc_prot
+			trigger = {
+				has_global_variable = bpm_florence_assembly_protection
+			}
+		}
+	}
+	flavor = bpm_springtime_italian_unification.12.f
+
+	event_image = {
+		video = "asia_farmers_market"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_trade.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		global_var:bpm_florence_parliament_progress >= 50
+		has_global_variable = bpm_florence_assembly_civil_rights_debates
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				this ?= c:SAR
+			}
+			random_list = {
+				1 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_florence_freetraders >= bpm_springtime_florence_protectionists
+							}
+							add = 10
+						}
+					}
+					set_global_variable = bpm_florence_assembly_freetrade
+				}
+				2 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_florence_freetraders < bpm_springtime_florence_protectionists
+							}
+							add = 10
+						}
+					}
+					set_global_variable = bpm_florence_assembly_protection
+				}
+			}
+		}
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.12.a
+
+		custom_tooltip = {
+			text = bpm_decrease_national_unity_by_3
+			je:je_italia_fara_de_se = {
+				add_progress = {
+					name = bpm_italy_national_unity_progress_bar
+					value = -3
+				}
+			}
+		}
+
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.13 = {
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.13.t
+	desc = bpm_springtime_italian_unification.13.d
+	flavor = bpm_springtime_of_the_peoples.107.f
+
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		global_var:bpm_florence_parliament_progress >= 65
+		has_global_variable = bpm_florence_assembly_civil_rights_debates
+	}
+
+	immediate = {
+		
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.13.a
+
+		custom_tooltip = {
+			text = bpm_increase_national_unity_by_2
+			je:je_italia_fara_de_se = {
+				add_progress = {
+					name = bpm_italy_national_unity_progress_bar
+					value = 2
+				}
+			}
+		}
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.14 = {
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.14.t
+	desc = {
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.14.desc_left
+			trigger = {
+				has_global_variable = bpm_florence_assembly_right_to_work
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.14.desc_right
+			trigger = {
+				has_global_variable = bpm_florence_assembly_right_to_nothing
+			}
+		}
+	}
+	flavor = bpm_springtime_buildup.11.f
+
+	event_image = {
+		video = "votp_agitator_speaking"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		global_var:bpm_florence_parliament_progress >= 85
+		has_global_variable = bpm_florence_assembly_civil_rights_debates
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				this ?= c:SAR
+			}
+			random_list = {
+				2 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_florence_right_of_the_assembly >= bpm_springtime_florence_left_of_the_assembly
+							}
+							add = 10
+						}
+					}
+					set_global_variable = bpm_florence_assembly_right_to_nothing
+				}
+				3 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_florence_right_of_the_assembly < bpm_springtime_florence_left_of_the_assembly
+							}
+							add = 10
+						}
+					}
+					set_global_variable = bpm_florence_assembly_right_to_work
+				}
+			}
+		}
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.14.a
+
+		custom_tooltip = {
+			text = bpm_decrease_national_unity_by_1
+			je:je_italia_fara_de_se = {
+				add_progress = {
+					name = bpm_italy_national_unity_progress_bar
+					value = -1.5
+				}
+			}
+		}
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.15 = {
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.15.t
+	desc = bpm_springtime_italian_unification.15.d
+	flavor = bpm_springtime_italian_unification.15.f
+
+	event_image = {
+		video = "votp_agitator_speaking"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		global_var:bpm_florence_parliament_progress >= 100
+		has_global_variable = bpm_florence_assembly_civil_rights_debates
+	}
+
+	immediate = {
+		random_list = {
+			20 = {
+				every_country = {
+					limit = {
+						OR = {
+							country_has_primary_culture = cu:north_italian
+							country_has_primary_culture = cu:south_italian
+						}
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.16
+						popup = yes
+						days = 20
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.16
+						popup = yes
+						weeks = 2
+					}
+				}
+			}
+			16 = {
+				every_country = {
+					limit = {
+						OR = {
+							country_has_primary_culture = cu:north_italian
+							country_has_primary_culture = cu:south_italian
+						}
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.16
+						popup = yes
+						days = 11
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.16
+						popup = yes
+						days = 18
+					}
+				}
+			}
+			20 = {
+				every_country = {
+					limit = {
+						OR = {
+							country_has_primary_culture = cu:north_italian
+							country_has_primary_culture = cu:south_italian
+						}
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.16
+						popup = yes
+						days = 12
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.16
+						popup = yes
+						days = 20
+					}
+				}
+			}
+			5 = {
+				every_country = {
+					limit = {
+						OR = {
+							country_has_primary_culture = cu:north_italian
+							country_has_primary_culture = cu:south_italian
+						}
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.16
+						popup = yes
+						days = 14
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.16
+						popup = yes
+						days = 21
+					}
+				}
+			}
+			10 = {
+				every_country = {
+					limit = {
+						OR = {
+							country_has_primary_culture = cu:north_italian
+							country_has_primary_culture = cu:south_italian
+						}
+					}
+
+					trigger_event = {
+						id = bpm_springtime_italian_unification.16
+						popup = yes
+						days = 18
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.16
+						popup = yes
+						days = 26
+					}
+				}
+			}
+		}
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.15.a
+
+		remove_global_variable = bpm_florence_assembly_civil_rights_debates
+		if = {
+			limit = {
+				this ?= c:SAR
+			}
+			set_global_variable = {
+				name = bpm_florence_parliament_progress
+				value = 0
+			}
+		}
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.16 = { # League and Military Affairs Committee achieves stuff
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.16.t
+	desc = bpm_springtime_italian_unification.16.d
+	flavor = bpm_springtime_italian_unification.16.f
+
+	event_image = {
+		video = "southamerica_factory_opening"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+
+	}
+
+	immediate = {
+		
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.16.a
+
+		custom_tooltip = {
+			text = bpm_increase_national_unity_by_35
+			je:je_italia_fara_de_se = {
+				add_progress = {
+					name = bpm_italy_national_unity_progress_bar
+					value = 3.5
+				}
+			}
+		}
+		
+		hidden_effect = {
+			if = {
+				limit = {
+					this ?= c:SAR
+				}
+				random_list = {
+					40 = {
+						modifier = {
+							if = {
+								limit = {
+									has_global_variable = bpm_springtime_italy_confederation_proposed
+								}
+								add = 10
+							}
+						}
+						create_power_bloc = {
+							name = "ita_customs_league"
+							map_color = { 26 68 26 }
+							founding_date = game_date
+							identity = identity_trade_league
+							principle = principle_internal_trade_1
+							#member = c:SAR
+							#member = c:PAP
+							#member = c:SIC
+							#member = c:TUS
+							#member = c:MOD
+							#member = c:RSM
+							#member = c:SIC_ISL
+							#member = c:PAR
+							#member = c:LOM
+						}
+						every_country = {
+							limit = {
+								OR = {
+									country_has_primary_culture = cu:north_italian
+									country_has_primary_culture = cu:south_italian
+								}
+							}
+							join_power_bloc = c:SAR
+						}
+					}
+					25 = {
+						modifier = {
+							if = {
+								limit = {
+									has_global_variable = bpm_springtime_italy_federation_proposed
+								}
+								add = 15
+							}
+						}
+						create_power_bloc = {
+							name = "ita_customs_league"
+							map_color = { 26 68 26 }
+							founding_date = game_date
+							identity = identity_trade_league
+							principle = principle_internal_trade_1
+						}
+						every_country = {
+							limit = {
+								OR = {
+									this ?= c:PAP
+									this ?= c:SIC
+									this ?= c:TUS
+									this ?= c:MOD
+									this ?= c:RSM
+									this ?= c:SIC_IS
+									this ?= c:LOM
+								}
+							}
+							join_power_bloc = c:SAR
+						}
+					}
+					10 = {
+						modifier = {
+							if = {
+								limit = {
+									has_global_variable = bpm_springtime_italy_federation_proposed
+								}
+								add = 5
+							}
+						}
+						create_power_bloc = {
+							name = "ita_customs_league"
+							map_color = { 26 68 26 }
+							founding_date = game_date
+							identity = identity_trade_league
+							principle = principle_internal_trade_1
+							#member = c:SAR
+							#member = c:PAP
+							#member = c:TUS
+							#member = c:MOD
+						}
+						every_country = {
+							limit = {
+								OR = {
+									this ?= c:PAP
+									this ?= c:TUS
+									this ?= c:MOD
+								}
+							}
+							join_power_bloc = c:SAR
+						}
+					}
+				}
+			}
+		}
+
+		show_as_tooltip = {
+			create_power_bloc = {
+				name = "ita_customs_league"
+				map_color = { 26 68 26 }
+				founding_date = game_date
+				identity = identity_trade_league
+				principle = principle_internal_trade_1
+				#member = c:SAR
+				#member = c:PAP
+				#member = c:TUS
+				#member = c:MOD
+			}
+		}
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.17 = { # ministerial responsibility
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.17.t
+	desc = bpm_springtime_italian_unification.17.d
+	flavor = bpm_springtime_italian_unification.17.f
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		
+	}
+
+	immediate = {
+		
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.17.a
+
+		custom_tooltip = {
+			text = bpm_increase_national_unity_by_35
+			je:je_italia_fara_de_se = {
+				add_progress = {
+					name = bpm_italy_national_unity_progress_bar
+					value = 3.5
+				}
+			}
+		}
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.18 = { 
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.18.t
+	desc = bpm_springtime_italian_unification.18.d
+	flavor = bpm_springtime_italian_unification.18.f
+
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				global_var:bpm_florence_parliament_progress < 25
+			}
+			set_global_variable = {
+				name = bpm_florence_parliament_progress
+				value = 25
+			}
+		}
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.18.a
+
+		set_global_variable = bpm_florence_assembly_electoral_debates
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.19 = { 
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.19.t
+	desc = {
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.19.desc_freehold
+			trigger = {
+				has_global_variable = bpm_florence_assembly_freehold_suffrage
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.19.desc_property
+			trigger = {
+				has_global_variable = bpm_florence_assembly_property_suffrage
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.19.desc_census
+			trigger = {
+				has_global_variable = bpm_florence_assembly_census_suffrage
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.19.desc_universal
+			trigger = {
+				has_global_variable = bpm_florence_assembly_universal_suffrage
+			}
+		}
+	}
+	flavor = bpm_springtime_italian_unification.19.f
+
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		global_var:bpm_florence_parliament_progress >= 100
+		has_global_variable = bpm_florence_assembly_electoral_debates
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				this ?= c:SAR
+			}
+			random_list = {
+				5 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_florence_right_of_the_assembly >= bpm_springtime_florence_left_of_the_assembly
+							}
+							add = 5
+						}
+					}
+					set_global_variable = bpm_florence_assembly_freehold_suffrage
+					custom_tooltip = {
+						text = bpm_florence_democratic_discontent_increase_5
+						je:je_italia_fara_de_se = {
+							add_progress = {
+								name = bpm_italy_democrat_discontent
+								value = 5
+							}
+						}
+					}
+				}
+				5 = { ### property suffrage
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_florence_property_suffrage > bpm_springtime_florence_universal_suffrage
+							}
+							add = 60
+						}
+					}
+					set_global_variable = bpm_florence_assembly_property_suffrage
+					custom_tooltip = {
+						text = bpm_florence_democratic_discontent_increase_3
+						je:je_italia_fara_de_se = {
+							add_progress = {
+								name = bpm_italy_democrat_discontent
+								value = 3
+							}
+						}
+					}
+				}
+				15 = {
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_florence_property_suffrage < bpm_springtime_florence_universal_suffrage
+								bpm_springtime_florence_right_of_the_assembly >= bpm_springtime_florence_left_of_the_assembly
+							}
+							add = 25
+						}
+					}
+					set_global_variable = bpm_florence_assembly_census_suffrage
+					custom_tooltip = {
+						text = bpm_florence_democratic_discontent_decrease_1
+						je:je_italia_fara_de_se = {
+							add_progress = {
+								name = bpm_italy_democrat_discontent
+								value = 1
+							}
+						}
+					}
+				}
+				5 = { ### property suffrage
+					modifier = {
+						if = {
+							limit = {
+								bpm_springtime_florence_property_suffrage < bpm_springtime_florence_universal_suffrage
+							}
+							add = 60
+						}
+					}
+					set_global_variable = bpm_florence_assembly_universal_suffrage
+					custom_tooltip = {
+						text = bpm_florence_democratic_discontent_decrease_5
+						je:je_italia_fara_de_se = {
+							add_progress = {
+								name = bpm_italy_democrat_discontent
+								value = -5
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.19.a
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.20 = { 
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.20.t
+	desc = bpm_springtime_italian_unification.20.d
+	flavor = bpm_springtime_italian_unification.20.f
+
+	event_image = {
+		video = "europenorthamerica_political_extremism"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		
+	}
+
+	immediate = {
+		set_global_variable = bpm_florence_assembly_constitutional_debates
+		set_global_variable = bpm_springtime_constitution_proposed
+		if = {
+			limit = {
+				global_var:bpm_florence_parliament_progress <= 0
+			}
+			set_global_variable = {
+				name = bpm_florence_parliament_progress
+				value = 0
+			}
+		}
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.20.a
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.21 = { # Parliamentary principles
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.21.t
+	desc = {
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.21.desc_advisory
+			trigger = {
+				has_global_variable = bpm_florence_assembly_advisory_body
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.21.desc_regular
+			trigger = {
+				has_global_variable = bpm_florence_assembly_separation_of_powers
+			}
+		}
+	}
+	flavor = bpm_springtime_italian_unification.21.f
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		global_var:bpm_florence_parliament_progress >= 25
+		has_global_variable = bpm_florence_assembly_constitutional_debates
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				this ?= c:SAR
+			}
+			if = {
+				limit = {
+					OR = {
+						global_var:bpm_springtime_florence_conconf_seats >= bpm_springtime_seats_counter_half
+						bpm_springtime_florence_weak_parliament > bpm_springtime_florence_powerful_parliamernt
+					}
+				}
+				set_global_variable = bpm_florence_assembly_advisory_body
+			}
+			else_if = {
+				limit = {
+					bpm_springtime_florence_weak_parliament <= bpm_springtime_florence_powerful_parliamernt
+				}
+				set_global_variable = bpm_florence_assembly_separation_of_powers
+			}
+		}
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.21.a
+
+		trigger = {
+			has_global_variable = bpm_florence_assembly_advisory_body
+		}
+
+		default_option = yes
+	}
+	option = {
+		name = bpm_springtime_italian_unification.21.b
+
+		trigger = {
+			has_global_variable = bpm_florence_assembly_separation_of_powers
+		}
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.22 = { # Executive Principles
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.22.t
+	desc = {
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.22.desc_ceremonial
+			trigger = {
+				has_global_variable = bpm_florence_assembly_ceremonial
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.22.desc_appointed
+			trigger = {
+				has_global_variable = bpm_florence_assembly_advice
+			}
+		}
+	}
+	flavor = bpm_springtime_italian_unification.22.f
+
+	event_image = {
+		video = "unspecific_ruler_speaking_to_people"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		global_var:bpm_florence_parliament_progress >= 50
+		has_global_variable = bpm_florence_assembly_constitutional_debates
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				this ?= c:SAR
+			}
+			if = {
+				limit = {
+					bpm_springtime_florence_weak_ruler > bpm_springtime_florence_moderating_ruler
+				}
+				set_global_variable = bpm_florence_assembly_ceremonial
+			}
+			else_if = {
+				limit = {
+					bpm_springtime_florence_weak_ruler <= bpm_springtime_florence_moderating_ruler
+				}
+				set_global_variable = bpm_florence_assembly_advice
+			}
+		}
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.22.a
+
+		trigger = {
+			has_global_variable = bpm_florence_assembly_ceremonial
+		}
+
+		default_option = yes
+	}
+	option = {
+		name = bpm_springtime_italian_unification.22.b
+
+		trigger = {
+			has_global_variable = bpm_florence_assembly_advice
+		}
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.23 = { # Elected Bureaucrats, Wider Suffrage Law, Monarchism
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.23.t
+	desc = {
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.23.desc_compromise
+			trigger = {
+				has_global_variable = bpm_florence_assembly_radical_compromise
+			}
+		}
+		triggered_desc = {
+			desc = bpm_springtime_italian_unification.23.desc_democratization
+			trigger = {
+				has_global_variable = bpm_florence_assembly_mere_democratization
+			}
+		}
+	}
+	flavor = bpm_springtime_italian_unification.23.f
+
+	event_image = {
+		video = "unspecific_ruler_speaking_to_people"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		global_var:bpm_florence_parliament_progress >= 75
+		has_global_variable = bpm_florence_assembly_constitutional_debates
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				this ?= c:SAR
+			}
+			if = {
+				limit = {
+					bpm_springtime_florence_left_of_the_assembly > bpm_springtime_florence_right_of_the_assembly
+				}
+				set_global_variable = bpm_florence_assembly_radical_compromise
+				
+				if = {
+					limit = {
+						has_global_variable = bpm_florence_assembly_freehold_suffrage
+					}
+					set_global_variable = bpm_florence_assembly_property_suffrage
+				}
+				else_if = {
+					limit = {
+						has_global_variable = bpm_florence_assembly_property_suffrage
+					}
+					set_global_variable = bpm_florence_assembly_census_suffrage
+				}
+				else_if = {
+					limit = {
+						has_global_variable = bpm_florence_assembly_census_suffrage
+					}
+					set_global_variable = bpm_florence_assembly_universal_suffrage
+				}
+			}
+			else_if = {
+				limit = {
+					bpm_springtime_florence_left_of_the_assembly < bpm_springtime_florence_right_of_the_assembly
+				}
+				set_global_variable = bpm_florence_assembly_mere_democratization
+			}
+		}
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.23.a
+
+		trigger = {
+			has_global_variable = bpm_florence_assembly_radical_compromise
+		}
+
+		default_option = yes
+	}
+	option = {
+		name = bpm_springtime_italian_unification.23.b
+
+		trigger = {
+			has_global_variable = bpm_florence_assembly_mere_democratization
+		}
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.24 = { # Nothing but the Constitution
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.24.t
+	desc = bpm_springtime_italian_unification.24.d
+	flavor = bpm_springtime_italian_unification.24.f
+
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		global_var:bpm_florence_parliament_progress >= 100
+		has_global_variable = bpm_florence_assembly_constitutional_debates
+	}
+
+	immediate = {
+		remove_global_variable = bpm_florence_assembly_constitutional_debates
+
+		if = {
+			limit = {
+				this ?= c:SAR
+			}
+			ordered_country = {
+				limit = {
+					country_rank >= rank_value:major_power
+					is_subject = no
+					OR = {
+						country_has_primary_culture = cu:north_italian
+						country_has_primary_culture = cu:south_italian
+					}
+				}
+				order_by = country_rank
+				save_scope_as = bpm_florence_crown_candidate
+				set_variable = bpm_florence_crown_leader
+				ruler = {
+					save_scope_as = bpm_florence_crown_ruler
+				}
+				trigger_event = {
+					id = bpm_springtime_italian_unification.25
+					days = 7
+					popup = yes
+				}
+			}
+		}
+		set_global_variable = bpm_florence_assembly_constitution_completed
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.24.a
+
+		custom_tooltip = bpm_springtime_florence_country_candidate
+		custom_tooltip = bpm_springtime_florence_countries_may_refuse_tt
+
+		default_option = yes
+	}
+}
+
+bpm_springtime_italian_unification.25 = { # The Response
+	type = country_event
+	placement = ROOT
+
+	title = bpm_springtime_italian_unification.25.t
+	desc = bpm_springtime_italian_unification.25.d
+	flavor = bpm_springtime_italian_unification.25.f
+
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	gui_window = event_window_superevent_modern_full
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_election.dds"
+
+	duration = 1
+
+	cooldown = {
+		years = 100
+	}
+
+	dlc = dlc_bpm
+
+	trigger = {
+		
+	}
+
+	immediate = {
+
+	}
+
+	option = {
+		name = bpm_springtime_italian_unification.25.a
+
+		if = {
+			limit = {
+				has_variable = bpm_florence_crown_leader
+			}
+		}
 
 		default_option = yes
 	}

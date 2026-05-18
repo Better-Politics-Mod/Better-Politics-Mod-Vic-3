@@ -903,7 +903,10 @@ bpm_appoint_as_hog = {
 bpm_unappoint_as_hog = {
     remove_variable = bpm_headofgov_sticky
     remove_variable = bpm_appointed_headofgov
-    owner = { bpm_choose_hog = yes }
+    owner = { 
+        bpm_clear_hog = yes
+        bpm_choose_hog = yes 
+        }
 }
 
 bpm_appoint_as_hog_heir = {
@@ -935,5 +938,54 @@ bpm_reload_interim_penalty = {
             has_modifier = bpm_interim_government_synergy_penalty
         }
         remove_modifier = bpm_interim_government_synergy_penalty
+    }
+}
+
+bpm_on_new_hog_dictatorship = {
+    if = {
+        limit = {
+            has_law = law_type:law_advisory_body
+            has_law_or_variant = law_type:law_answers_to_legislature
+            has_game_started = yes
+        }
+        if = {
+            limit = {
+                has_law = law_type:law_bakufu
+            }
+            bpm_create_hog_heir_hook = yes
+            var:bpm_hog_heir ?= {
+                bpm_set_headofgov_sticky = yes
+                if = {
+                    limit = {
+                        owner = {
+                            has_law = law_type:law_bakufu
+                        }
+                    }
+                    set_variable = shogun_var
+                }
+                remove_character_role = bpm_character_role_protege
+            }
+            remove_variable = bpm_hog_heir
+            bpm_do_hog_transition = yes
+        }
+        else_if = {
+            limit = {
+                NAND = {
+                    has_variable = bpm_headofgov
+                    bpm_headofgov ?= ruler
+                }
+            }
+            ordered_interest_group = {
+                limit = {is_in_government = yes}
+                order_by = ig_clout
+                position = 0
+                ordered_scope_character = {
+                    order_by = prominence
+                    position = 0
+                    bpm_appoint_as_hog = yes
+                }
+            }
+            bpm_do_hog_transition = yes
+        }
     }
 }

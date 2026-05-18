@@ -166,6 +166,7 @@ bpm_pick_cabinet_minister = {
 }
 
 bpm_clear_hog = {
+    remove_variable = bpm_headofgov
     every_scope_character = {
         limit = {
             has_role = bpm_character_role_hog
@@ -333,7 +334,6 @@ bpm_choose_hog = {
 	}
     if = {
         limit = {
-            NOT = {has_variable = hog_regency1_active}
             c:JAP ?= this
         }
         var:bpm_headofgov ?= {
@@ -970,9 +970,9 @@ bpm_on_new_hog_dictatorship = {
         }
         else_if = {
             limit = {
-                NAND = {
-                    has_variable = bpm_headofgov
-                    bpm_headofgov ?= ruler
+                OR = {
+                    NOT = {has_variable = bpm_headofgov}
+                    var:bpm_headofgov ?= ruler
                 }
             }
             ordered_interest_group = {
@@ -987,5 +987,430 @@ bpm_on_new_hog_dictatorship = {
             }
             bpm_do_hog_transition = yes
         }
+    }
+}
+
+bpm_choose_regent = {
+    if = {
+        limit = {
+            OR = {
+                has_variable = bpm_regency_init
+                AND = {
+                    bpm_has_gov_regency = yes
+                    OR = {
+                        NOT = { exists = var:bpm_regent }
+                        var:bpm_regent ?= {
+                            is_character_alive = no
+                        }
+                    }
+                }
+            }
+        }
+        if = {
+            limit = {
+                any_scope_character = {
+                    interest_group = {
+                        is_in_government = yes
+                    }
+                    bpm_char_can_be_regent = yes
+                }
+            }
+            ordered_interest_group = {
+                limit = {
+                        is_in_government = yes
+                        any_scope_character = {
+                            bpm_char_can_be_regent = yes
+                        }
+                    }
+                order_by = ig_clout
+                position = 0
+                ordered_scope_character = {
+                    limit = {
+                        bpm_char_can_be_regent = yes
+                    }
+                    order_by = prominence
+                    position = 0
+                    bpm_set_character_as_regent = yes
+                }
+            }
+        }
+        else = {
+            ordered_interest_group = {
+                limit = {
+                    is_in_government = yes
+                }
+                order_by = ig_clout
+                position = 0
+                save_temporary_scope_as = biggest_ig
+            }
+            create_character = {
+	            age = 23
+	            interest_group = scope:biggest_ig
+	            on_created = {
+	            	bpm_set_character_as_regent = yes
+	            }
+            }
+        }
+    }
+    if = {
+        limit = {has_variable = bpm_regency_init}
+        remove_variable = bpm_regency_init
+    }
+}
+bpm_remove_regency_modifier = {
+    if = {
+		limit = {
+			has_modifier = modifier_regency_landowners
+		}
+		remove_modifier = modifier_regency_landowners
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_devout
+		}
+		remove_modifier = modifier_regency_devout
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_petty_bourgeoisie
+		}
+		remove_modifier = modifier_regency_petty_bourgeoisie
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_industrialists
+		}
+		remove_modifier = modifier_regency_industrialists
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_trade_unions
+		}
+		remove_modifier = modifier_regency_trade_unions
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_intelligentsia
+		}
+		remove_modifier = modifier_regency_intelligentsia
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_armed_forces
+		}
+		remove_modifier = modifier_regency_armed_forces
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_rural_folk
+		}
+		remove_modifier = modifier_regency_rural_folk
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_liberals
+		}
+		remove_modifier = modifier_regency_liberals
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_radicals
+		}
+		remove_modifier = modifier_regency_radicals
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_market_liberals
+		}
+		remove_modifier = modifier_regency_market_liberals
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_national_liberals
+		}
+		remove_modifier = modifier_regency_national_liberals
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_fascists
+		}
+		remove_modifier = modifier_regency_fascists
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_christian_democrats
+		}
+		remove_modifier = modifier_regency_christian_democrats
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_agrarian_populists
+		}
+		remove_modifier = modifier_regency_agrarian_populists
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_conservatives
+		}
+		remove_modifier = modifier_regency_conservatives
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_reactionaries
+		}
+		remove_modifier = modifier_regency_reactionaries
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency_reformist_socialists
+		}
+		remove_modifier = modifier_regency_reformist_socialists
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_regency
+		}
+		remove_modifier = modifier_regency
+	}
+}
+bpm_end_regency = {
+    bpm_remove_regency_modifier = yes
+    every_scope_character = {
+        limit = {has_role = bpm_character_role_regent}
+        remove_character_role = bpm_character_role_regent
+    }
+    if = {
+        limit = {has_variable = bpm_regent}
+        remove_variable = bpm_regent
+    }
+    ruler ?= {
+        set_variable = regency_complete
+    }
+}
+
+bpm_set_character_as_regent = {
+    save_temporary_scope_as = regent_scope
+    owner = {
+        every_scope_character = {
+            limit = {has_role = bpm_character_role_regent}
+            remove_character_role = bpm_character_role_regent
+        }
+        set_variable = {
+            name = bpm_regent
+            value = prev
+        }
+        bpm_remove_regency_modifier = yes
+        add_regency_modifier = yes
+    }
+    add_character_role = bpm_character_role_regent
+}
+
+bpm_choose_acting_hog = {
+    if = {
+        limit = {
+            OR = {
+                has_variable = bpm_acting_hog_init
+                AND = {
+                    bpm_has_acting_hog = yes
+                    OR = {
+                        NOT = { exists = var:bpm_acting_hog }
+                        var:bpm_acting_hog ?= {
+                            is_character_alive = no
+                        }
+                    }
+                }
+            }
+        }
+        if = {
+            limit = {
+                any_scope_character = {
+                    interest_group = {
+                        is_in_government = yes
+                    }
+                    bpm_char_can_be_hog = yes
+                }
+            }
+            ordered_interest_group = {
+                limit = {
+                        is_in_government = yes
+                        any_scope_character = {
+                            bpm_char_can_be_hog = yes
+                        }
+                    }
+                order_by = ig_clout
+                position = 0
+                ordered_scope_character = {
+                    limit = {
+                        bpm_char_can_be_hog = yes
+                    }
+                    order_by = prominence
+                    position = 0
+                    bpm_set_character_as_acting_hog = yes
+                }
+            }
+        }
+        else = {
+            ordered_interest_group = {
+                limit = {
+                    is_in_government = yes
+                }
+                order_by = ig_clout
+                position = 0
+                save_temporary_scope_as = biggest_ig
+            }
+            create_character = {
+	            age = 23
+	            interest_group = scope:biggest_ig
+	            on_created = {
+	            	bpm_set_character_as_acting_hog = yes
+	            }
+            }
+        }
+    }
+}
+
+bpm_set_character_as_acting_hog = {
+    save_temporary_scope_as = acting_hog_scope
+    owner = {
+        every_scope_character = {
+            limit = {has_role = bpm_character_role_acting_hog}
+            remove_character_role = bpm_character_role_acting_hog
+        }
+        set_variable = {
+            name = bpm_acting_hog
+            value = prev
+        }
+        bpm_remove_acting_hog_modifier = yes
+        add_acting_hog_modifier = yes
+    }
+    add_character_role = bpm_character_role_acting_hog
+}
+
+bpm_remove_acting_hog_modifier = {
+    if = {
+		limit = {
+			has_modifier = modifier_acting_hog_landowners
+		}
+		remove_modifier = modifier_acting_hog_landowners
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_devout
+		}
+		remove_modifier = modifier_acting_hog_devout
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_petty_bourgeoisie
+		}
+		remove_modifier = modifier_acting_hog_petty_bourgeoisie
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_industrialists
+		}
+		remove_modifier = modifier_acting_hog_industrialists
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_trade_unions
+		}
+		remove_modifier = modifier_acting_hog_trade_unions
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_intelligentsia
+		}
+		remove_modifier = modifier_acting_hog_intelligentsia
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_armed_forces
+		}
+		remove_modifier = modifier_acting_hog_armed_forces
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_rural_folk
+		}
+		remove_modifier = modifier_acting_hog_rural_folk
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_liberals
+		}
+		remove_modifier = modifier_acting_hog_liberals
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_radicals
+		}
+		remove_modifier = modifier_acting_hog_radicals
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_market_liberals
+		}
+		remove_modifier = modifier_acting_hog_market_liberals
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_national_liberals
+		}
+		remove_modifier = modifier_acting_hog_national_liberals
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_fascists
+		}
+		remove_modifier = modifier_acting_hog_fascists
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_christian_democrats
+		}
+		remove_modifier = modifier_acting_hog_christian_democrats
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_agrarian_populists
+		}
+		remove_modifier = modifier_acting_hog_agrarian_populists
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_conservatives
+		}
+		remove_modifier = modifier_acting_hog_conservatives
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_reactionaries
+		}
+		remove_modifier = modifier_acting_hog_reactionaries
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog_reformist_socialists
+		}
+		remove_modifier = modifier_acting_hog_reformist_socialists
+	}
+	if = {
+		limit = {
+			has_modifier = modifier_acting_hog
+		}
+		remove_modifier = modifier_acting_hog
+	}
+}
+
+bpm_end_acting_hog = {
+    bpm_remove_acting_hog_modifier = yes
+    every_scope_character = {
+        limit = {has_role = bpm_character_role_acting_hog}
+        remove_character_role = bpm_character_role_acting_hog
+    }
+    if = {
+        limit = {has_variable = bpm_acting_hog}
+        remove_variable = bpm_acting_hog
     }
 }

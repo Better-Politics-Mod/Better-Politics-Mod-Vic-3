@@ -1235,50 +1235,137 @@ bpm_law_enactment_vote_threshold = {
 	}
 }
 
-
 bpm_law_support_in_government = {
 	save_temporary_scope_as = law
 	owner = {
 		every_interest_group = {
 			limit = {
 				is_in_government = yes
-				law_stance = {
+				law_enactment_stance = {
 					law = scope:law.type
 					value >= approve
 				}
-				save_temporary_scope_as = ig
-				owner = { any_active_law = {
-					type = {
-						save_temporary_scope_as = law_type
-					}
-					scope:law_type = {
-						is_same_law_group_as = scope:law.type
-					}
-					scope:ig = {
-						law_stance = {
-							law = scope:law_type
-							value <= neutral
-						}
-					}
-				} }
 			}
 			add = ig_clout
 		}
 	}
 }
 
-bpm_law_opposition_in_government = {
+bpm_law_enactment_desire_delta = {
+	value = bpm_law_enactment_desire
+	currently_active_law_in_group = {subtract = bpm_law_enactment_desire}
+}
+
+bpm_law_enactment_desire = {
 	save_temporary_scope_as = law
-	owner = {
-		every_interest_group = {
-			limit = {
-				is_in_government = yes
-				law_stance = {
-					law = scope:law.type
-					value <= disapprove
+	value = 0
+	if = {
+		limit = {
+			currently_active_law_in_group = this
+		}
+		owner = {
+			every_interest_group = {
+				limit = {
+					law_stance = {
+						law = scope:law.type
+						value >= approve
+					}
+				}
+				add = {
+					value = 50
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
 				}
 			}
-			add = ig_clout
+			every_interest_group = {
+				limit = {
+					law_stance = {
+						law = scope:law.type
+						value <= disapprove
+					}
+				}
+				add = {
+					value = -25
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
+				}
+			}
 		}
+	}
+	else = {
+		owner = {
+			every_interest_group = {
+				limit = {
+					law_enactment_stance = {
+						law = scope:law.type
+						value >= approve
+					}
+				}
+				add = {
+					value = 50
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
+				}
+			}
+			every_interest_group = {
+				limit = {
+					law_enactment_stance = {
+						law = scope:law.type
+						value <= disapprove
+					}
+				}
+				add = {
+					value = -25
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
+				}
+			}
+		}
+	}
+	if = {
+		limit = {
+			type = {
+				bpm_is_repeatable_law = yes
+				NOT = {is_same_law_group_as = law_type:law_repeatable_economy_none}
+			}
+		}
+		multiply = 0.7
+	}
+	if = {
+		limit = {
+			OR = {
+				scope:law.type = law_type:law_repeatable_military_parades_and_drills
+				scope:law.type = {
+					is_same_law_group_as = law_type:law_repeatable_culture_none
+					is_same_law_group_as = law_type:law_repeatable_religion_none
+					is_same_law_group_as = law_type:law_repeatable_politics_none
+				}
+			}
+		}
+		multiply = 0.1
+	}
+	multiply = {
+		type = {value = "law_progressiveness_difference(scope:law.currently_active_law_in_group.type)"}
+		divide = 100
+		add = 1	
+	}
+	if = {
+		limit = {
+        	currently_active_law_in_group = {bpm_codification_is_constitutional_law = yes}
+			NOT = {currently_active_law_in_group = this}
+		}
+		multiply = 0.3
 	}
 }

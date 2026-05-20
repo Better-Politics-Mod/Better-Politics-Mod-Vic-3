@@ -22,23 +22,18 @@ bpm_china.1 = {
 	trigger = {
         exists = c:CHI
 		this = c:CHI
-		scope:target_state ?= {
-		    state_region = s:STATE_SHAOZHOU
-            is_treaty_port = yes
-		}
+		has_variable = lost_opium_wars
         NOT = { has_variable = bpm_nanking_signed }
+	}
+
+	immediate = {
+		set_variable = {
+            name = bpm_nanking_signed
+        }
 	}
 
 	option = {
 		name = bpm_china.1.a
-        set_variable = {
-            name = bpm_nanking_signed
-        }
-		add_modifier = {
-			name = bpm_opium_war_lost
-			days = very_long_modifier_time
-			is_decaying = yes
-		}
 		add_treasury = -100000
 		c:GBR = {
 			add_treasury = 100000
@@ -729,41 +724,33 @@ bpm_china.16 = {
 
 	option = {
 		name = bpm_china.16.a
-		# scope:han_migrant_state = {
-		# 	kill_population_in_state = {
-		# 		value = 10000
-		# 		culture = cu:han
-		# 	}
-		# }
 		ordered_scope_pop = {
 			limit = {
 				culture = cu:han
 				strata = lower
 			}
-			if = {
-				limit = {
-					total_size >= 2000
-				}
-				move_partial_pop = {
-					state = scope:migrant_destination_state
-					population_ratio = {
-						add = 2000
-						divide = {
-							value = total_size
-							min = 2000
+			save_temporary_scope_as = relevant_pop
+			order_by = total_size
+			position = 0
+			check_range_bounds = no
+			move_partial_pop = {
+				state = scope:migrant_destination_state
+				population = {
+					# move in at most 5% of the target state's population, max 5000, or the max size of the pop, whichever is smaller
+					add = scope:han_migrant_state.state_population
+					multiply = 0.05
+					if = {
+						limit = {
+							scope:relevant_pop.total_size >= 5000
 						}
-						round_to = 0.00001
+						max = 5000
+					}
+					else = {
+						max = scope:relevant_pop.total_size
 					}
 				}
 			}
-			else = {
-				move_partial_pop = {
-					state = scope:migrant_destination_state
-					population_ratio = 1
-				}
-			}		
 		}
-
 	}
 }
 	

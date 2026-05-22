@@ -227,7 +227,23 @@ bpm_auto_cabinet_appoint_subp = {
 	clear_saved_scope = bpm_newmin
 	if = {
 		limit = {
-			has_law = law_type:law_answers_to_legislature
+			bpm_has_gov_regency = yes
+		}
+		var:bpm_regent = {
+			save_scope_as = bpm_new_ruler_scope
+		}
+	}
+	else_if = {
+		limit = {
+			bpm_has_acting_hog = yes
+		}
+		var:bpm_acting_hog = {
+			save_scope_as = bpm_new_ruler_scope
+		}
+	}
+	else_if = {
+		limit = {
+			modifier:country_bpm_hog_veto = yes
 		}
 		random_scope_character = {
 			limit = {
@@ -266,7 +282,7 @@ bpm_auto_cabinet_appoint_subp = {
 				order_by = prominence
 				position = 0
 				set_local_variable = {
-					name = bpm_cabappt_candidate
+					name = bpm_$m$appt_candidate
 					value = this
 				}
 			}
@@ -279,7 +295,9 @@ bpm_auto_cabinet_appoint_subp = {
 			scope:bpm_new_ruler_scope.interest_group = {
 				save_scope_as = minister_ig
 			}
-			bpm_get_ministerial_candidate = yes
+			bpm_get_ministerial_candidate = {
+				m = $m$
+			}
 		}
 		else_if = {
 			limit = {
@@ -304,7 +322,7 @@ bpm_auto_cabinet_appoint_subp = {
 				order_by = prominence
 				position = 0
 				set_local_variable = {
-					name = bpm_cabappt_candidate
+					name = bpm_$m$appt_candidate
 					value = this
 				}
 			}
@@ -332,7 +350,7 @@ bpm_auto_cabinet_appoint_subp = {
 				order_by = prominence
 				position = 0
 				set_local_variable = {
-					name = bpm_cabappt_candidate
+					name = bpm_$m$appt_candidate
 					value = this
 				}
 			}
@@ -344,7 +362,9 @@ bpm_auto_cabinet_appoint_subp = {
 			var:bpm_$m$_last_ig = {
 				save_scope_as = minister_ig
 			}
-			bpm_get_ministerial_candidate = yes
+			bpm_get_ministerial_candidate = {
+				m = $m$
+			}
 		}
 		else = {
 			random_scope_character = {
@@ -355,36 +375,35 @@ bpm_auto_cabinet_appoint_subp = {
 					}
 				}
 				set_local_variable = {
-					name = bpm_cabappt_candidate
+					name = bpm_$m$appt_candidate
 					value = this
 				}
 			}
 		}
-		if = {
-			limit = {
-				NOT = {
-					has_local_variable = bpm_cabappt_candidate
-				}
-			}
-			create_character = {
-				interest_group = owner.ruler.interest_group
-            	save_scope_as = bpm_selchar
-			}
-			scope:bpm_selchar = {
-				set_local_variable = {
-					name = bpm_cabappt_candidate
-					value = this
-				}
-			}
-		}
+
 		set_local_variable = {
 			name = bpm_minname
 			value = flag:$m$
 		}
-		local_var:bpm_cabappt_candidate = {
+
+		if = {
+			limit = {
+				NOT = {has_local_variable = bpm_$m$appt_candidate}
+			}
+			create_character = {
+				interest_group = scope:bpm_new_ruler_scope.interest_group
+            	on_created = {
+					save_scope_as = bpm_newmin
+					bpm_appoint_$m$_effect = yes
+				}
+			}
+		}
+
+		local_var:bpm_$m$appt_candidate ?= {
 			save_scope_as = bpm_newmin
 			bpm_appoint_$m$_effect = yes
 		}
+
 		post_notification = bpm_minister_replaced
 	}
 }
@@ -396,7 +415,7 @@ bpm_get_ministerial_candidate = {
 			interest_group ?= scope:minister_ig
 		}
 		set_local_variable = {
-			name = bpm_cabappt_candidate
+			name = bpm_$m$appt_candidate
 			value = this
 		}
 	}
@@ -404,22 +423,6 @@ bpm_get_ministerial_candidate = {
 
 bpm_auto_cabinet_appoint_pm = {
 	clear_saved_scope = bpm_newmin
-	if = {
-		limit = {
-			has_law_or_variant = law_type:law_answers_to_legislature
-		}
-		random_scope_character = {
-			limit = {
-				has_role = bpm_character_role_hog
-			}
-			save_scope_as = bpm_new_ruler_scope
-		}
-	}
-	else = {
-		ruler = {
-			save_scope_as = bpm_new_ruler_scope
-		}
-	}
 
 	if = {
 		limit = {
@@ -456,33 +459,32 @@ bpm_auto_cabinet_appoint_pm = {
 			order_by = prominence
 			position = 0
 			set_local_variable = {
-				name = bpm_cabappt_candidate
+				name = bpm_hogappt_candidate
 				value = this
 			}
 		}
-	
-		if = {
-			limit = {
-				NOT = {
-					has_local_variable = bpm_cabappt_candidate
-				}
-			}
-			create_character = {
-				interest_group = owner.ruler.interest_group
-            	save_scope_as = bpm_selchar
-			}
-			scope:bpm_selchar = {
-				set_local_variable = {
-					name = bpm_cabappt_candidate
-					value = this
-				}
-			}
-		}
+
 		set_local_variable = {
 			name = bpm_minname
 			value = flag:bpm_headofgov
 		}
-		local_var:bpm_cabappt_candidate = {
+
+		if = {
+			limit = {
+				NOT = {
+					has_local_variable = bpm_hogappt_candidate
+				}
+			}
+			create_character = {
+				interest_group = owner.ruler.interest_group
+            	on_created = {
+					save_scope_as = bpm_newmin
+					bpm_appoint_as_hog = yes
+				}
+			}
+		}
+
+		local_var:bpm_hogappt_candidate ?= {
 			save_scope_as = bpm_newmin
 			bpm_appoint_as_hog = yes
 		}

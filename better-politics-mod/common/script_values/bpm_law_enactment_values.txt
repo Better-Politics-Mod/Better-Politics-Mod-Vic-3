@@ -559,6 +559,19 @@ bpm_law_enactment_hog_approval = {
 
 	if = {
 		limit = {
+			bpm_has_acting_hog = yes
+		}
+		var:bpm_acting_hog ?= {
+			save_temporary_scope_as = acting_hog
+		}
+	}
+	else = {
+		var:bpm_headofgov ?= {
+			save_temporary_scope_as = acting_hog
+		}
+	}
+	if = {
+		limit = {
 			var:bpm_law_enactment_yea_votes_cached < bpm_law_enactment_vote_threshold
 		}
 		add = {
@@ -587,8 +600,7 @@ bpm_law_enactment_hog_approval = {
 	}
 	if = {
 		limit = {
-			has_variable = bpm_headofgov
-			var:bpm_headofgov = {
+			scope:acting_hog ?= {
 				OR = {
 					has_variable = bpm_ig_enacting_law_change_steps
 					interest_group = { has_variable = bpm_ig_enacting_law_change_steps }
@@ -596,7 +608,7 @@ bpm_law_enactment_hog_approval = {
 			}
 		}
 		# HoG base law support: -32 to 32 (8 per step)
-		var:bpm_headofgov = {
+		scope:acting_hog ?= {
 			add = {
 				value = 0
 				if = {
@@ -725,6 +737,19 @@ bpm_law_enactment_ruler_approval = {
 	value = 0
 	if = {
 		limit = {
+			bpm_has_gov_regency = yes
+		}
+		var:bpm_regent ?= {
+			save_temporary_scope_as = acting_ruler
+		}
+	}
+	else = {
+		ruler = {
+			save_temporary_scope_as = acting_ruler
+		}
+	}
+	if = {
+		limit = {
 			var:bpm_law_enactment_yea_votes_cached < bpm_law_enactment_vote_threshold
 		}
 		add = {
@@ -753,7 +778,7 @@ bpm_law_enactment_ruler_approval = {
 	}
 	if = {
 		limit = {
-			ruler ?= {
+			scope:acting_ruler ?= {
 				has_variable = bpm_ig_enacting_law_change_steps
 				interest_group = { has_variable = bpm_ig_enacting_law_change_steps }
 			}
@@ -764,12 +789,12 @@ bpm_law_enactment_ruler_approval = {
 			if = {
 				# If no ruler stance, use interest group stance
 				limit = {
-					ruler.var:bpm_ig_enacting_law_change_steps = 0
+					scope:acting_ruler.var:bpm_ig_enacting_law_change_steps = 0
 				}
-				add = ruler.interest_group.var:bpm_ig_enacting_law_change_steps
+				add = scope:acting_ruler.interest_group.var:bpm_ig_enacting_law_change_steps
 			}
 			else = {
-				add = ruler.var:bpm_ig_enacting_law_change_steps
+				add = scope:acting_ruler.var:bpm_ig_enacting_law_change_steps
 			}
 			if = {
 				limit = {
@@ -785,7 +810,7 @@ bpm_law_enactment_ruler_approval = {
 		}
 		if = {
 			limit = {
-				ruler = {
+				scope:acting_ruler = {
 					OR = {
 						var:bpm_ig_enacting_law_change_steps < 0
 						AND = {
@@ -796,28 +821,28 @@ bpm_law_enactment_ruler_approval = {
 				}
 			}
 			if = {
-				limit = { ruler = { has_trait = persistent } }
+				limit = { scope:acting_ruler = { has_trait = persistent } }
 				add = {
 					value = -5
 					desc = "bpm_ruler_law_support_from_trait_persistent"
 				}
 			}
 			else_if = {
-				limit = { ruler = { has_trait = arrogant } }
+				limit = { scope:acting_ruler = { has_trait = arrogant } }
 				add = {
 					value = -10
 					desc = "bpm_ruler_law_support_from_trait_arrogant"
 				}
 			}
 			else_if = {
-				limit = { ruler = { has_trait = imposing } }
+				limit = { scope:acting_ruler = { has_trait = imposing } }
 				add = {
 					value = -10
 					desc = "bpm_ruler_law_support_from_trait_imposing"
 				}
 			}
 			else_if = {
-				limit = { ruler = { has_trait = imperious } }
+				limit = { scope:acting_ruler = { has_trait = imperious } }
 				add = {
 					value = -15
 					desc = "bpm_ruler_law_support_from_trait_imperious"
@@ -876,14 +901,14 @@ bpm_law_enactment_ruler_approval = {
 		}
 	}
 	if = {
-		limit = { ruler = { has_trait = tactful } }
+		limit = { scope:acting_ruler = { has_trait = tactful } }
 		add = {
 			value = 5
 			desc = "bpm_ruler_law_support_from_trait_tactful"
 		}
 	}
 	else_if = {
-		limit = { ruler = { has_trait = honorable } }
+		limit = { scope:acting_ruler = { has_trait = honorable } }
 		add = {
 			value = 10
 			desc = "bpm_ruler_law_support_from_trait_honorable"
@@ -898,18 +923,18 @@ bpm_law_enactment_ruler_approval = {
 			}
 		}
 		if = {
-			limit = { ruler.age <= 12 }
+			limit = { scope:acting_ruler.age <= 12 }
 			add = {
 				value = 32
 				desc = "bpm_ruler_law_support_from_young"
 			}
 		}
 		else_if = {
-			limit = { ruler.age <= 16 }
+			limit = { scope:acting_ruler.age <= 16 }
 			add = {
 				value = 32
 				subtract = {
-					value = ruler.age
+					value = scope:acting_ruler.age
 					subtract = 12
 					multiply = 8
 				}
@@ -917,9 +942,9 @@ bpm_law_enactment_ruler_approval = {
 			}
 		}
 		else_if = {
-			limit = { ruler.age >= 66 }
+			limit = { scope:acting_ruler.age >= 66 }
 			add = {
-				value = ruler.age
+				value = scope:acting_ruler.age
 				subtract = 66
 				multiply = 2
 				max = 40
@@ -937,22 +962,45 @@ bpm_law_enactment_ruler_approval = {
 		add = {
 			value = 0
 			desc = "bpm_ruler_law_support_from_hog_opinion"
-			var:bpm_headofgov ?= {
-				if = {
-					limit = {
-						OR = {
-							NOT = {
-								has_variable = bpm_ig_enacting_law_change_steps
+			if = {
+				limit = {bpm_has_acting_hog = yes}
+				var:bpm_acting_hog ?= {
+					if = {
+						limit = {
+							OR = {
+								NOT = {
+									has_variable = bpm_ig_enacting_law_change_steps
+								}
+								var:bpm_ig_enacting_law_change_steps = 0
 							}
-							var:bpm_ig_enacting_law_change_steps = 0
+						}
+						interest_group = {
+							add = var:bpm_ig_enacting_law_change_steps
 						}
 					}
-					interest_group = {
+					else = {
 						add = var:bpm_ig_enacting_law_change_steps
 					}
 				}
-				else = {
-					add = var:bpm_ig_enacting_law_change_steps
+			}
+			else = {
+				var:bpm_headofgov ?= {
+					if = {
+						limit = {
+							OR = {
+								NOT = {
+									has_variable = bpm_ig_enacting_law_change_steps
+								}
+								var:bpm_ig_enacting_law_change_steps = 0
+							}
+						}
+						interest_group = {
+							add = var:bpm_ig_enacting_law_change_steps
+						}
+					}
+					else = {
+						add = var:bpm_ig_enacting_law_change_steps
+					}
 				}
 			}
 			multiply = 4
@@ -1235,50 +1283,150 @@ bpm_law_enactment_vote_threshold = {
 	}
 }
 
-
 bpm_law_support_in_government = {
 	save_temporary_scope_as = law
 	owner = {
 		every_interest_group = {
 			limit = {
 				is_in_government = yes
-				law_stance = {
+				law_enactment_stance = {
 					law = scope:law.type
 					value >= approve
 				}
-				save_temporary_scope_as = ig
-				owner = { any_active_law = {
-					type = {
-						save_temporary_scope_as = law_type
-					}
-					scope:law_type = {
-						is_same_law_group_as = scope:law.type
-					}
-					scope:ig = {
-						law_stance = {
-							law = scope:law_type
-							value <= neutral
-						}
-					}
-				} }
 			}
 			add = ig_clout
 		}
 	}
 }
 
-bpm_law_opposition_in_government = {
+bpm_law_enactment_desire_delta = {
+	value = bpm_law_enactment_desire
+	currently_active_law_in_group = {subtract = bpm_law_enactment_desire}
+}
+
+bpm_law_enactment_desire = {
 	save_temporary_scope_as = law
-	owner = {
-		every_interest_group = {
-			limit = {
-				is_in_government = yes
-				law_stance = {
-					law = scope:law.type
-					value <= disapprove
+	scope:law.type = {save_temporary_scope_as = lawtype} #i'm losing my mind
+	value = 0
+	if = {
+		limit = {
+			currently_active_law_in_group = this
+		}
+		owner = {
+			every_interest_group = {
+				limit = {
+					law_stance = {
+						law = scope:law.type
+						value >= approve
+					}
+				}
+				add = {
+					value = 5
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
 				}
 			}
-			add = ig_clout
+			every_interest_group = {
+				limit = {
+					law_stance = {
+						law = scope:law.type
+						value <= disapprove
+					}
+				}
+				add = {
+					value = -2.5
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
+				}
+			}
 		}
+	}
+	else = {
+		owner = {
+			every_interest_group = {
+				limit = {
+					law_enactment_stance = {
+						law = scope:law.type
+						value >= approve
+					}
+				}
+				add = {
+					value = 5
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
+				}
+			}
+			every_interest_group = {
+				limit = {
+					law_enactment_stance = {
+						law = scope:law.type
+						value <= disapprove
+					}
+				}
+				add = {
+					value = -2.5
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
+				}
+			}
+		}
+	}
+	if = {
+		limit = {
+			owner = {ai_has_reasons_to_not_oppose_law = no}
+			scope:lawtype = {
+				bpm_is_repeatable_law = yes
+				NOT = {is_same_law_group_as = law_type:law_repeatable_economy_none}
+			}
+		}
+		multiply = 0.7
+	}
+	if = {
+		limit = {
+			owner = {ai_has_reasons_to_not_oppose_law = no}
+			scope:lawtype = {	
+				OR = {
+					law_type:law_repeatable_military_parades_and_drills = scope:lawtype
+					is_same_law_group_as = law_type:law_repeatable_culture_none
+					is_same_law_group_as = law_type:law_repeatable_religion_none
+					is_same_law_group_as = law_type:law_repeatable_politics_none
+				}
+			}
+		}
+		multiply = 0.4
+	}
+	multiply = {
+		value = scope:lawtype.progressiveness
+		subtract = scope:law.currently_active_law_in_group.type.progressiveness
+		divide = 250
+		add = 1	
+	}
+	if = {
+		limit = {
+        	currently_active_law_in_group = {bpm_codification_is_constitutional_law = yes}
+			NOT = {currently_active_law_in_group = this}
+			owner = {ai_has_reasons_to_not_oppose_law = no}
+		}
+		multiply = 0.3
+	}
+	if = {
+		limit = {
+			owner = {
+				ai_has_enact_weight_modifier_journal_entries = yes
+			}
+		}
+		multiply = 3
 	}
 }

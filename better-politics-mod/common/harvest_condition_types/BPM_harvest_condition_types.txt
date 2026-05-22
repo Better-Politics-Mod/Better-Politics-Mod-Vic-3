@@ -1,0 +1,217 @@
+﻿# Negative
+REPLACE:drought = {
+	trigger = {
+		is_vulnerable_to_droughts = yes
+	}
+
+	incompatible_with = flood
+	incompatible_with = frost
+	incompatible_with = hailstorm
+	incompatible_with = torrential_rains
+	incompatible_with = moderate_rainfall
+	incompatible_with = tsunami
+	incompatible_with = earthquake
+	# Incompatible with Drought: flood, frost, hailstorm, heatwave, torrential rains, pollinator surge, optimal sunlight
+	# Replaces heatwave, optimal sunlight, pollinator surge
+
+	range = {
+		integer_range = {
+			min = 1
+			max = 2
+		}
+	}
+
+	duration = {
+		fixed_range = {
+			min = 36
+			max = 104
+		}
+	}
+
+	modifier = {
+		#Throughput
+		building_group_bg_agriculture_throughput_add = -0.05
+		building_group_bg_plantations_throughput_add = -0.05
+		building_group_bg_ranching_throughput_add = -0.05
+
+		#Infrastructure
+		building_group_bg_agriculture_infrastructure_usage_mult = 0.1
+		building_group_bg_plantations_infrastructure_usage_mult = 0.1
+		building_group_bg_ranching_infrastructure_usage_mult = 0.1
+
+		#Subsistence
+		state_peasants_consumption_multiplier_add = 0.025
+	}
+
+	intensity = {
+		fixed_range = {
+			min = 2
+			max = 6
+		}
+	}
+
+	chance = {
+		value = 0.0025
+		if = {
+			limit = {
+				has_harvest_condition = optimal_sunlight
+			}
+			multiply = 1.2
+		}
+		if = {
+			limit = {
+				has_harvest_condition = heatwave
+			}
+			multiply = 1.5
+		}
+		if = {
+			limit = {
+				has_global_variable = BPM_hungry_forties_drought_incoming
+				any_scope_state = {
+					is_in_geographic_region = geographic_region_europe
+				}
+			}
+			multiply = 25
+		}
+	}
+
+	color = { 222 62 37 }
+	icon = "gfx/interface/icons/harvest_condition_icons/drought.dds"
+	map_texture = "gfx/map/map_painting/harvest_conditions_map_patterns/harvest_conditions_bad.dds"
+	graphics = drought
+}
+
+REPLACE:disease_outbreak = {
+	trigger = {
+		is_vulnerable_to_disease_outbreak = yes
+	}
+
+	# Incompatible with Disease Outbreak: pollinators
+	# Replaces pollinators
+
+	range = {
+		integer_range = {
+			min = 1
+			max = 1
+		}
+	}
+
+	duration = {
+		fixed_range = {
+			min = 36
+			max = 96
+		}
+	}
+
+	modifier = {
+		# Throughput
+		building_urban_center_throughput_add = -0.05
+		building_group_bg_agriculture_throughput_add = -0.05
+		building_group_bg_plantations_throughput_add = -0.05
+		building_group_bg_ranching_throughput_add = -0.05
+
+		#Subsistence
+		state_peasants_consumption_multiplier_add = 0.03
+	}
+
+	intensity = {
+		fixed_range = {
+			min = 3
+			max = 7
+		}
+		if = {
+			limit = {
+				has_global_variable = krakatoa_temperature_drop
+			}
+			add = global_var:krakatoa_temperature_drop
+		}
+		if = {
+			limit = {
+				has_global_variable = hungry_forties_var
+			}
+			add = 2
+			if = {
+				limit = {
+					is_homeland = cu:irish
+				}
+				add = 2 # To make things quite terrible in Ireland
+			}
+		}
+	}
+
+	chance = {
+		
+		value = 0.0008
+		if = { # pre-Hungry Forties
+			limit = {
+				game_date > 1840.1.1
+				game_date < 1850.1.1
+				any_scope_state = {
+					is_in_geographic_region = geographic_region_europe
+				}
+				NOT = { has_global_variable = hungry_forties_var }
+			}
+			multiply = 25
+		}
+		if = { # To make the thing start properly
+			limit = {
+				s:STATE_FLANDERS ?= this
+				global_var:bpm_je_march_to_radicalism_progress >= 65
+				any_scope_state = {
+					is_in_geographic_region = geographic_region_europe
+				}
+			}
+			multiply = 50
+		}
+		if = { # The Hungry Forties - will never stack with previous
+			limit = {
+				has_global_variable = hungry_forties_var
+				any_scope_state = {
+					is_in_geographic_region = geographic_region_europe
+				}
+				NOT = {
+					has_variable = had_disease_outbreak_recently # To prevent excessive spamming
+				}
+			}
+			multiply = 25
+		}
+		if = {
+			limit = {
+				global_var:bpm_je_march_to_radicalism_progress <= 65
+				any_scope_state = {
+					is_in_geographic_region = geographic_region_europe
+				}
+			}
+			divide = 25
+		}
+		
+		if = {
+			limit = {
+				has_global_variable = krakatoa_temperature_drop
+			}
+			multiply = {
+				value = krakatoa_temperature_drop_harvest_condition_chance_base_mult
+				add = {
+					value = global_var:krakatoa_temperature_drop
+					multiply = 5
+					if = {
+						limit = {
+							OR = {
+								is_in_geographic_region = geographic_region_europe
+								is_in_geographic_region = geographic_region_north_america
+								is_in_geographic_region = geographic_region_central_asia_old
+								is_in_geographic_region = geographic_region_east_asia
+							}
+						}
+						add = krakatoa_temperature_drop_disease_outbreak_chance_mult
+					}
+				}
+			}
+		}
+	}
+
+	color = { 78 70 57 }
+	icon = "gfx/interface/icons/harvest_condition_icons/disease_outbreak.dds"
+	map_texture = "gfx/map/map_painting/harvest_conditions_map_patterns/harvest_conditions_bad.dds"
+	graphics = disease_outbreak
+}

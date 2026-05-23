@@ -229,7 +229,7 @@ bpm_auto_cabinet_appoint = {
 }
 
 bpm_auto_cabinet_appoint_subp = {
-	clear_saved_scope = bpm_newmin
+	remove_local_variable = bpm_$m$appt_candidate
 	if = {
 		limit = {
 			bpm_has_gov_regency = yes
@@ -291,6 +291,7 @@ bpm_auto_cabinet_appoint_subp = {
 					value = this
 				}
 			}
+			set_variable = bpm_used_locked_for_$m$
 		}
 		else_if = {
 			limit = {
@@ -303,6 +304,7 @@ bpm_auto_cabinet_appoint_subp = {
 			bpm_get_ministerial_candidate = {
 				m = $m$
 			}
+			set_variable = bpm_used_greedy_for_$m$
 		}
 		else_if = {
 			limit = {
@@ -331,6 +333,7 @@ bpm_auto_cabinet_appoint_subp = {
 					value = this
 				}
 			}
+			set_variable = bpm_used_prom_$m$
 		}
 		else_if = {
 			limit = {
@@ -359,6 +362,7 @@ bpm_auto_cabinet_appoint_subp = {
 					value = this
 				}
 			}
+			set_variable = bpm_used_prom_$m$
 		}
 		else_if = {
 			limit = {
@@ -370,8 +374,17 @@ bpm_auto_cabinet_appoint_subp = {
 			bpm_get_ministerial_candidate = {
 				m = $m$
 			}
+			set_variable = bpm_used_last_$m$
 		}
-		else = {
+		else_if = {
+			limit = {
+				any_scope_character = {
+					bpm_char_can_be_minister = yes
+					interest_group = {
+						is_in_government = yes
+					}
+				}
+			}
 			random_scope_character = {
 				limit = {
 					bpm_char_can_be_minister = yes
@@ -384,6 +397,28 @@ bpm_auto_cabinet_appoint_subp = {
 					value = this
 				}
 			}
+			set_variable = bpm_used_rand_$m$
+		}
+		else = {
+			every_scope_character = {
+				remove_variable = bpm_created_char_appt
+			}
+			create_character = {
+				interest_group = scope:bpm_new_ruler_scope.interest_group
+            	on_created = {
+					set_variable = bpm_created_char_appt
+				}
+			}
+			random_scope_character = {
+				limit = {
+					has_variable = bpm_created_char_appt
+				}
+				set_local_variable = {
+					name = bpm_$m$appt_candidate
+					value = this
+				}
+			}
+			set_variable = { name = bpm_used_char_cre_$m$ value = local_var:bpm_$m$appt_candidate } 
 		}
 
 		set_local_variable = {
@@ -391,22 +426,12 @@ bpm_auto_cabinet_appoint_subp = {
 			value = flag:$m$
 		}
 
-		if = {
-			limit = {
-				NOT = {has_local_variable = bpm_$m$appt_candidate}
-			}
-			create_character = {
-				interest_group = scope:bpm_new_ruler_scope.interest_group
-            	on_created = {
-					save_scope_as = bpm_newmin
-					bpm_appoint_$m$_effect = yes
-				}
-			}
-		}
-
 		local_var:bpm_$m$appt_candidate ?= {
-			save_scope_as = bpm_newmin
 			bpm_appoint_$m$_effect = yes
+			set_local_variable = {
+				name = bpm_newmin
+				value = this
+			}
 		}
 
 		post_notification = bpm_minister_replaced

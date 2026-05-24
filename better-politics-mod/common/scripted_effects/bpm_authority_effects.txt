@@ -1,4 +1,5 @@
-﻿bpm_auth_handle_potential_collapses = {
+﻿#============= Partisans and Collapses =============#
+bpm_auth_handle_potential_collapses = {
 	if = {
 		limit = { bpm_auth_can_collapse = yes turmoil >= bpm_auth_radicals_in_state_collapse_threshold }
 
@@ -221,7 +222,7 @@ bpm_auth_init_weeks_to_restore_order = {
 
 bpm_auth_handle_suppression_and_order = {
 	if = {
-		limit = { owner = { bpm_state_capacity_percentage > 0.2 } }
+		limit = { owner = { bpm_low_state_capacity = yes } }
 		if = {
 			limit = {
 				devastation > 0
@@ -359,119 +360,37 @@ bpm_auth_handle_suppression_and_order = {
 	}
 }
 
+#============================= Authority Exhaustion and Extra Sources of Authority =============#
 bpm_auth_update_state_exhaustion = {
-	if = { limit = { NOT = { has_variable = bpm_auth_state_exhaustion } } 
-		set_variable = { name = bpm_auth_state_exhaustion value = 0 }
-	}
-
-	change_variable = {
-		name = bpm_auth_state_exhaustion
-		add = bpm_auth_state_exhaustion_rate
+	if = { limit = { NOT = { has_variable = bpm_state_capacity } } 
+		set_variable = { name = bpm_state_capacity value = bpm_state_capacity_target }
 	}
 
 	if = {
 		limit = {
-			# If you collapse with no revolution to take over
-			bpm_state_capacity < 0
-			bpm_rev_exists = no
+			bpm_state_capacity > bpm_state_capacity_target
 		}
-		if = {
-			limit = {
-				NOT = {
-					has_variable = bpm_tick_tack_bureaubomb
-				}
+		change_variable = {
+			name = bpm_auth_state_exhaustion
+			add = {
+				value = bpm_state_cpacity_trend
+				multiply = -1
 			}
-			set_variable = { name = bpm_tick_tack_bureaubomb value = 0 }
 		}
-		change_variable = { name = bpm_tick_tack_bureaubomb add = 1 }
 	}
 	else = {
-		remove_variable = bpm_tick_tack_bureaubomb
-	}
-	# if = {
-	# 	limit = {
-	# 		var:bpm_tick_tack_bureaubomb >= 6
-	# 	}
-	# 	set_variable = {
-	# 		name = bpm_auth_state_exhaustion
-	# 		value = 0
-	# 	}
-	# 	set_variable = {
-	# 		name = bpm_tick_tack_bureaubomb
-	# 		value = 0
-	# 	}
-	# 	if = {
-	# 		limit = {
-	# 			has_law = law_type:law_hereditary_bureaucrats
-	# 		}
-	# 		bpm_palace_coup = yes
-	# 	}
-	# 	else = {
-	# 		bpm_bureaucratic_coup = yes
-	# 	}
-	# }
-
-	# if = {
-	# 	limit = {
-	# 		var:bpm_auth_state_exhaustion > 500
-	# 	}
-	# 	save_scope_value_as = {
-	# 		name = radper
-	# 		value = {
-	# 			value = var:bpm_auth_state_exhaustion
-	# 			divide = {
-	# 				value = {
-	# 					value = bpm_state_capacity
-	# 					add = var:bpm_auth_state_exhaustion
-	# 				}
-	# 				min = 1
-	# 			}
-	# 			divide = 1000
-	# 			max = 0.01
-	# 		}
-	# 	}
-	# 	add_radicals = {
-	# 		value = scope:radper
-	# 	}
-	# }
-
-	if = { limit = { var:bpm_auth_state_exhaustion < 0 } set_variable = { name = bpm_auth_state_exhaustion value = 0 } }
-
-	if = {
-		limit = { modifier:country_auth_transfer_state_exhaustion_to_overlord = yes }
-		overlord ?= {
-			bpm_auth_init_exhaustion_if_necessary = yes	
-			change_variable = {
-				name = bpm_auth_state_exhaustion
-				add = prev.var:bpm_auth_state_exhaustion
+		change_variable = {
+			name = bpm_auth_state_exhaustion
+			add = {
+				value = bpm_state_capacity_trend
 			}
 		}
-		set_variable = { name = bpm_auth_state_exhaustion value = 0 }
 	}
 
-	set_variable = { # Remembering it for things
-		name = bpm_auth_state_exhaustion_old
-		value = var:bpm_auth_state_exhaustion
-	}
-
-	bpm_auth_reapply_state_exhaustion_modifier = yes
-}
-
-bpm_auth_reapply_state_exhaustion_modifier = {
-	remove_modifier = bpm_auth_state_exhaustion_modifier
-
-	if = {
-		limit = { has_variable = bpm_auth_state_exhaustion }
-		add_modifier = {
-			name = bpm_auth_state_exhaustion_modifier
-			multiplier = {
-				value = var:bpm_auth_state_exhaustion
-				divide = {
-					add = 1
-					add = modifier:country_authority_mult
-				}
-			}
-		}
+	clamp_variable = {
+		name = bpm_auth_state_exhaustion
+		min = 0
+		max = 100
 	}
 }
 
@@ -521,7 +440,7 @@ bpm_auth_use_reserve_authority_post_civil_war = {
 bpm_auth_handle_authority_shortage = {
 	if = {
 		limit = {
-			bpm_state_capacity_percentage <= 0.2
+			bpm_low_state_capacity = yes
 		}
 		if = {
 			limit = { NOT = { has_modifier = bpm_auth_shortage } }
@@ -532,7 +451,7 @@ bpm_auth_handle_authority_shortage = {
 		}
 	} else_if = {
 		limit = {
-			bpm_state_capacity_percentage > 0.2
+			bpm_low_state_capacity = no
 			has_modifier = bpm_auth_shortage
 		}
 		remove_modifier = bpm_auth_shortage

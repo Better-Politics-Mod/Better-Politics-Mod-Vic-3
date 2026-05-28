@@ -1226,55 +1226,55 @@ bpm_apply_to_front = {
 		}
 		$effect$ = { front = urban }
 	}
-	if = {
+	else_if = {
 		limit = {
 			scope:selected_front_name = flag:bpm_front_popular
 		}
 		$effect$ = { front = popular }
 	}
-	if = {
+	else_if = {
 		limit = {
 			scope:selected_front_name = flag:bpm_front_liberal
 		}
 		$effect$ = { front = liberal }
 	}
-	if = {
+	else_if = {
 		limit = {
 			scope:selected_front_name = flag:bpm_front_republican
 		}
 		$effect$ = { front = republican }
 	}
-	if = {
+	else_if = {
 		limit = {
 			scope:selected_front_name = flag:bpm_front_labor
 		}
 		$effect$ = { front = labor }
 	}
-	if = {
+	else_if = {
 		limit = {
 			scope:selected_front_name = flag:bpm_front_socialist
 		}
 		$effect$ = { front = socialist }
 	}
-	if = {
+	else_if = {
 		limit = {
 			scope:selected_front_name = flag:bpm_front_reactionary
 		}
 		$effect$ = { front = reactionary }
 	}
-	if = {
+	else_if = {
 		limit = {
 			scope:selected_front_name = flag:bpm_front_fascist
 		}
 		$effect$ = { front = fascist }
 	}
-	if = {
+	else_if = {
 		limit = {
 			scope:selected_front_name = flag:bpm_front_nationalist
 		}
 		$effect$ = { front = nationalist }
 	}
-	if = {
+	else_if = {
 		limit = {
 			scope:selected_front_name = flag:bpm_front_peasant
 		}
@@ -1453,10 +1453,40 @@ bpm_destroy_all_cells = {
 	remove_variable = bpm_revcell_$front$
 }
 
+bpm_increase_or_shrink_tt = {
+	flag:bpm_front_$front$ = {
+		save_scope_as = selected_front_name
+	}
+	remove_variable = bpm_shrinkmarker_$front$
+	remove_variable = bpm_growmarker_$front$
+	random_list = {
+		0 = {
+			modifier = {
+				# static for now
+				add = 2
+			}
+			set_variable = bpm_shrinkmarker_$front$
+			custom_tooltip = "bpm_cell_shrinks"
+		}
+		0 = {
+			modifier = {
+				add = owner.modifier:country_bpm_revolution_progress_threshold_add
+			}
+			set_variable = bpm_growmarker_$front$
+			custom_tooltip = "bpm_cell_grows"
+		}
+		5 = {
+			custom_tooltip = "bpm_cell_stays"
+		}
+	}
+}
+
 bpm_increase_or_shrink_cell_level = {
 	flag:bpm_front_$front$ = {
 		save_scope_as = selected_front_name
 	}
+
+	bpm_increase_or_shrink_tt = { front = $front$ }
 
 	if = {
 		limit = {
@@ -1466,14 +1496,14 @@ bpm_increase_or_shrink_cell_level = {
 		}
 		set_variable = {
 			name = bpm_revcell_$front$_progress
-			value = 3
+			value = 2
 		}
 	}
 	else_if = {
 		limit = {
 			# below 25% turmoil it will go away
 			OR = {
-				bpm_state_repression > bpm_front_$front$_progressrate
+				has_variable = bpm_shrinkmarker_$front$
 				turmoil < 0.25
 			}
 		}
@@ -1486,7 +1516,7 @@ bpm_increase_or_shrink_cell_level = {
 	}
 	else_if = {
 		limit = {
-			bpm_state_repression <= bpm_front_$front$_progressrate
+			has_variable = bpm_growmarker_$front$
 		}
 		change_variable = {
 			name = bpm_revcell_$front$_progress
@@ -1495,23 +1525,24 @@ bpm_increase_or_shrink_cell_level = {
 		#bpm_increase_cell_level = { front = $front$ }
 		set_local_variable = bpm_growing
 	}
+	#==
 	if = {
 		limit = {
 			var:bpm_revcell_$front$_progress <= 0
 		}
 		set_variable = {
 			name = bpm_revcell_$front$_progress
-			value = 3
+			value = 2
 		}
 		bpm_reduce_cell_level = { front = $front$ }
 	}
 	else_if = {
 		limit = {
-			var:bpm_revcell_$front$_progress >= 6
+			var:bpm_revcell_$front$_progress >= 3
 		}
 		set_variable = {
 			name = bpm_revcell_$front$_progress
-			value = 3
+			value = 2
 		}
 		bpm_increase_cell_level = { front = $front$ }
 	}
@@ -1563,7 +1594,7 @@ bpm_shrink_or_grow_in_states = {
 		scope:selected_je = {
 			set_variable = bpm_je_is_urgent
 		}
-		random_scope_state = {
+		every_scope_state = {
 			limit = {
 				has_variable = bpm_revcell_$front$
 			}

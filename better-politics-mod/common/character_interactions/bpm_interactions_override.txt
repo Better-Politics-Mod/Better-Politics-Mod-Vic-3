@@ -616,9 +616,10 @@ REPLACE:invite_exile = {
 	effect = {
 		transfer_character = scope:actor
 		set_variable = exile_to_ruler_var
-		set_variable = {
-			name = memento_mori_immunity
+		add_career_length = {
+			role = agitator
 			months = 60
+			random_range = { 1.0 1.5 } # 60-90 months
 		}
 		custom_tooltip = invite_exile_start_join_movement_effect
 		hidden_effect = {
@@ -1051,5 +1052,75 @@ REPLACE:resign_from_office = {
 			}
 			add = -50
 		}
+	}
+}
+
+REPLACE:proclaim_regent_monarch = {
+    icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_royalist.dds"
+	potential = {
+		has_role = bpm_character_role_regent
+		owner ?= {
+			bpm_has_gov_regency = yes
+		}
+	}
+
+	possible = {
+        loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+        custom_tooltip = {
+            text = eterna_regency_tt
+            has_variable = regency_years
+            var:regency_years > 10
+        }
+	}
+
+	effect = {
+        owner = {
+            if = {
+                limit = {
+                    var:bpm_regent ?= {
+                        is_female = yes
+                    }
+                }
+                custom_tooltip = female_regent_becomes_monarch_tt
+            }
+            if = {
+                limit = {
+                    var:bpm_regent ?= {
+                        is_female = no
+                    }
+                }
+                custom_tooltip = male_regent_becomes_monarch_tt
+            }
+            if = { # Sorts an edge case
+                limit = {
+                    NAND = {
+                        root.popularity < 27
+                        root.popularity > 23
+                    }
+                }
+                custom_tooltip = effects_depend_on_popularity_tt
+                add_modifier = {
+                    name = modifier_new_royal_dynasty
+                    days = long_modifier_time
+                    is_decaying = yes
+                    multiplier = {
+                        value = root.popularity
+                        subtract = 25
+                        divide = 2
+                        min = -25
+                        max = 25
+                    }
+                }
+            }
+            bpm_end_regency = yes
+        }
+		set_character_as_ruler = yes
+	}
+
+	cooldown = { days = long_modifier_time }
+	show_confirmation_box = yes
+
+	ai_chance = {
+		value = 1
 	}
 }

@@ -497,6 +497,19 @@ bpm_law_enactment_hog_approval = {
 	value = 0
 	if = {
 		limit = {
+			bpm_has_acting_hog = yes
+		}
+		var:bpm_acting_hog ?= {
+			save_temporary_scope_as = acting_hog
+		}
+	}
+	else = {
+		var:bpm_headofgov ?= {
+			save_temporary_scope_as = acting_hog
+		}
+	}
+	if = {
+		limit = {
 			var:bpm_law_enactment_yea_votes_cached < 0.5
 		}
 		add = {
@@ -525,8 +538,7 @@ bpm_law_enactment_hog_approval = {
 	}
 	if = {
 		limit = {
-			has_variable = bpm_headofgov
-			var:bpm_headofgov = {
+			scope:acting_hog ?= {
 				OR = {
 					has_variable = bpm_ig_enacting_law_change_steps
 					interest_group = { has_variable = bpm_ig_enacting_law_change_steps }
@@ -534,7 +546,7 @@ bpm_law_enactment_hog_approval = {
 			}
 		}
 		# HoG base law support: -32 to 32 (8 per step)
-		var:bpm_headofgov = {
+		scope:acting_hog ?= {
 			add = {
 				value = 0
 				if = {
@@ -662,6 +674,19 @@ bpm_law_enactment_ruler_approval = {
 	value = 0
 	if = {
 		limit = {
+			bpm_has_gov_regency = yes
+		}
+		var:bpm_regent ?= {
+			save_temporary_scope_as = acting_ruler
+		}
+	}
+	else = {
+		ruler = {
+			save_temporary_scope_as = acting_ruler
+		}
+	}
+	if = {
+		limit = {
 			var:bpm_law_enactment_yea_votes_cached < 0.5
 		}
 		add = {
@@ -690,7 +715,7 @@ bpm_law_enactment_ruler_approval = {
 	}
 	if = {
 		limit = {
-			ruler ?= {
+			scope:acting_ruler ?= {
 				has_variable = bpm_ig_enacting_law_change_steps
 				interest_group = { has_variable = bpm_ig_enacting_law_change_steps }
 			}
@@ -701,12 +726,12 @@ bpm_law_enactment_ruler_approval = {
 			if = {
 				# If no ruler stance, use interest group stance
 				limit = {
-					ruler.var:bpm_ig_enacting_law_change_steps = 0
+					scope:acting_ruler.var:bpm_ig_enacting_law_change_steps = 0
 				}
-				add = ruler.interest_group.var:bpm_ig_enacting_law_change_steps
+				add = scope:acting_ruler.interest_group.var:bpm_ig_enacting_law_change_steps
 			}
 			else = {
-				add = ruler.var:bpm_ig_enacting_law_change_steps
+				add = scope:acting_ruler.var:bpm_ig_enacting_law_change_steps
 			}
 			if = {
 				limit = {
@@ -722,7 +747,7 @@ bpm_law_enactment_ruler_approval = {
 		}
 		if = {
 			limit = {
-				ruler = {
+				scope:acting_ruler = {
 					OR = {
 						var:bpm_ig_enacting_law_change_steps < 0
 						AND = {
@@ -733,28 +758,28 @@ bpm_law_enactment_ruler_approval = {
 				}
 			}
 			if = {
-				limit = { ruler = { has_trait = persistent } }
+				limit = { scope:acting_ruler = { has_trait = persistent } }
 				add = {
 					value = -5
 					desc = "bpm_ruler_law_support_from_trait_persistent"
 				}
 			}
 			else_if = {
-				limit = { ruler = { has_trait = arrogant } }
+				limit = { scope:acting_ruler = { has_trait = arrogant } }
 				add = {
 					value = -10
 					desc = "bpm_ruler_law_support_from_trait_arrogant"
 				}
 			}
 			else_if = {
-				limit = { ruler = { has_trait = imposing } }
+				limit = { scope:acting_ruler = { has_trait = imposing } }
 				add = {
 					value = -10
 					desc = "bpm_ruler_law_support_from_trait_imposing"
 				}
 			}
 			else_if = {
-				limit = { ruler = { has_trait = imperious } }
+				limit = { scope:acting_ruler = { has_trait = imperious } }
 				add = {
 					value = -15
 					desc = "bpm_ruler_law_support_from_trait_imperious"
@@ -813,14 +838,14 @@ bpm_law_enactment_ruler_approval = {
 		}
 	}
 	if = {
-		limit = { ruler = { has_trait = tactful } }
+		limit = { scope:acting_ruler = { has_trait = tactful } }
 		add = {
 			value = 5
 			desc = "bpm_ruler_law_support_from_trait_tactful"
 		}
 	}
 	else_if = {
-		limit = { ruler = { has_trait = honorable } }
+		limit = { scope:acting_ruler = { has_trait = honorable } }
 		add = {
 			value = 10
 			desc = "bpm_ruler_law_support_from_trait_honorable"
@@ -835,18 +860,18 @@ bpm_law_enactment_ruler_approval = {
 			}
 		}
 		if = {
-			limit = { ruler.age <= 12 }
+			limit = { scope:acting_ruler.age <= 12 }
 			add = {
 				value = 32
 				desc = "bpm_ruler_law_support_from_young"
 			}
 		}
 		else_if = {
-			limit = { ruler.age <= 16 }
+			limit = { scope:acting_ruler.age <= 16 }
 			add = {
 				value = 32
 				subtract = {
-					value = ruler.age
+					value = scope:acting_ruler.age
 					subtract = 12
 					multiply = 8
 				}
@@ -854,9 +879,9 @@ bpm_law_enactment_ruler_approval = {
 			}
 		}
 		else_if = {
-			limit = { ruler.age >= 66 }
+			limit = { scope:acting_ruler.age >= 66 }
 			add = {
-				value = ruler.age
+				value = scope:acting_ruler.age
 				subtract = 66
 				multiply = 2
 				max = 40
@@ -874,22 +899,45 @@ bpm_law_enactment_ruler_approval = {
 		add = {
 			value = 0
 			desc = "bpm_ruler_law_support_from_hog_opinion"
-			var:bpm_headofgov ?= {
-				if = {
-					limit = {
-						OR = {
-							NOT = {
-								has_variable = bpm_ig_enacting_law_change_steps
+			if = {
+				limit = {bpm_has_acting_hog = yes}
+				var:bpm_acting_hog ?= {
+					if = {
+						limit = {
+							OR = {
+								NOT = {
+									has_variable = bpm_ig_enacting_law_change_steps
+								}
+								var:bpm_ig_enacting_law_change_steps = 0
 							}
-							var:bpm_ig_enacting_law_change_steps = 0
+						}
+						interest_group = {
+							add = var:bpm_ig_enacting_law_change_steps
 						}
 					}
-					interest_group = {
+					else = {
 						add = var:bpm_ig_enacting_law_change_steps
 					}
 				}
-				else = {
-					add = var:bpm_ig_enacting_law_change_steps
+			}
+			else = {
+				var:bpm_headofgov ?= {
+					if = {
+						limit = {
+							OR = {
+								NOT = {
+									has_variable = bpm_ig_enacting_law_change_steps
+								}
+								var:bpm_ig_enacting_law_change_steps = 0
+							}
+						}
+						interest_group = {
+							add = var:bpm_ig_enacting_law_change_steps
+						}
+					}
+					else = {
+						add = var:bpm_ig_enacting_law_change_steps
+					}
 				}
 			}
 			multiply = 4

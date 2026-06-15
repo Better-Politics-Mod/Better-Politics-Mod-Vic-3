@@ -1,0 +1,306 @@
+﻿REPLACE:je_fascism_1 = {
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	group = je_group_internal_affairs
+
+	scripted_progress_bar = fascism_progress_bar
+
+	timeout = 1095
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = blank_tt
+				trigger = {
+					NOT = {
+						has_journal_entry = je_fascism_1
+					}
+				}
+			}
+			triggered_desc = {
+				desc = fascists_in_government_tt
+				trigger = {
+					any_interest_group = {
+						is_in_government = yes
+						leader = {
+							OR = {
+								has_ideology = ideology:ideology_fascist
+								has_ideology = ideology:ideology_integralist
+							}
+						}
+					}
+				}
+			}
+			triggered_desc = {
+				desc = fascists_out_of_government_tt
+				trigger = {
+					NOT = {
+						any_interest_group = {
+							is_in_government = yes
+							leader = {
+								OR = {
+									has_ideology = ideology:ideology_fascist
+									has_ideology = ideology:ideology_integralist
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	is_shown_when_inactive = {
+		always = no
+	}
+
+	possible = {
+		always = no
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				NOT = {
+					any_scope_character = {
+						OR = {
+							has_ideology = ideology:ideology_fascist
+							has_ideology = ideology:ideology_integralist
+						}
+					}
+				}
+			}
+			generate_fascist_agitator = yes
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_political_movement = {
+						is_political_movement_type = movement_fascist
+					}
+				}
+			}
+			create_political_movement = { type = movement_fascist }
+		}
+		every_scope_character = {
+			limit = {
+				OR = {
+					AND = {
+						prominence >= define:NCharacters|PROMINENCE_IMPORTANT_THRESHOLD
+						has_role_of_type = politician
+					}
+					has_role_of_type = agitator
+				}
+				OR = {
+					has_ideology = ideology:ideology_fascist
+					has_ideology = ideology:ideology_integralist
+				}
+			}
+			set_variable = var_fascism_1_char_checked
+		}
+	}
+
+	complete = {
+		custom_tooltip = {
+			text = je_fascism_1_complete_condition_tt
+			scope:journal_entry = {
+				"scripted_bar_progress(fascism_progress_bar)" >= 100
+			}
+		}
+		custom_tooltip = {
+			text = existent_fascist_character_tt
+			any_scope_character = {
+				OR = {
+					has_ideology = ideology:ideology_fascist
+					has_ideology = ideology:ideology_integralist
+				}
+			}
+		}
+    }
+
+	on_complete = {
+		set_variable = {
+			name = completed_fascism_1_var
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_interest_group  = {
+						leader = {
+							OR = {
+								has_ideology = ideology:ideology_fascist
+								has_ideology = ideology:ideology_integralist
+							}
+						}
+					}
+				}
+				any_scope_character = {
+					OR = {
+						has_ideology = ideology:ideology_fascist
+						has_ideology = ideology:ideology_integralist
+					}
+				}
+			}
+			ordered_interest_group = {
+				limit = {
+					any_scope_character = {
+						OR = {
+							has_ideology = ideology:ideology_fascist
+							has_ideology = ideology:ideology_integralist
+						}
+					}
+				}
+				order_by = ig_clout
+				position = 0
+				check_range_bounds = no
+				save_scope_as = fascist_ig
+				random_scope_character = {
+					limit = {
+						OR = {
+							has_ideology = ideology:ideology_fascist
+							has_ideology = ideology:ideology_integralist
+						}
+					}
+					save_scope_as = fascist_leader
+				}
+			}
+			custom_tooltip = {
+				text = fascist_leader_seizes_control_tt
+				scope:fascist_leader = {
+					set_as_interest_group_leader = yes
+				}
+			}
+		}
+		trigger_event = { id = fascism_events.11 }
+		custom_tooltip = {
+			text = fascist_characters_stays_increased_tt
+		}
+	}
+
+	fail = {
+		custom_tooltip = {
+			text = je_fascism_1_fail_condition_tt
+			scope:journal_entry = {
+				"scripted_bar_progress(fascism_progress_bar)" <= 0
+			}
+		}
+	}
+
+	on_fail = {
+		trigger_event = { id = fascism_events.10 }
+		custom_tooltip = {
+			text = fascist_characters_return_to_normal_tt
+		}
+	}
+
+	on_timeout = {
+		trigger_event = { id = fascism_events.10 }
+		custom_tooltip = {
+			text = fascist_characters_return_to_normal_tt
+		}
+	}
+
+	on_weekly_pulse = {
+        effect = {
+            if = {
+                limit = {
+					any_interest_group = {
+						is_in_government = yes
+						leader = {
+							OR = {
+								has_ideology = ideology:ideology_fascist
+								has_ideology = ideology:ideology_integralist
+							}
+							NOT = {
+								has_variable = var_fascism_1_char_checked
+							}
+						}
+					}
+                }
+				trigger_event = { id = fascism_events.9 popup = yes }
+            }
+			every_interest_group = {
+				limit = {
+					is_in_government = no
+				}
+				leader = {
+					set_variable = var_fascism_1_char_checked
+				}
+			}
+        }
+    }
+
+	on_monthly_pulse = {
+		random_events = {
+			100 = 0
+			10 = fascism_events.2
+		}
+	}
+
+	invalid = {
+		# pelly_says = no
+	}
+
+	weight = 10000
+	can_deactivate = no
+		
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}
+
+REPLACE:je_ethno_nationalist = {
+	icon = "gfx/interface/icons/event_icons/event_military.dds"
+
+	group = je_group_internal_affairs
+
+	is_shown_when_inactive = {
+		always = no
+	}
+
+	possible = {
+		always = no
+	}
+
+	complete = {
+		has_law_or_variant = law_type:law_ethnostate
+		OR = {
+			has_law_or_variant = law_type:law_migration_controls
+			has_law_or_variant = law_type:law_closed_borders
+		}
+		custom_tooltip = {
+			text = je_ethno_nationalist_tt
+			NOT = {
+				any_state = {
+					is_homeland_of_country_cultures = ROOT
+					NOT = { owner = ROOT }
+				}
+			}
+		}
+	}
+
+	on_complete = {
+		set_variable = {
+			name = completed_ethno_nationalism_var
+		}
+		trigger_event = { id = fascism_events.6 }
+	}
+
+	invalid = {
+		NOT = {
+			any_interest_group = {
+				custom_tooltip = {
+					text = ethnonationalist_tt
+					leader = {
+						OR = {
+							has_ideology = ideology:ideology_ethno_nationalist
+							has_ideology = ideology:ideology_fascist
+						}
+					}
+				}
+				is_in_government = yes
+			}
+		}
+	}
+
+	weight = 10000
+	can_deactivate = no
+}

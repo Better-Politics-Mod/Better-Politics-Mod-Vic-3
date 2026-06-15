@@ -1,0 +1,429 @@
+﻿ig_socialists = {
+	color = hsv{ 0.98 0.9 0.8 }
+	texture = "gfx/interface/icons/ig_icons/socialists.dds"
+	layer = "revolution_dynamic_trade_unions"
+	index = 16
+	
+	ideologies = {
+		ideology_nonexistent
+	}
+	
+	character_ideologies = {
+		ideology_center_leader
+		ideology_republican_leader
+		ideology_socialist_leader
+		ideology_communist
+		ideology_nihilist
+		ideology_social_democrat
+		ideology_radical
+	}
+
+	enable = {
+		always = yes
+	}
+	
+	on_enable = {
+		ig:ig_socialists ?= {
+			# #set_ig_trait = ig_trait:ig_trait_left_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_left_bastion_of_freedom
+			#set_ig_trait = ig_trait:ig_trait_left_systematic_opposition
+		}
+		#create_socialist_start_characters = yes
+	}
+	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				assamese avadhi baluchi bengali bihari gujarati kannada malayalam marathi oriya panjabi pathan rajput sindi tamil telegu hindustani bundeli pahari gondi bageli chhattisgarhi deccani
+			}
+		}
+
+		rule = {
+			trigger = {
+				c:CHI ?= this
+				any_primary_culture = { 
+					cu:manchu = this
+				}
+			}
+			cultures = {
+				han
+			}
+		}
+	}
+
+	on_character_ig_membership = {}
+	
+	pop_potential = {
+#		custom_tooltip = {
+#			text = BPM_VALID_POP_FOR_IG
+#			owner ?= {
+#				#NOT = { has_variable = bpm_deinitialize_socialists_var }
+#				NOT = { is_country_type = decentralized }
+#				ig:ig_socialists ?= { NOT = { has_ideology = ideology:ideology_nonexistent } }
+#				#OR = {
+#				#	has_technology_researched = egalitarianism
+#				#	bpm_country_starts_with_liberalism = yes
+#				#}
+#				ig:ig_socialists ?= {
+#					bpm_interest_group_is_activated = yes
+#				}
+#			}
+#		}
+		NOR = {
+			is_pop_type = aristocrats
+			is_pop_type = capitalists
+		}
+		owner = {
+			ig:ig_socialists ?= {
+				NOT = { has_ideology = ideology:ideology_nonexistent }
+				bpm_interest_group_is_activated = yes
+			}
+		}
+	}
+	
+	pop_weight = {
+		value = 20
+
+		if = {
+			limit = { 
+				OR = {
+					is_pop_type = laborers
+					is_pop_type = clerks
+					is_pop_type = machinists
+				}
+			}
+			add = {
+				desc = "POP_PROLETARIAT"
+				value = 50
+			}
+			add = {
+				desc = "POP_EDUCATED_PROLETARIAT"
+				value = literacy_rate
+				multiply = 200
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					is_pop_type = peasants
+					is_pop_type = capitalists
+				}
+			}
+			add = {
+				desc = "POP_EXCLUSIONS"
+				value = -50
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = farmers }
+			add = {
+				desc = "POP_EDUCATED_FARMERS"
+				value = literacy_rate
+				multiply = 200
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					is_pop_type = academics
+					is_pop_type = engineers
+				}
+			}
+			add = {
+				desc = "POP_LEADERS"
+				value = 80
+			}
+		}
+		else_if = {
+			limit = { 
+				is_pop_type = soldiers
+				owner = { has_variable = bpm_ig_laborers_angry_var }
+			}
+			add = {
+				desc = "POP_SOLDIERS"
+				value = 150
+			}
+		}
+
+		if = {
+			limit = { 
+				bpm_pop_employment_is_rural = no
+			}
+			add = {
+				desc = "URBAN_POP"
+				value = 40
+			}
+			if = {
+				limit = { is_employed = no }
+				add = {
+					desc = "URBAN_UNEMPLOYED"
+					value = 100
+				}
+			}
+		}
+
+		add = {
+			desc = "POPS_ANGER_SYMPATHY"
+			if = {
+				limit = { 
+					OR = {
+						is_pop_type = farmers
+						is_pop_type = academics
+					}
+					owner = { has_variable = bpm_ig_laborers_angry_var }
+				}
+				value = 100
+			}
+		}
+
+		add = {
+			desc = "POP_DISCRIMINATED"
+			if = {
+				limit = { 
+					pop_acceptance <= acceptance_status_3
+				}
+				value = 50
+			}
+		}	
+		
+		add = ig_attraction_agrarian_socialism
+
+		if = {
+			limit = {
+				total_size > 1000
+				owner = { bpm_performance_significant_country = yes }
+			}
+			multiply = 0.125
+			if = {
+				limit = {
+					owner = {
+						has_variable = bpm_strong_labor 
+					}
+				}
+				multiply = {
+					desc = "BPM_STRONG_LABOR"
+					value = 6
+				}
+			}
+			else_if = {
+				limit = {
+					owner = {
+						has_variable = bpm_average_labor 
+					}
+				}
+				multiply = {
+					desc = "BPM_AVERAGE_LABOR"
+					value = 4
+				}
+			}
+
+			add = ig_attraction_tmp_bpm_non_rural_socialist
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.01
+						add = 1
+						max = 2.0
+						min = 0.5
+					}
+				}
+			}	
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+			multiply = {
+				desc = "DEVASTATED"	
+				value = 1.0
+	
+				if = {
+					limit = { 
+						state = {
+							devastation > 5
+						}
+					}
+					value = 1.5
+				}		
+			}
+			multiply = { desc = bpm_ig_attraction_from_radicals_and_loyalists_tt value = ig_attraction_from_radicals_and_loyalists }
+		}
+
+		multiply = ig_attraction_to_ruler_ideology_from_stability
+
+		owner = {
+			multiply = {
+				desc = "WEAK_UNIONS"
+				value = 1.0
+
+				if = {
+					limit = { 
+						NOT = { has_variable = bpm_country_has_established_unions_history_var }
+					}
+					value = 0.5
+				}		
+			}
+			multiply = {
+				desc = "ESTABLISHED_UNIONS"	
+				value = 1.0
+
+				if = {
+					limit = { 
+						has_variable = bpm_country_has_powerful_unions_var
+					}
+					value = 1.5
+				}		
+			}
+
+			multiply = {
+				desc = "AT_WAR"	
+				value = 1.0
+
+				if = {
+					limit = { is_at_war = yes }
+					value = 1.9
+				}		
+			}	
+
+			if = {
+				limit = { has_global_variable = second_intl_chain_complete_var }
+				multiply = 1.0
+			}
+			else_if = {
+				limit = { has_global_variable = first_intl_chain_complete_var }
+				multiply = {
+					desc = "BEFORE_SECOND_INTERNATIONAL"
+					value = 0.7
+				}
+			}
+			else = {
+				multiply = {
+					desc = "BEFORE_FIRST_INTERNATIONAL"
+					value = 0.5
+				}
+			}
+
+			if = {
+				limit = { NOT = { has_technology_researched = labor_movement } }
+				multiply = {
+					desc = "NO_LABOR_MOVEMENT"
+					value = 0.5
+				}
+			}
+			else_if = {
+				limit = { NOT = { has_technology_researched = socialism } }
+				multiply = {
+					desc = "NO_SOCIALISM"
+					value = 0.7
+				}
+			}
+
+			multiply = {
+				desc = "SPLIT_SOCIALISTS"
+				value = 1.0
+
+				if = {
+					limit = {
+						has_variable = local_revsocs_split_var
+					}
+					value = 0.5
+				}			
+			}
+		}
+
+		if = {
+			limit = { game_date < 1860.1.1 }
+			if = {
+				limit = {
+					owner = {
+						NOT = { has_global_variable = bpm_peoples_springtime_happened }
+						has_global_variable = bpm_je_march_to_radicalism_progress
+						is_in_geographic_region = geographic_region_europe
+					}
+				}
+				multiply = {
+					desc = "PEOPLES_SPRINGTIME_BUILDUP"
+					value = global_var:bpm_je_march_to_radicalism_progress
+					multiply = 0.05
+				}
+			}
+		}
+	}
+	
+	monarch_weight = {
+		value = 0.0
+	}	
+
+	agitator_weight = {
+		value = 1.0
+		if = {
+			limit = { has_variable = bpm_deinitialize_socialists_var }
+			multiply = -100
+		}
+		else = {
+			multiply = bpm_base_agitator_weight
+		}
+	}
+	
+	commander_weight = {
+		value = 1.0
+		multiply = bpm_commander_assignment_from_laws_factor
+		if ={
+			limit = {
+				owner.ig:ig_socialists = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}	
+
+	executive_weight = { 
+		value = 0.0
+	}	
+	
+	noble_chance = {
+		value = 0.0
+	}
+	
+	female_commander_chance = {	
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
+	}
+	
+	female_politician_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
+
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}
+	
+	# The chance that a commander belonging to this IG takes over leadership when it changes
+	# scope:character is the most popular commander in the IG
+	commander_leader_chance = {
+		value = 0.25
+		if = {
+			limit = {
+				exists = scope:character
+			}
+			multiply = {
+				value = 1
+				add = scope:character.popularity
+				min = 0
+			}
+		}
+	}
+
+}

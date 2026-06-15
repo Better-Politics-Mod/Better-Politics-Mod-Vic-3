@@ -20,10 +20,10 @@ anti_state_religion.1 = { # Advance
 
 	duration = 3
 
-	cooldown = { months = normal_modifier_time }
+	cooldown = { days = normal_modifier_time }
 	
 	trigger = {
-		has_law = law_type:law_state_religion
+		has_law_or_variant = law_type:law_state_religion
 		OR = {
 			is_enacting_law = law_type:law_freedom_of_conscience
 			is_enacting_law = law_type:law_total_separation
@@ -37,6 +37,10 @@ anti_state_religion.1 = { # Advance
 		ROOT.religion = {
 			save_scope_as = country_religion
 		}
+		random_interest_group = { 
+			limit = {bpm_ig_not_strongly_disapproves_enactment = yes}
+			save_scope_as = bpm_anti_rel_ig
+		}
 	}
 
 	cancellation_trigger = {
@@ -48,8 +52,7 @@ anti_state_religion.1 = { # Advance
         default_option = yes
 		if = { 
 			limit = { is_player = yes }
-			random_interest_group = {
-				limit = { bpm_ig_not_strongly_disapproves_enactment = yes }
+			scope:bpm_anti_rel_ig = {
 				bpm_ig_increase_law_enactment_approval_small = yes
 			}
 		}
@@ -65,10 +68,10 @@ anti_state_religion.1 = { # Advance
 
 		trigger = {
 			any_scope_character = {
-				is_ruler = yes
+				is_ruler_of_own_country = yes
 				OR = { 
 					AND = {
-						NOT = { has_ideology = ideology:ideology_atheist }
+						NOT = { has_ideology = ideology:ideology_nihilist }
 					}
 					has_ideology = ideology:ideology_theocrat
 					has_ideology = ideology:ideology_traditionalist
@@ -78,23 +81,20 @@ anti_state_religion.1 = { # Advance
 
 		if = {
 			limit = {
-				ruler = { has_ideology = ideology:ideology_theocrat }
-			}
-			ruler = { set_ideology = ideology:ideology_moderate }
-		}
-		else_if = {
-			limit = {
-				ruler = { has_ideology = ideology:ideology_traditionalist }
+				or = { 
+					ruler = { has_ideology = ideology:ideology_theocrat }
+					ruler = { has_ideology = ideology:ideology_traditionalist }
+				}
 			}
 			ruler = { set_ideology = ideology:ideology_moderate }
 		}
 		else_if = {
 			limit = {
 				ruler = {
-					NOT = { has_ideology = ideology:ideology_atheist }
+					NOT = { has_ideology = ideology:ideology_nihilist }
 				}
 			}
-			ruler = { set_ideology = ideology:ideology_atheist }
+			ruler = { set_ideology = ideology:ideology_nihilist }
 		}
 	}
 }
@@ -112,7 +112,7 @@ anti_state_religion.2 = {
 
 	duration = 3
 
-	cooldown = { months = normal_modifier_time }
+	cooldown = { days = normal_modifier_time }
 
 	event_image = {
 		video = "southamerica_christianity"
@@ -123,7 +123,7 @@ anti_state_religion.2 = {
 	icon = "gfx/interface/icons/event_icons/event_scales.dds"
 
 	trigger = {
-		has_law = law_type:law_state_religion
+		has_law_or_variant = law_type:law_state_religion
 		OR = {
 			is_enacting_law = law_type:law_freedom_of_conscience
 			is_enacting_law = law_type:law_total_separation
@@ -151,6 +151,19 @@ anti_state_religion.2 = {
 				save_scope_as = community_rel_ig_leader_scope
 			}
 		}
+		random_interest_group = {
+			limit = { bpm_ig_approves_enactment = yes }
+			save_scope_as = neutral_rel_ig
+		}
+		random_interest_group = {
+			limit = {
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value > neutral
+				}
+			}
+			save_scope_as = anti_clerical_ig
+		}
 	}
 
 	cancellation_trigger = {
@@ -162,33 +175,34 @@ anti_state_religion.2 = {
 		default_option = yes
 		if = { 
 			limit = { is_player = yes }
-			random_interest_group = {
-				limit = { bpm_ig_disapproves_to_neutral_enactment = yes }
+			scope:neutral_rel_ig = {
 				bpm_ig_increase_law_enactment_approval_small = yes
 			}
 		}
 		else = { 
-			add_enactment_modifier = {
-				name = anti_clericalism_pushed_through
+			currently_enacting_law = {
+				add_amendment = {
+					type = amendment_state_anti_clericalism
+					sponsor = scope:anti_clerical_ig
+					cooldown = 120
+				}
+			}
+			add_radicals = {
+				value = medium_radicals
+				pop_type = clergymen
+			}
+			add_radicals = { 
+				value = medium_radicals
+				interest_group = scope:community_rel_ig_scope
 			}
 		}
-		add_radicals = {
-			value = medium_radicals
-			pop_type = clergymen
-		}
-		add_radicals = { 
-			value = medium_radicals
-			interest_group = community_rel_ig_scope
-		}
 	}
-
 	option = {
 		name = anti_state_religion.2.b
 
 		if = { 
 			limit = { is_player = yes }
-			random_interest_group = {
-				limit = { bpm_ig_disapproves_to_neutral_enactment = yes }
+			scope:neutral_rel_ig = {
 				bpm_ig_decrease_law_enactment_approval_small = yes
 			}
 		}
@@ -213,7 +227,7 @@ anti_state_religion.3 = {
 
 	duration = 3
 
-	cooldown = { months = normal_modifier_time }
+	cooldown = { days = normal_modifier_time }
 
 	event_image = {
 		video = "middleeast_courtroom_upheaval"
@@ -224,13 +238,16 @@ anti_state_religion.3 = {
 	icon = "gfx/interface/icons/event_icons/event_fire.dds"
 
 	trigger = {
-		has_law = law_type:law_state_religion
+		has_law_or_variant = law_type:law_state_religion
 		OR = {
 			is_enacting_law = law_type:law_freedom_of_conscience
 			is_enacting_law = law_type:law_total_separation
 		}
 		any_scope_pop = {
 			is_pop_type = clergymen # sanity check
+		}
+		any_interest_group = { 
+			bpm_ig_disapproves_to_neutral_enactment = yes
 		}
 	}
 
@@ -240,6 +257,10 @@ anti_state_religion.3 = {
 		}
 		currently_enacting_law = {
 			save_scope_as = current_law_scope
+		}
+		random_interest_group = {
+			limit = { bpm_ig_disapproves_to_neutral_enactment = yes }
+			save_scope_as = bpm_myrtyr_neutral_scope
 		}
 	}
 
@@ -254,8 +275,7 @@ anti_state_religion.3 = {
 			limit = { is_player = yes }
 			random_list = {
 				1 = {
-					random_interest_group = {
-						limit = { bpm_ig_disapproves_to_neutral_enactment = yes }
+					scope:bpm_myrtyr_neutral_scope = {
 						bpm_ig_increase_law_enactment_approval_medium = yes
 					}
 				}
@@ -295,10 +315,7 @@ anti_state_religion.3 = {
 
 		if = { 
 			limit = { is_player = yes }
-			random_interest_group = {
-				limit = { 
-					has_variable = bpm_ig_current_law_stance
-				}
+			scope:bpm_myrtyr_neutral_scope = {
 				bpm_ig_decrease_law_enactment_approval_small = yes
 			}
 		}

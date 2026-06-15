@@ -1,4 +1,4 @@
-﻿communist_party = {
+﻿REPLACE:communist_party = {
 	color = hsv{ 0 0.9 0.8 }
 	name = {
 		first_valid = {
@@ -42,6 +42,11 @@
 					OR = {
 						country_has_primary_culture = cu:north_italian
 						country_has_primary_culture = cu:south_italian
+					}
+					NOR = {
+						c:AUS ?= this
+						c:KUK ?= this
+						c:HRE ?= this
 					}
 				}
 			}
@@ -113,6 +118,13 @@
 				trigger = {
 					exists = c:HUN
 					THIS = c:HUN
+				}
+			}
+			triggered_desc = {
+				desc = party_revsoc_ast
+				trigger = {
+					country_has_primary_culture = cu:australian
+					NOT = {THIS = c:NZL}
 				}
 			}
 			triggered_desc = {
@@ -282,6 +294,13 @@
 				}
 			}
 			triggered_desc = {
+				desc = party_revsoc_cub
+				trigger = {
+					exists = c:CUB
+					THIS = c:CUB
+				}
+			}
+			triggered_desc = {
 				desc = party_communist
 				trigger = {
 					always = yes
@@ -300,12 +319,12 @@
 		always = yes
 	}
 	available_for_interest_group = {
-		bpm_ig_enabled = yes
+		bpm_interest_group_is_activated = yes
 		NOT = { bpm_is_party_banned = { PARTY = communist_party } }
 		owner = {
 			any_interest_group = {
 				bpm_ig_is_proletarian = yes
-				is_marginal = no
+				bpm_ig_is_marginal = no
 			}
 		}
 		OR = {
@@ -329,6 +348,33 @@
 		value = {
 			value = -2
 			desc = "base_value"
+		}
+		if = {
+			limit = {
+				owner = {
+					is_player = yes
+					has_variable = bpm_party_establishment_communist
+				}
+				NOR = {
+					bpm_ig_is_radical_opposition = yes
+					bpm_ig_is_very_radical_opposition = yes
+				}
+			}
+			add = {
+				desc = "bpm_from_party_establishment"
+				value = {
+					value = 20
+					if = {
+						limit = {
+							bpm_ig_is_institutional = yes
+						}
+						subtract = 12
+					}
+				}
+				multiply = owner.var:bpm_party_establishment_communist
+				multiply = owner.var:bpm_political_stability
+				divide = 10000
+			}
 		}
 		if = {
 			limit = {
@@ -405,7 +451,7 @@
 		if = { # trade unions are inclined towards socialism
 			limit = {
 				is_interest_group_type = ig_trade_unions
-				NOT = { owner = { has_law = law_type:law_illegal_labor_unions } }
+				NOT = { owner = { has_law = law_type:law_combination_acts } }
 			}
 			add = {	
 				value = 6
@@ -415,7 +461,7 @@
 		if = { # trade unions are inclined towards socialism
 			limit = {
 				is_interest_group_type = ig_trade_unions
-				owner = { has_law = law_type:law_illegal_labor_unions }
+				owner = { has_law = law_type:law_combination_acts }
 			}
 			add = {	
 				value = 10
@@ -445,6 +491,45 @@
 			add = {
 				value = 10
 				desc = "bpm_from_powerful_revsoc"
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_no_parties_allowed
+					NOT = {
+						has_law = law_type:law_outlawed_dissent
+					}
+				}
+			}
+
+			add = {
+				value = -50
+				desc = "from_no_reason_to_exist"
+			}
+		}
+		if = { # Christian Democrats hate electoralism
+			limit = {
+				is_interest_group_type = ig_christian_democrats
+				has_ideology = ideology:ideology_dop_placeholder
+				
+			}
+			add = {
+				value = -25
+				desc = "bpm_from_hostility_towards_democracy"
+			}
+		}
+
+		else_if = {
+			limit = {
+				is_interest_group_type = ig_christian_democrats
+				NOT = {
+					has_ideology = ideology:ideology_dop_placeholder
+				}
+			}
+			add = {
+				value = -25
+				desc = from_conservatism
 			}
 		}
 		if = { # liberals love liberalism
@@ -640,7 +725,7 @@
 		if = { # anti-serfdom
 			limit = {
 				owner = {
-					has_law = law_type:law_serfdom
+					has_law_or_variant = law_type:law_serfdom
 				}
 				OR = {
 					bpm_ig_is_abolitionist = yes	
@@ -688,7 +773,7 @@
 			limit = {
 				OR = {
 					bpm_ig_is_non_religious = yes
-					leader = { has_ideology = ideology:ideology_atheist }
+					leader = { has_ideology = ideology:ideology_nihilist }
 				}
 			}
 			add = {
@@ -724,7 +809,7 @@
 					AND = {
 						exists = owner.py:communist_party
 						owner = {
-							ig:ig_revolutionist_socialists = {
+							ig:ig_revolutionist_socialists ?= {
 								NOT = { is_member_of_party = owner.py:communist_party }
 							}
 						}

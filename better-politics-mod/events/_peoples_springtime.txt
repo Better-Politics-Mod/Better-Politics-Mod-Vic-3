@@ -17,36 +17,26 @@ peoples_springtime.1 = {
 	flavor = peoples_springtime.1.f
 
 	trigger = {
-		NOT = { has_global_variable = peoples_springtime_happening }
-		NOT = { has_global_variable = peoples_springtime_happened }
+		NOT = { has_global_variable = bpm_peoples_springtime_happening }
+		NOT = { has_global_variable = bpm_peoples_springtime_happened }
 		has_global_variable = bpm_je_march_to_radicalism_progress
 		global_var:bpm_je_march_to_radicalism_progress >= 100
-		
-		bpm_country_is_in_europe = yes
-		any_interest_group = {
-			is_marginal = no
-			OR = {
-				is_revolutionary = yes
-				owner = { is_secessionist = yes }
-			}
-			OR = {
-				bpm_ig_is_radical_left = yes
-				leader = { bpm_leader_is_radical_leftist = yes }
-				any_scope_character = {
-					has_role = agitator
-					bpm_leader_is_radical_leftist = yes
-				}
-			}
+		country_rank >= rank_value:major_power
+		is_in_geographic_region = geographic_region_europe
+		OR = {
+			has_civil_war_from_movement_type = movement_type:movement_liberal
+			has_civil_war_from_movement_type = movement_type:movement_radical
+			has_civil_war_from_movement_type = movement_type:movement_socialist
 		}
 	}
 
 	immediate = {
 		set_global_variable = {
-			name = peoples_springtime_happening
+			name = bpm_peoples_springtime_happening
 		}
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				bpm_ig_is_marginal = no
 				OR = {
 					is_insurrectionary = yes
 					ig_approval < -10 # ANGERY
@@ -55,7 +45,7 @@ peoples_springtime.1 = {
 					bpm_ig_is_radical_left = yes
 					leader = { bpm_leader_is_radical_leftist = yes }
 					any_scope_character = {
-						has_role = agitator
+						has_role_of_type = agitator
 						bpm_leader_is_radical_leftist = yes
 					}
 				}
@@ -71,7 +61,7 @@ peoples_springtime.1 = {
 		scope:radical_ig_leader = {
 			add_modifier = {
 				name = revolutionary_hero
-				months = normal_modifier_time
+				days = normal_modifier_time
 			}
 		}
 	}
@@ -82,7 +72,7 @@ peoples_springtime.1 = {
         scope:radical_ig_leader = {
         	add_modifier = {
         		name = treasonous_traitor
-        		months = normal_modifier_time
+        		days = normal_modifier_time
         	}
         }
 	}
@@ -113,7 +103,7 @@ peoples_springtime.2 = {
 	immediate = {
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				bpm_ig_is_marginal = no
 				bpm_ig_can_have_radical_leader_1848 = yes
 			}
 			save_scope_as = radical_ig
@@ -127,7 +117,7 @@ peoples_springtime.2 = {
 				set_ideology = ideology:ideology_radical 
 				add_modifier = {
 					name = revolutionary_hero
-					months = normal_modifier_time
+					days = normal_modifier_time
 				}
 			}
 		}
@@ -141,7 +131,7 @@ peoples_springtime.2 = {
 				set_ideology = ideology:ideology_radical
 				add_modifier = {
 					name = treasonous_traitor
-					months = normal_modifier_time
+					days = normal_modifier_time
 				}
 		 	}
         }
@@ -169,7 +159,7 @@ peoples_springtime.3 = {
 		# has_technology_researched = egalitarianism
 
 		any_interest_group = {
-			is_marginal = no
+			bpm_ig_is_marginal = no
 			bpm_ig_can_have_radical_leader_1848 = yes
 		}
 	}
@@ -177,7 +167,7 @@ peoples_springtime.3 = {
 	immediate = {
 		random_interest_group = {
 			limit = {
-				is_marginal = no
+				bpm_ig_is_marginal = no
 				bpm_ig_can_have_radical_leader_1848 = yes
 			}
 			save_scope_as = radical_ig
@@ -220,7 +210,7 @@ peoples_springtime.3 = {
 		scope:radical_ig = {
 			add_modifier = {
 				name = dissident_radical_faction
-				months = short_modifier_time
+				days = short_modifier_time
 			}
 		}
 		create_character = {
@@ -262,7 +252,7 @@ peoples_springtime.4 = {
 
 	duration = 3
 
-	cooldown = { months = normal_modifier_time }
+	cooldown = { days = normal_modifier_time }
 
 	option = {
 		name = peoples_springtime.4.a
@@ -291,7 +281,7 @@ peoples_springtime.4 = {
 			}
 			add_modifier = {
 				name = spread_the_revolution
-				months = short_modifier_time
+				days = short_modifier_time
 			}
 		}
 	}
@@ -307,7 +297,7 @@ peoples_springtime.4 = {
 			}
 			add_modifier = {
 				name = constrained_the_revolution
-				months = short_modifier_time
+				days = short_modifier_time
 			}
 		}
 		default_option = yes
@@ -332,7 +322,7 @@ peoples_springtime.5 = {
 	trigger = {
 		has_journal_entry = je_springtime_of_the_peoples
 		any_interest_group = {
-			is_marginal = no
+			bpm_ig_is_marginal = no
 			OR = {
 				bpm_ig_is_radical_left = yes
 				leader = { bpm_leader_is_radical_leftist = yes }
@@ -416,10 +406,10 @@ peoples_springtime.6 = {
 
 	immediate = {
 		set_variable = peoples_springtime_fully_ended
-		ig:ig_liberals = {
+		ig:ig_liberals ?= {
 			leader = { set_ideology = ideology:ideology_center_leader }
 		}
-		ig:ig_agrarian_populists = {
+		ig:ig_agrarian_populists ?= {
 			leader = { set_ideology = ideology:ideology_center_leader }
 		}
 		every_interest_group = {
@@ -448,15 +438,16 @@ peoples_springtime.6 = {
 			trigger_event = { id = peoples_springtime.7 days = 30 popup = yes }
 		}
 		# Revolution Failed
-		else_if = {
+		if = {
 			limit = {
-				bpm_country_laws_ok_voting = no
-				is_player = no
+				NOT = { has_variable = bpm_peoples_springtime_101_fired }
 			}
-			bpm_add_political_stability_huge = yes
-			if = {
-				limit = { has_law = law_type:law_no_home_affairs }
-				activate_law = law_type:law_national_guard
+			add_loyalists = {
+				value = 0.2
+			}
+			add_loyalists = {
+				value = 0.3
+				strata = upper
 			}
 		}
 		# Revolution Vanquished
@@ -466,11 +457,20 @@ peoples_springtime.6 = {
 				NOT = {
 					any_interest_group = {
 						bpm_ig_is_radical_left = yes
-						is_marginal = no
+						bpm_ig_is_marginal = no
 					}
 				}
 			}
 			trigger_event = { id = peoples_springtime.8 popup = yes }
+		}
+		if = {
+			limit = {
+				c:AUS ?= THIS
+				NOT = { exists = c:HUN }
+			}
+			add_journal_entry = {
+				type = je_matter_of_hungary
+			}
 		}
 	}
 
@@ -484,11 +484,29 @@ peoples_springtime.6 = {
 					this = c:GBR
 				}
 			}
-			ig:ig_radicals = {
+			ig:ig_radicals ?= {
 				bpm_remove_all_gov_ideologies = yes
 				bpm_reorder_ideologies = yes
 			}
-			bpm_add_political_stability_big = yes
+		}
+		if = {
+			limit = {
+				NOT = { has_variable = bpm_peoples_springtime_101_fired }
+			}
+			if = {
+				limit = { is_player = no }
+				bpm_add_political_stability_huge = yes
+			}
+			else = {
+				bpm_add_political_stability_big = yes
+			}
+			if = {
+				limit = {
+					bpm_country_laws_ok_voting = no
+					has_law = law_type:law_no_home_affairs
+				}
+				activate_law = law_type:law_national_guard
+			}
 		}
 		default_option = yes
 	}
@@ -529,9 +547,9 @@ peoples_springtime.7 = {
 		name = peoples_springtime.7.a
 		add_modifier = {
 			name = post_revolutionary_fervor
-			months = normal_modifier_time
+			days = normal_modifier_time
 		}
-		ig:ig_liberals = {
+		ig:ig_liberals ?= {
 			bpm_remove_all_dop_ideologies = yes
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_dop_radical_democrat
@@ -542,7 +560,7 @@ peoples_springtime.7 = {
 				set_interest_group_name = ig_liberals
 			}
 		}
-		ig:ig_conservatives = {
+		ig:ig_conservatives ?= {
 			bpm_remove_all_dop_ideologies = yes
 			add_ideology = ideology_dop_moderate_democrat
 			bpm_reorder_ideologies = yes
@@ -559,7 +577,7 @@ peoples_springtime.7 = {
 		add_loyalists = {
 			value = 0.1
 		}
-		ig:ig_liberals = {
+		ig:ig_liberals ?= {
 			bpm_remove_all_dop_ideologies = yes
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_dop_radical_democrat
@@ -570,7 +588,7 @@ peoples_springtime.7 = {
 				set_interest_group_name = ig_liberals
 			}
 		}
-		ig:ig_conservatives = {
+		ig:ig_conservatives ?= {
 			bpm_remove_all_dop_ideologies = yes
 			add_ideology = ideology_dop_moderate_democrat
 			bpm_reorder_ideologies = yes
@@ -604,7 +622,7 @@ peoples_springtime.8 = {
 		name = peoples_springtime.8.a
 		add_modifier = {
 			name = counter_revolutionary_fervor
-			months = normal_modifier_time
+			days = normal_modifier_time
 		}
 	}
 
@@ -673,30 +691,31 @@ peoples_springtime.9 = {
 				origin = c:AUS
 				state = s:STATE_CENTRAL_HUNGARY.region_state:AUS
 			}
-			s:STATE_TRANSDANUBIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-			s:STATE_BEKES.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-			s:STATE_BANAT.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-			s:STATE_DELVIDEK.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-			s:STATE_WEST_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-			s:STATE_EAST_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-			s:STATE_NORTHERN_TRANSYLVANIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-			s:STATE_SOUTHERN_TRANSYLVANIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-			s:STATE_SLAVONIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-			s:STATE_CROATIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			every_scope_state = {
+				limit = {
+					is_in_geographic_region = geographic_region_hungary
+				}
+				set_state_owner = c:HUN
+			}
+			# if = { 
+			# 	limit = { STMS_is_active_trigger = yes }
+			# 	s:STATE_SOUTHERN_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			# 	s:STATE_WEST_BANAT.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			# 	s:STATE_SYRMIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			# 	s:STATE_CARPATHIAN_RUTHENIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+			# }
+			c:HUN = {
+				bpm_setup_country = yes
+			}
 			
 			every_country = {
-				limit = { bpm_country_is_in_europe = yes }
+				limit = { is_in_geographic_region = geographic_region_europe }
 				post_notification = bpm_1848_ausgleich
 			}
 		}
 		create_diplomatic_pact = {
 			country = c:HUN
 			type = personal_union
-		}
-		trigger_event = { 
-			id = peoples_springtime.11
-			days = 120
-			popup = yes 
 		}
 	}
 }
@@ -733,14 +752,19 @@ peoples_springtime.10 = {
 				state = s:STATE_CENTRAL_HUNGARY.region_state:AUS
 		}
 
-		s:STATE_TRANSDANUBIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-		s:STATE_BEKES.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-		s:STATE_BANAT.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-		s:STATE_DELVIDEK.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-		s:STATE_WEST_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-		s:STATE_EAST_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-		s:STATE_NORTHERN_TRANSYLVANIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-		s:STATE_SOUTHERN_TRANSYLVANIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		every_scope_state = {
+			limit = {
+				is_in_geographic_region = geographic_region_hungary
+			}
+			set_state_owner = c:HUN
+		}
+		# if = { 
+		# 	limit = { STMS_is_active_trigger = yes }
+		# 	s:STATE_SOUTHERN_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		# 	s:STATE_WEST_BANAT.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		# 	s:STATE_SYRMIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		# 	s:STATE_CARPATHIAN_RUTHENIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+		# }
 
 		c:HUN = {
 			activate_law = law_type:law_devolved
@@ -754,6 +778,7 @@ peoples_springtime.10 = {
 			activate_law = law_type:law_per_capita_based_taxation
 			activate_law = law_type:law_professional_army
 			activate_law = law_type:law_professional_officers
+			bpm_setup_country = yes
 		}
 	}
 
@@ -798,11 +823,11 @@ peoples_springtime.10 = {
 			change_infamy = -250
 			trigger_event = { 
 				id = peoples_springtime.11
-				days = 90
-				popup = yes 
+			 	days = 90
+			 	popup = yes 
 			}
 			every_country = {
-				limit = { bpm_country_is_in_europe = yes }
+				limit = { is_in_geographic_region = geographic_region_europe }
 				post_notification = bpm_1848_hungarian_revolution
 			}
 		}
@@ -835,17 +860,58 @@ peoples_springtime.11 = {
 
 	dlc = dlc_bpm
 
+	trigger = {
+		c:AUS ?= this
+		has_journal_entry = je_springtime_of_the_peoples
+		NOT = { has_global_variable = bpm_italian_war_var }
+		OR = {
+			AND = {
+				any_scope_state = {
+					state_region = s:STATE_LOMBARDY
+				}
+				any_scope_state = {
+					state_region = {
+						is_homeland = cu:north_italian
+					}
+					OR = {
+						turmoil > 0.15
+						obstinance >= 0.05
+					}
+				}
+				NOT = {
+					exists = c:LOM
+				}
+				any_diplomatic_play = {
+					OR = {
+						AND = {
+							target = c:HUN
+							initiator = c:AUS
+						}
+						AND = {
+							target = c:AUS
+							initiator = c:HUN
+						}
+					}
+				}
+			}
+		}
+	}
+
 	immediate = {
+		set_global_variable = bpm_italian_war_var
 		create_country = {
 			tag = LOM
 			origin = c:AUS
 			state = s:STATE_LOMBARDY.region_state:AUS
 		}
 		c:LOM = {
+			remove_primary_culture = cu:south_german
+			add_primary_culture = cu:north_italian
 			activate_law = law_type:law_unitary
 			activate_law = law_type:law_parliamentary_republic
 			activate_law = law_type:law_elected_bureaucrats
 			activate_law = law_type:law_universal_suffrage
+			bpm_setup_country = yes
 		}
 	}
 
@@ -867,10 +933,19 @@ peoples_springtime.11 = {
 				popup = yes 
 			}
 			c:PAP ?= {
-				trigger_event = { id = italian_springtime.1 days = 7 popup = yes}
+				if = {
+					limit = {
+						OR = {
+							has_law = law_type:law_autocracy
+							has_law = law_type:law_oligarchy
+							has_law = law_type:law_landed_voting
+						}
+					}
+					trigger_event = { id = italian_springtime.1 days = 7 popup = yes}
+				}
 			}
 			every_country = {
-				limit = { bpm_country_is_in_europe = yes }
+				limit = { is_in_geographic_region = geographic_region_europe }
 				post_notification = bpm_1848_milan_revolution
 			}
 		}
@@ -910,10 +985,13 @@ peoples_springtime.12 = {
 				state = s:STATE_VENETIA.region_state:AUS
 		}
 		c:RSM = {
+			remove_primary_culture = cu:south_german
+			add_primary_culture = cu:north_italian
 			activate_law = law_type:law_unitary
 			activate_law = law_type:law_parliamentary_republic
 			activate_law = law_type:law_elected_bureaucrats
 			activate_law = law_type:law_universal_suffrage
+			bpm_setup_country = yes
 		}
 	}
 
@@ -945,7 +1023,7 @@ peoples_springtime.12 = {
 		}
 		hidden_effect = {
 			every_country = {
-				limit = { bpm_country_is_in_europe = yes }
+				limit = { is_in_geographic_region = geographic_region_europe }
 				post_notification = bpm_1848_san_marco_revolution
 			}
 		}
@@ -969,9 +1047,56 @@ peoples_springtime.13 = {
 
 	icon = "gfx/interface/icons/event_icons/event_protest.dds"
 
-	title = peoples_springtime.13.t
-	desc = peoples_springtime.13.d
-	flavor = peoples_springtime.13.f
+	title = {
+		first_valid = {
+			triggered_desc = {
+				desc = peoples_springtime.13.t
+				trigger = {
+					NOT = { owns_entire_state_region = STATE_CENTRAL_HUNGARY }
+				}
+			}
+			triggered_desc = {
+				desc = peoples_springtime.13.t2
+				trigger = {
+					owns_entire_state_region = STATE_CENTRAL_HUNGARY
+				}
+			}
+		}
+	}
+	
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = peoples_springtime.13.d
+				trigger = {
+					NOT = { owns_entire_state_region = STATE_CENTRAL_HUNGARY }
+				}
+			}
+			triggered_desc = {
+				desc = peoples_springtime.13.d2
+				trigger = {
+					owns_entire_state_region = STATE_CENTRAL_HUNGARY
+				}
+			}
+		}
+	}
+
+	flavor = {
+		first_valid = {
+			triggered_desc = {
+				desc = peoples_springtime.13.f
+				trigger = {
+					NOT = { owns_entire_state_region = STATE_CENTRAL_HUNGARY }
+				}
+			}
+			triggered_desc = {
+				desc = peoples_springtime.13.f2
+				trigger = {
+					owns_entire_state_region = STATE_CENTRAL_HUNGARY
+				}
+			}
+		}
+	}
 
 	duration = 1
 
@@ -980,7 +1105,6 @@ peoples_springtime.13 = {
 	trigger = {
 		has_variable = bpm_hungarian_revolution_started
 		NOT = { has_variable = bpm_austria_empire_dissolved }
-		NOT = { owns_entire_state_region = STATE_CENTRAL_HUNGARY }
 		owner = {
 			is_at_war = no
 			is_diplomatic_play_initiator = no
@@ -988,31 +1112,46 @@ peoples_springtime.13 = {
 	}
 
 	immediate = {
-		create_country = {
-			tag = GAL
-			origin = c:AUS
-			state = s:STATE_EAST_GALICIA.region_state:AUS
-		}
-		s:STATE_WEST_GALICIA.region_state:AUS = { set_state_owner = c:GAL set_state_type = incorporated}
-		s:STATE_MOLDAVIA.region_state:AUS = { set_state_owner = c:GAL set_state_type = incorporated}
-		set_variable = bpm_austria_empire_dissolved
 		remove_variable = bpm_hungarian_revolution_started
+		if = {
+			limit = {
+				NOT = { owns_entire_state_region = STATE_CENTRAL_HUNGARY }
+			}
+			create_country = {
+				tag = GAL
+				origin = c:AUS
+				state = s:STATE_EAST_GALICIA.region_state:AUS
+			}
+			s:STATE_WEST_GALICIA.region_state:AUS = { set_state_owner = c:GAL set_state_type = incorporated}
+			s:STATE_MOLDAVIA.region_state:AUS = { set_state_owner = c:GAL set_state_type = incorporated}
+			set_variable = bpm_austria_empire_dissolved
+			c:GAL = {
+				bpm_setup_country = yes
+			}
+			hidden_effect = {
+				create_diplomatic_pact = {
+					country = c:GAL
+					type = personal_union
+				}
+			}
+		}
 	}
 
 	option = {
+		trigger = {
+			NOT = { owns_entire_state_region = STATE_CENTRAL_HUNGARY }
+		}
 		name = peoples_springtime.13.a #release galicia
 
 		custom_tooltip = {
 			text = bpm_gl_union
 		}
-		
-		
-		hidden_effect = {
-			create_diplomatic_pact = {
-				country = c:GAL
-				type = personal_union
-			}
+	}
+	option = {
+		trigger = {
+			owns_entire_state_region = STATE_CENTRAL_HUNGARY
 		}
+		name = peoples_springtime.13.b #the hungarian revolution is defeated
 	}
 }
 
@@ -1045,6 +1184,7 @@ peoples_springtime.14 = {
 	}
 }
 
+# austrian empire dissolves, "1848 worst year of my life" -metternich
 peoples_springtime.15 = {
 	type = country_event
 
@@ -1066,9 +1206,9 @@ peoples_springtime.15 = {
 
 	trigger = {
 		#event/pulse
-		# has_global_variable = peoples_springtime_happening
+		has_global_variable = bpm_peoples_springtime_happening
 		owner = {
-			is_player = no
+			# is_player = no
 			this = c:AUS
 			NOT = { has_law = law_type:law_monarchy }
 			NOT = { has_variable = bpm_austria_empire_dissolved }
@@ -1077,7 +1217,11 @@ peoples_springtime.15 = {
 
 	option = {
 		name = peoples_springtime.15.a
+		ai_chance = {
+			base = 100
+		}
 		default_option = yes
+		
 		
 		hidden_effect = {
 			set_variable = bpm_austria_empire_dissolved
@@ -1088,16 +1232,19 @@ peoples_springtime.15 = {
 					origin = c:AUS
 					state = s:STATE_CENTRAL_HUNGARY.region_state:AUS
 				}
-				s:STATE_TRANSDANUBIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-				s:STATE_BEKES.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-				s:STATE_BANAT.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-				s:STATE_DELVIDEK.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-				s:STATE_WEST_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-				s:STATE_EAST_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-				s:STATE_NORTHERN_TRANSYLVANIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-				s:STATE_SOUTHERN_TRANSYLVANIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-				s:STATE_SLAVONIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
-				s:STATE_CROATIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+				every_scope_state = {
+					limit = {
+						is_in_geographic_region = geographic_region_hungary
+					}
+					set_state_owner = c:HUN
+				}
+				# if = { 
+				# 	limit = { STMS_is_active_trigger = yes }
+				# 	s:STATE_SOUTHERN_SLOVAKIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+				# 	s:STATE_WEST_BANAT.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+				# 	s:STATE_SYRMIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+				# 	s:STATE_CARPATHIAN_RUTHENIA.region_state:AUS = { set_state_owner = c:HUN set_state_type = incorporated}
+				# }
 
 				c:HUN = {
 					activate_law = law_type:law_devolved
@@ -1111,17 +1258,8 @@ peoples_springtime.15 = {
 					activate_law = law_type:law_per_capita_based_taxation
 					activate_law = law_type:law_professional_army
 					activate_law = law_type:law_professional_officers
+					bpm_setup_country = yes
 				}
-			}
-			if = {
-				limit = { NOT = { exists = c:GAL } }
-					create_country = {
-						tag = GAL
-						origin = c:AUS
-						state = s:STATE_EAST_GALICIA.region_state:AUS
-					}
-				s:STATE_WEST_GALICIA.region_state:AUS = { set_state_owner = c:GAL set_state_type = incorporated}
-				s:STATE_MOLDAVIA.region_state:AUS = { set_state_owner = c:GAL set_state_type = incorporated}
 			}
 			if = {
 				limit = { NOT = { exists = c:GAL } }
@@ -1140,6 +1278,7 @@ peoples_springtime.15 = {
 					activate_law = law_type:law_right_of_assembly
 					activate_law = law_type:law_total_separation
 					activate_law = law_type:law_cultural_exclusion
+					bpm_setup_country = yes
 				}
 			}
 			if = {
@@ -1158,21 +1297,77 @@ peoples_springtime.15 = {
 					activate_law = law_type:law_right_of_assembly
 					activate_law = law_type:law_total_separation
 					activate_law = law_type:law_cultural_exclusion
+					bpm_setup_country = yes
+				}
+			}
+			if = {
+				limit = { 
+					NOT = { exists = c:LOM }
+					c:AUS = { owns_entire_state_region = STATE_LOMBARDY }
+				}
+				create_country = {
+					tag = LOM
+					origin = c:AUS
+					state = s:STATE_LOMBARDY.region_state:AUS
+				}
+				c:LOM = {
+					activate_law = law_type:law_unitary
+					activate_law = law_type:law_parliamentary_republic
+					activate_law = law_type:law_elected_bureaucrats
+					activate_law = law_type:law_universal_suffrage
+					bpm_setup_country = yes
+				}
+			}
+			if = {
+				limit = { 
+					NOT = { exists = c:RSM }
+					c:AUS = { owns_entire_state_region = STATE_VENETIA }
+				}
+				create_country = {
+					tag = RSM
+					origin = c:AUS
+					state = s:STATE_VENETIA.region_state:AUS
+				}
+				c:RSM = {
+					activate_law = law_type:law_unitary
+					activate_law = law_type:law_parliamentary_republic
+					activate_law = law_type:law_elected_bureaucrats
+					activate_law = law_type:law_universal_suffrage
+					bpm_setup_country = yes
 				}
 			}
 			c:KRA = {
-			remove_diplomatic_pact = {
-				country = c:AUS
-				type = puppet
-			}			
-		}
+				remove_diplomatic_pact = {
+					country = c:AUS
+					type = puppet
+				}			
+			}
 			
-			# every_country = {
-			# 	limit = { bpm_country_is_in_europe = yes }
-			# 	post_notification = bpm_1848_ausgleich
-			# }
+			every_country = {
+				limit = { is_in_geographic_region = geographic_region_europe }
+				post_notification = bpm_1848_metterfail
+			}
 		}
 	}
+	# option = {
+	# 	name = peoples_springtime.15.b
+	# 	ai_chance = {
+	# 		base = 50
+	# 	}
+
+	# 	change_tag = KUK
+	# 	activate_law = law_type:law_confederated
+	# 	activate_law = law_type:law_cultural_exclusion
+
+	# 	custom_tooltip = {
+	# 		text = bpm_danubia
+	# 	}
+
+	# 	every_country = {
+	# 		limit = { is_in_geographic_region = geographic_region_europe }
+	# 		post_notification = bpm_1848_danubia
+	# 	}
+	# }
 }
 
 peoples_springtime.100 = {
@@ -1191,7 +1386,7 @@ peoples_springtime.100 = {
 		video = "europenorthamerica_springtime_of_nations"
 	}
 
-	cooldown = { months = normal_modifier_time }
+	cooldown = { days = normal_modifier_time }
 
 	trigger = {
 		OR = {
@@ -1220,12 +1415,11 @@ peoples_springtime.100 = {
 			}
 		}
 		any_political_movement = {
-			is_revolutionary_movement = yes
-			NOR = {
-				desired_law = law_type:law_chiefdom
-				desired_law = law_type:law_monarchy
-				desired_law = law_type:law_theocracy
-				desired_law = law_type:law_council_republic
+			is_revolutionary = yes
+			OR = { 
+				is_political_movement_type = movement_radical
+				is_political_movement_type = movement_liberal
+				is_political_movement_type = movement_socialist
 			}
 		}
 	}
@@ -1239,14 +1433,19 @@ peoples_springtime.100 = {
 	
 	immediate = {
 		save_scope_as = revolution_country
-		save_revolution_scopes = yes
+		random_civil_war = {
+			limit = {
+				is_civil_war_type = revolution
+			}
+			civil_war_save_scopes = yes
+		}
 		ruler = { save_scope_as = reforms_at_gunpoint_ruler }
 		random_interest_group = {
 			limit = { is_in_government = yes }
 			save_scope_as = reforms_at_gunpoint_ig
 		}
 		scope:ongoing_revolution_movement = { 
-			this.desired_law = { save_scope_as = revolutionaries_law }
+			most_desired_law ?= { save_scope_as = revolutionaries_law }
 		}
 	}
 	
@@ -1275,14 +1474,14 @@ peoples_springtime.100 = {
 			activate_law = scope:revolutionaries_law
 			activate_law = law_type:law_total_separation
 			if = {
-				limit = { has_law = law_type:law_serfdom }
+				limit = { has_law_or_variant = law_type:law_serfdom }
 				activate_law = law_type:law_tenant_farmers
 			}
 			if = {
 				limit = {
 					any_political_movement = {
-						is_revolutionary_movement = yes
-						is_political_movement_type = movement_to_preserve
+						is_revolutionary = yes
+						bpm_is_political_movement_to_preserve = yes
 					}
 				}
 				cancel_enactment = yes
@@ -1292,7 +1491,7 @@ peoples_springtime.100 = {
 			value = medium_radicals
 		}
 		every_country = {
-			limit = { bpm_country_is_in_europe = yes }
+			limit = { is_in_geographic_region = geographic_region_europe }
 			post_notification = bpm_1848_concede_constitution
 		}
 		trigger_event = { id = peoples_springtime.101 days = 30 popup = yes }
@@ -1321,16 +1520,15 @@ peoples_springtime.100 = {
 		default_option = yes
 		ROOT = {
 			if = {
-				limit = { bpm_country_laws_no_voting = yes }
+				limit = { country_has_voting_franchise = no }
 				activate_law = law_type:law_census_voting
 			}
 			else = {
 				activate_law = law_type:law_universal_suffrage
 			}
-			activate_law = law_type:law_census_voting
 			activate_law = law_type:law_total_separation
 			if = {
-				limit = { has_law = law_type:law_serfdom }
+				limit = { has_law_or_variant = law_type:law_serfdom }
 				activate_law = law_type:law_tenant_farmers
 			}
 		}
@@ -1338,7 +1536,7 @@ peoples_springtime.100 = {
 			value = large_radicals
 		}
 		every_country = {
-			limit = { bpm_country_is_in_europe = yes }
+			limit = { is_in_geographic_region = geographic_region_europe }
 			post_notification = bpm_1848_concede_constitution
 		}
 		trigger_event = { id = peoples_springtime.101 days = 30 popup = yes }
@@ -1370,7 +1568,7 @@ peoples_springtime.100 = {
 		default_option = yes
 		ROOT = {
 			if = {
-				limit = { bpm_country_laws_no_voting = yes }
+				limit = { country_has_voting_franchise = no }
 				activate_law = law_type:law_wealth_voting
 			}
 			else = {
@@ -1380,8 +1578,8 @@ peoples_springtime.100 = {
 			if = {
 				limit = {
 					any_political_movement = {
-						is_revolutionary_movement = yes
-						is_political_movement_type = movement_to_preserve
+						is_revolutionary = yes
+						bpm_is_political_movement_to_preserve = yes
 					}
 				}
 				cancel_enactment = yes
@@ -1391,7 +1589,7 @@ peoples_springtime.100 = {
 			value = medium_radicals
 		}
 		every_country = {
-			limit = { bpm_country_is_in_europe = yes }
+			limit = { is_in_geographic_region = geographic_region_europe }
 			post_notification = bpm_1848_concede_constitution
 		}
 		trigger_event = { id = peoples_springtime.101 days = 30 popup = yes }
@@ -1421,13 +1619,13 @@ peoples_springtime.100 = {
 		scope:ongoing_revolution_movement = {
 			add_modifier = {
 				name = modifier_movement_reforms_at_gunpoint_failed
-				months = normal_modifier_time
+				days = normal_modifier_time
 			}
 		}
 		scope:reforms_at_gunpoint_ig = {
 			add_modifier = {
 				name = modifier_refused_advice
-				months = normal_modifier_time
+				days = normal_modifier_time
 			}
 		}
 	}
@@ -1485,7 +1683,7 @@ peoples_springtime.101 = {
 		owner = {
 			add_loyalists = {
 				value = 0.7
-				strata = rich
+				strata = upper
 			}
 			add_loyalists = {
 				value = 0.7
@@ -1537,11 +1735,11 @@ peoples_springtime.102 = {
 			}
 			add_loyalists = {
 				value = 0.25
-				strata = poor
+				strata = lower
 			}
 			every_scope_character = {
 				limit = {
-					has_role = agitator
+					has_role_of_type = agitator
 					OR = {
 						interest_group = { bpm_ig_is_radical_left = yes }
 						bpm_leader_is_radical_leftist = yes

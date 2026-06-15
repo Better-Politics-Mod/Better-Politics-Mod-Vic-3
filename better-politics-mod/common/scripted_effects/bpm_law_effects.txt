@@ -3,18 +3,12 @@
 	custom_tooltip = {
 		text = bpm_law_effect_tt_officer_law_change
 		every_scope_admiral = {
-			limit = { NOT = { has_role = ruler } }
-			kill_character = {
-				value = yes 
-				hidden = yes
-			}
+			limit = { is_ruler_of_own_country = no }
+			remove_character_role = admiral
 		}
 		every_scope_general = {
-			limit = { NOT = { has_role = ruler } }
-			kill_character = {
-				value = yes 
-				hidden = yes
-			}
+			limit = { is_ruler_of_own_country = no }
+			remove_character_role = general
 		}
 	}
 
@@ -61,13 +55,38 @@ bpm_disable_elective_laws = {
 		limit = { has_law = law_type:law_elected_officers }
 		activate_law = law_type:law_political_officers
 	}
+	active_law:lawgroup_distribution_of_power ?= {
+		every_scope_amendment = {
+			limit = {
+				OR = {
+					type = amendment_type:amendment_electoral_clientelism
+					type = amendment_type:amendment_tradition_of_free_elections
+				}
+			}
+			remove_amendment = yes
+		}
+	}
 }
 
+bpm_remove_voting_strength_modifiers = {
+	if = {
+		limit = { has_modifier = bpm_missouri_compromise }
+		remove_modifier = bpm_missouri_compromise
+	}
+	if = {
+		limit = { has_modifier = bpm_barnburner_split  }
+		remove_modifier = bpm_barnburner_split
+	}
+	if = {
+		limit = { has_modifier = bpm_new_republican_party }
+		remove_modifier = bpm_new_republican_party
+	}
+}
 
 bpm_deactivate_syndicalism = {
 	if = {
 		limit = { has_law = law_type:law_syndicalism }
-		activate_law = law_type:law_all_labor_unions_allowed
+		activate_law = law_type:law_right_to_associate
 	}
 }
 
@@ -90,6 +109,11 @@ bpm_save_repeatable_enactment_vars = {
 
 bpm_finalize_repeatable_law = {
 	hidden_effect = {
+		set_variable = {
+			name = recently_enacted_repeatable
+			value = law_type:$LAW$
+			days = 14
+		}
 		set_variable = {
 			name = bpm_repeatable_law_$LAW$_cooldown
 			years = bpm_repeatable_law_cooldown
@@ -173,7 +197,7 @@ bpm_repeatable_culture_influence_apply_modifiers = {
 				years = bpm_repeatable_law_result_duration
 				is_decaying = yes
 				multiplier = {
-					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					value = owner.bpm_repeatable_law_promote_$VALUES$_values_effect_power
 					multiply = 0.2
 				}
 			}
@@ -190,7 +214,7 @@ bpm_repeatable_culture_influence_apply_modifiers = {
 				years = bpm_repeatable_law_result_duration
 				is_decaying = yes
 				multiplier = {
-					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					value = owner.bpm_repeatable_law_promote_$VALUES$_values_effect_power
 					multiply = 0.2
 					multiply = 0.5
 				}
@@ -208,7 +232,7 @@ bpm_repeatable_culture_influence_apply_modifiers = {
 				years = bpm_repeatable_law_result_duration
 				is_decaying = yes
 				multiplier = {
-					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					value = owner.bpm_repeatable_law_promote_$VALUES$_values_effect_power
 					multiply = 0.2
 					multiply = 0.5
 				}
@@ -226,7 +250,7 @@ bpm_repeatable_culture_influence_apply_modifiers = {
 				years = bpm_repeatable_law_result_duration
 				is_decaying = yes
 				multiplier = {
-					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					value = owner.bpm_repeatable_law_promote_$VALUES$_values_effect_power
 					multiply = 0.2
 				}
 			}
@@ -240,6 +264,36 @@ bpm_repeatable_culture_influence_apply_modifiers = {
 		multiplier = {
 			value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
 			multiply = 0.2
+		}
+	}
+}
+
+bpm_colonial_admin_activate_effect = {
+	bpm_disable_elective_laws = yes
+	if = {
+		limit = { bpm_country_is_republic = yes	}
+		scripted_effect_parties_emergence = yes
+	} else = {
+		scripted_effect_parties_disappearence = yes
+	}
+	set_variable = bpm_on_col_adm
+	set_variable = {
+		name = bpm_current_overlord
+		value = top_overlord
+	}
+	hidden_effect = {
+		every_interest_group = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_landowners
+					is_interest_group_type = ig_industrialists
+					is_interest_group_type = ig_armed_forces
+					is_interest_group_type = ig_conservatives
+				}
+			}
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_metropole_loyalist
+			bpm_reorder_ideologies = yes
 		}
 	}
 }

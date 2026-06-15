@@ -1,0 +1,338 @@
+﻿REPLACE:je_peru_bolivia = {
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	group = je_group_global_international_situations
+
+	should_be_involved = {
+		OR = {
+			c:BOL ?= this
+			is_subject_of = c:BOL
+		}
+	}
+
+	should_show_when_not_involved = {
+		capital ?= {
+			is_in_geographic_region = geographic_region_south_america
+		}
+		NOT = {
+			has_variable = ignore_peru_bol
+		}
+	}
+
+	immediate = {
+		cu:quechua = {
+			save_scope_as = quechua_culture
+		}
+		cu:south_andean = {
+			save_scope_as = south_andean_culture
+		}
+		c:BOL ?= {
+			save_scope_as = bolivia_scope
+		}
+	}
+	on_monthly_pulse = {
+		effect = {
+			scope:journal_entry = {
+				every_scope_je_involved = {
+					if = {
+						limit = {
+							c:BOL ?= this
+		
+							AND = {
+								c:SPU ?= {
+									is_subject_of = c:BOL
+									liberty_desire <= 60
+								}
+								c:NPU ?= {
+									is_subject_of = c:BOL
+									liberty_desire <= 60
+								}
+								c:IQU ?= {
+									is_subject_of = c:BOL
+									liberty_desire <= 60
+								}
+							}
+						}
+						change_global_variable = {
+							name = peru_bolivia_var
+							add = 1
+						}
+					}
+				}
+			}
+		}
+	}
+
+	custom_on_completion_header = je_peru_bolivia_on_confederation_victory
+
+	complete = {
+		scope:journal_entry = { is_goal_complete = yes }
+		OR = {
+			c:SPU ?= {
+				is_subject_of = c:BOL
+			}
+			c:NPU ?= {
+				is_subject_of = c:BOL
+			}
+			c:IQU ?= {
+				is_subject_of = c:BOL
+			}
+			c:PEU ?= {
+				is_subject_of = c:BOL
+			}
+		}
+		custom_tooltip = {
+			text = bol_no_revolutions_tt
+			NOT = {
+				any_country = {
+					is_subject_of = c:BOL
+					OR = {
+						country_has_primary_culture = cu:south_andean
+						country_has_primary_culture = cu:quechua
+						country_has_primary_culture = cu:peruvian
+					}
+					has_revolution = yes
+				}
+			}
+		}
+	}
+
+	on_complete = {
+		custom_tooltip = {
+			text = peru_bolivia_completion_nonbolivia_tt
+			c:BOL ?= {
+				trigger_event = {
+					id = peru_bolivia_events.1
+				}
+			}
+		}
+	}
+
+	on_complete_all_involved = {
+		if = {
+			limit = {
+				has_variable = pbc_member
+			}
+			custom_tooltip = all_restorers_lose_prestige_tt
+		}
+		if = {
+			limit = {
+				NOT = { has_variable = pbc_member }
+				NOT = { has_variable = befriend_bolivia }
+			}
+			remove_variable = attack_bolivia
+			remove_variable = befriend_bolivia
+			trigger_event = { id = peru_bolivia_events.7 popup = yes }
+		}
+	}
+
+	is_progressing = {
+		c:BOL ?= {
+			government_legitimacy >= 50
+		}
+		OR = {
+			c:SPU ?= {
+				is_subject_of = c:BOL
+			}
+			c:NPU ?= {
+				is_subject_of = c:BOL
+			}
+			c:IQU ?= {
+				is_subject_of = c:BOL
+			}
+			c:PEU ?= {
+				is_subject_of = c:BOL
+			}
+		}
+		NOT = {
+			any_country = {
+				is_subject_of = c:BOL
+				has_revolution = yes
+			}
+		}
+	}
+
+	custom_failure_header = je_peru_bolivia_restorer_victory
+
+	fail = {
+		OR = {
+			NOT = {
+				exists = c:BOL
+			}
+			AND = {
+				OR = {
+					NOT = {
+						exists = c:SPU
+					}
+					c:SPU ?= {
+						NOT = { is_subject_of = c:BOL }
+					}
+				}
+				OR = {
+					NOT = {
+						exists = c:NPU
+					}
+					c:NPU ?= {
+						NOT = { is_subject_of = c:BOL }
+					}
+				}
+				OR = {
+					NOT = {
+						exists = c:IQU
+					}
+					c:IQU ?= {
+						NOT = { is_subject_of = c:BOL }
+					}
+				}
+				OR = {
+					NOT = {
+						exists = c:PEU
+					}
+					c:PEU ?= {
+						NOT = { is_subject_of = c:BOL }
+					}
+				}
+			}
+			c:BOL ?= {
+				is_subject = yes
+			}
+		}
+	}
+
+	custom_on_failure_header = je_peru_bolivia_on_restorer_victory
+
+	on_fail_all_involved = {
+		if = { #Why? So that [somehow] this doesn't cause four fail events to fire at once. That should be impossible, but you never know.
+			limit = {
+				c:BOL ?= this
+			}
+			if = {
+				limit = {
+					any_country = {
+						has_variable = pbc_member
+						is_player = yes
+					}
+				}
+				random_country = {
+					limit = {
+						has_variable = pbc_member
+						is_player = yes
+					}
+					trigger_event = { id = peru_bolivia_events.3 popup = yes }
+				}
+			}
+			else = {
+				ordered_country = {
+					limit = {
+						has_variable = pbc_member
+					}
+					order_by = gdp
+					position = 0
+					check_range_bounds = no
+					trigger_event = { id = peru_bolivia_events.3 popup = yes }
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				NOT = {
+					exists = c:BOL
+				}
+			}
+			if = {
+				limit = {
+					any_country = {
+						has_variable = pbc_member
+						is_player = yes
+					}
+				}
+				random_country = {
+					limit = {
+						has_variable = pbc_member
+						is_player = yes
+					}
+					trigger_event = { id = peru_bolivia_events.3 popup = yes }
+				}
+			}
+			else = {
+				ordered_country = {
+					limit = {
+						has_variable = pbc_member
+					}
+					order_by = gdp
+					position = 0
+					check_range_bounds = no
+					trigger_event = { id = peru_bolivia_events.3 popup = yes }
+				}
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					has_variable = pbc_member
+				}
+			}
+			remove_variable = attack_bolivia
+			remove_variable = befriend_bolivia
+			custom_tooltip = {
+				text = peru_bolivia_complete_tt
+				if = {
+					limit = {
+						AND = {
+							c:BOL ?= {
+								relations:root >= relations_threshold:amicable
+							}
+							c:BOL ?= {
+								OR = {
+									is_in_customs_union_with = root
+									any_scope_treaty = {
+										binds = root
+										any_scope_article = {
+											has_type = alliance
+										}
+									}
+									any_scope_treaty = {
+										binds = root
+										any_scope_article = {
+											has_type = defensive_pact
+										}
+									}
+								}
+							}
+						}
+					}
+					trigger_event = { id = peru_bolivia_events.6 popup = yes }
+				}
+				else = {
+					trigger_event = { id = peru_bolivia_events.5 popup = yes }
+				}
+			}
+		}
+		if = {
+			limit = {
+				has_variable = pbc_member
+			}
+			remove_variable = pbc_member
+		}
+	}
+
+	invalid = {
+		NOT = {
+			exists = c:BOL
+		}
+	}
+
+	current_value = {
+		value = global_var:peru_bolivia_var #This variable is initialised in Argentina's country file, because of load orders.
+	}
+
+	goal_add_value = {
+		value = 120
+	}
+
+	progressbar = yes
+
+	weight = 10000
+
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}

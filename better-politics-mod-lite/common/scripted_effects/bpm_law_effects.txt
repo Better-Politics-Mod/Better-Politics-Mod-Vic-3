@@ -1,0 +1,274 @@
+﻿bpm_officer_law_change_effect = {
+	# Remove old officers 
+	custom_tooltip = {
+		text = bpm_law_effect_tt_officer_law_change
+		every_scope_admiral = {
+			limit = { NOT = { has_role = ruler } }
+			kill_character = {
+				value = yes 
+				hidden = yes
+			}
+		}
+		every_scope_general = {
+			limit = { NOT = { has_role = ruler } }
+			kill_character = {
+				value = yes 
+				hidden = yes
+			}
+		}
+	}
+
+	# Add a penalty modifier to country
+	add_modifier = {
+		name = bpm_high_command_chaos
+		years = 1
+	}
+}
+
+# Removing anarcho-monarchism and so on
+bpm_fix_stupid_law_combinations = {
+	if = { # Enforcing CR for anarchy
+		limit = {
+			has_law = law_type:law_anarchy
+			NOT = { has_law = law_type:law_council_republic }
+		}
+
+		activate_law = law_type:law_council_republic
+	}
+
+	# Commented out due to tweaks to right of assembly 
+	#if = { # Enforcing minimum censorship for party ban laws
+	#	limit = {
+	#		has_law = law_type:law_protected_speech
+	#		NOT = { has_law = law_type:law_no_party_bans }
+	#		NOT = { has_law = law_type:law_party_single }
+	#	}
+	#	
+	#	activate_law = law_type:law_right_of_assembly
+	#}
+}
+
+bpm_disable_elective_laws = {
+	if = {
+		limit = { has_law = law_type:law_elected_bureaucrats }
+		activate_law = law_type:law_appointed_bureaucrats
+	}
+	if = {
+		limit = { has_law = law_type:law_elected_police }
+		activate_law = law_type:law_dedicated_police
+	}
+	if = {
+		limit = { has_law = law_type:law_elected_officers }
+		activate_law = law_type:law_political_officers
+	}
+}
+
+
+bpm_deactivate_syndicalism = {
+	if = {
+		limit = { has_law = law_type:law_syndicalism }
+		activate_law = law_type:law_all_labor_unions_allowed
+	}
+}
+
+bpm_save_repeatable_enactment_vars = {
+	if = {
+		limit = {
+			law_type:law_repeatable_$CATEGORY$_none = { is_same_law_group_as = law_type:$LAW$ }
+		}
+		set_variable = {
+			name = bpm_last_enacted_repeatable_$CATEGORY$
+			value = law_type:$LAW$
+			days = 1825 # 5 years
+		}
+		set_variable = {
+			name = bpm_last_enacted_repeatable_$CATEGORY$_date
+			value = game_date
+		}
+	}
+}
+
+bpm_finalize_repeatable_law = {
+	hidden_effect = {
+		set_variable = {
+			name = bpm_repeatable_law_$LAW$_cooldown
+			years = bpm_repeatable_law_cooldown
+		}
+		bpm_save_repeatable_enactment_vars = {
+			LAW = $LAW$
+			CATEGORY = politics
+		}
+		bpm_save_repeatable_enactment_vars = {
+			LAW = $LAW$
+			CATEGORY = economy
+		}
+		bpm_save_repeatable_enactment_vars = {
+			LAW = $LAW$
+			CATEGORY = culture
+		}
+		bpm_save_repeatable_enactment_vars = {
+			LAW = $LAW$
+			CATEGORY = military
+		}
+		bpm_save_repeatable_enactment_vars = {
+			LAW = $LAW$
+			CATEGORY = religion
+		}
+		every_interest_group = {
+			limit = {
+				NOT = {
+					law_stance = {
+						law = law_type:$LAW$
+						value = neutral
+					}
+				}
+			}
+			
+			if = {
+				limit = {
+					law_stance = {
+						law = law_type:$LAW$
+						value > neutral
+					}
+				}
+	
+				add_modifier = {
+					name = bpm_repeatable_law_ig_happy
+					years = bpm_repeatable_law_result_duration
+					is_decaying = yes
+				}
+			} else = {
+				add_modifier = {
+					name = bpm_repeatable_law_ig_unhappy
+					years = bpm_repeatable_law_result_duration
+					is_decaying = yes
+				}
+			}
+		}
+		trigger_event = {
+			id = bpm_misc.3
+			days = 7
+		}
+	}
+}
+
+
+bpm_repeatable_culture_influence_apply_modifiers = {
+	# custom_tooltip = bpm_law_effect_tt_culture_generic_result
+	every_interest_group = {
+		limit = {
+			bpm_ig_is_ideological = yes
+		}
+
+		if = {
+			limit = { 
+				law_stance = {
+					law = law_type:law_repeatable_culture_promote_$VALUES$_values
+					value = strongly_approve
+				}
+			}
+
+			add_modifier = {
+				name = bpm_repeatable_law_culture_generic_result_ig_positive
+				years = bpm_repeatable_law_result_duration
+				is_decaying = yes
+				multiplier = {
+					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					multiply = 0.2
+				}
+			}
+		} else_if = {
+			limit = { 
+				law_stance = {
+					law = law_type:law_repeatable_culture_promote_$VALUES$_values
+					value = approve
+				}
+			}
+
+			add_modifier = {
+				name = bpm_repeatable_law_culture_generic_result_ig_positive
+				years = bpm_repeatable_law_result_duration
+				is_decaying = yes
+				multiplier = {
+					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					multiply = 0.2
+					multiply = 0.5
+				}
+			}
+		} else_if = {
+			limit = { 
+				law_stance = {
+					law = law_type:law_repeatable_culture_promote_$VALUES$_values
+					value = disapprove
+				}
+			}
+
+			add_modifier = {
+				name = bpm_repeatable_law_culture_generic_result_ig_negative
+				years = bpm_repeatable_law_result_duration
+				is_decaying = yes
+				multiplier = {
+					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					multiply = 0.2
+					multiply = 0.5
+				}
+			}
+		} else_if = {
+			limit = { 
+				law_stance = {
+					law = law_type:law_repeatable_culture_promote_$VALUES$_values
+					value = strongly_disapprove
+				}
+			}
+
+			add_modifier = {
+				name = bpm_repeatable_law_culture_generic_result_ig_negative
+				years = bpm_repeatable_law_result_duration
+				is_decaying = yes
+				multiplier = {
+					value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+					multiply = 0.2
+				}
+			}
+		}
+	}
+
+	add_modifier = {
+		name = bpm_repeatable_law_promote_$VALUES$_values_result
+		years = bpm_repeatable_law_result_duration
+		is_decaying = yes
+		multiplier = {
+			value = bpm_repeatable_law_promote_$VALUES$_values_effect_power
+			multiply = 0.2
+		}
+	}
+}
+
+bpm_colonial_admin_activate_effect = {
+	bpm_disable_elective_laws = yes
+	if = {
+		limit = { bpm_country_is_republic = yes	}
+		scripted_effect_parties_emergence = yes
+	} else = {
+		scripted_effect_parties_disappearence = yes
+	}
+	set_variable = bpm_on_col_adm
+	set_variable = {
+		name = bpm_current_overlord
+		value = top_overlord
+	}
+	hidden_effect = {
+		every_interest_group = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_landowners
+					is_interest_group_type = ig_industrialists
+					is_interest_group_type = ig_armed_forces
+				}
+			}
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_metropole_loyalist
+			bpm_reorder_ideologies = yes
+		}
+	}
+}

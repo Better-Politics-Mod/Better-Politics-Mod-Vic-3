@@ -1,10 +1,11 @@
-﻿ig_intelligentsia = {
-	color = hsv{ 0 0 0.5 }
+﻿REPLACE:ig_intelligentsia = {
+	color = hsv{ 0.15 0.2 0.55 }
 	texture = "gfx/interface/icons/ig_icons/intelligensia.dds"
 	layer = "revolution_dynamic_intelligentsia"
 	index = 3
 
 	ideologies = {
+		ideology_gov_anti_proletarian
 		ideology_dop_moderate_democrat
 		ideology_sta_weak_state
 		ideology_cit_liberal_nationalist
@@ -14,24 +15,91 @@
 		ideology_anti_slavery
 	}
 
+	character_ideologies = {
+		ideology_moderate
+		# ideology_republican_leader
+		# ideology_liberal_leader
+		# ideology_radical
+		ideology_reformer
+		ideology_sovereignist_leader
+		# ideology_authoritarian
+		# ideology_orleanist
+		# ideology_humanitarian
+		# ideology_land_reformer
+	}
+
 	enable = {
 		always = yes
 	}
 	
 	on_enable = {
 		ig:ig_intelligentsia = {
-			set_ig_trait = ig_trait:ig_trait_urban_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_urban_well_oiled_machine
-			set_ig_trait = ig_trait:ig_trait_urban_systematic_opposition	
+			#set_ig_trait = ig_trait:ig_trait_urban_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_urban_well_oiled_machine
+			#set_ig_trait = ig_trait:ig_trait_urban_systematic_opposition
+
+			if = {
+				limit = {
+					owner = { 
+						OR = {
+							c:BIC ?= this
+							any_primary_culture = {
+								has_discrimination_trait_group = heritage_group_south_asian
+							}
+						}
+					}
+				}
+				bpm_remove_all_eco_ideologies = yes
+				add_ideology = ideology_eco_modernizer
+				bpm_reorder_ideologies = yes
+			}
 		}
 	}
-	on_disable = {}	
-	on_character_ig_membership = {}
+
+	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				assamese avadhi baluchi bengali bihari gujarati kannada malayalam marathi oriya panjabi pathan rajput sindi tamil telegu hindustani bundeli pahari gondi bageli chhattisgarhi deccani
+			}
+		}
+		rule = {
+			trigger = {
+				c:ZAN ?= this
+				any_primary_culture = {
+					cu:bedouin = this
+				}
+			}
+			cultures = {
+				swahili bedouin
+			}
+		}
+	}
+
+	on_character_ig_membership = {
+		if = {
+			limit = { is_historical = no }
+			if = {
+				limit = { 
+					modifier:interest_group_bpm_intelligentsia_force_leader_non_moderate = yes
+					has_ideology = ideology:ideology_moderate
+				}
+				set_ideology = ideology:ideology_market_liberal
+			}
+		}
+	}
 	
 	pop_potential = {
 		custom_tooltip = {
 			text = BPM_VALID_POP_FOR_IG
-			owner = {
+			owner ?= {
 				NOT = {
 					is_country_type = decentralized
 				}
@@ -91,6 +159,38 @@
 				value = 50
 			}
 		}
+		if = {
+			limit = { 
+				owner = { 
+					active_law:lawgroup_economic_system = {
+						has_amendment = amendment_type:bpm_amendment_artisanal_economy
+					}
+				} 
+			}
+			if = {
+				limit = {
+					OR = {
+						is_pop_type = laborers
+						is_pop_type = clerks
+						is_pop_type = shopkeepers
+					}
+				}
+				add = {
+					desc = "POP_ARTISANS"
+					value = 250
+				}
+			}
+			else_if = {
+				limit = {
+					is_pop_type = peasants
+				}
+				add = {
+					desc = "POP_ARTISANS"
+					value = 50
+				}
+			}
+			
+		}
 		add = {
 			desc = "NONPRIMARY_CULTURE"
 
@@ -119,7 +219,37 @@
 				}
 				value = 100
 			}
-		}	
+		}
+		
+		if = {
+			limit = {
+				c:BIC ?= owner
+				culture = {
+					has_discrimination_trait_group = heritage_group_european
+				}
+			}
+			multiply = {
+				desc = "POP_INDIA_COLONIAL_RULE"
+				value = 0.001 #0.1
+			}
+		}
+		
+		if = {
+			limit = {
+				c:BIC ?= owner
+				culture = {
+					has_discrimination_trait_group = heritage_group_south_asian
+				}
+				OR = {
+					is_pop_type = capitalists
+					is_pop_type = shopkeepers
+				}
+			}
+			add = {
+				desc = "POP_INDIA_MONEYED_ELITES"
+				value = 50 #75
+			}
+		}
 
 		multiply = ig_attraction_to_interests_from_stability	
 	}
@@ -131,12 +261,22 @@
 	agitator_weight = {
 		value = 1.0
 		multiply = bpm_base_agitator_weight
+		if ={
+			limit = {
+				bpm_interest_group_is_activated = no
+			}
+			value = 0.0
+		}
 	}
 	
 	commander_weight = {
 		value = 1.0
 		multiply = bpm_commander_assignment_from_laws_factor
 	}	
+
+	executive_weight = {
+		value = 0.1
+	}
 	
 	noble_chance = {
 		value = 0.1
@@ -155,6 +295,11 @@
 	female_agitator_chance = {
 		value = 1.0
 		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

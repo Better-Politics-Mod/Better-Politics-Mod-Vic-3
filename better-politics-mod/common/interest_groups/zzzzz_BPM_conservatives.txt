@@ -1,0 +1,314 @@
+﻿ig_conservatives = {
+	color = hsv{ 0.57 1 1 }
+	texture = "gfx/interface/icons/ig_icons/conservatives.dds"
+	layer = "revolution_dynamic_petty_bourgeoisie"
+	index = 10
+
+	ideologies = {
+		ideology_gov_moderate_monarchist
+		ideology_dop_authoritarian_democrat
+		ideology_sta_powerful_state
+		ideology_cit_nationalist
+		ideology_eco_conservative_agrarian
+		ideology_rel_moralist
+		ideology_mil_patriotic
+		ideology_wel_religious_welfare
+		ideology_fem_moderate_patriarchal
+		ideology_ban_averse
+		# Vanilla
+		ideology_paternalistic
+		ideology_hierarchic
+		ideology_patriotic
+	}
+	
+	character_ideologies = {
+		ideology_center_leader
+		ideology_traditionalist
+		ideology_positivist
+		ideology_jingoist_leader
+		ideology_protectionist
+		ideology_sovereignist_leader
+		ideology_liberal_leader
+		ideology_positivist
+		ideology_corporatist_leader
+		ideology_authoritarian
+		ideology_reformer
+	}
+
+	enable = {
+		always = yes
+	}
+	
+	on_enable = {
+		#bpm_add_movement_interaction = { int = conservative_split }
+		ig:ig_conservatives ?= {
+			# #set_ig_trait = ig_trait:ig_trait_right_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_right_bastion_of_freedom
+			#set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
+
+			if = {
+				limit = {
+					owner = { c:BIC ?= this }
+				}
+				bpm_remove_all_gov_ideologies = yes
+				add_ideology = ideology_gov_liberal_republican
+				bpm_remove_all_sta_ideologies = yes
+				add_ideology = ideology_sta_federated_state
+				bpm_remove_all_cit_ideologies = yes
+				add_ideology = ideology_cit_liberal_nationalist
+				bpm_remove_all_rel_ideologies = yes
+				add_ideology = ideology_rel_pragmatic_moralist
+				bpm_reorder_ideologies = yes
+			}
+		}
+	}
+	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				assamese avadhi baluchi bengali bihari gujarati kannada malayalam marathi oriya panjabi pathan rajput sindi tamil telegu hindustani bundeli pahari gondi bageli chhattisgarhi deccani
+			}
+		}
+	}
+
+	on_character_ig_membership = {}
+	
+	pop_potential = {
+		custom_tooltip = {
+			text = BPM_VALID_POP_FOR_IG
+			owner ?= {
+				has_technology_researched = rationalism
+				ig:ig_conservatives ?= {
+					NOT = { has_ideology = ideology:ideology_nonexistent }
+					bpm_interest_group_is_activated = yes
+				}
+			}
+		}
+	}
+	
+	pop_weight = {
+		value = 30
+	
+		if = {
+			limit = { strata = lower }
+			add = {
+				desc = "LOWER_CLASS"
+				value = 20
+			}
+		}
+		else_if = {
+			limit = { strata = middle }
+			add = {
+				desc = "MIDDLE_CLASS"
+				value = 50
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = capitalists
+			}
+			add = {
+				desc = "POP_CAPITALISTS"
+				value = 175
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = aristocrats
+			}
+			add = {
+				desc = "POP_ARISTOCRATS"
+				value = 250
+			}
+		}
+
+		# RURAL
+		if = {
+			limit = {
+				bpm_pop_employment_is_rural = yes
+			}
+			add = {
+				desc = "RURAL"
+				value = 50
+			}
+		}
+
+		# PATCON AND URBAN
+		else_if = {
+			limit = {
+				scope:interest_group = { 
+					#has_ideology = ideology:ideology_wel_paternalistic_welfare 
+					bpm_ig_is_paternalistic = yes
+				}
+			}
+			if = {
+				limit = { strata = lower }
+				add = {
+					desc = "PATCON_LOWER_CLASS"
+					value = 50
+				}
+			}
+			else_if = {
+				limit = { strata = middle }
+				add = {
+					desc = "PATCON_MIDDLE_CLASS"
+					value = 50
+				}
+			}
+			else_if = {
+				limit = { strata = upper }
+				add = {
+					desc = "PATCON_CAPITALISTS"
+					value = 50
+				}
+			}
+		}
+
+		multiply = {
+			desc = "UNEDUCATED"
+			value = literacy_rate
+			multiply = 2.0
+			max = 1.0
+		}
+
+		owner = {
+			multiply = {
+				desc = "SPLIT_MORALISTS"
+				value = 1.0
+
+				if = {
+					limit = {
+						has_variable = local_christdem_split_var
+						has_global_variable = global_rerum_novarum_issued_var
+						owner = {
+							ig:ig_conservatives = {
+								ig_clout <= 0.05
+							}
+						}
+					}
+					value = 0.5
+				}			
+			}
+		}
+
+		if = {
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.005
+						add = 1
+						max = 1.5
+						min = 0.67
+					}
+				}
+			}	
+			multiply = {
+				desc = "STILL_OLIGARCHIC"
+				value = 1.0
+				if = {
+					limit = {
+						owner = {
+							has_law = law_type:law_oligarchy
+							has_law = law_type:law_monarchy
+						}
+					}
+					value = 0.5
+				}
+			}
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+			multiply = { desc = bpm_ig_attraction_from_radicals_and_loyalists_tt value = ig_attraction_from_radicals_and_loyalists }
+		}
+		multiply = ig_attraction_to_ruler_ideology_from_stability
+
+		multiply = {
+			desc = "AT_WAR"	
+			value = 1.0
+
+			if = {
+				limit = { owner = { is_at_war = yes } }
+				value = 1.4
+			}		
+		}
+	}
+	
+	monarch_weight = {
+		value = 1.0
+	}	
+
+	agitator_weight = {
+		value = 1.0
+		multiply = bpm_base_agitator_weight
+	}
+	
+	commander_weight = {
+		value = 1.0
+		multiply = bpm_commander_assignment_from_laws_factor
+		if ={
+			limit = {
+				owner.ig:ig_conservatives = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}	
+
+	executive_weight = {
+		value = 0.3
+		if ={
+			limit = {
+				owner.ig:ig_conservatives = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}	
+	
+	noble_chance = {
+		value = 0.3
+	}
+	
+	female_commander_chance = {	
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
+	}
+	
+	female_politician_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
+
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}
+	
+	# The chance that a commander belonging to this IG takes over leadership when it changes
+	# scope:character is the most popular commander in the IG
+	commander_leader_chance = {
+		value = 0.25
+		if = {
+			limit = {
+				exists = scope:character
+			}
+			multiply = {
+				value = 1
+				add = scope:character.popularity
+				min = 0
+			}
+		}
+	}
+}

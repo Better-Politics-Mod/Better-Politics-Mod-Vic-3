@@ -1,0 +1,214 @@
+﻿bpm_add_tech_progress = {
+	if = {
+		limit = {
+			NOT = { has_technology_researched = $TECH$ }
+			can_research = $TECH$
+		}
+
+		add_technology_progress = { 
+			technology = $TECH$ 
+			progress = $AMT$
+		}
+	}
+}
+
+bpm_give_labor_concession = {
+	random_political_movement = {
+		limit = { is_revolutionary_movement = yes }
+		this.desired_law = { save_scope_as = revolutionaries_law }
+	}
+	if = {
+		limit = {
+			OR = {
+				has_law = law_type:law_illegal_labor_unions
+				has_law = law_type:law_state_controlled_labor_unions
+			}
+			NOT = { scope:revolutionaries_law ?= { this = law_type:law_limited_labor_unions } }
+		}
+		activate_law = law_type:law_limited_labor_unions
+	} else_if = {
+		limit = {
+			has_law = law_type:law_no_workers_rights
+			NOT = { scope:revolutionaries_law ?= { this = law_type:law_regulatory_bodies } }
+		}
+		activate_law = law_type:law_regulatory_bodies
+	} else_if = {
+		limit = {
+			has_law = law_type:law_unregulated_work_time
+			NOT = { scope:revolutionaries_law ?= { this = law_type:law_token_time_regulations } }
+		}
+		activate_law = law_type:law_token_time_regulations
+	} else_if = {
+		limit = {
+			OR = {
+				has_law = law_type:law_no_womens_rights
+				has_law = law_type:law_women_own_property
+			}
+			NOT = { scope:revolutionaries_law ?= { this = law_type:law_women_in_the_workplace } }
+		}
+		activate_law = law_type:law_women_in_the_workplace
+	} else_if = {
+		limit = {
+			has_law = law_type:law_limited_labor_unions
+			NOT = { scope:revolutionaries_law ?= { this = law_type:law_all_labor_unions_allowed } }
+		}
+		activate_law = law_type:law_all_labor_unions_allowed
+	} else_if = {
+		limit = { 
+			has_law = law_type:law_token_time_regulations
+			NOT = { scope:revolutionaries_law ?= { this = law_type:law_limited_work_hours } }
+			has_technology_researched = human_rights
+		}
+		activate_law = law_type:law_limited_work_hours
+	} else_if = {
+		limit = { 
+			has_law = law_type:law_regulatory_bodies
+			NOT = { scope:revolutionaries_law ?= { this = law_type:law_worker_protections } }
+			has_technology_researched = human_rights
+		}
+		activate_law = law_type:law_worker_protections
+	} else_if = {
+		limit = { 
+			has_law = law_type:law_limited_work_hours
+			NOT = { scope:revolutionaries_law ?= { this = law_type:law_protected_leisure } }
+			has_technology_researched = human_rights
+		}
+		activate_law = law_type:law_protected_leisure
+	} 
+
+	add_loyalists = {
+		value = large_radicals
+		strata = poor
+	}
+	add_radicals = {
+		value = large_radicals
+		strata = rich
+	}
+	ig:ig_trade_unions = {
+		add_modifier = {
+			name = bpm_accepted_demands
+			years = 5
+			is_decaying = yes
+		}
+	}
+
+	custom_tooltip = {
+		text = bpm_right_wing_igs_angered
+		every_interest_group = {
+			limit = {
+				OR = {
+					bpm_ig_is_right_wing = yes
+				}
+			}
+			add_modifier = {
+				name = bpm_gave_into_demands
+				years = 5
+				is_decaying = yes
+			}
+		}	
+	}
+
+	custom_tooltip = {
+		text = bpm_upper_institutional_igs_angered
+		every_interest_group = {
+			limit = {
+				OR = {
+					bpm_ig_is_upper_institutional = yes
+				}
+			}
+			add_modifier = {
+				name = bpm_gave_into_demands
+				years = 5
+				is_decaying = yes
+			}
+		}	
+	}
+}
+
+bpm_fold_to_general_strike = {
+	random_political_movement = {
+		limit = { is_revolutionary_movement = yes }
+		this.desired_law = { save_scope_as = revolutionaries_law }
+	}
+	activate_law = scope:revolutionaries_law
+	bpm_give_labor_concession = yes
+}
+
+bpm_transfer_money_to_investors = {
+	add_treasury = { value = $AMT$ multiply = -1 }
+	add_investment_pool = $AMT$
+}
+
+bpm_upgrade_country_modifier = {
+	hidden_effect = {
+		remove_modifier = $MOD$
+		if = {
+			limit = { NOT = { has_variable = bpm_modifier_$MOD$_level } }
+			set_variable = { name = bpm_modifier_$MOD$_level value = $AMT$ }
+			add_modifier = {
+				name = $MOD$
+				multiplier = $AMT$
+			}
+		}
+		else = {
+			change_variable = { name = bpm_modifier_$MOD$_level add = $AMT$ }
+			add_modifier = {
+				name = $MOD$
+				multiplier = var:bpm_modifier_$MOD$_level
+			}
+		}
+
+	}
+	show_as_tooltip = { # The previous code does functionally that, except it doesn't make extra modifiers; to avoid player confusion we'll just hide all that scary stuff above and show them a nice white lie below that is functionally the same
+		add_modifier = {
+			name = $MOD$
+			multiplier = $AMT$
+		}
+	}
+}
+
+bpm_clear_upgradeable_country_modifier = {
+	remove_modifier = $MOD$
+	hidden_effect = { remove_variable = bpm_modifier_$MOD$_level }
+}
+
+bpm_give_next_bureaucracy_tech = {
+	if = {
+		limit = { NOT = { has_technology_researched = urbanization } }
+		add_technology_researched = urbanization
+	}
+	else_if = {
+		limit = { NOT = { has_technology_researched = tech_bureaucracy } }
+		add_technology_researched = tech_bureaucracy
+	}
+	else_if = {
+		limit = { NOT = { has_technology_researched = centralization } }
+		add_technology_researched = centralization
+	}
+	else_if = {
+		limit = { NOT = { has_technology_researched = central_archives } }
+		add_technology_researched = central_archives
+	}
+	else_if = {
+		limit = { NOT = { has_technology_researched = identification_documents } }
+		add_technology_researched = identification_documents
+	}
+	else_if = {
+		limit = { NOT = { has_technology_researched = identification_documents } }
+		add_technology_researched = identification_documents
+	}
+	else_if = {
+		limit = { NOT = { has_technology_researched = central_planning } }
+		add_technology_researched = central_planning
+	}
+	else_if = {
+		limit = { NOT = { has_technology_researched = mass_surveillance } }
+		add_technology_researched = mass_surveillance
+	}
+	else = {
+		bpm_upgrade_country_modifier = {
+			MOD = bpm_bureaucracy_upgraded
+			AMT = 1
+		}
+	}
+}

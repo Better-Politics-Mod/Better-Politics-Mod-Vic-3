@@ -77,7 +77,7 @@ law_group_to_law = {
     "lawgroup_land_reform": {
         "law_serfdom": "SER",
         "law_tenant_farmers": "TEN",
-        "law_homesteading": "FRE",
+        "law_peasant_proprietorship": "FRE",
         "law_commercialized_agriculture": "COM",
         "law_collectivized_agriculture": "COL",
     },

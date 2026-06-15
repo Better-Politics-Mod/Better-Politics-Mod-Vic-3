@@ -1,5 +1,5 @@
-﻿ig_devout = {
-	color = hsv{ 0 0 0.5 }
+﻿REPLACE:ig_devout = {
+	color = hsv{ 0.47 0.1 0.5 }
 	texture = "gfx/interface/icons/ig_icons/devout.dds"
 	layer = "revolution_dynamic_devout"
 	index = 1
@@ -13,6 +13,16 @@
 		ideology_moralist
 		ideology_patriarchal
 	}
+
+	character_ideologies = {
+		ideology_moderate
+		ideology_traditionalist
+		# ideology_reformer
+		# ideology_land_reformer
+		# ideology_legitimist
+		# ideology_authoritarian
+		ideology_theocrat
+	}
 	
 	enable = {
 		always = yes
@@ -20,9 +30,9 @@
 	
 	on_enable = {
 		ig:ig_devout = {
-			set_ig_trait = ig_trait:ig_trait_rural_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_rural_well_oiled_machine
-			set_ig_trait = ig_trait:ig_trait_rural_systematic_opposition
+			#set_ig_trait = ig_trait:ig_trait_rural_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_rural_well_oiled_machine
+			#set_ig_trait = ig_trait:ig_trait_rural_systematic_opposition
 		}
 		### Specific
 
@@ -70,6 +80,9 @@
 					country_has_primary_culture = cu:british
 					country_has_primary_culture = cu:irish
 					c:NRU ?= this
+				}
+				NOT = {
+					c:BIC ?= this
 				}
 			}
 			ig:ig_devout = {
@@ -169,7 +182,12 @@
 		}
 		# Evangelical Church
 		else_if = {
-			limit = { country_has_state_religion = rel:protestant }
+			limit = { 
+				country_has_state_religion = rel:protestant 
+				NOT = {
+					c:BIC ?= this
+				}
+			}
 			ig:ig_devout = { 
 				set_interest_group_name = ig_evangelical_church
 			}
@@ -213,10 +231,25 @@
 		}
 		# Hindu Priesthood
 		else_if = {
-			limit = { country_has_state_religion = rel:hindu }
+			limit = { 
+				OR = {
+					country_has_state_religion = rel:hindu
+					c:BIC ?= this
+				}
+			}
 			ig:ig_devout = {
 				set_interest_group_name = ig_hindu_priesthood
-				bpm_ig_make_hindu_moralist = yes
+				if = {
+					limit = {
+						owner = {
+							c:BIC ?= this
+						}
+					}
+					bpm_ig_make_hindu_moralist_british_india = yes
+				}
+				else = {
+					bpm_ig_make_hindu_moralist = yes
+				}
 			}
 		}
 		# Vajrayana Monks
@@ -255,13 +288,91 @@
 		ig:ig_devout = { bpm_reorder_ideologies = yes }
 	}
 	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				assamese avadhi baluchi bengali bihari gujarati kannada malayalam marathi oriya panjabi pathan rajput sindi tamil telegu hindustani bundeli pahari gondi bageli chhattisgarhi deccani
+			}
+		}
+		rule = {
+			trigger = {
+				c:ZAN ?= this
+				any_primary_culture = {
+					cu:bedouin = this
+				}
+			}
+			cultures = {
+				swahili
+			}
+		}
+		rule = {
+			trigger = {
+				c:HAW ?= this
+				NOT = { has_variable = deported_americans }
+			}
+			cultures = {
+				yankee dixie british hawaiian
+			}
+		}
+	}
+
 	on_character_ig_membership = {
-		change_character_religion = scope:interest_group.owner.religion
+		if = {
+			limit = {
+				owner = {
+					c:BIC ?= this
+				}
+			}
+			change_character_religion = rel:hindu
+		}
+		else_if = {
+			limit = {
+				owner = {
+					c:ZAN ?= this
+				}
+			}
+			change_character_religion = rel:sunni
+		}
+		else_if = {
+			limit = {
+				owner = {
+					NOR = {
+						has_law_or_variant = law_type:law_total_separation
+						has_law = law_type:law_state_atheism
+					}
+				}
+			}
+			change_character_religion = scope:interest_group.owner.religion
+		}
+		else = {
+			change_character_religion = scope:interest_group.owner.country_definition.religion
+		}
 	}
 		
-	
 	pop_potential = {
-		has_state_religion = yes
+		OR = {
+			has_state_religion = yes
+			AND = {
+				exists = c:BIC
+				owner ?= c:BIC
+				has_pop_religion = hindu
+			}
+			AND = {
+				exists = c:ZAN
+				owner ?= c:ZAN
+				has_pop_religion = sunni
+			}
+		}
+		NOT = { 
+			has_pop_religion = atheist
+		}
 	}
 	
 	pop_weight = {
@@ -271,20 +382,20 @@
 			limit = { is_pop_type = peasants }
 			add = {
 				desc = "POP_PEASANTS"
-				value = 80
+				value = 100
 			}
 		}
 		else_if = {
 			limit = { is_pop_type = clergymen }
 			add = {
 				desc = "POP_CLERGYMEN"
-				value = 300
+				value = 500
 			}
 		}
 		
 		if = {
 			limit = {
-				owner = { has_law = law_type:law_state_religion }
+				owner = { has_law_or_variant = law_type:law_state_religion }
 			}
 			multiply = {
 				desc = "STATE_RELIGION_LAW"
@@ -293,7 +404,7 @@
 		}
 		else_if = {
 			limit = {
-				owner = { has_law = law_type:law_total_separation }
+				owner = { has_law_or_variant = law_type:law_total_separation }
 			}
 			multiply = {
 				desc = "TOTAL_SEPARATION_LAW"
@@ -359,7 +470,7 @@
 				limit = {
 					is_pop_type = clergymen
 					owner = {
-						has_law = law_type:law_total_separation
+						has_law_or_variant = law_type:law_total_separation
 					}
 				}
 				value = 1.5
@@ -374,12 +485,22 @@
 	agitator_weight = {
 		value = 1.0
 		multiply = bpm_base_agitator_weight
+		if ={
+			limit = {
+				bpm_interest_group_is_activated = no
+			}
+			value = 0.0
+		}
 	}
 	
 	commander_weight = {
 		value = 1.0
 		multiply = bpm_commander_assignment_from_laws_factor
 	}	
+
+	executive_weight = {
+		value = 0.1
+	}
 	
 	noble_chance = {
 		value = 0.5
@@ -398,6 +519,11 @@
 	female_agitator_chance = {
 		value = 1.0
 		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

@@ -1,5 +1,5 @@
-﻿ig_armed_forces = {
-	color = hsv{ 0 0 0.5 }
+﻿REPLACE:ig_armed_forces = {
+	color = hsv{ 0.05 0.1 0.4 }
 	texture = "gfx/interface/icons/ig_icons/armed_forces.dds"
 	layer = "revolution_dynamic_armed_forces"
 	index = 0
@@ -12,6 +12,15 @@
 		ideology_loyalist
 		ideology_patriotic
 	}
+
+	character_ideologies = {
+		ideology_moderate
+		# ideology_orleanist
+		# ideology_bonapartist
+		ideology_jingoist_leader
+		ideology_authoritarian
+		# ideology_corporatist_leader
+	}
 	
 	enable = {
 		always = yes
@@ -19,10 +28,20 @@
 	
 	on_enable = {
 		ig:ig_armed_forces = {
-			set_ig_trait = ig_trait:ig_trait_military_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_military_well_oiled_machine
-			set_ig_trait = ig_trait:ig_trait_military_systematic_opposition
+			#set_ig_trait = ig_trait:ig_trait_military_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_military_well_oiled_machine
+			#set_ig_trait = ig_trait:ig_trait_military_systematic_opposition
 		}
+
+		# Put IG initialization here (in an arbitrary IG), so it happens before any on actions (hopefully)
+		# This is a bit of a hack, but it's the only way to do it
+		if = {
+			limit = { game_date > 1836.1.1 }
+			owner = {
+				bpm_copy_variable_from_civil_war_origin = yes
+			}
+		}
+
 		# Caudillo Ideology
 		if = {
 			limit = {
@@ -49,11 +68,68 @@
 				set_interest_group_name = ig_samurai
 			}
 		}
+		else_if = {
+			limit = {
+				exists = c:FRA
+				this = c:FRA
+			}
+			ig:ig_armed_forces = {
+				set_interest_group_name = ig_national_guard
+			}
+		}
+		# India
+		else_if = {
+			limit = {
+				c:BIC ?= this
+			}
+			ig:ig_armed_forces = {
+				set_interest_group_name = ig_presidency_armies
+			}
+		}
+		# Sikh Empire
+		else_if = {
+			limit = {
+				c:PAN ?= this
+			}
+			ig:ig_armed_forces = {
+				set_interest_group_name = ig_khalsaji
+				#remove_ideology = ideology_jingoist
+				#add_ideology = ideology_sikh_militancy
+			}
+		}
 	}
 	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				british scottish irish
+			}
+		}
+		rule = {
+			trigger = {
+				c:ZAN ?= this
+				any_primary_culture = {
+					cu:bedouin = this
+				}
+			}
+			cultures = {
+				bedouin swahili baluchi
+			}
+		}
+	}
+
+	
 	on_character_ig_membership = {}
 	
 	pop_potential = {
+		pop_acceptance >= acceptance_status_4
 		OR = {
 			is_pop_type = soldiers
 			is_pop_type = officers
@@ -65,27 +141,14 @@
 	}
 	
 	pop_weight = {
-		value = 0
-		
-		add = {
-			desc = "POP_NOT_DISCRIMINATED"
-			if = {
-				limit = { 
-					pop_is_discriminated = no
-				}
-				value = 25
-			}
-		}
+		value = 25
 
 		add = {
 			desc = "POP_WAR_PROFITEERS"
 			if = {
 				limit = { 
 					OR = {
-						pop_employment_building_group = bg_munition_plants
-						pop_employment_building_group = bg_arms_industries
-						pop_employment_building_group = bg_artillery_foundaries
-						pop_employment_building_group = bg_military_shipyards
+						pop_employment_building_group = bg_military_industry
 					}
 				}
 				value = 125
@@ -156,11 +219,21 @@
 	agitator_weight = {
 		value = 1.0
 		multiply = bpm_base_agitator_weight
+		if ={
+			limit = {
+				bpm_interest_group_is_activated = no
+			}
+			value = 0.0
+		}
 	}
 	
 	commander_weight = {
 		value = 10.0
 		multiply = bpm_commander_assignment_from_laws_factor
+	}
+
+	executive_weight = {
+		value = 0.1
 	}
 	
 	noble_chance = {
@@ -180,6 +253,11 @@
 	female_agitator_chance = {
 		value = 1.0
 		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

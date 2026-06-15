@@ -19,7 +19,7 @@ pedro.1 = {
 	
 	duration = 3
 
-	#dlc = dlc008
+	dlc = dlc008
 	
 	trigger = {
 		 # triggered by je_pedro_brazil
@@ -34,17 +34,17 @@ pedro.1 = {
 			}
 			save_scope_as = pedro_scope
 		}
-		ig:ig_conservatives = { # old regency
+		ig:ig_conservatives ?= { # old regency
 			save_scope_as = landowners_scope
 		}
-		ig:ig_reactionaries = { # old regency
+		ig:ig_reactionaries ?= { # old regency
 			save_scope_as = armed_forces_scope
 		}
-		ig:ig_liberals = { # new regency
+		ig:ig_liberals ?= { # new regency
 			save_scope_as = intelligentsia_scope
-			leader = {
-				save_scope_as = feijo_regent
-			}
+		}
+		var:bpm_regent = {
+			save_scope_as = feijo_regent
 		}
 		if = {
 			limit = { 
@@ -54,10 +54,13 @@ pedro.1 = {
 					}
 				}
 			}
-			ig:ig_conservatives = { 
+			ig:ig_conservatives ?= { 
 				remove_ruling_interest_group = yes
 			}
-			ig:ig_liberals = { 
+			ig:ig_liberals ?= { 
+				add_ruling_interest_group = yes
+			}
+			ig:ig_intelligentsia = {
 				add_ruling_interest_group = yes
 			}
 		}
@@ -72,12 +75,8 @@ pedro.1 = {
 	option = {
 		name = pedro.1.a
 		default_option = yes
-		#custom_tooltip = {
-		#	text = pedro_regency_party_tt
-		#}
-		add_modifier = {
-			name = brz_regency
-			months = long_modifier_time
+		show_as_tooltip = {
+			add_modifier = { name = modifier_regency_liberals }
 		}
 	}
 }
@@ -116,7 +115,7 @@ pedro.2 = {
 	
 	duration = 3
 
-	#dlc = dlc008
+	dlc = dlc008
 	
 	trigger = {
 		 # triggered by je_pedro_brazil
@@ -146,11 +145,79 @@ pedro.2 = {
 	option = {
 		name = pedro.2.a
 		default_option = yes
+		hidden_effect = {
+			ig:ig_landowners = {
+				add_ideology = ideology_republican_paternalistic
+				remove_ideology = ideology_paternalistic
+			}
+		}
 		ig:ig_landowners = {
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_gov_liberal_republican
 			bpm_reorder_ideologies = yes
 		}
+	}
+}
+
+# Pedro comes of age
+pedro.3 = {
+	type = country_event
+	placement = ROOT
+
+	title = pedro.3.t
+	desc = pedro.3.d
+	flavor = pedro.3.f
+
+	gui_window = event_window_1char_tabloid
+
+	left_icon = scope:pedro_scope
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_portrait.dds"
+
+	duration = 3
+
+	dlc = dlc008
+
+	trigger = {
+		has_dlc_feature = rp1_content
+		ruler ?= {
+			has_template = BRZ_emperor_pedro_02
+			age >= 14
+		}
+		NOT = { has_variable = pedro_of_age_var }
+	}
+
+	immediate = {
+		set_variable = pedro_of_age_var
+		ruler ?= {
+			save_scope_as = pedro_scope
+			set_variable = regency_complete
+		}
+		random_interest_group = {
+			limit = {
+				is_in_government = yes
+			}
+			save_scope_as = coronation_ig
+		}
+	}
+
+	option = {
+		name = pedro.3.a
+		default_option = yes
+		bpm_end_regency = yes
+		scope:pedro_scope ?= {
+			set_as_adult = yes
+			remove_trait = trait_child
+			add_trait = charismatic
+		}
+		add_journal_entry = { type = je_pedro_brazil }
+		set_variable = {
+			name = pedropoints
+			value = 5
+		}
+		add_pedropoint_effect = yes
 	}
 }
 
@@ -173,7 +240,7 @@ pedro.7 = {
 	
 	duration = 3
 
-	#dlc = dlc008
+	dlc = dlc008
 	
 	trigger = {
 		# triggered by je_pedro_brazil		
@@ -195,7 +262,7 @@ pedro.7 = {
 		scope:new_brz_monarch_scope = {
 			add_modifier = {
 				name = brz_new_monarch_popular
-				months = normal_modifier_time
+				days = normal_modifier_time
 			}
 			if = {
 				limit = {
@@ -219,21 +286,17 @@ pedro.7 = {
 		}
 		if = {
 			limit = {
-				cu:afro_brazilian = {
-					NOT = {
-						culture_is_discriminated_in = ROOT
-					}
-				}
+				cultural_acceptance_base = { target = cu:afro_brazilian value >= acceptance_status_4 }
 			}
 			add_loyalists = {
 				value = large_radicals
 				culture = cu:afro_brazilian
 			}
 		}
-		ig:ig_conservatives = { 
+		ig:ig_conservatives ?= { 
 			add_modifier = {
 				name = bpm_empowered_ig
-				months = very_long_modifier_time
+				days = very_long_modifier_time
 			}
 		}
 		if = {
@@ -241,6 +304,20 @@ pedro.7 = {
 				NOT = { has_variable = local_patcon_split_var }
 			}
 			trigger_event = { id = bpm_patcon_split.1 }
+		}
+		every_interest_group = {
+			limit = {
+				bpm_ig_is_monarchist = yes
+				leader = { has_ideology = ideology:ideology_abolitionist }
+			}
+			leader = { set_ideology = ideology:ideology_humanitarian_royalist }
+		}
+		every_interest_group = {
+			limit = {
+				bpm_ig_is_monarchist = no
+				leader = { has_ideology = ideology:ideology_abolitionist }
+			}
+			leader = { set_ideology = ideology:ideology_humanitarian }
 		}
 	}
 }
@@ -264,7 +341,7 @@ pedro.8 = {
 	
 	duration = 3
 
-	#dlc = dlc008
+	dlc = dlc008
 	
 	trigger = {
 		# triggered by je_pedro_brazil		
@@ -283,29 +360,88 @@ pedro.8 = {
 		ROOT = {
 			save_scope_as = brazil_scope
 		}
-		if = {
-			limit = {
-				NOT = { has_law = law_type:law_landed_voting }
-			}
-			activate_law = law_type:law_landed_voting
-		}
-		activate_law = law_type:law_presidential_republic
-		if = {
-			limit = {
-				NOT = { has_law = law_type:law_tenant_farmers }
-			}
-			activate_law = law_type:law_tenant_farmers
-		}
 	}
 
 	option = {
 		name = pedro.8.a
 		default_option = yes
+
+		hidden_effect = {
+			if = {
+				limit = {
+					any_scope_state = {
+						state_region = s:STATE_SANTA_CATARINA
+					}
+				}
+				random_scope_state = {
+					limit = { state_region = s:STATE_SANTA_CATARINA }
+					set_hub_name = {
+						type = port
+						name = HUB_NAME_STATE_SANTA_CATARINA_port_bra_republic
+					}
+				}
+			}
+		}
+
+		#if = {
+		#	limit = {
+		#		NOT = { has_law = law_type:law_landed_voting }
+		#	}
+		#	activate_law = law_type:law_landed_voting
+		#}
+		if = {
+			limit = {
+				NOT = { has_law = law_type:law_oligarchy }
+			}
+			activate_law = law_type:law_oligarchy
+		}
+		if = {
+			limit = {
+				NOT = { has_law = law_type:law_separated_powers }
+			}
+			activate_law = law_type:law_separated_powers
+		}
+		if = {
+			limit = {
+				NOT = { has_law = law_type:law_no_separate_hog }
+			}
+			activate_law = law_type:law_no_separate_hog
+		}
+		activate_law = law_type:law_presidential_republic
+		if = {
+			limit = {
+				NOT = { has_law_or_variant = law_type:law_tenant_farmers }
+			}
+			activate_law = law_type:law_tenant_farmers
+		}
+		#activate_law = law_type:law_ad_hoc_centralization
+		if = {
+			limit = {
+				NOT = { has_law = law_type:law_censorship }
+			}
+			activate_law = law_type:law_censorship
+		}
+		if = {
+			limit = {
+				OR = {
+					has_law_or_variant = law_type:law_state_religion
+					has_law = law_type:law_freedom_of_conscience
+				}
+			}
+			activate_law = law_type:law_total_separation
+		}
+		
+		hidden_effect = {
+			ig:ig_landowners = {
+				remove_ideology = ideology_hierarchic
+				add_ideology = ideology_oligarchic
+			}
+		}
 		if = {
 			limit = {
 				ig:ig_landowners = {
 					is_in_government = no
-					is_marginal = no
+					bpm_ig_is_marginal = no
 				}
 			}
 			ig:ig_landowners = {
@@ -316,7 +452,7 @@ pedro.8 = {
 			limit = {
 				ig:ig_armed_forces = {
 					is_in_government = no
-					is_marginal = no
+					bpm_ig_is_marginal = no
 				}
 			}
 			ig:ig_armed_forces = {
@@ -326,7 +462,32 @@ pedro.8 = {
 		if = {
 			limit = {
 				ig:ig_armed_forces = {
-					is_marginal = no
+					bpm_ig_is_marginal = no
+				}
+			}
+			if = {
+				limit = {
+					any_scope_character = {
+						has_template = BRZ_deodoro_da_fonseca
+					}
+				}
+				random_scope_character = {
+					limit = {
+						has_template = BRZ_deodoro_da_fonseca
+					}
+					set_as_interest_group_leader = yes
+				}
+			}
+			else_if = {
+				limit = {
+					year >= 1868
+					year <= 1892
+				}
+				create_character = {
+					template = BRZ_deodoro_da_fonseca
+					on_created = {
+						set_as_interest_group_leader = yes
+					}
 				}
 			}
 			ig:ig_armed_forces = {
@@ -354,6 +515,12 @@ pedro.8 = {
 			}
 			post_notification = brz_brazil_coup
 		}
+		set_variable = {
+			name = abolishing_monarchy_var
+			value = 0
+		}
+		add_journal_entry = { type = je_abolish_monarchy }
+
 		ig:ig_petty_bourgeoisie = { 
 			bpm_remove_all_dop_ideologies = yes
 			add_ideology = ideology_dop_oligarch
@@ -361,9 +528,19 @@ pedro.8 = {
 			bpm_reorder_ideologies = yes
 		}
 		ig:ig_armed_forces = {
+			bpm_remove_all_gov_ideologies = yes
+			bpm_remove_all_rel_ideologies = yes
+			add_ideology = ideology_gov_liberal_republican
+			add_ideology = ideology_rel_radical_secularist
+			if = {
+				limit = { NOT = { has_ideology = ideology:ideology_dop_technocrat } }
+				bpm_remove_all_dop_ideologies = yes
+				add_ideology = ideology_dop_oligarch
+			}
+			bpm_reorder_ideologies = yes
 			add_modifier = {
 				name = bpm_empowered_ig
-				months = very_long_modifier_time
+				days = very_long_modifier_time
 			}
 		}
 		ig:ig_landowners = {
@@ -378,25 +555,183 @@ pedro.8 = {
 			bpm_reorder_ideologies = yes
 			add_modifier = {
 				name = bpm_empowered_ig
-				months = very_long_modifier_time
+				days = very_long_modifier_time
 			}
 		}
-		ig:ig_liberals = { 
+		ig:ig_liberals ?= { 
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_gov_liberal_republican
 			bpm_reorder_ideologies = yes
 		}
 		if = {
 			limit = {
-				ig:ig_market_liberals = {
+				exists = ig:ig_market_liberals
+				ig:ig_market_liberals ?= {
 					NOT = { has_ideology = ideology:ideology_nonexistent }
 				}
 			}
-			ig:ig_market_liberals = { 
+			ig:ig_market_liberals ?= { 
 				bpm_remove_all_gov_ideologies = yes
 				add_ideology = ideology_gov_liberal_republican
 				bpm_reorder_ideologies = yes
 			}
+		}
+		ai_chance = {
+			base = 19
+		}
+	}
+
+	option = {
+		name = pedro.8.b
+		trigger = {
+			root.var:pedropoints >= 3
+			has_state_in_state_region = STATE_RIO_DE_JANEIRO
+		}
+		hidden_effect = {
+			set_variable = brz_republican_coup_cw
+			if = {
+				limit = { any_scope_character = { has_template = BRZ_deodoro_da_fonseca } }
+				random_scope_character = {
+					limit = { has_template = BRZ_deodoro_da_fonseca }
+					kill_character = yes
+				}
+			}
+			if = {
+				limit = { any_scope_character = { has_template = BRZ_ruy_barbosa } }
+				random_scope_character = {
+					limit = { has_template = BRZ_ruy_barbosa }
+					kill_character = yes
+				}
+			}
+			if = {
+				limit = { any_scope_character = { has_template = BRZ_benjamin_constant } }
+				random_scope_character = {
+					limit = { has_template = BRZ_benjamin_constant }
+					kill_character = yes
+				}
+			}
+			if = {
+				limit = { any_scope_character = { has_template = BRZ_quintino_bocaiuva } }
+				random_scope_character = {
+					limit = { has_template = BRZ_quintino_bocaiuva }
+					kill_character = yes
+				}
+			}
+			if = {
+				limit = { any_scope_character = { has_template = BRZ_campos_sales } }
+				random_scope_character = {
+					limit = { has_template = BRZ_campos_sales }
+					kill_character = yes
+				}
+			}
+			if = {
+				limit = { any_scope_character = { has_template = BRZ_floriano_peixoto } }
+				random_scope_character = {
+					limit = { has_template = BRZ_floriano_peixoto }
+					kill_character = yes
+				}
+			}
+		}
+		create_country = {
+			tag = BRZ
+			origin = c:BRZ
+			state = s:STATE_RIO_DE_JANEIRO.region_state:BRZ
+			state = s:STATE_SAO_PAULO.region_state:BRZ
+			state = s:STATE_MINAS_GERAIS.region_state:BRZ
+			on_created = {
+				set_variable = brz_republican_coup_country
+
+				activate_law = law_type:law_military_junta
+				activate_law = law_type:law_no_separate_hog
+				activate_law = law_type:law_presidential_republic
+				activate_law = law_type:law_tenant_farmers
+				activate_law = law_type:law_ad_hoc_centralization
+				activate_law = law_type:law_censorship
+				activate_law = law_type:law_total_separation
+				
+				set_variable = brz_federalist_flag
+				bpm_setup_country = yes
+
+				ig:ig_petty_bourgeoisie = { 
+					bpm_remove_all_dop_ideologies = yes
+					add_ideology = ideology_dop_oligarch
+					add_ideology = ideology_rel_radical_secularist
+					bpm_reorder_ideologies = yes
+				}
+				ig:ig_armed_forces = {
+					bpm_remove_all_gov_ideologies = yes
+					bpm_remove_all_rel_ideologies = yes
+					add_ideology = ideology_gov_liberal_republican
+					add_ideology = ideology_rel_radical_secularist
+					bpm_remove_all_dop_ideologies = yes
+					add_ideology = ideology_dop_oligarch
+					bpm_reorder_ideologies = yes
+					add_modifier = {
+						name = bpm_empowered_ig
+						days = very_long_modifier_time
+					}
+					add_ruling_interest_group = yes
+				}
+				ig:ig_landowners = {
+					bpm_remove_all_gov_ideologies = yes
+					bpm_remove_all_wel_ideologies = yes
+					bpm_remove_all_rel_ideologies = yes
+					bpm_remove_all_dop_ideologies = yes
+					add_ideology = ideology_gov_liberal_republican
+					add_ideology = ideology_dop_oligarch
+					add_ideology = ideology_rel_radical_secularist
+					add_ideology = ideology_wel_secular_anti_welfare
+					bpm_reorder_ideologies = yes
+					add_modifier = {
+						name = bpm_empowered_ig
+						days = very_long_modifier_time
+					}
+					add_ruling_interest_group = yes
+				}
+				if = {
+					limit = {
+						year >= 1860
+						year <= 1900
+					}
+					set_variable = local_natlib_split_var
+					create_character = {
+						template = BRZ_deodoro_da_fonseca
+						on_created = {
+							set_as_interest_group_leader = yes
+							set_character_as_ruler = yes
+						}
+					}
+					create_character = {
+						template = BRZ_ruy_barbosa
+						on_created = {
+							set_ideology = ideology:ideology_humanitarian
+						}
+					}
+					create_character = {
+						template = BRZ_quintino_bocaiuva
+					}
+					create_character = {
+						template = BRZ_campos_sales
+					}
+				}
+				else = {
+					ig:ig_armed_forces = {
+						leader = {
+							set_character_as_ruler = yes
+						}
+					}
+				}
+				create_diplomatic_play = {
+					name = brz_republican_coup
+					target_country = c:BRZ
+					escalation = 80
+					type = dp_revolution
+					annex_as_civil_war = yes
+				}
+			}
+		}
+		ai_chance = {
+			base = 1
 		}
 	}
 }
@@ -420,7 +755,7 @@ pedro.9 = {
 	
 	duration = 3
 
-	#dlc = dlc008
+	dlc = dlc008
 	
 	trigger = {
 		# triggered by je_pedro_brazil
@@ -438,7 +773,7 @@ pedro.9 = {
 						has_ideology = ideology:ideology_positivist
 						has_ideology = ideology:ideology_republican_leader
 						has_ideology = ideology:ideology_radical
-						has_ideology = ideology:ideology_atheist
+						has_ideology = ideology:ideology_nihilist
 					}
 				}
 				bpm_ig_is_republican = yes
@@ -462,7 +797,7 @@ pedro.9 = {
 							has_ideology = ideology:ideology_positivist
 							has_ideology = ideology:ideology_republican_leader
 							has_ideology = ideology:ideology_radical
-							has_ideology = ideology:ideology_atheist
+							has_ideology = ideology:ideology_nihilist
 						}
 					}
 					bpm_ig_is_republican = yes
@@ -517,7 +852,7 @@ pedro.10 = {
 	
 	duration = 3
 
-	#dlc = dlc008
+	dlc = dlc008
 	
 	trigger = {
 		# triggered by on_law_enactment_pass
@@ -561,31 +896,137 @@ pedro.10 = {
 		ruler = {
 			add_modifier = {
 				name = president_pedro_legitimacy
-				months = long_modifier_time
+				days = long_modifier_time
 				is_decaying = yes
 			}
 		}
-		ig:ig_conservatives = { 
+		ig:ig_conservatives ?= { 
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_gov_liberal_republican
 			bpm_reorder_ideologies = yes
 		}
-		ig:ig_liberals = { 
+		ig:ig_liberals ?= { 
 			bpm_remove_all_gov_ideologies = yes
 			add_ideology = ideology_gov_liberal_republican
 			bpm_reorder_ideologies = yes
 		}
 		if = {
 			limit = {
-				ig:ig_market_liberals = {
+				exists = ig:ig_market_liberals
+				ig:ig_market_liberals ?= {
 					NOT = { has_ideology = ideology:ideology_nonexistent }
 				}
 			}
-			ig:ig_market_liberals = { 
+			ig:ig_market_liberals ?= { 
 				bpm_remove_all_gov_ideologies = yes
 				add_ideology = ideology_gov_liberal_republican
 				bpm_reorder_ideologies = yes
 			}
+		}
+	}
+}
+
+# Death of Pedro's heirs
+pedro.12 = {
+	type = country_event
+	placement = ROOT
+	
+	title = pedro.12.t
+	desc = pedro.12.d
+	flavor = pedro.12.f
+	
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_skull.dds"
+	
+	duration = 3
+
+	dlc = dlc008
+	
+	trigger = {
+		NOT = { has_variable = pedro_heir_death }
+		year > 1849
+		any_scope_character = {
+			is_heir_of_own_country = yes
+		}
+	}
+
+	immediate = {
+		set_variable = pedro_heir_death
+		ruler = {
+			save_scope_as = pedro_scope
+		}
+		heir = {
+			save_scope_as = heir_scope
+		}
+	}
+
+	option = { # No women allowed
+		name = pedro.12.a
+		default_option = yes
+		create_character = {
+			template = brz_isabel_template
+			heir = yes
+		}
+		# appease the landowners slightly
+		ig:ig_landowners = {
+			add_modifier = {
+				name = princess_isabel
+				days = long_modifier_time
+				multiplier = -1
+			}
+		}
+		remove_pedropoint_effect = yes
+	}
+	option = { # Prepare isabel for the throne
+		name = pedro.12.b
+		default_option = yes
+		remove_pedropoint_effect = yes
+		create_character = {
+			template = brz_isabel_template
+			heir = yes
+			on_created = {
+				save_scope_as = isabel_scope
+				set_variable = isabel_var
+				add_modifier = {
+					name = isabel_heir_popularity
+				}
+				set_character_immortal = yes
+			}
+			save_scope_as = isabel_scope #PBF
+		}
+		# pedro's popularity is reduced
+		scope:pedro_scope = {
+			add_modifier = {
+				name = isabel_heir_popularity
+			}
+		}
+		# annoy the landowners
+		ig:ig_landowners = {
+			add_modifier = {
+				name = princess_isabel
+				days = long_modifier_time
+				multiplier = 3
+				is_decaying = yes
+			}
+		}
+		ig:ig_reactionaries ?= { 
+			bpm_remove_all_fem_ideologies = yes
+			add_ideology = ideology_fem_moderate_patriarchal
+			bpm_reorder_ideologies = yes
+		}
+		# add isabel JE
+		set_variable = {
+			name = isabel_points
+			value = 0
+		}
+		add_journal_entry = { type = je_isabel target = scope:isabel_scope }
+		custom_tooltip = {
+			text = isabel_je_tt
 		}
 	}
 }

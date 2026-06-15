@@ -1,20 +1,223 @@
-﻿
-exile_character = {
+﻿REPLACE:grant_command_to_ruler = {
+	icon = "gfx/interface/character_panel/grant_command.dds"
+	clicksound = "event:/SFX/UI/Military/command_grant"
+
+	potential = {
+		is_ruler_of_own_country = yes
+		NOR = {
+			has_role_of_type = general
+			has_role_of_type = admiral
+		}
+		owner ?= scope:actor
+		NOT = { has_variable = bpm_untouchable_char }
+	}
+
+	possible = {
+		age >= define:NCharacters|ADULT_AGE
+		is_female = no
+		owner ?= {
+			ruler_can_have_command = yes
+		}
+		exists = owner.capital.land_hq
+	}
+
+	effect = {
+		add_character_role = general
+	}
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = {
+				AND = {
+					age <= 50
+					OR = {
+						has_trait = reckless
+						has_trait = direct
+						has_trait = imposing
+					}
+					NOR = {
+						has_trait = psychological_affliction
+						has_trait = wounded
+						has_trait = shellshocked
+					}
+				}
+			}
+			add = 100
+		}
+	}
+}
+
+REPLACE:grant_leadership_to_agitator = {
+	icon = "gfx/interface/character_panel/grant_command_not.dds"
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/agitator_promote"
+
+	potential = {
+		has_dlc_feature = agitators
+		has_role_of_type = agitator
+		owner ?= scope:actor
+		NOT = { has_variable = bpm_untouchable_char }
+		interest_group = {
+			leader = {
+				NOT = { has_variable = bpm_untouchable_char }
+			}
+		}
+	}
+
+	possible = {
+		interest_group = {
+			is_in_government = yes
+		}
+		character_acceptance = { target = scope:actor value >= acceptance_status_3 }
+		trigger_if = {
+			limit = { owner ?= { has_law = law_type:law_state_atheism } }
+			NOR = {
+				has_ideology = ideology:ideology_theocrat
+				has_ideology = ideology:ideology_integralist
+				has_ideology = ideology:ideology_traditionalist
+			}
+		}
+		OR = {
+			is_female = no
+			scope:actor ?= { has_law_or_variant = law_type:law_womens_suffrage }
+		}
+	}
+
+	effect = {
+		remove_character_role = agitator
+		add_character_role = politician
+		custom_tooltip = {
+			text = make_agitator_ig_leader_tt
+			set_as_interest_group_leader = yes
+		}
+	}
+
+	cooldown = { days = normal_modifier_time }
+
+	ai_chance = {
+		value = -50
+		if = {
+			limit = {
+				popularity > interest_group.leader.popularity
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group.leader.popularity <= -50
+			}
+			add = 50
+		}
+		if = {
+			limit = {
+				interest_group.leader.popularity >= 50
+			}
+			add = -50
+		}
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= 0
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				this.ideology = owner.ruler.ideology
+			}
+			add = 50
+		}
+	}
+}
+
+REPLACE:grant_command_to_agitator = {
+	icon = "gfx/interface/character_panel/grant_command.dds"
+	clicksound = "event:/SFX/UI/Military/command_grant"
+
+	potential = {
+		has_dlc_feature = agitators
+		has_role_of_type = agitator
+		NOT = { has_role_of_type = general }
+		NOT = { has_role_of_type = admiral }
+		owner ?= scope:actor
+		NOT = { has_variable = bpm_untouchable_char }
+	}
+
+	possible = {
+		age >= define:NCharacters|ADULT_AGE
+		is_female = no
+		exists = owner.capital.land_hq
+	}
+
+	effect = {
+		add_character_role = general
+	}
+
+	cooldown = { days = normal_modifier_time }
+
+	ai_chance = {
+		value = 0
+		if = {
+			limit = {
+				has_commander_traits = yes
+			}
+			add = 50
+		}	
+		if = {
+			limit = {
+				is_interest_group_type = ig_armed_forces
+			}
+			add = 25
+		}	
+		if = {
+			limit = {
+				NOT = {
+					owner ?= {	
+						any_scope_general = {
+							exists = this
+						}
+					}
+				}	
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				owner ?= {
+					any_scope_war = {
+						any_scope_front = {
+							is_vulnerable_front = scope:actor #PBF
+						}
+					}
+				}	
+			}
+			add = 100
+		}
+	}
+}
+
+REPLACE:exile_character = {
 	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	should_ai_evaluate = {
+		country_rank >= rank_value:major_power
+	}
 
 	potential = {
 		is_in_exile_pool = no
 		is_in_void = no
+		exists = owner
 		# Cannot exile pure commanders, we have the retire interaction for that
 		OR = {
-			has_role = politician
-			has_role = agitator
+			has_role_of_type = politician
+			has_role_of_type = agitator
 		}
 		hidden_trigger = { # BPM addition: Making AI incapable of exiling non-institutional politicians unless they are a great power
 			OR = {
 				NOT = { has_variable = bpm_character_in_institutional_ig_var }
-				has_role = agitator
-				owner = {
+				has_role_of_type = agitator
+				owner ?= {
 					OR = {
 						country_rank >= rank_value:great_power	
 						is_player = yes
@@ -22,22 +225,29 @@ exile_character = {
 				}
 			}
 		}
-		is_ruler = no
-		is_heir = no
+		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
+		NOT = { has_variable = bpm_untouchable_char }
+		NOT = {
+			has_role = bpm_character_role_hog
+			has_role = bpm_character_role_protege
+			}
 	}
 
 	show_requirements = yes
 
 	possible = {
 		OR = {
-			has_role = agitator
+			has_role_of_type = agitator
 			interest_group = {
-				is_marginal = no
 				is_in_government = no
 				is_insurrectionary = no
 			}
 		}
-		owner = {
+		interest_group = {
+			bpm_ig_is_marginal = no
+		}
+		owner ?= {
 			NOT = { has_law = law_type:law_protected_speech }
 			NOT = { has_law = law_type:law_traditional_ostracism }
 		}
@@ -50,12 +260,12 @@ exile_character = {
 		this = {
 			save_scope_as = exile_scope
 		}
-		owner = {
+		owner ?= {
 			save_scope_as = exiling_country_scope
 		}
 		if = {
 			limit = {
-				owner = { has_journal_entry = je_caudillo }
+				owner ?= { has_journal_entry = je_caudillo }
 				interest_group = {
 					is_interest_group_type = ig_armed_forces
 				}
@@ -68,7 +278,7 @@ exile_character = {
 						}
 					}
 				}
-				owner = {
+				owner ?= {
 					custom_tooltip = {
 						text = lose_large_caudillo_points
 						change_variable = {
@@ -79,7 +289,7 @@ exile_character = {
 				}
 			}
 			else = {
-				owner = {
+				owner ?= {
 					custom_tooltip = {
 						text = lose_caudillo_points
 						change_variable = {
@@ -92,42 +302,42 @@ exile_character = {
 		}
 		if = {
 			limit = {
-				owner = {
+				owner ?= {
 					is_player = yes
 					NOT = { has_variable = achievement_agitate_elsewhere_var }
 				}
 				popularity >= 100
 			}
-			owner = { set_variable = achievement_agitate_elsewhere_var }
+			owner ?= { set_variable = achievement_agitate_elsewhere_var }
 		}
 		hidden_effect = {
 			if = {
 				limit = {
-					NOT = { has_role = agitator }
+					NOT = { has_role_of_type = agitator }
 				}
 				add_character_role = agitator
 			}
 			if = {
 				limit = {
-					has_role = general
+					has_role_of_type = general
 				}
 				remove_character_role = general
 			}
 			if = {
 				limit = {
-					has_role = admiral
+					has_role_of_type = admiral
 				}
 				remove_character_role = admiral
 			}
 			if = {
 				limit = {
-					has_role = politician
+					has_role_of_type = politician
 				}
 				set_as_interest_group_leader = no
 				remove_character_role = politician
 			}
 		}
-		owner = {
+		owner ?= {
 			custom_tooltip = exiling_dissident_radicals_factors
 		}
 		# Extra radical from exiling a popular character
@@ -135,7 +345,7 @@ exile_character = {
 			limit = {
 				popularity >= 50
 			}
-			owner = {
+			owner ?= {
 				add_radicals = {
 					value = small_radicals
 					interest_group = scope:relevant_ig
@@ -145,9 +355,9 @@ exile_character = {
 		# Standard radicals from having Right of Assembly
 		if = {
 			limit = {
-				owner = { has_law = law_type:law_right_of_assembly }
+				owner ?= { has_law = law_type:law_right_of_assembly }
 			}
-			owner = {
+			owner ?= {
 				add_radicals = {
 					value = medium_radicals
 					interest_group = scope:relevant_ig
@@ -157,9 +367,9 @@ exile_character = {
 		# Fewer radicals from Censorship
 		else_if = {
 			limit = {
-				owner = { has_law = law_type:law_censorship }
+				owner ?= { has_law = law_type:law_censorship }
 			}
-			owner = {
+			owner ?= {
 				add_radicals = {
 					value = small_radicals
 					interest_group = scope:relevant_ig
@@ -201,7 +411,7 @@ exile_character = {
 		}
 	}
 
-	cooldown = { months = normal_modifier_time }
+	cooldown = { days = normal_modifier_time }
 	show_confirmation_box = yes
 
 	ai_chance = {
@@ -299,5 +509,618 @@ exile_character = {
 			}
 		}
 		multiply = 0.3
+	}
+}
+
+REPLACE:invite_exile = {
+	# icon = ""
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/character_invite"
+
+	should_ai_evaluate = {
+		bpm_performance_significant_country = yes
+		empty_agitator_slots >= 1
+	}
+
+	potential = {
+		is_in_exile_pool = yes
+	}
+
+	show_requirements = yes
+
+	ai_considers_exiles = yes
+
+	possible = {
+		# scope:actor ?= {
+		# 	empty_agitator_slots >= 1
+		# 	bpm_performance_significant_country = yes
+		# 	NOT = { has_law = law_type:law_closed_borders }
+		# }
+		scope:actor ?= {
+			bpm_performance_significant_country = yes
+			empty_agitator_slots >= 1
+			NOT = { has_law = law_type:law_closed_borders }
+		}
+		hidden_trigger = {
+			NOT = { has_variable = bpm_untouchable_char }
+		}
+
+		# Only popular individuals need apply
+		popularity > 15
+
+		# Devout exiles must have country religion
+		trigger_if = {
+			limit = {
+				is_interest_group_type = ig_devout
+			}
+		    custom_tooltip = {
+		        text = invite_exile_devout_tt
+		        religion = scope:actor.religion
+		    }
+		}
+		# If you have state religion, exiles must have your religion
+		trigger_else_if = {
+			limit = {
+				scope:actor ?= {
+					has_law_or_variant = law_type:law_state_religion
+				}
+			}
+			custom_tooltip = {
+				text = invite_exile_state_religion_tt
+				religion = scope:actor.religion
+			}
+		}
+
+		# # cannot invite culturally discriminated exiles
+		# NOT = {
+		# 	culture = {
+		# 		culture_is_discriminated_in = scope:actor
+		# 	}
+		# }
+
+		trigger_if = {
+			limit = { is_interest_group_type = ig_socialists }
+			scope:actor ?= { exists = ig:ig_socialists }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_anarchists }
+			scope:actor ?= { exists = ig:ig_anarchists }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_reformist_socialists }
+			scope:actor ?= { exists = ig:ig_reformist_socialists }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_revolutionist_socialists }
+			scope:actor ?= { exists = ig:ig_revolutionist_socialists }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_market_liberals }
+			scope:actor ?= { exists = ig:ig_market_liberals }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_national_liberals }
+			scope:actor ?= { exists = ig:ig_national_liberals }
+		}
+		trigger_else_if = {
+			limit = { is_interest_group_type = ig_fascists }
+			scope:actor ?= { exists = ig:ig_fascists }
+		}
+
+		# cannot invite culturally discriminated exiles
+		character_acceptance = { target = scope:actor value >= acceptance_status_3 }
+
+		# Agitator must be able to start or join a movement
+		can_agitate = scope:actor
+	}
+
+	effect = {
+		transfer_character = scope:actor
+		set_variable = exile_to_ruler_var
+		add_career_length = {
+			role = agitator
+			months = 60
+			random_range = { 1.0 1.5 } # 60-90 months
+		}
+		custom_tooltip = invite_exile_start_join_movement_effect
+		hidden_effect = {
+			remove_modifier = in_exile_modifier
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					has_variable = mazzini_var
+					has_dlc_feature = voice_of_the_people_content
+				}
+				scope:actor ?= {
+					trigger_event = { id = historical_agitators.7 days = 3 }
+				}
+			}
+			if = {
+				limit = {
+					has_variable = garibaldi_var
+					has_dlc_feature = voice_of_the_people_content
+				}
+				set_variable = {
+					name = garibaldi_cooldown_var
+					days = short_modifier_time
+				}
+			}
+			if = {
+				limit = {
+					exists = root.home_country
+					NOT = { root.home_country = scope:actor }
+				}
+				if = {
+					limit = {
+						root.home_country = {
+							any_interest_group = {
+								is_in_government = yes
+								OR = {
+									this.type = root.interest_group_type
+									this.leader.ideology = root.ideology
+								}
+							}
+						}
+					}
+					root.home_country = {
+						create_diplomatic_catalyst = {
+							type = catalyst_invited_exile_positive
+							target = scope:actor
+						}		
+					}
+				}
+				else = {
+					root.home_country = {
+						create_diplomatic_catalyst = {
+							type = catalyst_invited_exile_negative
+							target = scope:actor
+						}		
+					}
+				}
+			}
+		}
+	}
+
+	cooldown = { days = normal_modifier_time }
+
+	ai_chance = {
+		value = -85
+		if = {
+			limit = {
+				popularity >= 75
+			}
+			add = 25
+		}	
+		if = {
+			limit = {
+				popularity >= 50
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				culture = {
+					is_primary_culture_of = scope:actor #PBF
+				}			
+			}
+			add = 50
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					any_interest_group = {
+						is_in_government = yes
+						save_temporary_scope_as = ex_ig
+					}
+				}		
+				ig_type_matches_former = yes	
+			}
+			add = 50
+		}
+		if = {
+			limit = {
+				scope:actor ?= { has_law = law_type:law_closed_borders }
+			}
+			add = -200
+		}
+		if = {
+			limit = {
+				scope:actor ?= { has_law = law_type:law_no_migration_controls }
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				scope:actor ?= { has_law_or_variant = law_type:law_multicultural }
+			}
+			add = 15
+		}
+		if = { 
+			limit = {
+				scope:actor ?= {
+					country_rank < rank_value:major_power
+				}
+			}
+			multiply = 0
+		}
+	}
+}
+
+REPLACE:arrange_accident = {
+	clicksound = "event:/SFX/DLC/1.3_ip1/UI/exile_character"
+
+	potential = {
+		is_in_exile_pool = no
+		is_in_void = no
+		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
+		OR = {
+			has_role_of_type = general
+			has_role_of_type = admiral
+			has_role_of_type = politician
+			has_role_of_type = agitator
+		}
+		NOT = { has_variable = bpm_untouchable_char }
+	}
+
+	show_requirements = yes
+
+	possible = {
+		owner ?= {
+			has_law = law_type:law_secret_police
+		}
+		interest_group = {
+			bpm_ig_is_marginal = no
+		}
+	}
+
+	effect = {
+		this.interest_group = {
+			save_scope_as = relevant_ig
+		}
+		this = {
+			save_scope_as = assassinated_scope
+		}
+		random_list = {
+			25 = {
+				kill_character = yes
+			}
+			50 = {
+				owner ?= {
+					post_notification = arranged_accident_failed
+				}
+				custom_tooltip = assassination_attempt_failed_tt
+			}
+			25 = {
+				custom_tooltip = assassination_attempt_failed_loud_tt
+				owner ?= {
+					add_radicals = {
+						value = very_large_radicals
+						interest_group = scope:relevant_ig
+					}
+				}
+				if = {
+					limit = {
+						character_supports_political_movement = yes
+					}
+					this.political_movement = {
+						add_modifier = {
+							name = modifier_government_accident_attempt
+							days = long_modifier_time
+						}
+					}
+				}
+				else_if = {
+					limit = {
+						has_role_of_type = politician
+						THIS.interest_group = {
+							interest_group_supports_political_movement = yes
+						}
+					}
+					owner ?= {
+						random_political_movement = {
+							limit = {
+								any_influenced_interest_group = {
+									this = scope:relevant_ig
+								}
+							}
+							add_modifier = {
+								name = modifier_government_accident_attempt
+								days = long_modifier_time
+							}
+						}
+					}
+				}
+				owner ?= {
+					post_notification = arranged_accident_failed_incrimination
+				}
+			}
+		}
+	}
+
+	cooldown = { days = normal_modifier_time }
+	show_confirmation_box = yes
+
+	ai_chance = {
+		value = -50
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -5
+				}		
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group = {
+					ig_approval <= -10
+				}		
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					NOR = {
+						has_law = law_type:law_autocracy
+						has_law = law_type:law_oligarchy
+						has_law = law_type:law_single_party_state
+					}
+				}			
+			}
+			add = -25
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_outlawed_dissent
+				}			
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_censorship
+				}			
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_right_of_assembly
+				}			
+			}
+			add = -10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					has_law = law_type:law_protected_speech
+				}			
+			}
+			add = -20
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					any_interest_group = {
+						is_insurrectionary = yes
+					}
+				}			
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler = {
+						OR = {
+							has_trait = cruel
+						}
+					}
+				}			
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler = {
+						OR = {
+							has_trait = imperious
+						}
+					}
+				}			
+			}
+			add = 10
+		}
+	}
+}
+
+REPLACE:resign_from_office = {
+	clicksound = "event:/SFX/UI/Military/command_grant"
+
+	potential = {
+		has_dlc_feature = voice_of_the_people_content
+		owner ?= scope:actor
+		is_ruler_of_own_country = yes
+		owner ?= {
+			NOR = {
+				has_law = law_type:law_monarchy
+				has_law = law_type:law_theocracy
+			}
+		}
+		NOT = { has_variable = bpm_untouchable_char }
+	}
+
+	possible = {
+		OR = {
+			interest_group = {
+				ig_approval <= angry
+			}
+			interest_group = {
+				bpm_ig_is_marginal = yes
+			}
+			popularity <= -50
+			OR = {
+				has_trait = psychological_affliction
+				has_trait = cancer
+				has_trait = senile
+				has_trait = wounded
+			}
+			owner ?= {
+				any_interest_group = {
+					is_insurrectionary = yes
+				}
+			}
+		}
+	}
+
+	effect = {
+		if = {
+			limit = {
+				owner ?= {
+					any_interest_group = {
+						is_insurrectionary = yes
+					}
+				}
+			}
+			owner ?= {
+				trigger_event = { id = resignation.2 popup = yes }
+			}
+		}
+		else = {
+			owner ?= {
+				trigger_event = { id = resignation.1 popup = yes }
+			}
+		}
+	}
+
+	cooldown = { months = 180 }
+	show_confirmation_box = yes
+
+	ai_chance = {
+		value = -50
+		if = {
+			limit = {	
+				interest_group = {
+					ig_approval <= angry
+				}
+			}
+			add = 25
+		}	
+		if = {
+			limit = {
+				interest_group = {
+					bpm_ig_is_marginal = yes
+				}				
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				popularity <= -50			
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				popularity <= -75			
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				OR = {
+					has_trait = psychological_affliction
+					has_trait = cancer
+					has_trait = senile
+					has_trait = wounded
+				}			
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				OR = {
+					has_trait = arrogant
+					has_trait = imperious
+				}			
+			}
+			add = -50
+		}
+	}
+}
+
+REPLACE:proclaim_regent_monarch = {
+    icon = "gfx/interface/icons/ideology_icons/ideology_leader/ideology_leader_royalist.dds"
+	potential = {
+		has_role = bpm_character_role_regent
+		owner ?= {
+			bpm_has_gov_regency = yes
+		}
+	}
+
+	possible = {
+        loyalty < define:NCharacters|LOYALTY_UNCERTAIN_THRESHOLD
+        custom_tooltip = {
+            text = eterna_regency_tt
+            has_variable = regency_years
+            var:regency_years > 10
+        }
+	}
+
+	effect = {
+        owner = {
+            if = {
+                limit = {
+                    var:bpm_regent ?= {
+                        is_female = yes
+                    }
+                }
+                custom_tooltip = female_regent_becomes_monarch_tt
+            }
+            if = {
+                limit = {
+                    var:bpm_regent ?= {
+                        is_female = no
+                    }
+                }
+                custom_tooltip = male_regent_becomes_monarch_tt
+            }
+            if = { # Sorts an edge case
+                limit = {
+                    NAND = {
+                        root.popularity < 27
+                        root.popularity > 23
+                    }
+                }
+                custom_tooltip = effects_depend_on_popularity_tt
+                add_modifier = {
+                    name = modifier_new_royal_dynasty
+                    days = long_modifier_time
+                    is_decaying = yes
+                    multiplier = {
+                        value = root.popularity
+                        subtract = 25
+                        divide = 2
+                        min = -25
+                        max = 25
+                    }
+                }
+            }
+            bpm_end_regency = yes
+        }
+		set_character_as_ruler = yes
+	}
+
+	cooldown = { days = long_modifier_time }
+	show_confirmation_box = yes
+
+	ai_chance = {
+		value = 1
 	}
 }

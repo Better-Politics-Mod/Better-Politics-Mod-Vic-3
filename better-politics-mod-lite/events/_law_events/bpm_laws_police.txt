@@ -1,0 +1,477 @@
+﻿namespace = laws_police
+
+laws_police.1 = { # advance
+	type = country_event
+	placement = root
+
+	title = laws_police.1.t
+	desc = laws_police.1.d
+	flavor = laws_police.1.f
+
+	category = enactment
+
+	event_image = {
+		video = "southamerica_public_figure_assassination"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		has_law = law_type:law_no_police
+		OR = {
+			is_enacting_law = law_type:law_local_police
+			is_enacting_law = law_type:law_dedicated_police
+			is_enacting_law = law_type:law_militarized_police
+		}
+		any_interest_group = {
+			is_in_government = no
+			is_marginal = no
+			law_stance = {
+				law = owner.currently_enacting_law.type
+				value < neutral
+			}
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		random_interest_group = {
+			limit = {
+				is_in_government = yes
+			}
+			save_scope_as = assassination_target_ig
+		}
+		random_interest_group = {
+			limit = {
+				is_in_government = no
+				is_marginal = no
+				law_stance = {
+					law = owner.currently_enacting_law.type
+					value < neutral
+				}
+			}
+			save_scope_as = they_dont_like_laws_ig
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = { # We shall protect our own
+		name = laws_police.1.a
+		scope:assassination_target_ig = {
+			add_modifier = {
+				name = well_protected_ig
+				months = normal_modifier_time
+			}
+		}
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group ={ 
+				limit = { 
+					bpm_ig_disagrees_to_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = rising_support_for_law_enforcement
+			}
+		}
+	}
+
+	option = { # See what our critics want?
+		name = laws_police.1.b
+		default_option = yes
+
+
+		scope:they_dont_like_laws_ig = {
+			add_modifier = {
+				name = under_suspicion_ig
+				months = normal_modifier_time
+			}
+		}
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_interest_group ={ 
+				limit = { 
+					bpm_ig_disagrees_to_neutral_enactment = yes
+				}
+				bpm_ig_increase_law_enactment_approval_medium = yes
+			}
+		}
+		else = { 
+			add_enactment_modifier = {
+				name = rising_support_for_law_enforcement
+			}
+		}
+	}
+}
+
+# The Papers' Police Polemics 
+laws_police.2 = { # debate
+	type = country_event
+	placement = root
+	title = laws_police.2.t
+	desc = laws_police.2.d
+	flavor = laws_police.2.f
+
+	category = enactment
+
+	duration = 3
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		has_law = law_type:law_no_police
+		OR = {
+			is_enacting_law = law_type:law_local_police
+			is_enacting_law = law_type:law_dedicated_police
+			is_enacting_law = law_type:law_militarized_police
+		}
+		NOR = { 
+			has_law = law_type:law_censorship
+			has_law = law_type:law_outlawed_dissent
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+    }
+
+    cancellation_trigger = {
+		NOT = { currently_enacting_law = scope:current_law_scope }
+	}
+
+	option = {
+		name = laws_police.2.a
+		default_option = yes
+		if = { 
+			limit = {is_player = yes}
+			random_list = { 
+				1 = { 
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_disapproves_to_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+				}
+				3 = { 
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_disapproves_to_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_small = yes
+					}
+				}
+				3 = { 
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_neutral_to_approves_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_medium = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				1 = {
+					add_enactment_modifier = {
+						name = flood_of_supportive_editorials
+					}
+				}
+				3 = {
+					add_enactment_modifier = {
+						name = flood_of_supportive_editorials
+						multiplier = 0.5
+					}
+				}
+				3 = {
+					add_enactment_modifier = {
+						name = wave_of_negative_editorials
+					}
+				}
+			}
+		}
+	}
+	option = {
+		name = laws_police.2.b
+		trigger = { 
+			has_law = law_type:law_right_of_assembly
+		}
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_list = { 
+				3 = { 
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_disapproves_to_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+				}
+				1 = { 
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_neutral_to_approves_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_big = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				3 = {
+					add_enactment_modifier = {
+						name = flood_of_supportive_editorials
+					}
+				}
+				1 = {
+					add_enactment_modifier = {
+						name = wave_of_negative_editorials
+						multiplier = 2
+					}
+				}
+			}
+		}
+	}
+	option = {
+		name = laws_police.2.c
+		trigger = { has_law = law_type:law_protected_speech }
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			random_list = { 
+				2 = { 
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_disapproves_to_neutral_enactment = yes
+						}
+						bpm_ig_increase_law_enactment_approval_medium = yes
+					}
+				}
+				2 = { 
+					random_interest_group = { 
+						limit = { 
+							bpm_ig_neutral_to_approves_enactment = yes
+						}
+						bpm_ig_decrease_law_enactment_approval_small = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				2 = {
+					add_enactment_modifier = {
+						name = flood_of_supportive_editorials
+					}
+				}
+				2 = {
+					add_enactment_modifier = {
+						name = wave_of_negative_editorials
+					}
+				}
+			}
+		}
+	}
+}
+
+# The Rally Run Roughshod
+laws_police.3 = { # stall event
+	type = country_event
+	placement = root
+	title = laws_police.3.t
+	desc = laws_police.3.d
+	flavor = laws_police.3.f
+
+	category = enactment
+
+	duration = 3
+
+	event_image = {
+		video = "africa_soldiers_breaking_protest"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_fire.dds"
+
+	cooldown = { months = normal_modifier_time }
+
+	trigger = {
+		any_political_movement = {
+			political_movement_support > 10
+			any_supporting_interest_group = {
+				is_marginal = no
+			}
+		}
+		has_law = law_type:law_no_police
+		OR = {
+			is_enacting_law = law_type:law_local_police
+			is_enacting_law = law_type:law_dedicated_police
+			is_enacting_law = law_type:law_militarized_police
+		}
+	}
+
+	immediate = {
+		currently_enacting_law = {
+    		save_scope_as = current_law_scope
+    	}
+		random_political_movement = {
+			limit = {
+				political_movement_support > 10
+			}
+			save_scope_as = rally_movement
+			random_supporting_interest_group = {
+				limit = {
+					is_marginal = no
+				}
+				save_scope_as = rally_movement_ig
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		OR = { 
+			NOT = {
+				currently_enacting_law = scope:current_law_scope 
+			}
+			NOT = {
+				exists = scope:rally_movement_ig
+			}
+			NOT = {
+				exists = scope:rally_movement
+			}
+		}
+	}
+
+	option = {
+		name = laws_police.3.a
+		default_option = yes
+
+		if = { 
+			limit = { 
+				is_player = yes
+			}
+			rally_movement_ig = { 
+				bpm_ig_decrease_law_enactment_approval_medium = yes
+			}
+		}
+		else ={ 
+			add_enactment_modifier = {
+				name = violently_suppressed_rally_bad_aftermath
+			}
+		}
+		scope:rally_movement = {
+			add_modifier = {
+				name = placated_rally_ig
+				months = normal_modifier_time
+			}
+		}
+	}
+	option = {
+		name = laws_police.3.b
+		trigger = { has_law = law_type:law_censorship }
+
+		scope:rally_movement = {
+			add_modifier = {
+				name = suppressed_rally_ig
+				months = normal_modifier_time
+			}
+		}
+		if = { 
+			limit = { is_player = yes }
+			random_list = { 
+				1 = { 
+					rally_movement_ig = { 
+						bpm_ig_decrease_law_enactment_approval_big = yes
+					}
+				}
+				1 = { 
+					rally_movement_ig = { 
+						bpm_ig_increase_law_enactment_approval_big = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				1 = {
+					add_enactment_modifier = {
+						name = violently_suppressed_rally_positive_aftermath
+					}
+				}
+				1 = {
+					add_enactment_modifier = {
+						name = violently_suppressed_rally_very_bad_aftermath
+					}
+				}
+			}
+		}
+	}
+	option = {
+		name = laws_police.3.c
+		if = { 
+			limit ={ 
+				is_player = yes
+			}
+			random_list = { 
+				1 = { 
+					rally_movement_ig = { 
+						bpm_ig_decrease_law_enactment_approval_big = yes
+					}
+				}
+				3 = { 
+					rally_movement_ig = { 
+						bpm_ig_increase_law_enactment_approval_big = yes
+					}
+				}
+			}
+		}
+		else = { 
+			random_list = {
+				1 = {
+					add_enactment_modifier = {
+						name = violently_suppressed_rally_positive_aftermath
+					}
+				}
+				3 = {
+					add_enactment_modifier = {
+						name = violently_suppressed_rally_very_bad_aftermath
+					}
+				}
+			}
+		}
+	}
+}

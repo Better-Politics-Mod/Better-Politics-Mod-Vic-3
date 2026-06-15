@@ -1,0 +1,156 @@
+﻿# BPM Cabinet Register Institutions (13)
+bpm_has_unfilled_cabinet_positions = {
+    OR = {
+        bpm_has_unfilled_cabinet_positions_subp = { INST = colonial_affairs }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = social_security }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = workplace_safety }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = police }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = schools }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = home_affairs }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = health_system }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = centralization }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = suffrage }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = culture }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = diplomacy }
+        bpm_has_unfilled_cabinet_positions_subp = { INST = economy }
+    }
+}
+
+bpm_has_unfilled_cabinet_positions_subp = {
+    OR = {
+        NOT = { has_variable = bpm_minister_of_$INST$  } 
+        NOT = { exists = var:bpm_minister_of_$INST$.interest_group }
+    }
+    has_variable = bpm_has_cabinet
+    has_institution = institution_$INST$
+}
+
+bpm_minister_valid_triggers = {
+    hidden_trigger = {
+        interest_group = {
+            bpm_interest_group_is_activated = yes
+        }
+        exists = interest_group
+        is_character_alive = yes
+        is_ruler_of_own_country = no
+        is_heir_of_own_country = no
+        NOR = {
+            has_role = bpm_character_role_minister
+            has_role = bpm_character_role_hog
+            has_role = bpm_character_role_acting_hog
+            has_role = bpm_character_role_protege
+        }
+        NOR = {
+            owner.var:bpm_minint ?= this
+            owner.var:bpm_minsoc ?= this
+            owner.var:bpm_minfor ?= this
+            owner.var:bpm_mineco ?= this
+            owner.var:bpm_minmor ?= this
+        }
+    }
+}
+
+bpm_char_can_be_minister = {
+    bpm_minister_valid_triggers = yes
+    has_role_of_type = politician
+    trigger_if = {
+        limit = {
+            game_date > 1836.1.1
+            owner = {
+                is_player = yes
+            }
+        }
+        OR = {
+            custom_tooltip = {
+                text = "bpm_ideologically_aligned_with_hog"
+                bpm_synergy_with_hog > 0.8
+            }
+            prominence >= 20
+        }
+    }
+}
+
+bpm_hog_valid_triggers = {
+    hidden_trigger = {
+        exists = interest_group
+        is_character_alive = yes
+        is_ruler_of_own_country = no
+        is_heir_of_own_country = no
+        NOT = {
+            has_role = bpm_character_role_protege
+            has_role = bpm_character_role_regent
+            has_role = bpm_character_role_acting_hog
+        }
+    }
+}
+
+bpm_char_can_be_hog = {
+    bpm_hog_valid_triggers = yes
+    interest_group = {
+        bpm_ig_is_marginal = no
+        is_insurrectionary = no
+        custom_tooltip = {
+            text = "bpm_not_anti_establishment_tt"
+            bpm_ig_is_radical_opposition = no
+        }
+        custom_tooltip = {
+            text = "bpm_not_extremist_tt"
+            bpm_ig_is_very_radical_opposition = no
+        }
+    }
+    trigger_if = {
+        limit = {
+            game_date > 1836.1.1
+            owner = {
+                is_player = yes
+            }
+        }
+        OR = {
+            custom_tooltip = {
+                text = "bpm_ideologically_aligned_with_ruler"
+                bpm_synergy_with_ruler > 0.8
+            }
+            prominence >= 30
+        }
+    }
+    trigger_else = {
+        prominence >= 25
+    }
+    trigger_if = {
+        limit = {
+            owner ?= {
+                has_law = law_type:law_appointed_by_hos
+            }
+        }
+        always = yes
+    }
+    trigger_else_if = {
+        limit = {
+            owner ?= {
+                has_law = law_type:law_appointed_on_advice
+            }
+        }
+        interest_group = {
+            OR = {
+                is_in_government = yes
+                custom_tooltip = {
+                    text = "bpm_ig_same_as_ruler_tt"
+                    this = owner.ruler.interest_group	
+                }
+            }
+        }
+    }
+}
+
+bpm_char_can_be_regent = {
+    NOT = {
+	    has_role_of_type = agitator
+	    has_role = bpm_character_role_hog
+        has_role = bpm_character_role_acting_hog
+	    has_role = bpm_character_role_protege
+    }
+    is_ruler_of_own_country = no
+    is_heir_of_own_country = no
+    is_character_alive = yes
+    exists = interest_group
+}

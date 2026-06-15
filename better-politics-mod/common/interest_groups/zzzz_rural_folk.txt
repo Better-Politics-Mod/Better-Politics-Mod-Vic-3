@@ -1,5 +1,5 @@
-﻿ig_rural_folk = {
-	color = hsv{ 0 0 0.5 }
+﻿REPLACE:ig_rural_folk = {
+	color = hsv{ 0.35 0.1 0.6 }
 	texture = "gfx/interface/icons/ig_icons/rural_folk.dds"	
 	layer = "revolution_dynamic_rural_folk"
 	index = 6
@@ -14,26 +14,25 @@
 		ideology_isolationist
 	}
 	
+	character_ideologies = {
+		ideology_moderate
+		ideology_pacifist
+		# ideology_bonapartist
+		# ideology_legitimist
+		ideology_land_reformer
+		ideology_protectionist
+		# ideology_reformer
+	}
+	
 	enable = {
 		always = yes
 	}
 	
 	on_enable = {
 		ig:ig_rural_folk = {
-			set_ig_trait = ig_trait:ig_trait_rural_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_rural_well_oiled_machine
-			set_ig_trait = ig_trait:ig_trait_rural_systematic_opposition
-		}
-		if = {
-			limit = {
-				OR = {
-					country_has_primary_culture = cu:yankee
-					country_has_primary_culture = cu:dixie
-				}
-			}
-			ig:ig_rural_folk = {
-				set_interest_group_name = ig_yeoman_farmers
-			}
+			#set_ig_trait = ig_trait:ig_trait_rural_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_rural_well_oiled_machine
+			#set_ig_trait = ig_trait:ig_trait_rural_systematic_opposition
 		}
 		# Frontier Expansion Ideology
 		if = {
@@ -51,29 +50,55 @@
 				add_ideology = ideology_mil_frontier_expansion
 			}
 		}
-		# Heimin
-		if = {
-			limit = {
-				country_has_primary_culture = cu:japanese
-			}
-			ig:ig_rural_folk = {
-				set_interest_group_name = ig_peasants
-			}
-		}
-		# Maka'āinana
-		if = {
-			limit = {
-				country_has_primary_culture = cu:hawaiian
-			}
-			ig:ig_rural_folk = {
-				set_interest_group_name = ig_maka_ainana
-			}
-		}
-
 		ig:ig_rural_folk = { bpm_reorder_ideologies = yes }
 	}
-	on_disable = {}	
-	on_character_ig_membership = {}
+	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				assamese avadhi baluchi bengali bihari gujarati kannada malayalam marathi oriya panjabi pathan rajput sindi tamil telegu hindustani bundeli pahari gondi bageli chhattisgarhi deccani
+			}
+		}
+		rule = {
+			trigger = {
+				c:ZAN ?= this
+				any_primary_culture = {
+					cu:bedouin = this
+				}
+			}
+			cultures = {
+				swahili lacustrine_bantu oromo
+			}
+		}
+	}
+
+	on_character_ig_membership = {
+		if = {
+			limit = {
+				OR = {
+					culture = cu:oromo
+					culture = cu:lacustrine_bantu
+				}
+				owner = {
+					c:ZAN ?= this
+					any_primary_culture = {
+						cu:bedouin = this
+					}
+				}
+			}
+			random_list = {
+				2 = { change_character_religion = rel:sunni }
+				1 = { change_character_religion = rel:animist }
+			}
+		}
+	}
 	
 	pop_potential = {
 		NOR = {
@@ -115,6 +140,19 @@
 			}
 		}
 
+		if = {
+			limit = {
+				c:BIC ?= owner
+				culture = {
+					has_discrimination_trait_group = heritage_group_european
+				}
+			}
+			multiply = {
+				desc = "POP_INDIA_COLONIAL_RULE"
+				value = 0.01 #0.1
+			}
+		}
+
 		multiply = ig_attraction_to_interests_from_stability
 
 		multiply = {
@@ -123,7 +161,7 @@
 			
 			if = {
 				limit = { 
-					owner = {
+					owner ?= {
 						OR = {
 							has_law = law_type:law_agrarianism
 							has_law = law_type:law_traditionalism
@@ -143,12 +181,22 @@
 	agitator_weight = {
 		value = 1.0
 		multiply = bpm_base_agitator_weight
+		if ={
+			limit = {
+				bpm_interest_group_is_activated = no
+			}
+			value = 0.0
+		}
 	}
 	
 	commander_weight = {
 		value = 1.0
 		multiply = bpm_commander_assignment_from_laws_factor
 	}	
+
+	executive_weight = {
+		value = 0.1
+	}
 	
 	noble_chance = {
 		value = 0.2
@@ -167,6 +215,11 @@
 	female_agitator_chance = {
 		value = 1.0
 		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

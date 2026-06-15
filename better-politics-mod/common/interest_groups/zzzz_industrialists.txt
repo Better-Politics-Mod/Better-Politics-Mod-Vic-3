@@ -1,10 +1,11 @@
-﻿ig_industrialists = {
-	color = hsv{ 0 0 0.5 }
+﻿REPLACE:ig_industrialists = {
+	color = hsv{ 0.08 0.2 0.55 }
 	texture = "gfx/interface/icons/ig_icons/industrialists.dds"
 	layer = "revolution_dynamic_industrialists"
 	index = 2
 
 	ideologies = {
+		ideology_gov_anti_proletarian
 		ideology_sta_institutional_state
 		ideology_mil_plutocratic_militarist
 		ideology_eco_laissez_faire
@@ -13,6 +14,20 @@
 		ideology_laissez_faire
 		ideology_individualist
 	}
+
+	character_ideologies = {
+		ideology_moderate
+		ideology_market_liberal
+		ideology_protectionist
+		# ideology_liberal_leader
+		# ideology_positivist
+		# ideology_corporatist_leader
+		# ideology_authoritarian
+		# ideology_orleanist
+		# ideology_bonapartist
+		# ideology_land_reformer
+		ideology_reformer
+	}
 	
 	enable = {
 		always = yes
@@ -20,18 +35,90 @@
 	
 	on_enable = {
 		ig:ig_industrialists = {
-			set_ig_trait = ig_trait:ig_trait_urban_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_urban_well_oiled_machine
-			set_ig_trait = ig_trait:ig_trait_urban_systematic_opposition
+			#set_ig_trait = ig_trait:ig_trait_urban_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_urban_well_oiled_machine
+			#set_ig_trait = ig_trait:ig_trait_urban_systematic_opposition
+			if = {
+				limit = {
+					owner = {
+						c:BIC ?= this
+					}
+				}
+				set_interest_group_name = ig_east_india_company
+			}
 		}
 	}
 	on_disable = {}
-	on_character_ig_membership = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				british scottish irish
+			}
+		}
+		rule = {
+			trigger = {
+				c:ZAN ?= this
+				any_primary_culture = {
+					cu:bedouin = this
+				}
+			}
+			cultures = {
+				bedouin swahili north_german british gujarati
+			}
+		}
+		rule = {
+			trigger = {
+				c:HAW ?= this
+				NOT = { has_variable = deported_americans }
+			}
+			cultures = {
+				yankee dixie british hawaiian
+			}
+		}
+	}
+
+
+	on_character_ig_membership = {
+		if = {
+			limit = {
+				OR = {
+					culture = cu:british
+					culture = cu:north_german
+				}
+				owner = {
+					c:ZAN ?= this
+					any_primary_culture = {
+						cu:bedouin = this
+					}
+				}
+			}
+			change_character_religion = rel:protestant
+		}
+		if = {
+			limit = {
+				culture = cu:gujarati
+				owner = {
+					c:ZAN ?= this
+					any_primary_culture = {
+						cu:bedouin = this
+					}
+				}
+			}
+			change_character_religion = rel:shiite
+		}
+	}
 	
 	pop_potential = {
 		custom_tooltip = {
 			text = BPM_VALID_POP_FOR_IG
-			owner = {
+			owner ?= {
 				NOT = {
 					is_country_type = decentralized
 				}
@@ -41,6 +128,17 @@
 			is_pop_type = capitalists
 			is_pop_type = engineers
 			is_pop_type = shopkeepers
+			AND = {
+				exists = c:BIC
+				owner ?= c:BIC
+				OR = {
+					culture ?= {
+						has_discrimination_trait_group = heritage_group_european
+					}
+					is_pop_type = bureaucrats
+					is_pop_type = clerks
+				}
+			}
 		}
 	}
 	
@@ -67,6 +165,31 @@
 					value = 100
 				}
 			}
+			if = {
+				limit = {
+					owner = { 
+						has_variable = bpm_liberal_movement 
+						NOT = { exists = ig:ig_liberals }
+					}
+				}
+				add = {
+					desc = "POP_CAPITALISTS"
+					value = 75
+				}
+			}
+		}
+		else_if = {
+			limit = { 
+				is_pop_type = aristocrats
+				owner = { 
+					has_variable = bpm_liberal_movement 
+					NOT = { exists = ig:ig_liberals }
+				}
+			}
+			add = {
+				desc = "POP_ARISTOCRATS"
+				value = 75
+			}
 		}
 		else_if = {
 			limit = { is_pop_type = engineers }
@@ -83,6 +206,70 @@
 			}
 		}
 		
+		if = {
+			limit = {
+				owner = {
+					c:BIC ?= this
+				}
+				culture = {
+					has_discrimination_trait_group = heritage_group_european
+				}
+				OR = {
+					strata = upper
+					strata = middle
+				}
+				NOT = {
+					is_pop_type = officers
+				}
+			}
+			add = {
+				desc = "POP_INDIA_EUROPEAN_ADMINISTRATORS"
+				value = 1000 #250
+			}
+		}
+		
+		if = {
+			limit = {
+				owner = {
+					c:BIC ?= this
+				}
+			}
+			if = {
+				limit = {
+					NOT = {
+						culture = {
+							has_discrimination_trait_group = heritage_group_european
+						}
+					}
+					OR = {
+						is_pop_type = bureaucrats
+						is_pop_type = clerks
+					}
+				}
+				add = {
+					desc = "POP_INDIA_NATIVE_ADMINISTRATORS"
+					value = 100 #25
+				}
+			}
+			else_if = {
+				limit = {
+					NOT = {
+						culture = {
+							has_discrimination_trait_group = heritage_group_european
+						}
+					}
+					NOR = {
+						is_pop_type = bureaucrats
+						is_pop_type = clerks
+					}
+				}
+				multiply = {
+					desc = "POP_INDIA_ADMINISTRATION_PRIVILEGES"
+					value = 0.5 #0.05
+				}
+			}
+		}
+
 		add = {
 			desc = "NOT_RURAL_POP"
 			if = {
@@ -103,12 +290,33 @@
 	agitator_weight = {
 		value = 1.0
 		multiply = bpm_base_agitator_weight
+		if ={
+			limit = {
+				bpm_interest_group_is_activated = no
+			}
+			value = 0.0
+		}
 	}
 	
 	commander_weight = {
 		value = 0.5
 		multiply = bpm_commander_assignment_from_laws_factor
 	}	
+
+	executive_weight = {
+		value = 2.0
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_cooperative_ownership
+						has_law = law_type:law_command_economy
+					}
+				}
+			}
+			value = 0.0
+		}
+	}
 	
 	noble_chance = {
 		value = 0.3
@@ -127,6 +335,11 @@
 	female_agitator_chance = {
 		value = 1.0
 		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

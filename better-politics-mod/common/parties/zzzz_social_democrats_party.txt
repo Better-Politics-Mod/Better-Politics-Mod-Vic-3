@@ -2,10 +2,16 @@
 # Attracts weak leftists and liberals
 # Available for Trade Unions pre-Socialism
 
-social_democrat_party = {
+REPLACE:social_democrat_party = {
 	color = hsv{ 0.98 0.9 0.8 }
 	name = {
 		first_valid = {
+			triggered_desc = {
+				desc = party_trade_union_syndicates
+				trigger = {
+					has_law = law_type:law_no_parties_allowed
+				}
+			}
 			triggered_desc = {
 				desc = party_socdem_gbr
 				trigger = {
@@ -88,6 +94,13 @@ social_democrat_party = {
 				trigger = {
 					exists = c:NET
 					THIS = c:NET
+				}
+			}
+			triggered_desc = {
+				desc = party_socdem_ast
+				trigger = {
+					country_has_primary_culture = cu:australian
+					NOT = {THIS = c:NZL}
 				}
 			}
 			triggered_desc = {
@@ -225,6 +238,11 @@ social_democrat_party = {
 						country_has_primary_culture = cu:north_italian
 						country_has_primary_culture = cu:south_italian
 					}
+					NOR = {
+						c:AUS ?= this
+						c:KUK ?= this
+						c:HRE ?= this
+					}
 				}
 			}
 			triggered_desc = {
@@ -296,6 +314,13 @@ social_democrat_party = {
 				}
 			}
 			triggered_desc = {
+				desc = party_socdem_cub
+				trigger = {
+					exists = c:CUB
+					THIS = c:CUB
+				}
+			}
+			triggered_desc = {
 				desc = party_social_democrats
 				trigger = {
 					always = yes
@@ -316,12 +341,13 @@ social_democrat_party = {
 	}
 	available_for_interest_group = {
 		owner = { has_technology_researched = labor_movement }
-		bpm_ig_enabled = yes
+		bpm_interest_group_is_activated = yes
 		NOT = { bpm_is_party_banned = { PARTY = social_democrat_party } }
 		owner = {
 			any_interest_group = {
 				bpm_ig_is_proletarian = yes
-				is_marginal = no
+#				bpm_ig_is_marginal = no
+				bpm_interest_group_is_activated = yes
 			}
 		}
 		OR = {
@@ -346,6 +372,33 @@ social_democrat_party = {
 		value = {
 			value = -2
 			desc = "base_value"
+		}
+		if = {
+			limit = {
+				owner = {
+					is_player = yes
+					has_variable = bpm_party_establishment_social_democrat
+				}
+				NOR = {
+					bpm_ig_is_radical_opposition = yes
+					bpm_ig_is_very_radical_opposition = yes
+				}
+			}
+			add = {
+				desc = "bpm_from_party_establishment"
+				value = {
+					value = 20
+					if = {
+						limit = {
+							bpm_ig_is_institutional = yes
+						}
+						subtract = 12
+					}
+				}
+				multiply = owner.var:bpm_party_establishment_social_democrat
+				multiply = owner.var:bpm_political_stability
+				divide = 10000
+			}
 		}
 		if = {
 			limit = {
@@ -431,7 +484,7 @@ social_democrat_party = {
 		if = { # trade unions are inclined towards socialism
 			limit = {
 				is_interest_group_type = ig_trade_unions
-				NOT = { owner = { has_law = law_type:law_illegal_labor_unions } }
+				NOT = { owner = { has_law = law_type:law_combination_acts } }
 			}
 			add = {	
 				value = 10
@@ -441,7 +494,7 @@ social_democrat_party = {
 		if = { # trade unions are inclined towards socialism
 			limit = {
 				is_interest_group_type = ig_trade_unions
-				owner = { has_law = law_type:law_illegal_labor_unions }
+				owner = { has_law = law_type:law_combination_acts }
 			}
 			add = {	
 				value = 14
@@ -582,6 +635,24 @@ social_democrat_party = {
 				desc = from_marked_liberal_sd
 			}
 		}
+		if = { # Trade Unions, Syndicates etc. are represented too
+			limit = {
+				owner = {
+					has_law = law_type:law_no_parties_allowed
+					NOT = {
+						has_law = law_type:law_outlawed_dissent
+					}
+				}
+				OR = {
+					is_interest_group_type = ig_trade_unions
+				}
+			}
+
+			add = {
+				value = 150
+				desc = "from_trade_union_interests_no_parties_allowed"
+			}
+		}
 		if = { # anti-censorship
 			limit = {
 				bpm_ig_is_radical_liberal = yes
@@ -677,7 +748,7 @@ social_democrat_party = {
 		if = { # anti-serfdom
 			limit = {
 				owner = {
-					has_law = law_type:law_serfdom
+					has_law_or_variant = law_type:law_serfdom
 				}
 				OR = {
 					bpm_ig_is_abolitionist = yes	
@@ -725,7 +796,7 @@ social_democrat_party = {
 			limit = {
 				OR = {
 					bpm_ig_is_non_religious = yes
-					leader = { has_ideology = ideology:ideology_atheist }
+					leader = { has_ideology = ideology:ideology_nihilist }
 				}
 			}
 			add = {
@@ -752,6 +823,7 @@ social_democrat_party = {
 							}
 						}
 					}
+					NOT = { has_variable = bpm_fra_second_republic }
 				}
 			}
 			add = {
@@ -768,6 +840,30 @@ social_democrat_party = {
 				desc = "bpm_anti_electoralist"
 			}
 		}
+		if = { # Christian Democrats hate electoralism
+			limit = {
+				is_interest_group_type = ig_christian_democrats
+				has_ideology = ideology:ideology_dop_placeholder
+				
+			}
+			add = {
+				value = -25
+				desc = "bpm_from_hostility_towards_democracy"
+			}
+		}
+
+		else_if = {
+			limit = {
+				is_interest_group_type = ig_christian_democrats
+				NOT = {
+					has_ideology = ideology:ideology_dop_placeholder
+				}
+			}
+			add = {
+				value = -25
+				desc = from_conservatism
+			}
+		}
 		if = { # Strong anti-electoralism
 			limit = {
 				bpm_ig_is_strongly_anti_electoralist_socialist = yes
@@ -775,6 +871,45 @@ social_democrat_party = {
 			add = {
 				value = -30
 				desc = "bpm_strongly_anti_electoralist"
+			}
+		}
+
+		# ===========================================================================
+		# Hardcoded party affiliation
+		# ===========================================================================
+		# GBR
+		if = {
+			limit = { owner = c:GBR }
+			if = { 
+				limit = {
+					OR = {
+						is_interest_group_type = ig_socialists
+						leader = { bpm_leader_is_party_socialist = yes }
+					}
+					NOT = { has_global_variable = first_intl_chain_complete_var }
+				}
+				add = {
+					value = 50
+					desc = "bpm_from_english_early_socialists"
+				}
+			}
+		}
+		else_if = {
+			limit = { owner = c:FRA }
+			if = { 
+				limit = {
+					OR = {
+						is_interest_group_type = ig_socialists
+						is_interest_group_type = ig_agrarian_populists
+						is_interest_group_type = ig_trade_unions
+						leader = { bpm_leader_is_party_socialist = yes }
+					}
+					owner = { has_variable = bpm_fra_second_republic }
+				}
+				add = {
+					value = 50
+					desc = "bpm_from_french_early_socialists"
+				}
 			}
 		}
 	}

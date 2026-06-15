@@ -1,0 +1,283 @@
+﻿ig_national_liberals = {
+	color = hsv{ 0.50 0.9 0.8 }
+	texture = "gfx/interface/icons/ig_icons/national_liberals.dds"
+	layer = "revolution_dynamic_petty_bourgeoisie"
+	index = 10
+
+	ideologies = {
+		ideology_nonexistent
+	}
+	
+	character_ideologies = {
+		ideology_center_leader
+		ideology_positivist
+		ideology_jingoist_leader
+		ideology_protectionist
+		ideology_sovereignist_leader
+		ideology_liberal_leader
+		ideology_radical
+		ideology_corporatist_leader
+		ideology_authoritarian
+		ideology_reformer
+	}
+
+	enable = {
+		always = yes
+	}
+	
+	on_enable = {
+		ig:ig_national_liberals ?= {
+			# #set_ig_trait = ig_trait:ig_trait_right_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_right_bastion_of_freedom
+			#set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
+		}
+
+		#create_natlib_start_characters = yes
+	}
+	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				assamese avadhi baluchi bengali bihari gujarati kannada malayalam marathi oriya panjabi pathan rajput sindi tamil telegu hindustani bundeli pahari gondi bageli chhattisgarhi deccani
+			}
+		}
+
+		rule = {
+			trigger = {
+				c:CHI ?= this
+				any_primary_culture = { 
+					cu:manchu = this
+				}
+			}
+			cultures = {
+				han
+			}
+		}
+	}
+
+
+	on_character_ig_membership = {}
+	
+	pop_potential = {
+		custom_tooltip = {
+			text = BPM_VALID_POP_FOR_IG
+			owner ?= {
+				ig:ig_national_liberals ?= {
+					NOT = { has_ideology = ideology:ideology_nonexistent }
+					bpm_interest_group_is_activated = yes
+				}
+			}
+		}
+		game_date > 1836.1.2
+	}
+	
+	pop_weight = {
+		value = 30
+		
+		if = {
+			limit = {
+				owner = {
+					ig:ig_national_liberals ?= {
+						OR = {
+							has_ideology = ideology:ideology_nonexistent
+							bpm_interest_group_is_activated = no
+						}
+					}	
+				}
+			}
+			value = -999
+		}
+
+		if = {
+			limit = { strata = lower }
+			add = {
+				desc = "LOWER_CLASS"
+				value = 20
+			}
+		}
+		else_if = {
+			limit = { strata = middle }
+			add = {
+				desc = "MIDDLE_CLASS"
+				value = 50
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = capitalists
+			}
+			add = {
+				desc = "POP_CAPITALISTS"
+				value = 175
+			}
+		}
+		else_if = {
+			limit = {
+				is_pop_type = aristocrats
+			}
+			add = {
+				desc = "POP_ARISTOCRATS"
+				value = 220
+			}
+		}
+
+		# RURAL
+		if = {
+			limit = {
+				bpm_pop_employment_is_rural = yes
+			}
+			add = {
+				desc = "RURAL"
+				value = 50
+			}
+		}
+		if = { 
+			limit = { 
+				owner = { 
+					bpm_performance_significant_country = yes
+					has_global_variable = bpm_peoples_springtime_happened
+					
+					OR = {
+						can_form_nation = ITA
+						can_form_nation = GER
+					}
+				}
+			}
+			add = { 
+				desc = "UNIFICATION_CANDIDATE"
+				value = 15
+			}
+		}
+		if = { 
+			limit = { 
+				owner = { 
+					bpm_performance_significant_country = yes
+					has_modifier = unification_prestige
+				}
+			}
+			add = { 
+				desc = "RECENTLY_UNIFIED"
+				value = 20
+			}
+		}
+		multiply = {
+			desc = "UNEDUCATED"
+			value = literacy_rate
+			multiply = 1.6
+			max = 1.0
+		}
+
+		multiply = ig_attraction_to_ruler_ideology_from_stability
+
+		if = {
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			multiply = {
+				desc = "IN_WAR"	
+				value = 1.0
+	
+				if = {
+					limit = { owner = { is_at_war = yes } }
+					value = 1.5
+				}		
+			}
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.005
+						add = 1
+						max = 1.5
+						min = 0.67
+					}
+				}
+			}	
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+			multiply = { desc = bpm_ig_attraction_from_radicals_and_loyalists_tt value = ig_attraction_from_radicals_and_loyalists }
+		}
+	}
+	
+	monarch_weight = {
+		value = 0.5
+	}	
+
+	agitator_weight = {
+		value = 1.0
+		multiply = owner.ig:ig_national_liberals.bpm_base_agitator_weight
+		if ={
+			limit = {
+				owner.ig:ig_national_liberals = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}
+	
+	commander_weight = {
+		value = 2.5
+		multiply = bpm_commander_assignment_from_laws_factor
+		if ={
+			limit = {
+				owner.ig:ig_national_liberals = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}	
+
+	executive_weight = {
+		value = 0.3
+		if ={
+			limit = {
+				owner.ig:ig_national_liberals = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}	
+	
+	noble_chance = {
+		value = 0.3
+	}
+	
+	female_commander_chance = {	
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
+	}
+	
+	female_politician_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
+
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}
+	
+	# The chance that a commander belonging to this IG takes over leadership when it changes
+	# scope:character is the most popular commander in the IG
+	commander_leader_chance = {
+		value = 0.25
+		if = {
+			limit = {
+				exists = scope:character
+			}
+			multiply = {
+				value = 1
+				add = scope:character.popularity
+				min = 0
+			}
+		}
+	}
+}

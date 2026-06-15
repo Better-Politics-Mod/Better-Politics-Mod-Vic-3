@@ -13,6 +13,7 @@ je_bpm_split_natlibs = {
 	group = bpm_je_group_interest_groups
 
 	is_shown_when_inactive = {
+		always = no
 		NOR = {
 			c:FRA = root # The French have the power of Nationalism on their side right away
 			AND = { # Latin american Positivists
@@ -28,13 +29,20 @@ je_bpm_split_natlibs = {
 				year > 1850
 				has_technology_researched = nationalism
 				hidden_trigger = { NOT = { has_variable = local_natlib_split_var } }
-				bpm_country_laws_no_voting = no
+				country_has_voting_franchise = yes
 			}
 			hidden_trigger = {
 				ruler = {
 					interest_group = { is_interest_group_type = ig_national_liberals }
 				}
 			}
+		}
+		trigger_if = {
+			limit = { 
+				this = c:BIC
+			}
+			NOT = { has_journal_entry = je_uneasy_raj }
+			NOT = { has_journal_entry = je_sepoy_mutiny }
 		}
 	}
 
@@ -48,6 +56,7 @@ je_bpm_split_natlibs = {
 	}
 
 	on_complete = {
+		set_variable = local_natlib_split_var
 		if = {
 			limit = {
 				OR = {
@@ -55,14 +64,14 @@ je_bpm_split_natlibs = {
 					country_has_primary_culture = cu:south_german
 				}
 			}
-			trigger_event = { id = bpm_natlib_split.1 }
+			trigger_event = { id = bpm_natlib_split.1 days = 1 }
 		} else_if = {
 			limit = {
 				bpm_country_is_major_unification_candidate = yes
 			}
-			trigger_event = { id = bpm_natlib_split.2 }
+			trigger_event = { id = bpm_natlib_split.2 days = 1 }
 		} else = {
-			trigger_event = { id = bpm_natlib_split.3 }
+			trigger_event = { id = bpm_natlib_split.3 days = 1 }
 		}
 	}
 
@@ -70,7 +79,7 @@ je_bpm_split_natlibs = {
 
 	weight = 100
 
-	should_be_pinned_by_default = no
+	should_be_pinned_by_default_uninvolved_or_context = no
 }
 
 # Market Liberals are a conservative group that support market reforms. 
@@ -87,7 +96,11 @@ je_bpm_split_marlibs = {
 	group = bpm_je_group_interest_groups
 
 	is_shown_when_inactive = {
-		always = yes
+		always = no
+		NAND = {
+			c:BIC ?= this
+			has_dlc_feature = ip2_content
+		}
 	}
 
 	possible = {
@@ -95,12 +108,12 @@ je_bpm_split_marlibs = {
 		hidden_trigger = { NOT = { has_variable = local_marlib_split_var } }
 		any_interest_group = {
 			OR = {
-				is_marginal = no
-				is_being_bolstered = yes
+				bpm_ig_is_marginal = no
+				# is_being_bolstered = yes
 			}
 			bpm_ig_is_liberal = yes
 		}
-		bpm_country_laws_no_voting = no
+		country_has_voting_franchise = yes
 	}
 
 	complete = {
@@ -113,14 +126,15 @@ je_bpm_split_marlibs = {
 	}
 
 	on_complete = {
-		trigger_event = { id = bpm_marlib_split.1 }
+		set_variable = local_marlib_split_var
+		trigger_event = { id = bpm_marlib_split.1 days = 1 }
 	}
 
 	scripted_progress_bar = je_bpm_split_marlibs_progress_bar
 
 	weight = 100
 
-	should_be_pinned_by_default = no
+	should_be_pinned_by_default_uninvolved_or_context = no
 }
 
 # Paternalists are a more advanced version of conservatives, arriving to adapt the conservative thought to the modern era. Instead of a split, they cause a replacement of existing conservatives.
@@ -140,20 +154,23 @@ je_bpm_split_patcons = {
 	group = bpm_je_group_interest_groups
 
 	is_shown_when_inactive = {
-		always = yes
+		always = no
 	}
 
 	possible = {
 		hidden_trigger = { NOT = { has_variable = local_patcon_split_var } }
-		ig:ig_conservatives = {
+		ig:ig_conservatives ?= {
 			OR = {
-				is_marginal = no
-				is_being_bolstered = yes
+				bpm_ig_is_marginal = no
+				# is_being_bolstered = yes
 			}
 		}
-		bpm_country_laws_no_voting = no
+		country_has_voting_franchise = yes
 		trigger_if = {
-			limit = { exists = c:USA }
+			limit = { 
+				exists = c:USA 
+				this = c:USA
+			}
 			NOT = { this = c:USA }
 		}
 		trigger_if = {
@@ -170,12 +187,20 @@ je_bpm_split_patcons = {
 			}
 			NOT = { has_journal_entry = je_pedro_brazil }
 		}
+		trigger_else_if = {
+			limit = { 
+				this = c:BIC
+			}
+			NOT = { has_journal_entry = je_uneasy_raj }
+			NOT = { has_journal_entry = je_sepoy_mutiny }
+		}
 		OR = {
-			has_technology_researched = labor_movement
-			ig:ig_socialists ?= { is_marginal = no }
-			ig:ig_anarchists ?= { is_marginal = no }
-			ig:ig_reformist_socialists ?= { is_marginal = no }
-			ig:ig_revolutionist_socialists ?= { is_marginal = no }
+			has_technology_researched = corporatism #labor_movement
+			#ig:ig_socialists ?= { bpm_ig_is_marginal = no }
+			#ig:ig_anarchists ?= { bpm_ig_is_marginal = no }
+			#ig:ig_reformist_socialists ?= { bpm_ig_is_marginal = no }
+			#ig:ig_revolutionist_socialists ?= { bpm_ig_is_marginal = no }
+			bpm_country_proletarian_are_popular = yes
 		}
 	}
 
@@ -196,7 +221,7 @@ je_bpm_split_patcons = {
 
 	weight = 100
 
-	should_be_pinned_by_default = no
+	should_be_pinned_by_default_uninvolved_or_context = no
 }
 
 # FIRST INTERNATIONAL 
@@ -213,11 +238,29 @@ je_bpm_first_international = {
 	group = bpm_je_group_global
 
 	is_shown_when_inactive = {
-		# has_global_variable = march_to_radicalism_complete_var
+		# has_global_variable = bpm_march_to_radicalism_complete_var
 		hidden_trigger = { NOT = { has_global_variable = first_intl_started_var } }
 	}
 
-	immediate = {
+	should_be_involved = {
+		any_country = {
+			country_rank >= rank_value:minor_power
+			OR = {
+				has_technology_researched = socialism
+				has_technology_researched = anarchism
+			}
+		}
+	}
+
+	invalid = {
+		hidden_trigger = { has_global_variable = first_intl_chain_complete_var } # It was already finished
+	}
+
+	should_show_when_not_involved = {
+		always = yes
+	}
+
+	immediate_all_involved = {
 		if = {
 			limit = { NOT = { has_global_variable = bpm_je_first_intl_progress } }
 			set_global_variable = {
@@ -226,30 +269,33 @@ je_bpm_first_international = {
 			}
 		}
 		# Make sure Peoples Springtime is set if it somehow never happened (mod conflict?)
-		set_global_variable = peoples_springtime_happened
+		set_global_variable = bpm_peoples_springtime_happened
 	}
 
 	possible = {
 		custom_tooltip = {
-			text = "bpm_je_trigger_peoples_springtime_happened"
+			text = "bpm_je_trigger_bpm_peoples_springtime_happened"
 			OR = {
-				has_global_variable = peoples_springtime_happened
+				has_global_variable = bpm_peoples_springtime_happened
 				game_date > 1855.1.1
 			}
 		}
 		trigger_if = {
 			limit = {
-				has_global_variable = peoples_springtime_happened
+				has_global_variable = bpm_peoples_springtime_happened
 			}
 			custom_tooltip = {
 				text = "bpm_je_trigger_peoples_springtime_not_recent"
 				NOT = { has_global_variable = recently_completed_peoples_springtime_je }
 			}
 		}
-	}
-
-	invalid = {
-		hidden_trigger = { has_global_variable = first_intl_chain_complete_var } # It was already finished
+		any_country = {
+			country_rank >= rank_value:minor_power
+			OR = {
+				has_technology_researched = socialism
+				has_technology_researched = anarchism
+			}
+		}
 	}
 
 	complete = {
@@ -262,9 +308,16 @@ je_bpm_first_international = {
 		}
 	}
 
-	on_complete = {
+	on_complete_all_involved = {
+		show_as_tooltip = {
+			trigger_event = { id = bpm_1st_intl.1 }
+		}
+	}
 		
-		trigger_event = { id = bpm_1st_intl.1 }
+	on_complete = {
+		hidden_effect = { every_country = {	
+			trigger_event = { id = bpm_1st_intl.1 }
+		} }
 	}
 
 	on_weekly_pulse = {
@@ -285,7 +338,8 @@ je_bpm_first_international = {
 
 	weight = 150
 
-	should_be_pinned_by_default = yes
+	should_be_pinned_by_default_involved = yes
+	should_be_pinned_by_default_uninvolved_or_context = yes
 }
 
 
@@ -307,10 +361,23 @@ je_bpm_second_international = {
 		NOT = { has_global_variable = second_intl_attempted_var }
 	}
 
-	immediate = {
+	immediate_all_involved = {
 		
 	}
+	
+	should_be_involved = {
+		any_country = {
+			country_rank >= rank_value:minor_power
+			OR = {
+				has_technology_researched = socialism
+				has_technology_researched = anarchism
+			}
+		}
+	}
 
+	should_show_when_not_involved = {
+		always = yes
+	}
 	possible = {
 		custom_tooltip = {
 			text = "bpm_first_intl_happened"
@@ -333,8 +400,16 @@ je_bpm_second_international = {
 		}
 	}
 
+	on_complete_all_involved = {
+		show_as_tooltip = {
+			trigger_event = { id = bpm_2nd_intl.1 }
+		}
+	}
+
 	on_complete = {
-		trigger_event = { id = bpm_2nd_intl.1 }
+		hidden_effect = { every_country = {
+			trigger_event = { id = bpm_2nd_intl.1 }
+		} }
 	}
 
 	on_weekly_pulse = {
@@ -355,40 +430,53 @@ je_bpm_second_international = {
 
 	weight = 150
 
-	should_be_pinned_by_default = yes
+	should_be_pinned_by_default_involved = yes
+	should_be_pinned_by_default_uninvolved_or_context = yes
 }
 
-je_bpm_split_fascists = {
-	icon = "gfx/interface/icons/invention_icons/stormtroopers.dds"
-
-	group = bpm_je_group_interest_groups
-
-	is_shown_when_inactive = {
-		always = yes
-	}
-
-	possible = {
-		year > 1900
-		has_technology_researched = political_agitation
-		bpm_country_laws_no_voting = no
-	}
-
-	complete = {
-		custom_tooltip = {
-			text = "bpm_je_progress_complete"
-			scope:journal_entry = {
-				"scripted_bar_progress(je_bpm_split_fascists_progress_bar)" >= 100
-			}
-		}
-	}    
-	
-	on_complete = {
-        trigger_event = { id = bpm_fascist_split.1 }
-    }
-
-	scripted_progress_bar = je_bpm_split_fascists_progress_bar
-
-	weight = 100
-
-	should_be_pinned_by_default = no
-}
+#je_bpm_split_fascists = {
+#	icon = "gfx/interface/icons/invention_icons/stormtroopers.dds"
+#
+#	group = bpm_je_group_interest_groups
+#
+#	is_shown_when_inactive = {
+#		always = no
+#		NOT = { has_law = law_type:law_isolationism }
+#		# has_global_variable = second_intl_attempted_var
+#	}
+#
+#	possible = {
+#		has_technology_researched = political_agitation
+#		country_has_voting_franchise = yes
+#		OR = {
+#			custom_tooltip = {
+#				text = bpm_red_scare_unlock_tt
+#				any_country = {
+#					country_rank >= rank_value:major_power
+#					has_law = law_type:law_council_republic
+#				}
+#			}
+#			socialist_revolution_ongoing = yes
+#			# year > 1900
+#		}
+#	}
+#
+#	complete = {
+#		custom_tooltip = {
+#			text = "bpm_je_progress_complete"
+#			scope:journal_entry = {
+#				"scripted_bar_progress(je_bpm_split_fascists_progress_bar)" >= 100
+#			}
+#		}
+#	}    
+#	
+#	on_complete = {
+#       trigger_event = { id = bpm_fascist_split.1 }
+#    }
+#
+#	scripted_progress_bar = je_bpm_split_fascists_progress_bar
+#
+#	weight = 100
+#
+#	should_be_pinned_by_default_uninvolved_or_context = no
+#}

@@ -1,0 +1,425 @@
+﻿ig_reactionaries = {
+	color = hsv{ 0.67 0.7 0.9 }
+	texture = "gfx/interface/icons/ig_icons/reactionaries.dds"
+	layer = "revolution_dynamic_landowners"
+	index = 14
+	
+	ideologies = {
+		ideology_gov_radical_monarchist
+		ideology_dop_autocrat
+		ideology_sta_security_state
+		ideology_cit_traditional_culture
+		ideology_rel_radical_moralist
+		ideology_mil_aristocratic_militarist
+		ideology_eco_traditional_agrarian
+		ideology_wel_no_welfare
+		ideology_fem_patriarchal
+		ideology_ban_conservative_supremacist
+		# Vanilla
+		ideology_reactionary
+		ideology_hierarchic
+		ideology_patriotic
+	}
+
+	character_ideologies = {
+		ideology_center_leader
+		ideology_traditionalist
+		ideology_authoritarian
+		ideology_theocrat
+		ideology_serfdom_reformer
+		ideology_royalist
+	}
+	
+	enable = {
+		always = yes
+	}
+	
+	on_enable = {
+		ig:ig_reactionaries ?= {
+			# #set_ig_trait = ig_trait:ig_trait_right_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_right_bastion_of_freedom
+			#set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
+		}
+	}
+	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:USA ?= this
+				any_primary_culture = { 
+					cu:dixie = this
+				}
+			}
+			cultures = {
+				dixie
+			}
+		}
+
+		rule = {
+			trigger = {
+				c:AUS ?= this
+				any_primary_culture = { 
+					cu:south_german = this
+				}
+			}
+			cultures = {
+				south_german
+			}
+		}
+
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				british scottish irish
+			}
+		}
+	}
+
+	on_character_ig_membership = {}
+	
+	pop_potential = {
+		custom_tooltip = {
+			text = BPM_VALID_POP_FOR_IG
+			owner ?= {
+				has_technology_researched = rationalism
+				ig:ig_reactionaries ?= {
+					NOT = { has_ideology = ideology:ideology_nonexistent }
+					bpm_interest_group_is_activated = yes
+				}
+			}
+		}
+	}
+	
+	pop_weight = {
+		value = 10
+
+		if = {
+			limit = { strata = middle }
+			add = {
+				desc = "MIDDLE_CLASS"
+				value = 50
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = aristocrats }
+			add = {
+				desc = "POP_ARISTOCRATS"
+				value = 150
+			}
+		}
+		else_if = {
+			limit = { is_pop_type = capitalists }
+			add = {
+				desc = "POP_CAPITALISTS"
+				value = 100
+			}
+		}
+
+		add = {
+			desc = "RURAL"
+			if = {
+				limit = { 
+					bpm_pop_employment_is_rural = yes
+				}
+				value = 40
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					c:BIC ?= this
+				}
+				culture = {
+					has_discrimination_trait_group = heritage_group_european
+				}
+				OR = {
+					strata = upper
+					strata = middle
+				}
+				NOT = {
+					is_pop_type = officers
+				}
+			}
+			add = {
+				desc = "POP_INDIA_EUROPEAN_ADMINISTRATORS"
+				value = 1000 #250
+			}
+		}
+		
+		if = {
+			limit = {
+				owner = {
+					c:BIC ?= this
+				}
+			}
+			if = {
+				limit = {
+					NOT = {
+						culture = {
+							has_discrimination_trait_group = heritage_group_european
+						}
+					}
+					OR = {
+						is_pop_type = bureaucrats
+						is_pop_type = clerks
+					}
+				}
+				add = {
+					desc = "POP_INDIA_NATIVE_ADMINISTRATORS"
+					value = 100 #25
+				}
+			}
+			else_if = {
+				limit = {
+					NOT = {
+						culture = {
+							has_discrimination_trait_group = heritage_group_european
+						}
+					}
+					NOR = {
+						is_pop_type = bureaucrats
+						is_pop_type = clerks
+					}
+				}
+				multiply = {
+					desc = "POP_INDIA_ADMINISTRATION_PRIVILEGES"
+					value = 0.5 #0.05
+				}
+			}
+		}
+
+		# Organic Democrat
+		if = {
+			limit = {
+				scope:interest_group = { 
+					#has_ideology = ideology:ideology_wel_paternalistic_welfare 
+					bpm_ig_is_organic_democrat = yes
+				}
+			}
+			if = {
+				limit = { strata = lower }
+				add = {
+					desc = "PATCON_LOWER_CLASS"
+					value = 30
+				}
+			}
+			else_if = {
+				limit = { strata = middle }
+				add = {
+					desc = "PATCON_MIDDLE_CLASS"
+					value = 50
+				}
+			}
+
+			multiply = { # Graves de communi re was released. Time to implode whole parties and organizations.
+				desc = POP_GRAVES_DE_COMMUNI
+				value = 1.0
+				if = { 
+					limit = { 
+						has_global_variable = global_variable_graves_de_communi_re
+					}
+					value = 0.75
+				}
+			}
+		}
+
+		# PATCON
+		else_if = {
+			limit = {
+				scope:interest_group = { 
+					#has_ideology = ideology:ideology_wel_paternalistic_welfare 
+					bpm_ig_is_paternalistic = yes
+				}
+			}
+			if = {
+				limit = { strata = lower }
+				add = {
+					desc = "PATCON_LOWER_CLASS"
+					value = 50
+				}
+			}
+			else_if = {
+				limit = { strata = middle }
+				add = {
+					desc = "PATCON_MIDDLE_CLASS"
+					value = 50
+				}
+			}
+			else_if = {
+				limit = { is_pop_type = capitalists }
+				add = {
+					desc = "PATCON_CAPITALISTS"
+					value = 30
+				}
+			}
+		}
+
+		if = {
+			limit = { owner = { bpm_performance_significant_country = yes } }
+			add = {
+				desc = "SLAVERY_SUPPORTERS"
+				if = {
+					limit = {
+						pop_has_primary_culture = yes
+						state = { is_slave_state = yes }
+					}
+					value = 200
+				}
+				else_if = {
+					limit = {
+						owner = { has_law = law_type:law_colonial_slavery }
+						state = { is_incorporated = yes }
+						is_pop_type = aristocrats
+					}
+					value = 100
+				}
+			}
+
+			add = {
+				desc = "SLAVERY_DETRACTORS"
+				if = {
+					limit = {
+						owner = {
+							NOR = {
+								has_law_or_variant = law_type:law_slavery_banned
+								has_law_or_variant = law_type:law_colonial_slavery
+							}
+						}
+						NOT = { is_pop_type = aristocrats }
+						OR = {
+							#pop_has_primary_culture = no
+							pop_acceptance <= acceptance_status_3
+							state = { is_slave_state = no }
+						}
+					}
+					value = -150
+				}
+				else_if = {
+					limit = {
+						owner = { has_law = law_type:law_colonial_slavery }
+						OR = {
+							#pop_has_primary_culture = no
+							pop_acceptance <= acceptance_status_3
+							state = { is_incorporated = no }
+						}
+						NOT = { is_pop_type = aristocrats }
+					}
+					value = -150
+				}
+			}
+			multiply = {
+				desc = "LEADER_POPULARITY"
+				scope:interest_group = {
+					leader = {
+						value = popularity
+						multiply = 0.005
+						add = 1
+						max = 1.5
+						min = 0.67
+					}
+				}
+			}	
+			multiply = bpm_ig_agitators_popularity
+			multiply = bpm_ig_ruler_popularity
+			multiply = { desc = bpm_ig_attraction_from_radicals_and_loyalists_tt value = ig_attraction_from_radicals_and_loyalists }
+		}
+		multiply = ig_attraction_to_ruler_ideology_from_stability
+
+		multiply = {
+			desc = "AT_WAR"	
+			value = 1.0
+
+			if = {
+				limit = { owner = { is_at_war = yes } }
+				value = 1.3
+			}		
+		}
+	}
+	
+	monarch_weight = {
+		value = 1.0
+		if = {
+			limit = { owner = { country_has_voting_franchise = no } }
+			multiply = 2.0
+		}
+	}	
+
+	agitator_weight = {
+		value = 1.0
+		multiply = bpm_base_agitator_weight
+		if ={
+			limit = {
+				owner.ig:ig_reactionaries = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}
+	
+	commander_weight = {
+		value = 1.0
+		multiply = bpm_commander_assignment_from_laws_factor
+		if ={
+			limit = {
+				owner.ig:ig_reactionaries = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}	
+	
+	executive_weight = {
+		value = 0.1
+		if ={
+			limit = {
+				owner.ig:ig_reactionaries = { bpm_interest_group_is_activated = no }
+			}
+			value = 0.0
+		}
+	}	
+	
+	noble_chance = {
+		value = 0.3
+	}
+	
+	female_commander_chance = {	
+		value = 1.0
+		multiply = bpm_female_commander_spawn_chance
+	}
+	
+	female_politician_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}	
+
+	female_agitator_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
+	}
+
+	# The chance that a commander belonging to this IG takes over leadership when it changes
+	# scope:character is the most popular commander in the IG
+	commander_leader_chance = {
+		value = 0.25
+		if = {
+			limit = {
+				exists = scope:character
+			}
+			multiply = {
+				value = 1
+				add = scope:character.popularity
+				min = 0
+			}
+		}
+	}
+}

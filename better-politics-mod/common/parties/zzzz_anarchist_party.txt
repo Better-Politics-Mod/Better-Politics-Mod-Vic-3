@@ -1,6 +1,6 @@
 ﻿# Niche party for anarchists in specific circumstances
 
-anarchist_party = {
+REPLACE:anarchist_party = {
 	color = { 0 0 0 }
 	name = {
 		first_valid = {
@@ -119,6 +119,13 @@ anarchist_party = {
 				}
 			}
 			triggered_desc = {
+				desc = party_anarchist_cub
+				trigger = {
+					exists = c:CUB
+					THIS = c:CUB
+				}
+			}
+			triggered_desc = {
 				desc = party_anarchist
 				trigger = {
 					always = yes
@@ -137,7 +144,7 @@ anarchist_party = {
 		always = yes
 	}
 	available_for_interest_group = {
-		bpm_ig_enabled = yes
+		bpm_interest_group_is_activated = yes
 		NOT = { bpm_is_party_banned = { PARTY = anarchist_party} }
 		NOR = { 
 			is_interest_group_type = ig_reactionaries
@@ -159,6 +166,33 @@ anarchist_party = {
 			}
 			add = {
 				value = bpm_party_loyalty_values
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					is_player = yes
+					has_variable = bpm_party_establishment_anarchist
+				}
+				NOR = {
+					bpm_ig_is_radical_opposition = yes
+					bpm_ig_is_very_radical_opposition = yes
+				}
+			}
+			add = {
+				desc = "bpm_from_party_establishment"
+				value = {
+					value = 20
+					if = {
+						limit = {
+							bpm_ig_is_institutional = yes
+						}
+						subtract = 12
+					}
+				}
+				multiply = owner.var:bpm_party_establishment_anarchist
+				multiply = owner.var:bpm_political_stability
+				divide = 10000
 			}
 		}
 		if = { # strong anarchists like anarchism
@@ -190,7 +224,7 @@ anarchist_party = {
 		if = { # weak agrarian socialists and trade unionists will fall behind anarchists
 			limit = {
 				owner = { exists = ig:ig_anarchists }
-				owner = {ig:ig_anarchists = { is_powerful = yes }}
+				owner = {ig:ig_anarchists ?= { is_powerful = yes }}
 				is_powerful = no
 				OR = {
 					is_interest_group_type = ig_agrarian_populists
@@ -200,6 +234,17 @@ anarchist_party = {
 			add = {
 				value = 10
 				desc = "powerful_anarchists"
+			}
+		}
+		if = { # Christian Democrats hate electoralism
+			limit = {
+				is_interest_group_type = ig_christian_democrats
+				has_ideology = ideology:ideology_dop_placeholder
+				
+			}
+			add = {
+				value = -25
+				desc = "bpm_from_hostility_towards_democracy"
 			}
 		}
 		if = { # anarchists don't like the revolution being hijacked
@@ -220,6 +265,21 @@ anarchist_party = {
 				desc = "from_vanguard_anarchy"
 			}
 		}
+		if = {
+			limit = {
+				owner = {
+					has_law = law_type:law_no_parties_allowed
+					NOT = {
+						has_law = law_type:law_outlawed_dissent
+					}
+				}
+			}
+
+			add = {
+				value = -50
+				desc = "from_no_reason_to_exist"
+			}
+		}
 		if = { # anarchists will make their own party if there is no communist party to join
 			limit = {
 				OR = {
@@ -229,7 +289,7 @@ anarchist_party = {
 				owner = {
 					NOT = {
 						any_interest_group = {
-							is_marginal = no
+							bpm_ig_is_marginal = no
 							leader = {
 								bpm_leader_is_communist = yes
 							}

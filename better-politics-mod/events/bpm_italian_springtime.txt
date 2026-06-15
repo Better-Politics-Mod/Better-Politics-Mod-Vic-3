@@ -75,8 +75,14 @@ italian_springtime.2 = {
 			}
 			save_scope_as = bpm_ita_rev
 		}
-		ruler = {
-			set_variable = bpm_current_pope_var
+		random_scope_character = {
+			limit = {
+				is_ruler_of_own_country = yes
+			}
+			save_scope_as = the_pope
+			set_variable = {
+				name = bpm_current_pope_var
+			}
 		}
 	}
 
@@ -85,26 +91,27 @@ italian_springtime.2 = {
 		default_option = yes
 		
 		# prestige
-		c:PAP = {
+		c:PAP ?= {
 			activate_law = law_type:law_unitary
 			activate_law = law_type:law_parliamentary_republic
 			activate_law = law_type:law_elected_bureaucrats
-			activate_law = law_type:law_census_suffrage
+			activate_law = law_type:law_census_voting
 			activate_law = law_type:law_freedom_of_conscience
 		}
 		ig:ig_devout = { 
 			add_modifier = {
 				name = bpm_damaged_ig
-				months = long_modifier_time
+				days = long_modifier_time
 			}
 		}
-		scope:bpm_current_pope_var = {
+		scope:the_pope = {
 			exile_character = yes
 		}
+		
 
 		hidden_effect = {
 			every_country = {
-				limit = { bpm_country_is_in_europe = yes }
+				limit = { is_in_geographic_region = geographic_region_europe }
 				post_notification = bpm_1848_roman_revolution
 			}
 			c:AUS ?= {
@@ -148,8 +155,7 @@ italian_springtime.3 = {
 	dlc = dlc_bpm
 
 	trigger = {
-		exists = c:PAR
-		c:PAR = this
+		c:PAR ?= this
 		owner = {
 			has_law = law_type:law_monarchy
 			NOT = { has_variable = bpm_parma_var }
@@ -158,31 +164,37 @@ italian_springtime.3 = {
 	}
 
 	immediate = {
-		c:LUC = {
+		c:LUC ?= {
 			ruler = {
-                    kill_character = yes
+				set_variable = king_parma
+   				place_character_in_void = 10000
             }
+			random_scope_character = {
+				limit = {
+					is_heir_of_own_country = yes
+				}
+				set_variable = {
+					name = prince_parma
+				}
+				place_character_in_void = 10000
+			}
 			trigger_event = {
 				id = italian_springtime.4
 				popup = yes 
 			}
 		}
 		c:PAR = {
-			create_character = {
-				# Charles Louis, the future Charles II, Duke of Parma
-				first_name = "Carlo_Ludovico"
-				last_name = "di_Borbone_Parma"
-				historical = yes
-				ruler = yes
-				age = 48
-				interest_group = ig_petty_bourgeoisie
-				ideology = ideology_moderate
-				traits = {
-					reckless
+			random_character = {
+				limit = { 
+					has_variable = king_parma
 				}
-				on_created = {
-					set_character_as_ruler = yes
+				set_character_as_ruler = yes
+			}
+			random_scope_character = {
+				limit = {
+					is_heir_of_own_country = yes
 				}
+				kill_character = yes
 			}
 		}
 	}		
@@ -191,7 +203,7 @@ italian_springtime.3 = {
 		name = italian_springtime.3.a
 		default_option = yes
 		hidden_effect = {
-			c:TUS = {
+			c:TUS ?= {
 				trigger_event = { id = italian_springtime.4 }
 				annex = c:LUC
 			}
@@ -264,6 +276,10 @@ italian_springtime.5 = {
 		activate_law = law_type:law_wealth_voting
 		activate_law = law_type:law_appointed_bureaucrats
 		activate_law = law_type:law_right_of_assembly
+		activate_law = law_type:law_separated_powers
+		activate_law = law_type:law_appointed_on_advice
+		activate_law = law_type:law_freedom_of_conscience
+		activate_law = law_type:law_anti_strike_laws
 
 		add_loyalists = {
 			value = large_radicals
@@ -341,14 +357,17 @@ italian_springtime.6 = {
 		}
 	}
 
-	# option = {
-	# 	name = italian_springtime.6.b
+	option = {
+		name = italian_springtime.6.b
+		trigger = {
+			is_player = yes
+		}
 		
-	# 	add_loyalists = {
-	# 		value = medium_radicals
-	# 		strata = rich
-	# 	}
-	# }
+		add_loyalists = {
+			value = medium_radicals
+			strata = upper
+		}
+	}
 }
 
 italian_springtime.7 = {
@@ -424,8 +443,8 @@ italian_springtime.8 = {
 	dlc = dlc_bpm
 
 	trigger = {
-		this = c:PAP
-		c:AUS = { 
+		c:PAP ?= this
+		c:AUS ?= {
 			owns_entire_state_region = STATE_VENETIA
 			owns_entire_state_region = STATE_LOMBARDY
 		}
@@ -433,6 +452,10 @@ italian_springtime.8 = {
 			NOT = { has_law = law_type:law_theocracy }
 			NOT = { has_variable = bpm_pope_back }
 		}
+	}
+
+	immediate = {
+		set_variable = bpm_pope_back
 	}
 
 	option = {
@@ -445,24 +468,69 @@ italian_springtime.8 = {
 			activate_law = law_type:law_oligarchy
 			activate_law = law_type:law_state_religion
 		}
-		create_character = {
-			# Giovanni Maria Mastai Ferretti, the future Pope Pius IX
-			first_name = Giovanni_Maria
-			last_name = Ferretti
-			historical = yes
-			birth_date = 1792.5.13
-			ig_leader = yes
-			interest_group = ig:ig_devout
-			ideology = ideology_theocrat
-			traits = {
+		if = {
+			limit = {
+				NOT = { has_law = law_type:law_theocracy }
 			}
-			on_created = {
+			scope:the_pope ?= {
 				set_character_as_ruler = yes
 			}
 		}
-
-		hidden_effect = {
-			set_variable = bpm_pope_back
+		else = {
+			create_character = {
+				# Giovanni Maria Mastai Ferretti, the future Pope Pius IX
+				first_name = Giovanni_Maria
+				last_name = Ferretti
+				historical = yes
+				birth_date = 1792.5.13
+				ig_leader = yes
+				interest_group = ig:ig_devout
+				ideology = ideology_theocrat
+				traits = {
+				}
+				on_created = {
+					set_character_as_ruler = yes
+				}
+			}
 		}
 	}
 }
+
+# italian_springtime.9 = {
+# 	type = country_event
+# 	placement = ROOT
+
+# 	title = italian_springtime.9.t
+# 	desc = italian_springtime.9.d
+# 	flavor = italian_springtime.9.f
+
+# 	event_image = {
+# 		video = "europenorthamerica_before_the_battle"
+# 	}
+
+# 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+# 	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+# 	duration = 1
+
+# 	dlc = dlc_bpm
+
+# 	trigger = {
+# 		this ?= c:SAR
+# 		is_subject = no
+# 		has_global_variable = bpm_peoples_springtime_happened
+# 		NOT = { has_global_variable = recently_completed_peoples_springtime_je }
+# 		NOT = { has_global_variable = bpm_lega_italica_var }
+# 	}
+
+# 	immediate = {
+# 		set_global_variable = bpm_lega_italica_var
+# 	}
+
+# 	option = {
+# 		name = italian_springtime.7.a
+# 		default_option = yes
+
+# 	}
+# }

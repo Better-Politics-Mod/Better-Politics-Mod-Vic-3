@@ -1,12 +1,116 @@
-﻿bpm_set_ig_enacting_law_stance_to_number = {
-	set_variable = { name = bpm_ig_enacting_law_stance value = 0 }
+﻿bpm_set_ig_repealing_amendment_vars = {
+	bpm_set_ig_parent_law_stance_to_number = yes
+	bpm_set_ig_attached_law_stance_to_number = yes
+	bpm_set_ig_repealing_amendment_change_steps = yes
+}
 
+bpm_set_ig_parent_law_stance_to_number = {
+	set_variable = { name = bpm_ig_parent_law_stance value = 0 }
+	
+	if = {
+		limit = { owner = { has_variable = bpm_repealing_amendment }}
+		if = {
+			limit = {
+				law_stance = {
+					law = owner.var:bpm_repealing_amendment.parent_law_type
+					value = strongly_approve
+				}
+			}
+			set_variable = { name = bpm_ig_parent_law_stance value = 2 }
+		}
+		else_if = {
+			limit = {
+				law_stance = {
+					law = owner.var:bpm_repealing_amendment.parent_law_type
+					value = approve
+				}
+			}
+			set_variable = { name = bpm_ig_parent_law_stance value = 1 }
+		}
+		else_if = {
+			limit = {
+				law_stance = {
+					law = owner.var:bpm_repealing_amendment.parent_law_type
+					value = disapprove
+				}
+			}
+			set_variable = { name = bpm_ig_parent_law_stance value = -1 }
+		}
+		else_if = {
+			limit = {
+				law_stance = {
+					law = owner.var:bpm_repealing_amendment.parent_law_type
+					value = strongly_disapprove
+				}
+			}
+			set_variable = { name = bpm_ig_parent_law_stance value = -2 }
+		}
+	}
+}
+
+bpm_set_ig_attached_law_stance_to_number = {
+	set_variable = { name = bpm_ig_attached_law_stance value = 0 }
+	
+	if = {
+		limit = { owner = { has_variable = bpm_repealing_amendment }}
+		if = {
+			limit = {
+				law_stance = {
+					law = owner.var:bpm_repealing_amendment.attached_law.type
+					value = strongly_approve
+				}
+			}
+			set_variable = { name = bpm_ig_attached_law_stance value = 2 }
+		}
+		else_if = {
+			limit = {
+				law_stance = {
+					law = owner.var:bpm_repealing_amendment.attached_law.type
+					value = approve
+				}
+			}
+			set_variable = { name = bpm_ig_attached_law_stance value = 1 }
+		}
+		else_if = {
+			limit = {
+				law_stance = {
+					law = owner.var:bpm_repealing_amendment.attached_law.type
+					value = disapprove
+				}
+			}
+			set_variable = { name = bpm_ig_attached_law_stance value = -1 }
+		}
+		else_if = {
+			limit = {
+				law_stance = {
+					law = owner.var:bpm_repealing_amendment.attached_law.type
+					value = strongly_disapprove
+				}
+			}
+			set_variable = { name = bpm_ig_attached_law_stance value = -2 }
+		}
+	}
+}
+
+bpm_set_ig_repealing_amendment_change_steps = {
+	set_variable = { 
+		name = bpm_ig_repealing_amendment_change_steps
+		value = {
+			add = var:bpm_ig_attached_law_stance
+			subtract = var:bpm_ig_parent_law_stance
+		}
+	}
+}
+
+bpm_set_ig_enacting_law_stance_to_number = {
+	set_variable = { name = bpm_ig_enacting_law_stance value = 0 }
+	
 	if = {
 		limit = { owner = { enacting_any_law = yes }}
 		if = {
 			limit = {
 				law_stance = {
-					law = owner.currently_enacting_law.type
+					law = root.currently_enacting_law.type
 					value = strongly_approve
 				}
 			}
@@ -15,7 +119,7 @@
 		else_if = {
 			limit = {
 				law_stance = {
-					law = owner.currently_enacting_law.type
+					law = root.currently_enacting_law.type
 					value = approve
 				}
 			}
@@ -24,7 +128,7 @@
 		else_if = {
 			limit = {
 				law_stance = {
-					law = owner.currently_enacting_law.type
+					law = root.currently_enacting_law.type
 					value = disapprove
 				}
 			}
@@ -33,7 +137,7 @@
 		else_if = {
 			limit = {
 				law_stance = {
-					law = owner.currently_enacting_law.type
+					law = root.currently_enacting_law.type
 					value = strongly_disapprove
 				}
 			}
@@ -42,31 +146,131 @@
 	}
 }
 
+bpm_set_ig_preferred_law_stance_to_number = {
+    set_variable = { name = bpm_ig_preferred_law_stance value = 0 }
+	if = {
+		limit = {
+			has_variable = preferred_law
+		}
+		remove_variable = preferred_law
+	}
+    
+    save_scope_as = stance_ig
+    
+    if = {
+        limit = { owner = { enacting_any_law = yes }}
+        owner = { currently_enacting_law.type = { save_scope_as = enacting_law_type } }
+        if = {
+            limit = {
+                any_preferred_law = {
+                    can_be_enacted = yes
+                    type = { save_temporary_scope_as = law_type }
+                    scope:law_type = { is_same_law_group_as = scope:enacting_law_type }
+                }
+            }
+            ordered_preferred_law = {
+                limit = {
+                    can_be_enacted = yes
+                    type = { save_temporary_scope_as = law_type }
+                    scope:law_type = { is_same_law_group_as = scope:enacting_law_type }
+                }
+				position = 0
+                check_range_bounds = no
+                scope:stance_ig = {
+                    set_variable = {
+                        name = preferred_law
+                        value = prev
+                    }
+                }
+            }
+        }
+		if = {
+            limit = {
+                has_variable = preferred_law
+            }
+            var:preferred_law.type = { save_scope_as = preferred_law_type }
+            if = {
+                limit = {
+                    law_stance = {
+                        law = scope:preferred_law_type
+                        value = strongly_approve
+                    }
+                }
+                set_variable = { name = bpm_ig_preferred_law_stance value = 2 }
+            }
+            else_if = {
+                limit = {
+                    law_stance = {
+                        law = scope:preferred_law_type
+                        value = approve
+                    }
+                }
+                set_variable = { name = bpm_ig_preferred_law_stance value = 1 }
+            }
+            else_if = {
+                limit = {
+                    law_stance = {
+                        law = scope:preferred_law_type
+                        value = disapprove
+                    }
+                }
+                set_variable = { name = bpm_ig_preferred_law_stance value = -1 }
+            }
+            else_if = {
+                limit = {
+                    law_stance = {
+                        law = scope:preferred_law_type
+                        value = strongly_disapprove
+                    }
+                }
+                set_variable = { name = bpm_ig_preferred_law_stance value = -2 }
+            }
+        }
+        else = {
+            set_variable = { name = bpm_ig_preferred_law_stance value = var:bpm_ig_enacting_law_stance }
+        }
+    }
+}
+
 bpm_set_ig_current_law_stance_to_number = {
 	set_variable = { name = bpm_ig_current_law_stance value = 0 }
 
 	save_scope_as = stance_ig
 
+
 	owner = {
 		save_scope_as = this_country
-		currently_enacting_law = { save_scope_as = enacting_law }
+		currently_enacting_law.type = { save_scope_as = enacting_law_type }
 		# Save the current law that's in the same law group as the enacting law
-		every_law = {
-			limit = { 
-				exists = type
-				this.type ?= { is_same_law_group_as = scope:enacting_law.type }
-				scope:this_country = { has_law = prev.type }
+		random_active_law = {
+			limit = {
+				type = {
+					save_temporary_scope_as = law_type
+				}
+				scope:law_type = {
+					is_same_law_group_as = scope:enacting_law_type
+				}		
+				owner = {
+					has_law = scope:law_type
+				}	
 			}
 			scope:stance_ig = {
-				set_variable = { name = current_law value = prev }
+				set_variable = {
+					name = current_law
+					value = prev
+				}
 			}
 		}
+	}
+
+	var:current_law.type = {
+		save_scope_as = current_law_type
 	}
 	if = {
 		limit = {
 			has_variable = current_law
 			law_stance = {
-				law = var:current_law.type
+				law = scope:current_law_type
 				value = strongly_approve
 			}
 		}
@@ -76,7 +280,7 @@ bpm_set_ig_current_law_stance_to_number = {
 		limit = {
 			has_variable = current_law
 			law_stance = {
-				law = var:current_law.type
+				law = scope:current_law_type
 				value = approve
 			}
 		}
@@ -86,7 +290,7 @@ bpm_set_ig_current_law_stance_to_number = {
 		limit = {
 			has_variable = current_law
 			law_stance = {
-				law = var:current_law.type
+				law = scope:current_law_type
 				value = disapprove
 			}
 		}
@@ -96,7 +300,7 @@ bpm_set_ig_current_law_stance_to_number = {
 		limit = {
 			has_variable = current_law
 			law_stance = {
-				law = var:current_law.type
+				law = scope:current_law_type
 				value = strongly_disapprove
 			}
 		}
@@ -110,6 +314,16 @@ bpm_set_ig_enacting_law_change_steps = {
 		value = {
 			add = var:bpm_ig_enacting_law_stance
 			subtract = var:bpm_ig_current_law_stance
+		}
+	}
+}
+
+bpm_set_ig_preferred_over_enacting_law_change_steps = {
+	set_variable = { 
+		name = bpm_ig_preferred_over_enacting_law_change_steps
+		value = {
+			add = var:bpm_ig_preferred_law_stance
+			subtract = var:bpm_ig_enacting_law_stance
 		}
 	}
 }
@@ -155,15 +369,39 @@ bpm_set_ig_party_whip_enacting_law_change_steps = {
 }
 
 bpm_set_ig_law_support_ruler = {
+	ruler ?= {
+		bpm_set_ig_enacting_law_stance_to_number = yes
+		bpm_set_ig_current_law_stance_to_number = yes
+		bpm_set_ig_enacting_law_change_steps = yes
+		bpm_set_ig_repealing_amendment_vars = yes
+	}
 	if = {
 		limit = {
-			exists = owner.ruler
+			bpm_has_gov_regency = yes
 		}
-		owner.ruler = {
+		var:bpm_regent ?= {
 			bpm_set_ig_enacting_law_stance_to_number = yes
 			bpm_set_ig_current_law_stance_to_number = yes
 			bpm_set_ig_enacting_law_change_steps = yes
+			bpm_set_ig_repealing_amendment_vars = yes
 		}
+	}
+	if = {
+		limit = {
+			bpm_has_acting_hog = yes
+		}
+		var:bpm_acting_hog ?= {
+			bpm_set_ig_enacting_law_stance_to_number = yes
+			bpm_set_ig_current_law_stance_to_number = yes
+			bpm_set_ig_enacting_law_change_steps = yes
+			bpm_set_ig_repealing_amendment_vars = yes
+		}
+	}
+	var:bpm_headofgov ?= {
+		bpm_set_ig_enacting_law_stance_to_number = yes
+		bpm_set_ig_current_law_stance_to_number = yes
+		bpm_set_ig_enacting_law_change_steps = yes
+		bpm_set_ig_repealing_amendment_vars = yes
 	}
 }
 
@@ -171,6 +409,10 @@ bpm_set_ig_law_support_stance_vars = {
 	bpm_set_ig_enacting_law_stance_to_number = yes
 	bpm_set_ig_current_law_stance_to_number = yes
 	bpm_set_ig_enacting_law_change_steps = yes
+	bpm_set_ig_preferred_law_stance_to_number = yes
+	bpm_set_ig_preferred_over_enacting_law_change_steps = yes
+	bpm_set_ig_repealing_amendment_vars = yes
+	
 }
 
 bpm_set_all_igs_law_support_cached_vars = {
@@ -183,17 +425,18 @@ bpm_set_all_igs_law_support_cached_vars = {
 	every_interest_group = {
 		bpm_set_ig_party_whip_enacting_law_change_steps = yes
 	}
-	owner = {
-		bpm_set_ig_law_support_ruler = yes
-	}
+	bpm_set_ig_law_support_ruler = yes
 }
 
 bpm_set_country_law_support_fixed_vars = {
 	if = {
 		limit = {
 			any_political_movement = {
-				desired_law = prev.currently_enacting_law.type
-				is_revolutionary_movement = yes
+				law_stance = {
+					law = prev.currently_enacting_law.type
+					value > approve
+				}
+				is_revolutionary = yes
 			}
 		}
 		set_variable = bpm_law_enactment_desired_by_revolution
@@ -232,18 +475,47 @@ bpm_clear_law_sway_vars = {
 		remove_variable = bpm_tax_break_poor_sway_used
 		remove_variable = bpm_tax_break_peasant_sway_used
 		remove_variable = bpm_construction_racket_sway_used
-		remove_variable = bpm_law_sway_promise_used
+		remove_variable = bpm_law_sway_promise_made
 		remove_variable = bpm_cannot_promise_a_law
+		remove_variable = bpm_cabinet_promise_sway_used
+		remove_variable = bpm_num_promised_ministries
+		remove_variable = bpm_negotiated_amendment_sway_used
+
+		###### Note: These modifiers are not used. Cleanup is retained here just in case.
+		remove_modifier = bpm_law_sway_assert_authority_mod
+		remove_modifier = bpm_law_sway_assert_authority_neg_mod
+		remove_modifier = bpm_law_sway_redeem_favors_mod
+		remove_modifier = bpm_law_sway_entrench_privileges_mod
+		remove_modifier = bpm_law_sway_public_debate_mod
+		remove_modifier = bpm_law_sway_decrease_suffrage_mod
+		remove_modifier = bpm_law_sway_decrease_police_mod
+		remove_modifier = bpm_law_sway_decrease_home_affairs_mod
+		remove_modifier = bpm_law_sway_decrease_regionalism_mod
+		remove_modifier = bpm_law_sway_blackmail_leader_mod
+		remove_modifier = bpm_law_sway_tax_break_rich_mod
+		remove_modifier = bpm_law_sway_tax_break_middle_mod
+		remove_modifier = bpm_law_sway_tax_break_poor_mod
+		remove_modifier = bpm_law_sway_tax_break_peasant_mod
+		remove_modifier = bpm_law_sway_construction_racket_mod
+		remove_modifier = bpm_law_sway_promise_mod
 	}
+	remove_variable = bpm_cannot_promise_a_cabinet
 }
 
 # IG Scope
 bpm_subtract_from_law_sways = {
-	owner = {
-		change_variable = {
-			name = bpm_law_sway_maneuvers
-			subtract = {
-				prev = { value = bpm_law_enactment_sway_cost }
+	if = {
+		limit = {
+			owner = {
+				is_player = yes
+			}
+		}
+		owner = {
+			change_variable = {
+				name = bpm_law_sway_maneuvers
+				subtract = {
+					prev = { value = bpm_law_enactment_sway_cost }
+				}
 			}
 		}
 	}
@@ -290,97 +562,157 @@ bpm_cache_nay_votes = {
 }
 
 bpm_update_law_enactment_variables_modifiers = {
-	bpm_cache_yea_votes = yes
-	bpm_cache_nay_votes = yes
-	bpm_apply_law_vote_contribution_modifier = yes
+	if = {
+		limit = {
+			is_player = yes
+		}
+		bpm_cache_yea_votes = yes
+		bpm_cache_nay_votes = yes
+		bpm_apply_law_vote_contribution_modifier = yes
+	}
 }
 
 bpm_ig_increase_law_enactment_approval_small = {
-	save_scope_as = bpm_ig_law_approval_scope
-	custom_tooltip = {
-		text = bpm_ig_increase_law_enactment_approval_small_tt
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			change_variable = {
-				name = bpm_law_enactment_approval_from_events
-				add = 5
+	if = {
+		limit = {
+			owner = {
+				is_player = yes
 			}
-			bpm_update_law_enactment_variables_modifiers = yes	
+		}
+		save_scope_as = bpm_ig_law_approval_scope
+
+		custom_tooltip = {
+			text = bpm_ig_increase_law_enactment_approval_small_tt
+		}
+		hidden_effect = {
+			if = {
+				limit = { has_variable = bpm_law_enactment_approval_from_events }
+				change_variable = {
+					name = bpm_law_enactment_approval_from_events
+					add = 5
+				}
+				owner = { bpm_update_law_enactment_variables_modifiers = yes }
+			}
 		}
 	}
 }
 
 bpm_ig_increase_law_enactment_approval_medium = {
-	save_scope_as = bpm_ig_law_approval_scope
-	custom_tooltip = {
-		text = bpm_ig_increase_law_enactment_approval_medium_tt
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			change_variable = {
-				name = bpm_law_enactment_approval_from_events
-				add = 10
+	if = {
+		limit = {
+			owner = {
+				is_player = yes
 			}
-			bpm_update_law_enactment_variables_modifiers = yes	
+		}
+		save_scope_as = bpm_ig_law_approval_scope
+		custom_tooltip = {
+			text = bpm_ig_increase_law_enactment_approval_medium_tt
+		}
+		hidden_effect = {
+			if = {
+				limit = { has_variable = bpm_law_enactment_approval_from_events }
+				change_variable = {
+					name = bpm_law_enactment_approval_from_events
+					add = 10
+				}
+				owner = { bpm_update_law_enactment_variables_modifiers = yes }
+			}
 		}
 	}
 }
 
 bpm_ig_increase_law_enactment_approval_big = {
-	save_scope_as = bpm_ig_law_approval_scope
-	custom_tooltip = {
-		text = bpm_ig_increase_law_enactment_approval_medium_tt
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			change_variable = {
-				name = bpm_law_enactment_approval_from_events
-				add = 15
+	if = {
+		limit = {
+			owner = {
+				is_player = yes
 			}
-			bpm_update_law_enactment_variables_modifiers = yes	
+		}
+		save_scope_as = bpm_ig_law_approval_scope
+		custom_tooltip = {
+			text = bpm_ig_increase_law_enactment_approval_big_tt
+		}
+		hidden_effect = {
+			if = {
+				limit = { has_variable = bpm_law_enactment_approval_from_events }
+				change_variable = {
+					name = bpm_law_enactment_approval_from_events
+					add = 15
+				}
+				owner = { bpm_update_law_enactment_variables_modifiers = yes }
+			}
 		}
 	}
 }
 
 bpm_ig_decrease_law_enactment_approval_small = {
-	save_scope_as = bpm_ig_law_approval_scope
-	custom_tooltip = {
-		text = bpm_ig_decrease_law_enactment_approval_small_tt
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			change_variable = {
-				name = bpm_law_enactment_approval_from_events
-				subtract = 5
+	if = {
+		limit = {
+			owner = {
+				is_player = yes
 			}
-			bpm_update_law_enactment_variables_modifiers = yes	
+		}
+		save_scope_as = bpm_ig_law_approval_scope
+		custom_tooltip = {
+			text = bpm_ig_decrease_law_enactment_approval_small_tt
+		}
+		hidden_effect = {
+			if = {
+				limit = { has_variable = bpm_law_enactment_approval_from_events }
+				change_variable = {
+					name = bpm_law_enactment_approval_from_events
+					subtract = 5
+				}
+				owner = { bpm_update_law_enactment_variables_modifiers = yes }
+			}
 		}
 	}
 }
 
 bpm_ig_decrease_law_enactment_approval_medium = {
-	save_scope_as = bpm_ig_law_approval_scope
-	custom_tooltip = {
-		text = bpm_ig_decrease_law_enactment_approval_medium_tt
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			change_variable = {
-				name = bpm_law_enactment_approval_from_events
-				subtract = 10
+	if = {
+		limit = {
+			owner = {
+				is_player = yes
 			}
-			bpm_update_law_enactment_variables_modifiers = yes	
+		}
+		save_scope_as = bpm_ig_law_approval_scope
+		custom_tooltip = {
+			text = bpm_ig_decrease_law_enactment_approval_medium_tt
+		}
+		hidden_effect = {
+			if = {
+				limit = { has_variable = bpm_law_enactment_approval_from_events }
+				change_variable = {
+					name = bpm_law_enactment_approval_from_events
+					subtract = 10
+				}
+				owner = { bpm_update_law_enactment_variables_modifiers = yes }
+			}
 		}
 	}
 }
 
 bpm_ig_decrease_law_enactment_approval_big = {
-	save_scope_as = bpm_ig_law_approval_scope
-	custom_tooltip = {
-		text = bpm_ig_decrease_law_enactment_approval_medium_tt
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			change_variable = {
-				name = bpm_law_enactment_approval_from_events
-				subtract = 15
+	if = {
+		limit = {
+			owner = {
+				is_player = yes
 			}
-			bpm_update_law_enactment_variables_modifiers = yes	
+		}
+		save_scope_as = bpm_ig_law_approval_scope
+		custom_tooltip = {
+			text = bpm_ig_decrease_law_enactment_approval_big_tt
+		}
+		hidden_effect = {
+			if = {
+				limit = { has_variable = bpm_law_enactment_approval_from_events }
+				change_variable = {
+					name = bpm_law_enactment_approval_from_events
+					subtract = 15
+				}
+				owner = { bpm_update_law_enactment_variables_modifiers = yes }
+			}
 		}
 	}
 }

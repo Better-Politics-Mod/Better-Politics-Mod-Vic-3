@@ -1,0 +1,387 @@
+﻿
+REPLACE:je_portugal_regeneration = {
+	icon = "gfx/interface/icons/invention_icons/philosophical_pragmatism.dds"
+
+    is_shown_in_lobby = {
+        c:POR ?= this
+        has_dlc_feature = ip4_content
+    }
+
+	group = je_group_historical_content
+
+	is_shown_when_inactive = {
+		OR = {
+			c:POR ?= this
+			was_formed_from = POR
+		}
+		has_dlc_feature = ip4_content
+	}
+
+	possible = {
+		has_technology_researched = nationalism
+		legitimacy >= 65
+		any_interest_group = {
+			is_in_government = yes
+			OR = {
+				is_interest_group_type = ig_petty_bourgeoisie
+				is_interest_group_type = ig_industrialists
+				has_ideology = ideology:ideology_eco_interventionist
+				has_ideology = ideology:ideology_eco_modern_interventionist
+				has_ideology = ideology:ideology_eco_modernizer
+			}
+		}
+		trigger_if = {
+			limit = {
+				has_variable = recent_coup_or_revolution_var
+			}
+			custom_tooltip = {
+				text = no_coups_for_ten_years_smart_tt
+				NOT = {
+					has_variable = recent_coup_or_revolution_var
+				}
+			}
+		}
+		trigger_else_if = {
+			limit = {
+				NOT = {
+					has_variable = recent_coup_or_revolution_var
+				}
+			}
+			custom_tooltip = {
+				text = no_coups_for_ten_years_tt
+				NOT = {
+					has_variable = recent_coup_or_revolution_var
+				}
+			}
+		}
+	}
+
+	immediate = {
+		set_variable = { name = surplus_time_var value = 0 }
+		set_variable = { name = je_age_in_months_var value = 0 }
+        add_journal_entry = { type = je_portugal_regeneration_public_works }
+        add_journal_entry = { type = je_portugal_regeneration_agriculture }
+        add_journal_entry = { type = je_portugal_regeneration_institutions }
+		trigger_event = { id = portugal_regeneration.1 }
+	}
+
+	on_monthly_pulse = {
+        effect = {
+			change_variable = { name = je_age_in_months_var add = 1 } # journal_entry_age is in days, I want months
+			if = {
+				limit = {
+					net_total_income > 0
+				}
+				change_variable = { name = surplus_time_var add = 1 }
+			}
+		}
+	}
+
+	complete = {
+		trigger_if = {
+			limit = {
+				AND = {
+					has_variable = surplus_time_var
+					has_variable = je_age_in_months_var
+				}
+			}
+			OR = {
+				custom_tooltip = {
+					text = surplus_50_percent_of_the_time_tt
+					var:surplus_time_var >= {
+						value = var:je_age_in_months_var
+						divide = 2
+					}
+				}
+				gold_reserves > 0
+			}
+		}
+		OR = {
+			has_law = law_type:law_per_capita_based_taxation
+			has_law = law_type:law_proportional_taxation
+			has_law = law_type:law_graduated_taxation
+		}
+		custom_tooltip = {
+			text = je_portugal_regeneration_public_works_tt
+			has_variable = je_portugal_regeneration_public_works
+		}
+		custom_tooltip = {
+			text = je_portugal_regeneration_agriculture_complete_tt
+			has_variable = je_portugal_regeneration_agriculture_complete
+		}
+		custom_tooltip = {
+			text = je_portugal_regeneration_institutions_tt
+			has_variable = je_portugal_regeneration_institutions
+		}
+	}
+
+	on_complete = {
+		set_variable = regeneration_complete
+		trigger_event = { id = portugal_regeneration.2 }
+	}
+
+	event_outcome_completed_effect_desc = {
+        header = portugal_regeneration.2.a
+        effect = {
+			add_modifier = {
+				name = modifier_regenerated_portugal
+				days = very_long_modifier_time
+				is_decaying = yes
+			}
+			active_law:lawgroup_economic_system ?= {
+				add_amendment = {
+					type = amendment_economic_regeneration_1
+					sponsor = PREV.ig:ig_industrialists
+					cooldown = 240
+				}
+			}
+        }
+    }
+
+    event_outcome_completed_effect_desc = {
+        header = portugal_regeneration.2.b
+        effect = {
+            ruler = {
+				add_modifier = {
+					name = modifier_successful_regeneration
+					days = very_long_modifier_time
+				}
+			}
+			ordered_interest_group = {
+				limit = {
+					is_in_government = yes
+					OR = {
+						is_interest_group_type = ig_petty_bourgeoisie
+						is_interest_group_type = ig_industrialists
+						has_ideology = ideology:ideology_eco_interventionist
+						has_ideology = ideology:ideology_eco_modern_interventionist
+						has_ideology = ideology:ideology_eco_modernizer
+					}
+				}
+				order_by = ig_clout
+				position = 0
+				check_range_bounds = no
+				leader = {
+					add_modifier = {
+						name = modifier_successful_regeneration
+						days = very_long_modifier_time
+					}
+				}
+			}
+			add_modifier = {
+				name = modifier_regenerated_portugal
+				days = very_long_modifier_time
+				multiplier = 0.5
+				is_decaying = yes
+			}
+			active_law:lawgroup_economic_system ?= {
+				add_amendment = {
+					type = amendment_economic_regeneration_2
+					sponsor = PREV.ig:ig_industrialists
+					cooldown = 240
+				}
+			}
+        }
+    }
+
+    fail = {
+		OR = {
+			custom_tooltip = {
+				text = no_coups_tt
+				has_variable = recent_coup_or_revolution_var
+			}
+			in_default = yes
+		}
+    }
+
+	on_fail = {
+		trigger_event = { id = portugal_regeneration.3 }
+	}
+
+	event_outcome_failed_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = event_effects_portugal_regeneration.3_tt
+			}
+		}
+	}
+
+	weight = 6000
+
+    should_be_pinned_by_default_uninvolved_or_context = yes
+}
+
+
+
+REPLACE:je_portugal_regeneration_public_works = {
+	icon = "gfx/interface/icons/invention_icons/railways.dds"
+
+	group = je_group_historical_content
+
+	complete = {
+		has_technology_researched = electric_telegraph
+		any_scope_state = {
+			filter = {
+				is_incorporated = yes
+			}
+			has_building = building_railway
+			percent = 1
+		}
+		any_scope_building = {
+			filter = {
+				is_building_type = building_urban_center
+				state = { is_incorporated = yes }
+			}
+			has_active_production_method = pm_public_trams
+			percent >= 0.75
+		}
+		NOT = {
+			any_scope_state = {
+				market_access < 1
+			}
+		}
+	}
+
+	on_complete = {
+		set_variable = je_portugal_regeneration_public_works
+		trigger_event = { id = portugal_regeneration.5 }
+	}
+
+	event_outcome_completed_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = event_effects_portugal_regeneration.5_tt
+			}
+		}
+	}
+
+    fail = {
+		OR = {
+			custom_tooltip = {
+				text = no_coups_tt
+				has_variable = recent_coup_or_revolution_var
+			}
+			in_default = yes
+		}
+    }
+
+	weight = 6000
+
+    should_be_pinned_by_default_uninvolved_or_context = yes
+}
+
+
+REPLACE:je_portugal_regeneration_agriculture = {
+	icon = "gfx/interface/icons/invention_icons/threshing_machine.dds"
+
+	group = je_group_historical_content
+
+	complete = {
+		has_technology_researched = improved_fertilizer
+		has_technology_researched = threshing_machine
+		OR = {
+			has_law_or_variant = law_type:law_peasant_proprietorship
+			has_law = law_type:law_commercialized_agriculture
+		}
+		any_scope_building = {
+			filter = {
+				is_building_group = bg_staple_crops
+				state = { is_incorporated = yes }
+			}
+			OR = {
+				has_active_production_method = pm_fertilization
+				hidden_trigger = {
+					has_active_production_method = pm_fertilization_building_rice_farm
+				}
+			}
+			percent >= 0.5
+		}
+		any_scope_building = {
+			filter = {
+				is_building_group = bg_staple_crops
+				state = { is_incorporated = yes }
+			}
+			OR = {
+				has_active_production_method = pm_steam_threshers
+				hidden_trigger = {
+					has_active_production_method = pm_steam_threshers_building_rice_farm
+				}
+			}
+			percent >= 0.5
+		}
+	}
+
+	on_complete = {
+		set_variable = je_portugal_regeneration_agriculture_complete
+		trigger_event = { id = portugal_regeneration.4 }
+	}
+
+	event_outcome_completed_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = event_effects_portugal_regeneration.4_tt
+			}
+		}
+	}
+
+    fail = {
+		OR = {
+			custom_tooltip = {
+				text = no_coups_tt
+				has_variable = recent_coup_or_revolution_var
+			}
+			in_default = yes
+		}
+    }
+
+	weight = 6000
+
+    should_be_pinned_by_default_uninvolved_or_context = yes
+}
+
+REPLACE:je_portugal_regeneration_institutions = {
+	icon = "gfx/interface/icons/invention_icons/bureaucracy.dds"
+
+	group = je_group_historical_content
+
+	complete = {
+		bureaucracy >= 0
+		approaching_bureaucracy_shortage = no
+		literacy_rate >= 0.5
+		institution_investment_level = {
+			institution = institution_schools
+			value >= 3
+		}
+		country_has_building_group_levels = {
+			type = bg_technology
+			value >= 12
+		}
+	}
+
+	on_complete = {
+		set_variable = je_portugal_regeneration_institutions
+		trigger_event = { id = portugal_regeneration.6 }
+	}
+
+	event_outcome_completed_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = event_effects_portugal_regeneration.6_tt
+			}
+		}
+	}
+
+    fail = {
+		OR = {
+			custom_tooltip = {
+				text = no_coups_tt
+				has_variable = recent_coup_or_revolution_var
+			}
+			in_default = yes
+		}
+    }
+
+	weight = 6000
+
+    should_be_pinned_by_default_uninvolved_or_context = yes
+}

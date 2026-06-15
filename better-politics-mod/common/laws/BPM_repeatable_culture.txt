@@ -1,4 +1,4 @@
-law_repeatable_culture_none = {
+﻿law_repeatable_culture_none = {
 	group = lawgroup_repeatable_culture
 	icon = "gfx/interface/icons/law_icons/repeatable_culture_none.dds"
 	
@@ -8,9 +8,101 @@ law_repeatable_culture_none = {
 	on_enact = { }
 	unlocking_technologies = { }
 	disallowing_laws = { }
-	possible_political_movements = { }
 	ai_enact_weight_modifier = { 
 		value = 0
+	}
+}
+
+law_repeatable_culture_invite_foreign_experts = {
+	group = lawgroup_repeatable_culture
+	icon = "gfx/interface/icons/law_icons/repeatable_experts.dds" # TODO Other values
+	
+	progressiveness = 50
+
+	is_visible = {
+		OR = {
+			has_journal_entry = je_bpm_modernizers
+			is_enacting_law = law_type:law_repeatable_culture_invite_foreign_experts # In case the passing started before the JE closed
+		}
+	}
+	
+	modifier = {
+		bpm_decorative_repeatable_effect_no_permanent = yes
+		bpm_decorative_repeatable_effect_temporary = yes
+	}
+
+	on_enact = {
+		bpm_remove_political_stability_normal = yes
+		
+		add_modifier = {
+			name = bpm_repeatable_law_invite_foreign_experts_result
+			years = bpm_repeatable_law_result_duration
+			is_decaying = yes
+		}
+		
+		bpm_finalize_repeatable_law = {
+			LAW = law_repeatable_culture_invite_foreign_experts
+		}
+	}
+
+	unlocking_technologies = {
+		
+	}
+
+	can_enact = {
+		bpm_repeatable_law_not_on_cooldown = {
+			LAW = law_repeatable_culture_invite_foreign_experts
+		}
+		OR = {
+			has_journal_entry = je_bpm_modernizers
+			is_enacting_law = law_type:law_repeatable_culture_invite_foreign_experts # In case the passing started before the JE closed
+		}
+	}
+
+	disallowing_laws = {
+		law_ethnostate
+		law_isolationism
+	}
+	
+	unlocking_laws = { 
+		
+	}
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+
+		if = {
+			limit = {
+				ruler = {
+					OR = {
+						bpm_leader_is_left_wing = yes
+						interest_group = {
+							bpm_ig_is_left_wing = yes
+						}
+					}
+				}
+			}
+			add = 250 # Anyone with progressive agenda wants this
+		}
+	
+		if = {
+			limit = {
+				OR = {
+					has_strategy = ai_strategy_progressive_agenda
+					has_strategy = ai_strategy_egalitarian_agenda
+				}
+			}
+			add = 250 # Anyone with progressive agenda wants this
+		}
+		
+		if = {
+			limit = { 
+				has_journal_entry = je_government_petition
+				has_variable = desired_law_var
+                scope:law = var:desired_law_var
+			}
+			add = 750
+		}
 	}
 }
 
@@ -31,6 +123,12 @@ law_repeatable_culture_promote_democratic_values = {
 
 		custom_tooltip = bpm_law_effect_tt_repeatable_stronger_from_culture
 		custom_tooltip = bpm_law_effect_tt_repeatable_strength_influenced_by_ig_support
+		if = { 
+			limit = {
+				has_journal_entry = je_bpm_second_revolution
+			}
+			trigger_event = bpm_acw_events.315
+		}
 		bpm_repeatable_culture_influence_apply_modifiers = {
 			VALUES = democratic
 		}
@@ -56,8 +154,6 @@ law_repeatable_culture_promote_democratic_values = {
 		law_party_socialist_only
 		law_party_reactionary_only
 	}
-	
-	possible_political_movements = { }
 	
 	unlocking_laws = { 
 		law_census_voting
@@ -106,7 +202,7 @@ law_repeatable_culture_promote_absolutist_values = {
 	}
 
 	unlocking_technologies = {
-		bureaucracy
+		tech_bureaucracy
 	}
 
 	can_enact = {
@@ -117,15 +213,14 @@ law_repeatable_culture_promote_absolutist_values = {
 	}
 
 	disallowing_laws = {
-		law_presidental_republic
+		law_presidential_republic
 		law_parliamentary_republic
 		law_council_republic
 	}
 	
-	possible_political_movements = { }
-	
 	unlocking_laws = { 
 		law_autocracy
+		law_neo_absolutism
 		law_oligarchy
 		law_party_single
 	}
@@ -161,6 +256,59 @@ law_repeatable_culture_promote_patriotic_values = {
 
 		custom_tooltip = bpm_law_effect_tt_repeatable_stronger_from_culture
 		custom_tooltip = bpm_law_effect_tt_repeatable_strength_influenced_by_ig_support
+		custom_tooltip = bpm_law_effect_tt_repeatable_promote_patriotic_values
+		hidden_effect = {
+			every_scope_culture = {
+				limit = {
+					root = {
+						country_average_cultural_acceptance = {
+							target = prev
+							value <= 80
+						}
+					}
+				}
+				add_fervor = root.bpm_repeatable_law_promote_patriotic_values_power_fervor
+				root = {
+					add_culture_acceptance_modifier = {
+					   culture = prev
+					   multiplier = root.bpm_repeatable_law_promote_patriotic_values_power_acceptance
+					   years = 25
+					}
+				}
+			}
+
+			every_primary_culture = {
+				add_fervor = root.bpm_repeatable_law_promote_patriotic_values_power_fervor
+			}
+		}
+
+		#custom_tooltip = bpm_law_effect_tt_repeatable_promote_patriotic_values_assimilation
+		#hidden_effect = {
+		#	if = {
+		#		limit = { has_law = law_type:law_cultural_exclusion }
+		#		ordered_primary_culture = {
+		#			position = 0
+		#			save_scope_as = primary_culture
+		#		}
+		#		every_scope_state = {
+		#			limit = { is_incorporated = yes }
+		#			every_scope_pop = {
+		#				if = {
+		#					limit = {
+		#						pop_is_discriminated = yes
+		#					}
+		#					change_pop_culture = { 
+		#						target = scope:primary_culture 
+		#						value = {
+		#							value = bpm_repeatable_law_promote_patriotic_values_assimilation_percent
+		#							multiply = 0.01
+		#						}
+		#					}
+		#				}
+		#			}
+		#		}
+		#	}
+		#}
 		bpm_repeatable_culture_influence_apply_modifiers = {
 			VALUES = patriotic
 		}
@@ -185,10 +333,105 @@ law_repeatable_culture_promote_patriotic_values = {
 		law_anarchy
 	}
 	
-	possible_political_movements = { }
-	
 	unlocking_laws = { 
 
+	}
+
+	ai_enact_weight_modifier = { 
+		value = 0
+		#Petitions
+		if = {
+			limit = { 
+				has_journal_entry = je_government_petition
+				has_variable = desired_law_var
+                scope:law = var:desired_law_var
+			}
+			add = 750
+		}
+		# Latam National Identity
+		if = {
+			limit = { 
+				has_journal_entry = je_south_american_national_identity_emergence
+			}
+			add = 100
+		}
+	}
+}
+
+law_repeatable_culture_affirmative_action = {
+	group = lawgroup_repeatable_culture
+	icon = "gfx/interface/icons/law_icons/repeatable_culture_affirmative_action.dds"
+	
+	progressiveness = 50
+	
+	modifier = {
+		bpm_decorative_repeatable_effect_no_permanent = yes
+		bpm_decorative_repeatable_effect_temporary = yes
+		bpm_decorative_repeatable_stronger_from_culture = yes
+	}
+
+	on_activate = {
+		custom_tooltip = bpm_law_effect_tt_repeatable_stronger_from_culture
+		custom_tooltip = bpm_law_effect_tt_repeatable_strength_influenced_by_ig_support
+		custom_tooltip = bpm_law_effect_tt_repeatable_culture_affirmative_action
+		hidden_effect = {
+			every_scope_culture = {
+				limit = {
+					root = {
+						country_average_cultural_acceptance = {
+							target = prev
+							value <= 80
+						}
+					}
+				}
+				add_fervor = root.bpm_repeatable_law_affirmative_action_power_fervor
+				root = {
+					add_culture_acceptance_modifier = {
+					   culture = prev
+					   multiplier = root.bpm_repeatable_law_affirmative_action_power_acceptance
+					   years = 25
+					}
+				}
+			}
+		}
+
+		if = {
+			limit = { has_law = law_type:law_multicultural }
+
+			custom_tooltip = {
+				text = bpm_je_multicultural_upgrade_advance_25
+				je:je_bpm_multicultural_upgrade ?= {
+					add_progress = { value = root.bpm_repeatable_law_affirmative_action_power_upgrade_progress name = je_bpm_multicultural_upgrade_progress_bar }
+				}
+			}
+		}
+		
+		bpm_finalize_repeatable_law = {
+			LAW = law_repeatable_culture_affirmative_action
+		}
+	}
+
+	unlocking_technologies = {
+		human_rights
+	}
+
+	can_enact = {
+		has_institution = institution_culture
+		bpm_repeatable_law_not_on_cooldown = {
+			LAW = law_repeatable_culture_affirmative_action
+		}
+	}
+
+	disallowing_laws = {
+		law_ethnostate
+		law_subjecthood
+		law_national_supremacy
+		law_racial_segregation
+		law_cultural_exclusion
+	}
+	
+	unlocking_laws = { 
+		
 	}
 
 	ai_enact_weight_modifier = { #Petitions
@@ -223,6 +466,17 @@ law_repeatable_culture_promote_socialist_values = {
 		bpm_repeatable_culture_influence_apply_modifiers = {
 			VALUES = socialist
 		}
+
+		if = {
+			limit = { has_law = law_type:law_womens_suffrage }
+
+			custom_tooltip = {
+				text = bpm_je_women_rights_upgrade_advance_25
+				je:je_bpm_women_rights_upgrade ?= {
+					add_progress = { value = root.bpm_repeatable_law_promote_socialist_values_effect_power_upgrade_progress name = je_bpm_women_rights_upgrade_progress_bar }
+				}
+			}
+		}
 		
 		bpm_finalize_repeatable_law = {
 			LAW = law_repeatable_culture_promote_socialist_values
@@ -242,8 +496,6 @@ law_repeatable_culture_promote_socialist_values = {
 
 	disallowing_laws = {
 	}
-	
-	possible_political_movements = { }
 	
 	unlocking_laws = { 
 		law_council_republic
@@ -278,6 +530,32 @@ law_repeatable_culture_promote_ultranationalist_values = {
 	on_enact = {
 		custom_tooltip = bpm_law_effect_tt_repeatable_stronger_from_culture
 		custom_tooltip = bpm_law_effect_tt_repeatable_strength_influenced_by_ig_support
+		custom_tooltip = bpm_law_effect_tt_repeatable_promote_patriotic_values
+		hidden_effect = {
+			every_scope_culture = {
+				limit = {
+					root = {
+						country_average_cultural_acceptance = {
+							target = prev
+							value <= 80
+						}
+					}
+				}
+				add_fervor = root.bpm_repeatable_law_promote_patriotic_values_power_fervor
+				root = {
+					add_culture_acceptance_modifier = {
+					   culture = prev
+					   multiplier = root.bpm_repeatable_law_promote_patriotic_values_power_acceptance
+					   years = 25
+					}
+				}
+			}
+
+			every_primary_culture = {
+				add_fervor = root.bpm_repeatable_law_promote_patriotic_values_power_fervor
+			}
+		}
+
 		bpm_repeatable_culture_influence_apply_modifiers = {
 			VALUES = ultranationalist
 		}
@@ -303,8 +581,6 @@ law_repeatable_culture_promote_ultranationalist_values = {
 		law_multicultural
 		law_cultural_exclusion
 	}
-	
-	possible_political_movements = { }
 	
 	unlocking_laws = { 
 	}

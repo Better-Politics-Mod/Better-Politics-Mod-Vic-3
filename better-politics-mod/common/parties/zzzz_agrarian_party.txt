@@ -2,11 +2,16 @@
 # Occasionally used for an anti-serfdom alliance
 # More popular in Nordic countries
 
-agrarian_party = {
+REPLACE:agrarian_party = {
 	color = hsv{ 0.32 0.67 0.75 }
 	name = {
 		first_valid = {
-
+			triggered_desc = {
+				desc = party_rural_communes
+				trigger = {
+					has_law = law_type:law_no_parties_allowed
+				}
+			}
 			triggered_desc = {
 				desc = party_irish_national_land_league
 				trigger = {
@@ -27,6 +32,11 @@ agrarian_party = {
 					OR = {
 						country_has_primary_culture = cu:north_italian
 						country_has_primary_culture = cu:south_italian
+					}
+					NOR = {
+						c:AUS ?= this
+						c:KUK ?= this
+						c:HRE ?= this
 					}
 				}
 			}
@@ -112,6 +122,12 @@ agrarian_party = {
 				}
 			}
 			triggered_desc = {
+				desc = party_cro_peasants
+				trigger = {
+					c:CRO ?= THIS
+				}
+			}
+			triggered_desc = {
 				desc = party_agrarian_usa
 				trigger = {
 					exists = c:USA
@@ -133,7 +149,7 @@ agrarian_party = {
 				}
 			}
 			triggered_desc = {
-				desc = party_patrons_of_industry
+				desc = party_agrarian_can
 				trigger = {
 					country_has_primary_culture = cu:anglo_canadian
 				}
@@ -164,6 +180,13 @@ agrarian_party = {
 						country_has_primary_culture = cu:north_german
 						country_has_primary_culture = cu:south_german
 					}
+				}
+			}
+			triggered_desc = {
+				desc = party_country
+				trigger = {
+					country_has_primary_culture = cu:australian
+					NOT = {c:NZL ?= THIS}
 				}
 			}
 			triggered_desc = {
@@ -262,6 +285,13 @@ agrarian_party = {
 				}
 			}
 			triggered_desc = {
+				desc = party_agrarian_gre
+				trigger = {
+					exists = c:GRE
+					THIS = c:GRE
+				}
+			}
+			triggered_desc = {
 				desc = party_agrarian
 				trigger = {
 					always = yes
@@ -280,13 +310,52 @@ agrarian_party = {
 		always = yes
 	}
 	available_for_interest_group = {
-		bpm_ig_enabled = yes
+		bpm_interest_group_is_activated = yes
 		NOT = { bpm_is_party_banned = { PARTY = agrarian_party } }
+		#OR = {
+		#	bpm_ig_is_organic_democrat = yes
+		#	bpm_ig_is_non_paternal_conservative = yes
+		#}
+		#owner = {
+		#	OR = {
+		#		bpm_ig_is_organic_democrat = yes
+		#		NOT = { # unreformed conservatives should not join the liberals
+		#			bpm_ig_is_non_paternal_conservative = yes
+		#		}
+		#	}
+		#}
 	}
 	join_weight = {
 		value = {
 			value = -2
 			desc = "base_value"
+		}
+		if = {
+			limit = {
+				owner = {
+					is_player = yes
+					has_variable = bpm_party_establishment_agrarian
+				}
+				NOR = {
+					bpm_ig_is_radical_opposition = yes
+					bpm_ig_is_very_radical_opposition = yes
+				}
+			}
+			add = {
+				desc = "bpm_from_party_establishment"
+				value = {
+					value = 20
+					if = {
+						limit = {
+							bpm_ig_is_institutional = yes
+						}
+						subtract = 12
+					}
+				}
+				multiply = owner.var:bpm_party_establishment_agrarian
+				multiply = owner.var:bpm_political_stability
+				divide = 10000
+			}
 		}
 		if = {
 			limit = {
@@ -297,6 +366,24 @@ agrarian_party = {
 			}
 			add = {
 				value = bpm_party_loyalty_values
+			}
+		}
+		if = {
+			limit = {
+				owner = { 
+					this = c:USA 
+					has_variable = bpm_2nd_party_system
+					bpm_country_has_unfree_labor = yes
+				}
+			}
+			if = {
+				limit = {
+					is_interest_group_type = ig_agrarian_populists
+				}
+				add = {
+					value = 100
+					desc = "bpm_second_party_system"
+				}
 			}
 		}
 		if = {
@@ -318,6 +405,45 @@ agrarian_party = {
 				add = {
 					value = 100
 					desc = "bpm_second_party_system"
+				}
+			}
+		}
+		if = {
+			limit = {
+				owner = { 
+					this = c:USA 
+					has_variable = bpm_reconstruction_aftermath
+					NOT = { has_variable = bpm_no_solidarity }
+				}
+			}
+			if = {
+				limit = {
+					OR = {
+						is_interest_group_type = ig_agrarian_populists
+						AND = {
+							is_interest_group_type = ig_trade_unions
+							NOT = { owner = { has_law = law_type:law_council_republic } }
+							owner = { has_variable = bpm_solidarity_knights_of_labor } 
+						}
+						AND = {
+							is_interest_group_type = ig_rural_folk
+							owner = { has_variable = bpm_solidarity_national_grange } 
+						}
+						AND = {
+							is_interest_group_type = ig_reformist_socialists
+							NOT = { owner = { has_law = law_type:law_council_republic } }
+							owner = { has_variable = bpm_solidarity_geoists } 
+						}
+						AND = {
+							is_interest_group_type = ig_revolutionist_socialists
+							NOT = { owner = { has_law = law_type:law_council_republic } }
+							owner = { has_variable = bpm_solidarity_socialistic_laborers } 
+						}
+					}
+				}
+				add = {
+					value = 100
+					desc = "bpm_third_party_system"
 				}
 			}
 		}
@@ -343,8 +469,8 @@ agrarian_party = {
 						}
 						any_interest_group = {
 							bpm_ig_is_anarchist = yes
-							is_marginal = no
-							owner = { has_law = law_type:law_serfdom }
+							bpm_ig_is_marginal = no
+							owner = { has_law_or_variant = law_type:law_serfdom }
 						}
 					}
 				}
@@ -364,10 +490,51 @@ agrarian_party = {
 				desc = "bpm_from_powerful_agrarians"
 			}
 		}
+		if = { # Representing a more rural-one faction
+			limit = {
+				owner = {
+					has_law = law_type:law_no_parties_allowed
+					NOT = {
+						has_law = law_type:law_outlawed_dissent
+					}
+				}
+				OR = {
+					is_interest_group_type = ig_rural_folk
+					is_interest_group_type = ig_landowners
+				}
+			}
+
+			add = {
+				value = 50
+				desc = "from_rural_interests_no_parties_allowed"
+			}
+		}
+		
+
+		if = { # Representing a more rural-one faction
+			limit = {
+				owner = {
+					has_law = law_type:law_no_parties_allowed
+					NOT = {
+						has_law = law_type:law_outlawed_dissent
+					}
+				}
+				OR = {
+					has_ideology = ideology:ideology_eco_conservative_agrarian
+					has_ideology = ideology:ideology_eco_traditional_agrarian
+				}
+			}
+
+			add = {
+				value = 5
+				desc = "from_conservatives_no_parties_allowed"
+			}
+		}
+
 		if = { # a party for anti-serfdom anarchists
 			limit = {
 				bpm_ig_is_anarchist = yes
-				owner = { has_law = law_type:law_serfdom }
+				owner = { has_law_or_variant = law_type:law_serfdom }
 			}
 			add = {
 				value = 20
@@ -400,7 +567,7 @@ agrarian_party = {
 				is_interest_group_type = ig_rural_folk
 				owner = {
 					OR = {
-						has_law = law_type:law_serfdom
+						has_law_or_variant = law_type:law_serfdom
 						has_law = law_type:law_slave_trade
 					}
 					any_interest_group = {
@@ -425,7 +592,7 @@ agrarian_party = {
 				}
 				is_powerful = no
 				owner = {
-					has_law = law_type:law_serfdom
+					has_law_or_variant = law_type:law_serfdom
 					any_interest_group = {
 						is_powerful = yes
 						OR = {
@@ -455,7 +622,7 @@ agrarian_party = {
 			limit = {
 				owner = {
 					any_primary_culture = {
-						has_discrimination_trait = scandinavian_culture_group
+						has_discrimination_trait = language_scandinavian
 					}
 				}
 				OR = {
@@ -533,6 +700,17 @@ agrarian_party = {
 				desc = "from_land_tax"
 			}
 		}
+		if = { # Christian Democrats hate electoralism
+			limit = {
+				is_interest_group_type = ig_christian_democrats
+				has_ideology = ideology:ideology_dop_placeholder
+				
+			}
+			add = {
+				value = -25
+				desc = "bpm_from_hostility_towards_democracy"
+			}
+		}
 		if = { # against free trade - peasant/socialist alliance
 			limit = {
 				law_stance = {
@@ -590,6 +768,11 @@ agrarian_party = {
 		}
 		if = { # nobody will join if the agrarian populists don't join
 			limit = {
+				owner = {
+					NOT = {
+						has_law = law_type:law_no_parties_allowed
+					}
+				}
 				NOT = { is_interest_group_type = ig_agrarian_populists }
 				OR = {
 					NOT = { exists = owner.py:agrarian_party }

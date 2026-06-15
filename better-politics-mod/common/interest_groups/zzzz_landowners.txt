@@ -1,5 +1,5 @@
-﻿ig_landowners = {
-	color = hsv{ 0 0 0.5 }
+﻿REPLACE:ig_landowners = {
+	color = hsv{ 0.78 0.1 0.5 }
 	texture = "gfx/interface/icons/ig_icons/landowners.dds"
 	layer = "revolution_dynamic_landowners"
 	index = 5
@@ -11,19 +11,29 @@
 		ideology_wel_no_welfare
 		# Vanilla
 		ideology_paternalistic
-		ideology_stratocratic
+		ideology_hierarchic
 		ideology_patriarchal
 	}
 	
+	character_ideologies = {
+		ideology_moderate
+		ideology_traditionalist
+		ideology_jingoist_leader
+		# ideology_legitimist
+		ideology_authoritarian
+		# ideology_theocrat
+		# ideology_luddite
+	}
+
 	enable = {
 		always = yes
 	}
 	
 	on_enable = {
 		ig:ig_landowners = {
-			set_ig_trait = ig_trait:ig_trait_rural_systematic_corruption
-			set_ig_trait = ig_trait:ig_trait_rural_well_oiled_machine
-			set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
+			#set_ig_trait = ig_trait:ig_trait_rural_systematic_corruption
+			#set_ig_trait = ig_trait:ig_trait_rural_well_oiled_machine
+			#set_ig_trait = ig_trait:ig_trait_right_systematic_opposition
 		}
 		# Squattocracy
 		if = {
@@ -91,25 +101,25 @@
 			}
 		}
 		# Yangban Officials
-		else_if = {
-			limit = {
-				c:KOR ?= this
-			}
-			ig:ig_landowners = { 
-				set_interest_group_name = ig_yangban
-				bpm_ig_make_scholar_paternalistic = yes
-			}
-		}
-		# Scholar Officials
-		else_if = {
-			limit = {
-				c:CHI ?= this
-			}
-			ig:ig_landowners = { 
-				set_interest_group_name = ig_scholar_officials
-				bpm_ig_make_scholar_paternalistic = yes
-			}
-		}
+		# else_if = {
+		# 	limit = {
+		# 		c:KOR ?= this
+		# 	}
+		# 	ig:ig_landowners = { 
+		# 		set_interest_group_name = ig_yangban
+		# 		bpm_ig_make_scholar_paternalistic = yes
+		# 	}
+		# }
+		# # Scholar Officials
+		# else_if = {
+		# 	limit = {
+		# 		c:CHI ?= this
+		# 	}
+		# 	ig:ig_landowners = { 
+		# 		set_interest_group_name = ig_scholar_officials
+		# 		bpm_ig_make_scholar_paternalistic = yes
+		# 	}
+		# }
 		# Pious Spanish Landowners
 		else_if = {
 			limit = {
@@ -162,16 +172,55 @@
 				bpm_ig_make_caudillismo = yes
 			}
 		}
+		# India
+		else_if = {
+			limit = {
+				OR = {
+					c:BIC ?= this
+					any_primary_culture = {
+						has_discrimination_trait_group = heritage_group_south_asian
+					}
+				}
+			}
+			ig:ig_landowners = {
+				set_interest_group_name = ig_zamindars
+			}
+		}
 
 		ig:ig_landowners = { bpm_reorder_ideologies = yes }
 	}
 	on_disable = {}
+
+	priority_cultures = { #Country scope
+		rule = {
+			trigger = {
+				c:BIC ?= this
+				any_primary_culture = { 
+					cu:british = this
+				}
+			}
+			cultures = {
+				assamese avadhi baluchi bengali bihari gujarati kannada malayalam marathi oriya panjabi pathan rajput sindi tamil telegu hindustani bundeli pahari gondi bageli chhattisgarhi deccani
+			}
+		}
+		rule = {
+			trigger = {
+				c:ZAN ?= this
+				any_primary_culture = { cu:bedouin = this }
+				NOT = { any_primary_culture = { cu:swahili = this } }
+			}
+			cultures = {
+				bedouin
+			}
+		}
+	}
+
 	on_character_ig_membership = {}
 	
 	pop_potential = {
 		custom_tooltip = {
 			text = BPM_VALID_POP_FOR_IG
-			owner = {
+			owner ?= {
 				NOR = {
 					has_law = law_type:law_collectivized_agriculture
 					has_law = law_type:law_commercialized_agriculture
@@ -193,20 +242,43 @@
 			desc = "SLAVERY_DETRACTORS"
 			if = {
 				limit = {
-					owner = { NOT = { has_law = law_type:law_slavery_banned } }
+					owner = {
+							NOR = {
+								has_law_or_variant = law_type:law_slavery_banned
+								has_law_or_variant = law_type:law_colonial_slavery
+							} 
+					}
+					NOT = { is_pop_type = aristocrats }
 					OR = {
-						pop_has_primary_culture = no
+						#pop_has_primary_culture = no
+						pop_acceptance <= acceptance_status_3
 						state = { is_slave_state = no }
 					}
+				}
+				value = -300
+			}
+			else_if = {
+				limit = {
+					owner = {
+						has_law = law_type:law_colonial_slavery
+					}
+					OR = {
+						#pop_has_primary_culture = no
+						pop_acceptance <= acceptance_status_3
+						state = { is_incorporated = no }
+					}
+					NOT = { is_pop_type = aristocrats }
 				}
 				value = -300
 			}
 		}
 
 		if = {
-			limit = { is_pop_type = aristocrats }
+			limit = {
+				is_pop_type = aristocrats
+				NOT = { owner = { country_has_state_religion = rel:confucian } }
+			}
 			add = {
-				# desc = "RURAL_UPPER_CLASS" # Gotta find a way to fix this post update
 				desc = "POP_ARISTOCRATS"
 				value = 250
 			}
@@ -215,6 +287,13 @@
 				add = {
 					desc = "SLAVEHOLDERS"
 					value = 400
+				}
+			}
+			else_if = {
+				limit = { state = { is_incorporated = yes } owner = { has_law_or_variant= law_type:law_colonial_slavery } }
+				add = {
+					desc = "SLAVEHOLDERS"
+					value = 200
 				}
 			}
 		}
@@ -240,6 +319,19 @@
 			}
 		}
 
+		if = {
+			limit = {
+				c:BIC ?= owner
+				culture = {
+					has_discrimination_trait_group = heritage_group_european
+				}
+			}
+			multiply = {
+				desc = "POP_INDIA_COLONIAL_RULE"
+				value = 0.1
+			}
+		}
+
 		multiply = ig_attraction_to_interests_from_stability
 
 	}
@@ -251,12 +343,22 @@
 	agitator_weight = {
 		value = 1.0
 		multiply = bpm_base_agitator_weight
+		if ={
+			limit = {
+				bpm_interest_group_is_activated = no
+			}
+			value = 0.0
+		}
 	}
 	
 	commander_weight = {
 		value = 1.0
 		multiply = bpm_commander_assignment_from_laws_factor
 	}	
+
+	executive_weight = {
+		value = 0.1
+	}
 	
 	noble_chance = {
 		value = 1.0
@@ -275,6 +377,11 @@
 	female_agitator_chance = {
 		value = 1.0
 		multiply = bpm_female_character_spawn_chance		
+	}
+
+	female_executive_chance = {
+		value = 1.0
+		multiply = bpm_female_character_spawn_chance
 	}
 	
 	# The chance that a commander belonging to this IG takes over leadership when it changes

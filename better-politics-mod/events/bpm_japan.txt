@@ -1,88 +1,110 @@
-﻿# namespace = bpm_japan
+﻿namespace = bpm_japan
 
-# bpm_japan.1 = {
-# 	type = country_event
-# 	placement = root
-# 	title = bpm_japan.1.t
-# 	desc = bpm_japan.1.d
-# 	flavor = bpm_japan.1.f
+bpm_japan.1 = { # For if Japan somehow gets elections without abolishing the bakufu first
+	type = country_event
+	placement = root
 
-# 	dlc = dlc_bpm
+	duration = 3
 
-# 	duration = 3
+	title = bpm_japan.1.t
+	desc = bpm_japan.1.d
+	flavor = bpm_japan.1.f
 
-# 	icon = "gfx/interface/icons/event_icons/event_trade.dds"
+    gui_window = event_window_1char_tabloid
 
-# 	event_image = {
-# 		video = "asia_confucianism_shinto"
-# 	}
+	left_icon = scope:shogun_scope
 
-# 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+	on_opened_soundeffect = "event:/SFX/Events/misc/1Character_Banner"
 
-# 	trigger = {
-# 		#triggered by event
-# 	}
+	dlc = dlc_bpm
 
-# 	option = {
-# 		name = bpm_japan.1.a
+	icon = "gfx/interface/icons/faction_icons/faction_japan_tokugawa.dds"
 
-#         s:STATE_SOUTHERN_MANCHURIA = {
-# 			add_claim = c:JAP
-# 		}
-#         s:STATE_NORTHERN_MANCHURIA = {
-# 			add_claim = c:JAP
-# 		}
-#         s:STATE_OUTER_MANCHURIA = {
-# 			add_claim = c:JAP
-# 		}
-# 	}
-#     option = {
-# 		name = bpm_japan.1.b
+	cooldown = { days = never_fire_again_modifier_time }
 
-#         s:STATE_LUZON = {
-# 			add_claim = c:JAP
-# 		}
-#         s:STATE_MINDANAO = {
-# 			add_claim = c:JAP
-# 		}
-#         s:STATE_VISAYAS = {
-# 			add_claim = c:JAP
-# 		}
-#         s:STATE_NORTH_BORNEO = {
-# 			add_claim = c:JAP
-# 		}
-# 	}
-# }
+	trigger = {
+		has_law = law_type:law_bakufu
+        country_has_voting_franchise = yes
+	}
 
-# bpm_japan.2 = {
-# 	type = country_event
-# 	placement = root
-# 	title = bpm_japan.2.t
-# 	desc = bpm_japan.2.d
-# 	flavor = bpm_japan.2.f
+	cancellation_trigger = {
 
-# 	dlc = dlc_bpm
+	}
 
-# 	duration = 3
+	immediate = {
+		random_scope_character = {
+            limit = {has_role = bpm_character_role_hog}
+            save_scope_as = shogun_scope
+        }
+        random_political_movement = {
+			limit = {
+				is_political_movement_type = movement_tokugawa_loyalist
+			}
+			save_scope_as = loyalist_movement_scope
+		}
+	}
 
-# 	icon = "gfx/interface/icons/event_icons/event_election.dds"
+	option = {
+        highlighted_option = yes
+		name = bpm_japan.1.a
+        trigger = {
+            custom_tooltip = {
+                text = shogun_is_democrat_or_loyalists_marginalized
+                OR = {
+                    scope:shogun_scope = {
+                        OR = {
+                            bpm_character_is_radical_democrat = yes
+		                    bpm_character_is_moderate_democrat = yes
+                        }
+                    }
+                    scope:loyalist_movement_scope ?= {
+                        political_movement_support < 0.05
+                    }
+                    NOT = {exists = scope:loyalist_movement_scope}
+                }
+            }
+		}
+		show_as_unavailable = {
+			always = yes
+		}
+        scope:shogun_scope = {
+            add_modifier = modifier_former_shogun
+        }
+	}
 
-# 	event_image = {
-# 		video = "asia_confucianism_shinto"
-# 	}
+    option = {
+        highlighted_option = yes
+        name = bpm_japan.1.b
+        default_option = yes
+        trigger = {
+            custom_tooltip = {
+                text = loyalists_not_marginalized
+                scope:loyalist_movement_scope ?= {
+                    political_movement_support >= 0.05
+                }
+            }
+        }
+        show_as_unavailable = {
+			always = yes
+		}
+        add_modifier = {
+			name = modifier_meiji_interregnum
+			days = short_modifier_time
+		}
+        scope:loyalist_movement_scope = {
+            add_modifier = {
+				name = modifier_retreat_to_osaka
+				days = short_modifier_time
+			}
+        }
+    }
 
-# 	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
-
-# 	trigger = {
-# 		#triggered by event
-# 	}
-
-# 	immediate = {
-# 		remove_variable = bpm_shogunate_var
-# 	}
-
-# 	option = {
-# 		name = bpm_japan.2.a
-# 		set_variable = bpm_imperial_democracy
-# 	}
-# }
+    after = {
+        activate_law = law_type:law_answers_to_legislature
+        if = {
+            limit = {has_law = law_type:law_advisory_body}
+            activate_law = law_type:law_separated_powers
+        }
+    }
+}

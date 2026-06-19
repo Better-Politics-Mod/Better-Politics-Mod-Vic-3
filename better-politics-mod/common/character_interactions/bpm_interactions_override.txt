@@ -250,8 +250,53 @@ REPLACE:exile_character = {
 			bpm_ig_is_marginal = no
 		}
 		owner ?= {
-			NOT = { has_law = law_type:law_protected_speech }
-			NOT = { has_law = law_type:law_traditional_ostracism }
+			NOR = {
+				has_law_or_variant = law_type:law_protected_speech
+				has_law_or_variant = law_type:law_guaranteed_liberties
+				has_law = law_type:law_traditional_ostracism
+			}
+		}
+		is_busy = no
+		trigger_if = {
+			limit = {owner = {is_player = yes}}
+			custom_tooltip = {
+				text = ideology_not_too_close_tt
+				bpm_synergy_with_executive < 0.7
+			}
+		}
+		trigger_if = {
+			limit = {
+				c:JAP ?= owner
+			}
+			trigger_if = {
+				limit = {
+					owner ?= {
+						has_law = law_type:law_bakufu
+					}
+				}
+				custom_tooltip = {
+					text = house_tokugawa_not_tt
+					NOT = {
+						has_variable = house_tokugawa
+					}
+				}
+			}
+			trigger_if = {
+				limit = {
+					owner ?= {
+						NOR = {
+							has_law_or_variant = law_type:law_council_republic
+							has_law_or_variant = law_type:law_corporate_state
+						}
+					}
+				}
+				custom_tooltip = {
+					text = house_yamato_not_tt
+					NOT = {
+						has_variable = house_yamato
+					}
+				}
+			}
 		}
 	}
 
@@ -310,31 +355,18 @@ REPLACE:exile_character = {
 			}
 			owner ?= { set_variable = achievement_agitate_elsewhere_var }
 		}
-		hidden_effect = {
-			if = {
-				limit = {
-					NOT = { has_role_of_type = agitator }
-				}
-				add_character_role = agitator
+		if = {
+			limit = {
+				has_role_of_type = politician
 			}
-			if = {
-				limit = {
-					has_role_of_type = general
+			owner ?= {
+				scope:relevant_ig = {
+					add_modifier = {
+						name = modifier_exiled_leader
+						days = normal_modifier_time
+						is_decaying = yes
+					}
 				}
-				remove_character_role = general
-			}
-			if = {
-				limit = {
-					has_role_of_type = admiral
-				}
-				remove_character_role = admiral
-			}
-			if = {
-				limit = {
-					has_role_of_type = politician
-				}
-				set_as_interest_group_leader = no
-				remove_character_role = politician
 			}
 		}
 		owner ?= {
@@ -754,6 +786,7 @@ REPLACE:arrange_accident = {
 		is_in_void = no
 		is_ruler_of_own_country = no
 		is_heir_of_own_country = no
+		is_immortal = no
 		OR = {
 			has_role_of_type = general
 			has_role_of_type = admiral
@@ -772,67 +805,235 @@ REPLACE:arrange_accident = {
 		interest_group = {
 			bpm_ig_is_marginal = no
 		}
+		trigger_if = {
+			limit = {
+				c:JAP ?= owner
+			}
+			trigger_if = {
+				limit = {
+					owner ?= {
+						has_law = law_type:law_bakufu
+					}
+				}
+				custom_tooltip = {
+					text = house_tokugawa_not_tt
+					NOT = {
+						has_variable = house_tokugawa
+					}
+				}
+			}
+			trigger_if = {
+				limit = {
+					owner ?= {
+						NOR = {
+							has_law_or_variant = law_type:law_council_republic
+							has_law_or_variant = law_type:law_corporate_state
+						}
+					}
+				}
+				custom_tooltip = {
+					text = house_yamato_not_tt
+					NOT = {
+						has_variable = house_yamato
+					}
+				}
+			}
+		}
 	}
 
 	effect = {
-		this.interest_group = {
+		this.interest_group ?= {
 			save_scope_as = relevant_ig
 		}
 		this = {
 			save_scope_as = assassinated_scope
 		}
-		random_list = {
-			25 = {
-				kill_character = yes
+		if = {
+			limit = {
+				exists = owner.institution:institution_home_affairs
 			}
-			50 = {
-				owner ?= {
-					post_notification = arranged_accident_failed
-				}
-				custom_tooltip = assassination_attempt_failed_tt
-			}
-			25 = {
-				custom_tooltip = assassination_attempt_failed_loud_tt
-				owner ?= {
-					add_radicals = {
-						value = very_large_radicals
-						interest_group = scope:relevant_ig
-					}
-				}
-				if = {
-					limit = {
-						character_supports_political_movement = yes
-					}
-					this.political_movement = {
-						add_modifier = {
-							name = modifier_government_accident_attempt
-							days = long_modifier_time
-						}
-					}
-				}
-				else_if = {
-					limit = {
-						has_role_of_type = politician
-						THIS.interest_group = {
-							interest_group_supports_political_movement = yes
-						}
-					}
-					owner ?= {
-						random_political_movement = {
+			random_list = {
+				40 = {
+					modifier = {
+						if = {
 							limit = {
-								any_influenced_interest_group = {
-									this = scope:relevant_ig
-								}
+								owner.institution:institution_home_affairs.investment >= 2
 							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 3
+							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 4
+							}
+							add = 25
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 5
+							}
+							add = 25
+						}
+					}
+					kill_character = yes
+				}
+				40 = {
+					owner ?= {
+						post_notification = arranged_accident_failed
+					}
+					custom_tooltip = assassination_attempt_failed_tt
+				}
+				20 = {
+					modifier = {
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 2
+							}
+							subtract = 5
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 3
+							}
+							subtract = 5
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 4
+							}
+							subtract = 5
+						}
+						if = {
+							limit = {
+								owner.institution:institution_home_affairs.investment >= 5
+							}
+							subtract = 5
+						}
+					}
+					custom_tooltip = assassination_attempt_failed_loud_tt
+					owner ?= {
+						add_radicals = {
+							value = very_large_radicals
+							interest_group = scope:relevant_ig
+						}
+					}
+					if = {
+						limit = {
+							owner = {
+								has_journal_entry = je_ip4_coup
+							}
+							root = {
+								has_variable = golpista_var
+							}
+						}
+						owner = {
+							character_execute_immediate_coup = yes
+						}
+					}
+					if = {
+						limit = {
+							character_supports_political_movement = yes
+						}
+						this.political_movement = {
 							add_modifier = {
 								name = modifier_government_accident_attempt
 								days = long_modifier_time
 							}
 						}
 					}
+					else_if = {
+						limit = {
+							has_role_of_type = politician
+							THIS.interest_group ?= {
+								interest_group_supports_political_movement = yes
+							}
+						}
+						owner ?= {
+							random_political_movement = {
+								limit = {
+									any_influenced_interest_group = {
+										this = scope:relevant_ig
+									}
+								}
+								add_modifier = {
+									name = modifier_government_accident_attempt
+									days = long_modifier_time
+								}
+							}
+						}
+					}
+					owner ?= {
+						post_notification = arranged_accident_failed_incrimination
+					}
 				}
-				owner ?= {
-					post_notification = arranged_accident_failed_incrimination
+			}
+		}
+		else = { # Exists purely to generate a tooltip when inactive
+			random_list = {
+				40 = {
+					kill_character = yes
+				}
+				40 = {
+					custom_tooltip = assassination_attempt_failed_tt
+				}
+				20 = {
+					custom_tooltip = assassination_attempt_failed_loud_tt
+					owner ?= {
+						add_radicals = {
+							value = very_large_radicals
+							interest_group = scope:relevant_ig
+						}
+					}
+					if = {
+						limit = {
+							owner = {
+								has_journal_entry = je_ip4_coup
+							}
+							root = {
+								has_variable = golpista_var
+							}
+						}
+						owner = {
+							character_execute_immediate_coup = yes
+						}
+					}
+					if = {
+						limit = {
+							character_supports_political_movement = yes
+						}
+						this.political_movement = {
+							add_modifier = {
+								name = modifier_government_accident_attempt
+								days = long_modifier_time
+							}
+						}
+					}
+					else_if = {
+						limit = {
+							has_role_of_type = politician
+							THIS.interest_group ?= {
+								interest_group_supports_political_movement = yes
+							}
+						}
+						owner ?= {
+							random_political_movement = {
+								limit = {
+									any_influenced_interest_group = {
+										this = scope:relevant_ig
+									}
+								}
+								add_modifier = {
+									name = modifier_government_accident_attempt
+									days = long_modifier_time
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -840,6 +1041,14 @@ REPLACE:arrange_accident = {
 
 	cooldown = { days = normal_modifier_time }
 	show_confirmation_box = yes
+
+	should_ai_evaluate = {
+		country_rank > rank_value:minor_power
+	}
+	
+	ai_will_do = {
+		is_heir_of_own_country = no
+	}
 
 	ai_chance = {
 		value = -50
@@ -1001,6 +1210,10 @@ REPLACE:resign_from_office = {
 
 	cooldown = { months = 180 }
 	show_confirmation_box = yes
+
+	should_ai_evaluate = {
+		country_rank > rank_value:minor_power
+	}
 
 	ai_chance = {
 		value = -50

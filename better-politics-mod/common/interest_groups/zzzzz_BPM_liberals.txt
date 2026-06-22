@@ -89,9 +89,22 @@
 
 		if = {
 			limit = { is_pop_type = peasants }
-			add = {
-				desc = "POP_EXCLUSIONS"
-				value = -50
+			if = {
+				limit = {
+					owner = {
+						this = c:SWI
+					}
+				}
+				add = {
+					desc = "POP_INCLUSIONS"
+					value = 60
+				}	
+			}
+			else = {
+				add = {
+					desc = "POP_EXCLUSIONS"
+					value = -50
+				}
 			}
 		}
 		else_if = {
@@ -103,24 +116,31 @@
 			if = {
 				limit = { 
 					owner = {
-						has_law = law_type:law_monarchy
+						has_law_or_variant = law_type:law_monarchy
 						OR = {
-							has_law = law_type:law_oligarchy
-							has_law = law_type:law_autocracy
+							has_law_or_variant = law_type:law_landed_voting
+							has_law_or_variant = law_type:law_autocracy
 						}
 					}
 				}
 				add = {
 					desc = "ARISTOCRAT_REFORMERS"
-					value = 40
+					value = 30
 				}
 			}
-		}
-		else_if = {
-			limit = { is_pop_type = capitalists }
-			add = {
-				desc = "POP_CAPITALISTS"
-				value = 195
+			else_if = {
+				if = {
+					limit = { 
+						owner = {
+							has_law_or_variant = law_type:law_monarchy
+							has_law_or_variant = law_type:law_wealth_voting
+						}
+					}
+					add = {
+						desc = "ARISTOCRAT_REFORMERS"
+						value = 20
+					}
+				}
 			}
 		}
 		else_if = {
@@ -131,6 +151,35 @@
 			add = {
 				desc = "MIDDLE_CLASS"
 				value = 30
+			}
+		}
+
+		if = {
+			limit = { OR = {
+				is_pop_type = capitalists 
+				is_pop_type = shopkeepers
+			} }
+			add = {
+				desc = "POP_CAPITALISTS"
+				value = var:bpm_consciousness_liberal_igs_capitalists_shopkeepers
+			}
+		}
+		else_if = {
+			limit = {
+				OR = {
+					is_pop_type = academics
+					is_pop_type = engineers
+				}
+			}
+			add = {
+				desc = "POP_ACADEMICS"
+				value = var:bpm_consciousness_liberal_igs_academics_engineers
+			}
+		}
+		else = {
+			add = {
+				desc = "LABOR_CONSCIOUSNESS"
+				value = var:bpm_consciousness_liberal_igs_others
 			}
 		}
 
@@ -174,7 +223,7 @@
 				desc = "SLAVERY_DETRACTORS"
 				if = {
 					limit = {
-						owner = { NOT = { has_law = law_type:law_slavery_banned } }
+						owner = { NOT = { has_law_or_variant = law_type:law_slavery_banned } }
 						OR = {
 							pop_acceptance <= acceptance_status_3
 							state = { is_slave_state = no }
@@ -224,11 +273,24 @@
 				multiply = {
 					desc = "PEOPLES_SPRINGTIME_BUILDUP"
 					value = global_var:bpm_je_march_to_radicalism_progress
-					multiply = 0.05
+					multiply = 0.033 # 0.05
 				}
 			}
 		}
 		multiply = ig_attraction_to_ruler_ideology_from_stability
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			multiply = {
+				desc = "IN_GOVERNMENT_ATTRACTION"
+				value = 1
+				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+				min = 0
+			}
+		}
 	}
 	
 	monarch_weight = {

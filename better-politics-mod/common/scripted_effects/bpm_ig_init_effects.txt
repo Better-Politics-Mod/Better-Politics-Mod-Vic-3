@@ -19,6 +19,8 @@
 				remove_ideology = ideology_nonexistent
 				add_ideology = ideology_eco_modern_agrarian
 			}
+			add_ideology = ideology_wel_rural_welfare
+
 			add_ideology = ideology_dop_radical_democrat
 			#add_ideology = ideology_sta_decentralized_state
 			add_ideology = ideology_sta_minimal_state
@@ -37,39 +39,6 @@
 					has_ideology = ideology:ideology_placeholder_leader
 				}
 				set_ideology = ideology:ideology_center_leader
-			}
-
-			bpm_reorder_ideologies = yes
-		}
-		bpm_rename_igs = yes
-	}
-}
-
-bpm_initialize_trade_unions = {
-	if = {
-		limit = { 
-			ig:ig_trade_unions = { 
-				has_ideology = ideology:ideology_nonexistent
-			}
-		}
-		ig:ig_trade_unions = {
-			remove_ideology = ideology_nonexistent
-
-			add_ideology = ideology_sta_progressive_state
-			add_ideology = ideology_mil_antimilitarist
-			add_ideology = ideology_wel_expanded_public_welfare
-			add_ideology = ideology_dop_unionist
-			# Vanilla ideologies
-			add_ideology = ideology_proletarian
-			add_ideology = ideology_egalitarian
-			add_ideology = ideology_populist
-			add_ideology = ideology_anti_slavery
-
-			every_scope_character = {
-				limit = {
-					has_ideology = ideology:ideology_placeholder_leader
-				}
-				set_ideology = ideology:ideology_social_democrat
 			}
 
 			bpm_reorder_ideologies = yes
@@ -101,8 +70,33 @@ bpm_initialize_radlibs = {
 			}
 		}
 		ig:ig_radicals ?= {
-			add_ideology = ideology_dop_radical_democrat
-			add_ideology = ideology_sta_progressive_state
+			if = {
+				limit = {
+					ROOT = { has_law = law_type:law_supreme_legislature }
+				}
+				add_ideology = ideology_dop_radical_parliamentarian
+			}
+			else = {
+				add_ideology = ideology_dop_radical_democrat
+			}
+			if = {
+				limit = {
+					ROOT = {
+						bpm_country_is_in_mainland_europe = yes
+					}
+					NOR = {
+						this = c:BEL
+						this = c:SWI
+					}
+					NOT = {
+						has_global_variable = peoples_springtime_happened
+					}
+				}
+				add_ideology = ideology_sta_effective_state
+			}
+			else = {
+				add_ideology = ideology_sta_progressive_state
+			}
 			add_ideology = ideology_cit_liberal_nationalist
 			add_ideology = ideology_rel_radical_secularist
 			add_ideology = ideology_mil_patriotic_liberal
@@ -194,8 +188,22 @@ bpm_initialize_natlibs = {
 			else = { add_ideology = ideology_gov_moderate_monarchist }
 			# Latin american Positivists
 			if = {
-				limit = { prev = { bpm_country_is_latin_american = yes } }
+				limit = { ROOT = { bpm_country_is_latin_american = yes } }
+				add_ideology = ideology_dop_authoritarian_democrat
+			}
+			else_if = {
+				limit = { ROOT = c:BEL }
+				add_ideology = ideology_dop_doctrinaire_democrat
+			}
+			else_if = {
+				limit = { ROOT = { bpm_country_is_latin_american = yes } }
 				add_ideology = ideology_dop_technocrat
+			}
+			else_if = {
+				limit = {
+					ROOT = { has_law = law_type:law_supreme_legislature }
+				}
+				add_ideology = ideology_dop_moderate_parliamentarian
 			}
 			# Else moderate democrat
 			else = { add_ideology = ideology_dop_moderate_democrat }
@@ -204,14 +212,34 @@ bpm_initialize_natlibs = {
 				limit = {
 					prev = { 
 						OR ={ 
-							country_has_primary_culture = cu:north_german
-							country_has_primary_culture = cu:south_german
 							bpm_country_is_latin_american = yes
 							this = c:BIC
 						}
 					}
 				}
 				add_ideology = ideology_sta_progressive_state
+			}
+			else_if = {
+				limit = {
+					ROOT = {
+						OR = {
+							country_has_primary_culture = cu:north_german
+							country_has_primary_culture = cu:south_german
+						}
+						NOT = {
+							this ?= c:AUS
+						}
+					}
+				}
+				add_ideology = ideology_sta_weak_state
+			}
+			else_if = {
+				limit = { ROOT = c:BEL }
+				add_ideology = ideology_sta_effective_state
+			}
+			else_if = {
+				limit = { ROOT = c:SWI }
+				add_ideology = ideology_sta_minimal_state
 			}
 			# Else security state
 			else = { add_ideology = ideology_sta_security_state }
@@ -226,7 +254,24 @@ bpm_initialize_natlibs = {
 				}
 				add_ideology = ideology_cit_liberal_nationalist
 			}
+			else_if = {
+				limit = { 
+					ROOT = { 
+						this = c:SWI
+					} 
+				}
+				add_ideology = ideology_cit_traditional_culture
+			}
+			else_if = {
+				limit = { 
+					ROOT = { 
+						this = c:BEL
+					} 
+				}
+				add_ideology = ideology_cit_segregationist
+			}
 			else = { add_ideology = ideology_cit_nationalist }
+			bpm_remove_all_rel_ideologies = yes
 			if = {
 				limit = { 
 					prev = {
@@ -250,11 +295,22 @@ bpm_initialize_natlibs = {
 				add_ideology = ideology_rel_radical_secularist
 			}
 			else = { add_ideology = ideology_rel_moralist }
-			add_ideology = ideology_jingoist
+			add_ideology = ideology_mil_jingoist
 			# Latin american Positivists
 			if = {
 				limit = { prev = { bpm_country_is_latin_american = yes } }
 				add_ideology = ideology_wel_public_welfare
+			}
+			else_if = {
+				limit = {
+					ROOT = {
+						OR = {
+							country_has_primary_culture = cu:north_german
+							country_has_primary_culture = cu:south_german
+						}
+					}
+				}
+				add_ideology = ideology_wel_market_welfare
 			}
 			else = { add_ideology = ideology_wel_paternalistic_welfare }
 			if = {
@@ -263,6 +319,7 @@ bpm_initialize_natlibs = {
 						OR = {
 							this = c:USA
 							this = c:GBR
+							this = c:BEL
 							country_has_primary_culture = cu:north_german
 							country_has_primary_culture = cu:south_german
 							country_has_primary_culture = cu:danish
@@ -309,16 +366,16 @@ bpm_initialize_natlibs = {
 			set_interest_group_name = ig_moderate_liberals
 		}
 
-		ig:ig_intelligentsia = {
-			if = {
-				limit = {
-					has_ideology = ideology:ideology_sta_weak_state
-				}
-				bpm_remove_all_sta_ideologies = yes
-				add_ideology = ideology_sta_powerful_state
-				bpm_reorder_ideologies = yes
-			}
-		}
+		#ig:ig_intelligentsia = {
+		#	if = {
+		#		limit = {
+		#			has_ideology = ideology:ideology_sta_weak_state
+		#		}
+		#		bpm_remove_all_sta_ideologies = yes
+		#		add_ideology = ideology_sta_powerful_state
+		#		bpm_reorder_ideologies = yes
+		#	}
+		#}
 
 		bpm_rename_igs = yes
 	}
@@ -349,24 +406,77 @@ bpm_initialize_marlibs = {
 					}
 				}
 				add_ideology = ideology_dop_moderate_democrat
-				add_ideology = ideology_sta_federated_state
 			}
 			else_if = {
 				limit = {
 					prev = c:BIC
 				}
-				add_ideology = ideology_dop_technocrat
+				add_ideology = ideology_dop_authoritarian_democrat
+			}
+			else_if = {
+				limit = {
+					ROOT = {
+						OR = {
+							country_has_primary_culture = cu:north_german
+							country_has_primary_culture = cu:south_german
+						}
+						NOT = {
+							this ?= c:AUS
+						}
+					}
+				}
+				add_ideology = ideology_dop_radical_democrat
+			}
+			else_if = {
+				limit = {
+					ROOT = c:BEL
+				}
+				add_ideology = ideology_dop_doctrinaire_democrat
+			}
+			else_if = {
+				limit = {
+					ROOT = { has_law = law_type:law_supreme_legislature }
+				}
+				add_ideology = ideology_dop_authoritarian_parliamentarian
+			}
+			else = {
+				add_ideology = ideology_dop_authoritarian_democrat
+			}
+			if = {
+				limit = {
+					ROOT = { 
+						OR = {
+							has_law = law_type:law_federated
+							this = c:BEL
+							this = { bpm_country_is_latin_american = yes }
+							this = c:USA
+						} 
+					}
+				}
+				add_ideology = ideology_sta_federated_state
+			}
+			else_if = {
+				limit = {
+					ROOT = c:RAJ
+				}
+				
 				add_ideology = ideology_sta_weak_state
 			}
 			else_if = {
 				limit = {
-					prev = { has_law = law_type:law_federated }
+					ROOT = {
+						OR = {
+							country_has_primary_culture = cu:north_german
+							country_has_primary_culture = cu:south_german
+						}
+						NOT = {
+							this ?= c:AUS
+						}
+					}
 				}
-				add_ideology = ideology_dop_technocrat
-				add_ideology = ideology_sta_federated_state
+				add_ideology = ideology_sta_weak_state
 			}
-			else = { 
-				add_ideology = ideology_dop_technocrat
+			else = {
 				add_ideology = ideology_sta_powerful_state
 			}
 			if = {
@@ -376,11 +486,14 @@ bpm_initialize_marlibs = {
 			else = {
 				add_ideology = ideology_cit_liberal_nationalist
 			}
+			bpm_remove_all_rel_ideologies = yes
 			if = {
 				limit = { 
 					OR = {
-						prev = c:USA
-						prev = c:BIC
+						ROOT = c:USA
+						country_has_primary_culture = cu:north_german
+						country_has_primary_culture = cu:south_german
+						ROOT = c:BIC
 					}
 				}
 				add_ideology = ideology_rel_secularist
@@ -426,8 +539,17 @@ bpm_initialize_marlibs = {
 				bpm_remove_all_wel_ideologies = yes
 				add_ideology = ideology_wel_public_welfare
 			}
-			bpm_remove_all_eco_ideologies = yes
-			add_ideology = ideology_eco_modernizer
+			if = {
+				limit = { 
+					NOR = {
+						ROOT = c:USA
+						ROOT = c:BEL
+						ROOT = c:GBR
+					}
+				}
+				bpm_remove_all_eco_ideologies = yes
+				add_ideology = ideology_eco_modernizer
+			}
 			bpm_reorder_ideologies = yes
 			set_interest_group_name = ig_moderate_liberals
 		}
@@ -545,7 +667,7 @@ bpm_initialize_fascists = {
 				add_ideology = ideology_wel_religious_welfare
 				
 				bpm_remove_all_mil_ideologies = yes
-				add_ideology = ideology_jingoist
+				add_ideology = ideology_mil_jingoist
 
 				bpm_reorder_ideologies = yes
 			}
@@ -876,13 +998,19 @@ bpm_initialize_catholic_interests = {
 			if = {
 				limit = { 
 					owner = {
-						OR = {
-							country_has_primary_culture = cu:flemish
-							country_has_primary_culture = cu:alemannic
-						}	
+						country_has_primary_culture = cu:flemish
 					}
 				}
 				add_ideology = ideology_dop_divine_democrat
+			}
+
+			else_if = {
+				limit = { 
+					owner = {
+						country_has_primary_culture = cu:alemannic
+					}
+				}
+				add_ideology = ideology_dop_moderate_parliamentarian
 			}
 
 			else = {
@@ -891,7 +1019,17 @@ bpm_initialize_catholic_interests = {
 
 			add_ideology = ideology_eco_traditional_agrarian
 			
-			add_ideology = ideology_sta_regionalized_state
+			if = {
+				limit = {
+					ROOT = {
+						this = c:SWI
+					}
+				}
+				add_ideology = ideology_sta_decentralized_state
+			}
+			else = {
+				add_ideology = ideology_sta_regionalized_state
+			}
 			
 			add_ideology = ideology_cit_traditional_culture
 
@@ -910,6 +1048,10 @@ bpm_initialize_catholic_interests = {
 					}
 				}
 				add_ideology = ideology_rel_pragmatic_moralist
+			}
+			else_if = { 
+				limit = { ROOT = c:BEL }
+				add_ideology = ideology_rel_moralist
 			}
 			else = {
 				add_ideology = ideology_rel_radical_moralist

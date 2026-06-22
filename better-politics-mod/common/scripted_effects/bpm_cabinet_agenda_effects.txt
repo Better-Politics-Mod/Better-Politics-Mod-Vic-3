@@ -1,0 +1,383 @@
+﻿bpm_cabinet_agenda_weekly_progress = {
+	if = {
+		limit = {
+			owner = { bpm_has_unfilled_cabinet_positions = no }
+		}
+		if = {
+			limit = {
+				has_variable = bpm_cabinet_agenda_slot_one_progress
+			}
+			change_variable = {
+				name = bpm_cabinet_agenda_slot_one_progress
+				add = 0.01
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_cabinet_agenda_slot_two_progress
+			}
+			change_variable = {
+				name = bpm_cabinet_agenda_slot_two_progress
+				add = 0.01
+			}
+		}
+		if = {
+			limit = {
+				has_variable = bpm_cabinet_agenda_slot_three_progress
+			}
+			change_variable = {
+				name = bpm_cabinet_agenda_slot_three_progress
+				add = 0.01
+			}
+		}
+	}
+}
+
+bpm_cabinet_agenda_completion = {
+	bpm_cabinet_agenda_completion_subp = { slot = slot_one }
+	bpm_cabinet_agenda_completion_subp = { slot = slot_two }
+	bpm_cabinet_agenda_completion_subp = { slot = slot_three }
+}
+
+bpm_cabinet_agenda_completion_subp = {
+	if = {
+		limit = {
+			var:bpm_cabinet_agenda_$slot$_progress >= 1
+		}
+		bpm_cabinet_agenda_result = { slot = $slot$ }
+		scope:journal_entry = {
+			remove_variable = bpm_cabinet_agenda_$slot$_progress
+			remove_variable = bpm_cabinet_agenda_$slot$
+		}
+	}
+}
+
+bpm_lock_slot_if_no_skill_subp = {
+	if = {
+		limit = {
+			NOT = { AND = {
+				has_variable = bpm_headofgov
+				#bpm_ruler_is_acting_as_interim_head_of_government = no
+				var:bpm_headofgov = {
+					bpm_character_agenda_level >= $num$
+				}
+			} }
+		}
+		scope:journal_entry = {
+			remove_variable = bpm_cabinet_agenda_$slot$
+			remove_variable = bpm_cabinet_agenda_$slot$_progress
+		}
+	} else_if = {
+		limit = {
+			has_variable = bpm_headofgov
+			#bpm_ruler_is_acting_as_interim_head_of_government = no
+			var:bpm_headofgov = {
+				bpm_character_agenda_level >= $num$
+			}
+			scope:journal_entry = {
+				NOT = {
+					has_variable = bpm_cabinet_agenda_$slot$
+				}
+			}
+		}
+		scope:journal_entry = {
+			set_variable = {
+				name = bpm_cabinet_agenda_$slot$
+				value = flag:bpm_no_cabinet_agenda
+			}
+			set_variable = {
+				name = bpm_cabinet_agenda_$slot$_progress
+				value = 0
+			}
+		}
+	}
+}
+
+bpm_lock_slot_if_no_skill = {
+	var:bpm_headofgov ?= {
+		bpm_character_skill_level_init = yes
+	}
+	bpm_lock_slot_if_no_skill_subp = { num = 1 slot = slot_one }
+	bpm_lock_slot_if_no_skill_subp = { num = 2 slot = slot_two }
+	bpm_lock_slot_if_no_skill_subp = { num = 3 slot = slot_three }
+}
+
+bpm_reset_cabinet_agendas_if_new_gov = {
+	# This effect is used to reset the cabinet agendas when a new government is formed.
+	if = {
+		limit = {
+			NOT = { 
+				has_variable = bpm_current_headofgov_in_charge
+			}
+			bpm_ruler_is_acting_as_interim_head_of_government = no
+		}
+		set_variable = {
+			name = bpm_current_headofgov_in_charge
+			value = owner.var:bpm_headofgov
+		}
+	}
+	if = {
+		limit = {
+			bpm_ruler_is_acting_as_interim_head_of_government = no
+			NOT = {
+				var:bpm_current_headofgov_in_charge = owner.var:bpm_headofgov
+			}
+		}
+		set_variable = {
+			name = bpm_current_headofgov_in_charge
+			value = owner.var:bpm_headofgov
+		}
+		scope:journal_entry = {
+			remove_variable = bpm_cabinet_agenda_slot_one
+			remove_variable = bpm_cabinet_agenda_slot_one_progress
+			remove_variable = bpm_cabinet_agenda_slot_two
+			remove_variable = bpm_cabinet_agenda_slot_two_progress
+			remove_variable = bpm_cabinet_agenda_slot_three
+			remove_variable = bpm_cabinet_agenda_slot_three_progress
+		}
+		owner = { clear_variable_list = bpm_focused_institutions }
+	}
+	if = {
+		limit = {
+			bpm_ruler_is_acting_as_interim_head_of_government = yes
+		}
+		scope:journal_entry = {
+			remove_variable = bpm_cabinet_agenda_slot_one
+			remove_variable = bpm_cabinet_agenda_slot_one_progress
+			remove_variable = bpm_cabinet_agenda_slot_two
+			remove_variable = bpm_cabinet_agenda_slot_two_progress
+			remove_variable = bpm_cabinet_agenda_slot_three
+			remove_variable = bpm_cabinet_agenda_slot_three_progress
+		}
+		owner = { clear_variable_list = bpm_focused_institutions }
+	}
+}
+
+bpm_character_skill_level_init = {
+
+	if = {
+		limit = {
+			NOR = { 
+				has_trait = bpm_political_skill_zero
+				has_trait = bpm_political_skill_one
+				has_trait = bpm_political_skill_two
+				has_trait = bpm_political_skill_three
+				has_trait = bpm_political_skill_four
+				has_trait = bpm_political_skill_five
+			}
+		}
+		set_variable = {
+			name = bpm_character_skill_level_factors
+			value = 0
+		}
+		if = {
+			limit = {
+				has_trait = experienced_political_operator
+			}
+			set_variable = {
+				name = bpm_character_skill_level_factors
+				value = 3
+			}
+		}
+		if = {
+			limit = {
+				owner.bpm_consciousness_liberal_percent > 0.25
+			}
+			change_variable = {
+				name = bpm_character_skill_level_factors
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				owner.bpm_consciousness_liberal_percent > 0.75
+			}
+			change_variable = {
+				name = bpm_character_skill_level_factors
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_landed_voting
+						has_law = law_type:law_wealth_voting
+					}
+				}
+			}
+			change_variable = {
+				name = bpm_character_skill_level_factors
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					OR = {
+						has_law = law_type:law_census_voting	
+						has_law = law_type:law_universal_suffrage
+					}
+				}
+			}
+			change_variable = {
+				name = bpm_character_skill_level_factors
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				interest_group = {
+					bpm_ig_is_radical_opposition = yes
+				}
+			}
+			change_variable = {
+				name = bpm_character_skill_level_factors
+				add = 1
+			}
+		}
+		if = {
+			limit = {
+				interest_group = {
+					bpm_ig_is_very_radical_opposition = yes
+				}
+			}
+			change_variable = {
+				name = bpm_character_skill_level_factors
+				add = 1
+			}
+		}
+
+		random_list = {
+			0 = {
+				modifier = {
+					add = 200
+					divide = {
+						value = var:bpm_character_skill_level_factors
+						min = 1
+					}
+				}
+				add_trait = bpm_political_skill_zero
+			}
+			0 = {
+				modifier = {
+					add = 200
+					divide = {
+						value = var:bpm_character_skill_level_factors
+						min = 1
+					}
+				}
+				add_trait = bpm_political_skill_one
+			}
+			150 = {
+				add_trait = bpm_political_skill_two
+			}
+			100 = {
+				modifier = {
+					add = {
+						value = 25
+						multiply = var:bpm_character_skill_level_factors
+					}
+				}
+				add_trait = bpm_political_skill_three
+			}
+			0 = {
+				modifier = {
+					add = var:bpm_character_skill_level_factors
+					multiply = 50
+				}
+				add_trait = bpm_political_skill_four
+			}
+			0 = {
+				modifier = {
+					add = 1
+				}
+				add_trait = bpm_political_skill_five
+			}
+		}
+	}
+}
+
+bpm_add_military_strongarm_boost = {
+	add_to_variable_list = {
+		name = bpm_law_sway_military_strongarm_targets
+		target = scope:selected_law_type
+	}
+}
+
+bpm_add_military_strongarm_boost_specified = {
+	law_type:law_$law$ = {
+		save_scope_as = selected_law_type
+	} 
+	custom_tooltip = "bpm_add_military_strongarm_boost_specified_tooltip"
+	bpm_add_military_strongarm_boost = yes
+}
+
+bpm_add_popular_strongarm_boost = {
+	add_to_variable_list = {
+		name = bpm_law_sway_popular_strongarm_targets
+		target = scope:selected_law_type
+	}
+}
+
+bpm_add_popular_strongarm_boost_specified = {
+	law_type:law_$law$ = {
+		save_scope_as = selected_law_type
+	} 
+	custom_tooltip = "bpm_add_popular_strongarm_boost_specified_tooltip"
+	bpm_add_popular_strongarm_boost = yes
+}
+
+bpm_add_law_enactment_boost = {
+	add_to_variable_list = {
+		name = bpm_law_sway_prepared_negotiation_targets
+		target = scope:selected_law_type
+	}
+}
+
+bpm_add_law_enactment_boost_specified = {
+	law_type:law_$law$ = {
+		save_scope_as = selected_law_type
+	} 
+	custom_tooltip = "bpm_add_law_enactment_boost_specified_tooltip"
+	bpm_add_law_enactment_boost = yes
+}
+
+bpm_remove_enacted_law_from_boosts = {
+	if = {
+		limit = {
+			is_target_in_variable_list = {
+				name = bpm_law_sway_prepared_negotiation_targets
+				target = currently_enacting_law.type
+			}	
+		}
+		remove_list_variable = {
+			name = bpm_law_sway_prepared_negotiation_targets
+			target = currently_enacting_law.type
+		}
+	}
+	if = {
+		limit = {
+			is_target_in_variable_list = {
+				name = bpm_law_sway_military_strongarm_targets
+				target = currently_enacting_law.type
+			}	
+		}
+		remove_list_variable = {
+			name = bpm_law_sway_military_strongarm_targets
+			target = currently_enacting_law.type
+		}
+	}
+	if = {
+		limit = {
+			is_target_in_variable_list = {
+				name = bpm_law_sway_popular_strongarm_targets
+				target = currently_enacting_law.type
+			}	
+		}
+		remove_list_variable = {
+			name = bpm_law_sway_popular_strongarm_targets
+			target = currently_enacting_law.type
+		}
+	}
+}

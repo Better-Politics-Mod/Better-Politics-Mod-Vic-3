@@ -1,0 +1,423 @@
+﻿bpm_nation_at_crossroads = {
+	# There are many options for what can happen here
+	# - Coup/March on the capital
+	# - Civil War
+	# - Bloodless Revolution
+	# - Collapse into Warlordism
+	if = {
+		limit = {
+			bpm_trigger_front = {
+				trigger = bpm_front_crossroad_takes_over
+			}
+			always = no # test
+		}
+		# 'March on Capital'
+	}
+	#else_if = {
+	#	limit = {
+	#		bpm_trigger_front = {
+	#			trigger = bpm_front_crossroad_bloodless
+	#		}
+	#		always = no # test
+	#	}
+	#	# 'Bloodless Revolution'
+	#}
+	else = {
+		# 'Civil War'
+		trigger_event = { id = bpm_revolution_results.100 popup = yes }
+	}
+}
+
+bpm_front_crossroads_happened = {
+	# Revolutionary Fervour
+	add_radicals = {
+		value = -0.85
+	}
+	every_interest_group = {
+		add_modifier = {
+			name = bpm_adapting_to_new_regime
+			days = 730
+			is_decaying = yes
+		}
+	}
+	every_political_movement = {
+		add_modifier = {
+			name = bpm_adapting_to_new_regime_mov
+			days = 730
+			is_decaying = yes
+		}
+	}
+}
+
+
+bpm_front_revolution_victorious = {
+	set_variable = {
+		name = bpm_no_touch 
+		days = 30
+	}
+
+	flag:bpm_front_$front$ = {
+		save_scope_as = selected_front_name
+	}
+	scope:selected_front_name =  {
+		save_scope_as = member_front_name
+	}
+
+	clear_variable_list = bpm_revolution_victory_igs
+	every_interest_group = {
+		remove_modifier = modifier_revolution_defeated_light
+		remove_modifier = modifier_revolution_victorious_light
+		remove_modifier = bpm_modifier_revolution_victorious_light
+	}
+	every_in_list = {
+		variable = bpm_civil_war_revolutionary_ig
+		add_modifier = {
+			name = bpm_modifier_revolution_victorious_light
+			multiplier = 5
+			days = 3650
+			is_decaying = yes
+		}
+		owner = { add_to_variable_list = {
+			name = bpm_revolution_victory_igs
+			target = prev
+		} }
+	}
+	every_scope_state = {
+		bpm_apply_to_all_fronts = {
+			effect = bpm_destroy_all_cells
+		}
+	}
+
+
+	bpm_front_crossroads_happened = yes
+
+
+	every_interest_group = {
+		limit = {
+			NOT = {
+				owner = {
+					is_target_in_variable_list = {
+						name = bpm_revolution_victory_igs
+						target = prev
+					}
+				}
+			}
+		}
+		add_modifier = {
+			name = modifier_revolution_defeated_light
+			days = 3650
+			is_decaying = yes
+		}
+		remove_modifier = bpm_empowered_ig
+	}
+	bpm_dissent_je_revolution_active_on_inactive = yes
+
+	bpm_remove_political_stability_huge = yes
+	bpm_remove_political_stability_huge = yes
+	bpm_choose_fronts = yes
+	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution }
+	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution1 }
+	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution2 }
+	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution3 }
+
+	if = {
+		limit = {
+			exists = scope:member_front_name
+		}
+		switch = {
+			trigger = scope:member_front_name
+			flag:bpm_front_peasant = {
+				trigger_event = {
+					id = bpm_revolution_results.1
+					days = 0
+					popup = yes
+				}
+			}
+			flag:bpm_front_urban = {
+				trigger_event = {
+					id = bpm_revolution_results.2
+					days = 0
+					popup = yes
+				}
+			}
+			flag:bpm_front_republican = {
+				trigger_event = {
+					id = bpm_revolution_results.3
+					days = 0
+					popup = yes
+				}
+			}
+			flag:bpm_front_popular = {
+				trigger_event = {
+					id = bpm_revolution_results.4
+					days = 0
+					popup = yes
+				}
+			}
+			flag:bpm_front_liberal = {
+				trigger_event = {
+					id = bpm_revolution_results.5
+					days = 0
+					popup = yes
+				}
+			}
+			flag:bpm_front_reactionary = {
+				trigger_event = {
+					id = bpm_revolution_results.6
+					days = 0
+					popup = yes
+				}
+			}
+			flag:bpm_front_nationalist = {
+				trigger_event = {
+					id = bpm_revolution_results.7
+					days = 0
+					popup = yes
+				}
+			}
+			flag:bpm_front_fascist = {
+				trigger_event = {
+					id = bpm_revolution_results.8
+					days = 0
+					popup = yes
+				}
+			}
+			flag:bpm_front_labor = {
+				trigger_event = {
+					id = bpm_revolution_results.9
+					days = 0
+					popup = yes
+				}
+			}
+			flag:bpm_front_socialist = {
+				trigger_event = {
+					id = bpm_revolution_results.10
+					days = 0
+					popup = yes
+				}
+			}
+		}
+	}
+	bpm_clear_front = { front = $front$ }
+}
+
+bpm_make_government_of_national_defence = {
+	activate_law = law_type:law_provisional_government
+	recalculate_pop_ig_support = yes
+	bpm_setup_basic_igs = yes
+	bpm_forcibly_initialize = yes
+	recalculate_pop_ig_support = yes
+	every_in_list = {
+		variable = bpm_civil_war_revolutionary_ig
+		add_ideology = ideology_provgov_member
+	}
+	if = {
+		limit = {
+			NOT = { is_target_in_variable_list = {
+				name = bpm_civil_war_revolutionary_ig
+				target = ruler.interest_group
+			} }
+		}
+		ordered_in_list = {
+			variable = bpm_civil_war_revolutionary_ig
+			order_by = ig_clout
+			position = 0
+			leader = {
+				set_character_as_ruler = yes
+			}
+		}
+	}
+	call_election = {
+		months = 3
+	}
+	# every_interest_group = {
+	# 	limit = {
+	# 		NOT = { owner = { is_target_in_variable_list = {
+	# 			name = bpm_front_$front$_members
+	# 			target = prev
+	# 		} } }
+	# 	}
+	# 	add_ideology = ideology_provgov_ally
+	# }
+	# every_interest_group = {
+	# 	limit = {
+	# 		bpm_ig_is_fundamentally_antagonistic_to_$front$ = yes
+	# 	}
+	# 	remove_ideology = ideology_provgov_ally
+	# 	remove_ideology = ideology_provgov_member
+	# 	add_ideology = ideology_provgov_enemy
+	# }
+}
+
+bpm_start_civil_war = {
+	save_scope_as = origin_country
+	if = {
+		limit = {
+			NOT = {
+				any_scope_state = {
+					NOT = { bpm_state_has_rev = { front = $front$ } }
+				}
+			}
+		}
+		set_local_variable = bpm_civil_war_has_all
+	}
+	else = {
+		remove_local_variable = bpm_civil_war_has_all
+	}
+	every_state = {
+		remove_variable = bpm_state_to_cede
+	}
+
+	every_scope_state = {
+		limit = {
+			bpm_state_has_rev = { front = $front$ }
+			OR = {
+				NOT = { is_capital = yes }
+				NOT = { has_local_variable = bpm_civil_war_has_all }
+			}
+		}
+		set_variable = bpm_state_to_cede
+	}
+	every_country = {
+		remove_variable = bpm_coniq
+	}
+	random_scope_state = {
+		limit = {
+			has_variable = bpm_state_to_cede
+		}
+		save_scope_as = state_to_give
+	}
+	create_country = {
+		origin = scope:origin_country
+		state = scope:state_to_give
+		on_created = {
+			set_variable = bpm_coniq
+		}
+	}
+	every_in_list = {
+		variable = bpm_front_$front$_members
+		owner = {
+			add_to_variable_list = {
+				name = bpmtotransferrev
+				target = prev.type
+			}
+		}
+	}
+	random_country = {
+		limit = {
+			has_variable = bpm_coniq
+		}
+		save_scope_as = new_country
+		set_variable = {
+			name = bpm_country_revolutionary_front
+			value = flag:bpm_front_$front$
+		}
+		set_variable = {
+			name = bpm_civil_war_origin
+			value = scope:origin_country
+		}
+		every_interest_group = {
+			limit = {
+				scope:origin_country = {
+					is_target_in_variable_list = {
+						name = bpmtotransferrev
+						target = prev.type
+					}
+				}
+			}
+			owner = {
+				add_to_variable_list = {
+					name = bpm_civil_war_revolutionary_ig
+					target = prev
+				}
+			}
+		}
+		bpm_make_government_of_national_defence = yes
+	}
+	clear_variable_list = bpmtotransferrev
+	every_scope_state = {
+		limit = {
+			has_variable = bpm_state_to_cede
+		}
+		set_state_owner = scope:new_country
+	}
+	scope:new_country = { create_diplomatic_play = { 
+		target_country = scope:origin_country
+		type = bpm_dp_revolution
+		add_war_goal = { holder = scope:origin_country type = bpm_civil_war_preserve target_country = scope:new_country  }  
+	} }
+	scope:new_country = {
+		if = {
+			limit = {
+				exists = var:bpm_civil_war_origin
+			}
+			every_country = {
+				limit = {
+					has_variable = bpm_civil_war_origin
+					var:bpm_civil_war_origin = prev.var:bpm_civil_war_origin
+					NOT = {
+						this = prev
+					}
+				}
+				save_scope_as = target_country
+				prev = {
+					create_diplomatic_play = { 
+						target_country = scope:target_country
+						type = dp_revolution
+						escalation = 80
+						annex_as_civil_war = yes
+					}  
+				}
+			}
+		}
+	}
+}
+
+bpm_do_jank_civil_war_end = {
+	random_state = {
+		limit = {
+			state_region = s:STATE_MADEIRA
+		}
+		save_scope_as = jank_state
+		owner = {
+			save_scope_as = prevowner
+		}
+	}
+	var:bpm_country_revolutionary_front = {
+		save_scope_as = selected_front_name
+	}
+	every_country = {
+		remove_variable = bpm_civil_war_jank_country
+	}
+	create_country = {
+		origin = this
+		state = scope:jank_state
+		on_created = {
+			set_variable = bpm_civil_war_jank_country
+		}
+	}
+	random_country = {
+		limit = {
+			has_variable = bpm_civil_war_jank_country
+		}
+		save_scope_as = new_country
+	}
+	play_as = scope:new_country
+	scope:new_country = {
+		annex_as_civil_war = prev
+		every_scope_state = {
+			limit = {
+				state_region = s:STATE_MADEIRA
+			}
+			set_state_owner = scope:prevowner
+		}
+	}
+
+	bpm_apply_to_front = {
+		effect = bpm_front_revolution_victorious
+	}
+	scope:new_country = {
+		remove_variable = bpm_civil_war_origin
+		remove_variable = bpm_country_revolutionary_front
+	}
+}

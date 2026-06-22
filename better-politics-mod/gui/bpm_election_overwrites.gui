@@ -1,0 +1,464 @@
+# COPY-PASTED FOR NOW
+@panel_width_minus_10 = 530			# used to be 450
+@panel_width = 540  				# used to be 460
+@panel_width_half = 270				# used to be 230
+@panel_width_plus_10 = 550  		# used to be 470
+@panel_width_plus_14 = 554			# used to be 474
+@panel_width_plus_14_half = 277		# used to be 237
+@panel_width_plus_20 = 560			# used to be 480
+@panel_width_plus_30 = 570			# used to be 490
+@panel_width_plus_70 = 610			# used to be 530
+
+types election_panel_types
+{
+    type election_panel = default_block_window_two_lines {
+		name = "election_panel"
+		datacontext = "[ElectionPanel.GetElection]"
+
+		blockoverride "window_header_name" {
+			text = "ELECTION_PANEL_HEADER_LINE_ONE"
+		}
+		blockoverride "window_header_name_line_two"
+		{
+			text = "ELECTION_PANEL_HEADER_LINE_TWO"
+		}
+
+		max_update_rate = 20
+		
+		blockoverride "scrollarea_content" {
+			flowcontainer = {
+				margin_top = 10
+				using = default_list_position
+				direction = vertical
+				spacing = 10
+				
+				background = {
+					visible = "[Election.IsInCampaignPeriod]"
+					texture = "gfx/interface/illustrations/government/government_illustration.dds"
+					alpha = 0.15
+					fittype = start
+					
+					modify_texture = {
+						texture = "gfx/interface/masks/fade_vertical_center.dds"
+						spriteType = Corneredstretched
+						spriteborder = { 0 0 }
+						blend_mode = alphamultiply
+					}
+				}
+				
+				### ELECTION DATE
+				widget = {
+					visible = "[Election.IsInCampaignPeriod]"
+					size = { @panel_width_minus_10 80 }
+					parentanchor = hcenter
+					using = entry_bg_fancy
+
+					flowcontainer = {
+						direction = vertical
+						parentanchor = center
+						
+						textbox = {
+							text = "DATE_OF_ELECTION"
+							autoresize = yes
+							parentanchor = hcenter
+							align = nobaseline
+						}
+						textbox = {
+							text = "[Election.GetDateFormatted]"
+							autoresize = yes
+							parentanchor = hcenter
+							using = fontsize_large
+							align = nobaseline
+							default_format = "#v"
+						}
+					}
+				}
+
+				### GRAPH
+				v3_plotline = {
+					visible = "[Election.IsInCampaignPeriod]"
+					parentanchor = hcenter
+					blockoverride "size" {
+						size = { 440 150 }
+					}
+					blockoverride "header" {
+						text = "VOTES_GRAPH_TITLE"
+					}
+					blockoverride "datamodel" {
+						datamodel = "[AccessPlayer.AccessActiveParties]"
+					}
+					blockoverride "line_color" {
+						color = "[Party.GetColor]"
+					}
+					blockoverride "line_plotpoints" {
+						visible = "[Not(IsEmpty(Party.GetElectionVotesTrend))]"
+						plotpoints = "[GetTrendPlotPointsNormalized( Party.GetElectionVotesTrend, '(CFixedPoint)0', Election.GetVotesGraphMax )]"
+					}
+					blockoverride "maxvalue" {
+						text = "[Election.GetVotesGraphMax|D]"
+					}
+					blockoverride "minvalue" {
+						raw_text = "0%"
+					}
+					blockoverride "startdate" {
+						text = "[Election.GetVotesGraphDateStart]"
+					}
+					blockoverride "enddate" {
+						text = "[Election.GetVotesGraphDateEnd]"
+					}
+					blockoverride "singleitem" {}
+
+					blockoverride "tooltip" {
+						tooltipwidget = {
+							FancyTooltip_Party = {}
+						}
+					}
+					blockoverride "empty_state_visibility" {
+						visible = "[Not(AccessPlayer.HasElectionTrendData)]"
+					}
+
+					blockoverride "everything_that_is_not_empty_state_visibility" {
+						visible = "[AccessPlayer.HasElectionTrendData]"
+					}
+
+					blockoverride "empty_state_text" {
+						text = "GRAPH_NOT_INITIALIZED"
+					}
+				}
+				
+				### INFO
+				flowcontainer = {
+					visible = "[Election.IsInCampaignPeriod]"
+					parentanchor = hcenter
+					spacing = 20
+					margin_top = 10
+					margin_bottom = 10
+
+					law_item_small = {
+						datacontext = "[AccessPlayer.AccessActiveLawFromGroup('lawgroup_distribution_of_power')]"
+					}
+
+					flowcontainer = {
+						direction = vertical
+						parentanchor = hcenter
+						tooltip = "ELECTION_VOTER_TURNOUT_TOOLTIP"
+						
+						widget = {
+							size = { 240 40 }
+							
+							hbox = {
+								textbox = {
+									layoutpolicy_horizontal = expanding
+									size = { 0 30 }
+									text = "TOTAL_VOTERS"
+									elide = right
+									fontsize_min = 14
+								}
+								textbox = {
+									raw_text = "[Election.GetVoterTurnout|%0]"
+									autoresize = yes
+									default_format = "#variable"
+								}
+							}
+							divider_clean = {
+								parentanchor = bottom|hcenter
+							}
+						}
+						widget = {
+							size = { 240 40 }
+							
+							hbox = {
+								textbox = {
+									layoutpolicy_horizontal = expanding
+									size = { 0 30 }
+									text = "ELIGIBLE_VOTERS"
+									elide = right
+									fontsize_min = 14
+								}
+								textbox = {
+									raw_text = "@population![Election.GetEligibleVoters|K]"
+									autoresize = yes
+									default_format = "#variable"
+								}
+							}
+							divider_clean = {
+								parentanchor = bottom|hcenter
+							}
+						}
+					}
+				}
+
+				### PARTIES
+				default_header = {
+					visible = "[Election.IsInCampaignPeriod]"
+					blockoverride "text" {
+						text = "PARTIES"
+					}
+				}
+				
+				# party list with igs
+				flowcontainer = {
+					visible = "[Election.IsInCampaignPeriod]"
+					direction = vertical
+					parentanchor = hcenter
+					datamodel = "[Election.GetParties]"
+					spacing = 10
+					
+					item = {
+						flowcontainer = {
+							minimumsize = { @panel_width_minus_10 -1 }
+							maximumsize = { @panel_width_minus_10 -1 }
+							parentanchor = hcenter
+							direction = vertical
+							margin_bottom = 5
+							
+							background = {
+								using = simple_frame
+							}
+							
+							# party header
+							container = {
+								minimumsize = { @panel_width_minus_10 -1 }
+								maximumsize = { @panel_width_minus_10 -1 }
+								
+								background = {
+									texture = "gfx/interface/tooltip/tooltip_title_bg.dds"
+									color = "[Party.GetColor]"
+									alpha = 0.5
+									mirror = horizontal
+									
+									modify_texture = {
+										using = texture_velvet
+									}
+								}
+								
+								# party + momentum
+								flowcontainer = {
+									margin = { 10 10 }
+									spacing = 10
+									
+									icon = {
+										texture = "[Party.GetIcon]"
+										size = { 50 50 }
+									}
+									
+									flowcontainer = {
+										direction = vertical
+										
+										flowcontainer = {
+											spacing = 10
+											textbox = {
+												text = "[Party.GetName]"
+												autoresize = yes
+												align = nobaseline
+												using = fontsize_xl
+											}
+											
+											icon = {
+												visible = "[Party.IsInGovernment]"
+												texture = "gfx/interface/icons/generic_icons/in_government_icon.dds"
+												size = { 20 20 }
+												parentanchor = vcenter
+											}
+										}
+										
+										flowcontainer = {
+											tooltip = "PROJECTED_VOTES_TOOLTIP"
+											parentanchor = right						
+											spacing = 7
+											textbox = {
+												text = "PROJECTED_VOTES_TITLE"
+												autoresize = yes
+												align = nobaseline
+											}										
+											textbox = {
+												raw_text = "[Party.GetCurrentPollVotingPowerShare|%v0]"
+												autoresize = yes
+												align = nobaseline
+											}	
+											textbox = {
+												parentanchor = vcenter
+												raw_text = "([Party.GetCurrentPollVotingPowerDifference|K+=])"
+												autoresize = yes
+												align = nobaseline
+											}										
+										}										
+									}
+								}
+								
+								# projected votes
+								flowcontainer = {
+									margin = { 10 10 }
+									direction = vertical
+									parentanchor = right
+									
+									textbox = {
+										text = "[concept_momentum]: [Party.GetMomentum|v%0]"
+										tooltip = "[Party.GetMomentumDesc]"
+										autoresize = yes
+										align = nobaseline
+										parentanchor = right
+										using = fontsize_xl
+									}
+										
+									textbox = {
+										tooltip = "PROJECTED_VOTES_TOOLTIP"
+										parentanchor = right
+										raw_text = "@population![Party.GetCurrentPollNumVoters|vK] ([Party.GetCurrentPollNumVotersDifference|K+=])"
+										autoresize = yes
+										align = nobaseline
+									}
+								}
+							}
+							flowcontainer = {
+
+								visible = "[Party.GetLeader.MakeScope.Var('bpm_party_issue').IsSet]"
+								direction = horizontal
+								politics_panel_democracy_issue = {
+									datacontext = "[Party.GetLeader.MakeScope.Var('bpm_party_issue')]"
+									blockoverride "minsiz" {
+										minimumsize = { 160 35 }
+									}
+									blockoverride "minsiz2" {
+										minimumsize = { 100 35 }
+									}
+									blockoverride "weekly_change" {
+										expand = { }
+										vertical_divider = {}
+										expand = { }
+
+										textbox = {
+											text = "[Party.GetLeader.MakeScope.ScriptValue('bpm_momentum_impact')|+=v1%] Weekly Momentum Impact"
+											#parentanchor = left
+											#align = right|nobaseline
+											minimumsize = { -1 35 }
+											#maximumsize = { 210 -1 }
+											fontsize = 12
+											align = vcenter
+											
+											autoresize = yes
+										}
+									}
+								}
+							}
+							### DROPDOWN / EXPAND
+							section_header_button = {
+								size = { 500 40 }
+
+								blockoverride "left_text" {
+									text = "INTEREST_GROUPS"
+								}
+
+								blockoverride "fontsize" {}
+
+								blockoverride "right_text" {
+									flowcontainer = {
+										visible = "[Not(GetVariableSystem.Exists(Party.GetName))]"
+										margin = { 5 0 }
+										spacing = 10
+										datamodel = "[Party.GetMembers]"
+											
+                                        item = {
+                                            ig_button = {
+                                                size = { 30 30 }
+                                                blockoverride "in_government_icon" {}
+                                            }
+                                        }
+									}
+								}
+
+								blockoverride "onclick" {
+									onclick = "[GetVariableSystem.Toggle(Party.GetName)]"
+								}
+								
+								blockoverride "onclick_showmore" {
+									visible = "[Not(GetVariableSystem.Exists(Party.GetName))]"
+								}
+
+								blockoverride "onclick_showless" {
+									visible = "[GetVariableSystem.Exists(Party.GetName)]"
+								}
+							}
+
+							election_ig_list = {
+								visible = "[GetVariableSystem.Exists(Party.GetName)]"
+							}
+						}
+					}
+				}
+				
+				# igs outside of parties
+				election_ig_list = {
+					margin_top = 15
+					blockoverride "datamodel" {
+						#datamodel = [Election.GetIndependentIGs] #TODO PRCAL-15550: this lacks a group
+					}
+				}
+				
+				### LAST ELECTION RESULTS
+				flowcontainer = {
+					direction = vertical
+					margin_top = 30
+					spacing = 5
+					
+					section_header_button = {
+						blockoverride "left_text" {
+							text = "LAST_ELECTION_RESULTS"
+						}
+
+						blockoverride "onclick" {
+							onclick = "[GetVariableSystem.Toggle('last_election_results_expanded')]"
+						}
+						
+						blockoverride "onclick_showmore" {
+							visible = "[Not(GetVariableSystem.Exists('last_election_results_expanded'))]"
+						}
+
+						blockoverride "onclick_showless" {
+							visible = "[GetVariableSystem.Exists('last_election_results_expanded')]"
+						}
+					}
+					
+					fixedgridbox = {
+						visible = "[GetVariableSystem.Exists('last_election_results_expanded')]"
+						datamodel = "[AccessPlayer.AccessLastElectionParties]"
+						flipdirection = yes
+						parentanchor = hcenter
+						
+						addcolumn = 180
+						addrow = 85
+						datamodel_wrap = 3
+
+						item = {
+                            widget = {
+								size = { 175 80 }
+								
+								background = {
+									using = entry_bg_simple
+								}
+								
+								vbox = {
+									margin = { 5 5 }
+									layoutpolicy_horizontal = expanding
+									layoutpolicy_vertical = expanding
+									
+									icon = {
+										texture = "[Party.GetIcon]"
+										size = { 40 40 }
+									}
+									textbox = {
+										layoutpolicy_horizontal = expanding
+										layoutpolicy_vertical = expanding
+										raw_text = "[Party.GetCurrentVotingPowerShare|%1]"
+										tooltip = "PARTY_ELECTION_TOOLTIP"
+										align = center|nobaseline
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

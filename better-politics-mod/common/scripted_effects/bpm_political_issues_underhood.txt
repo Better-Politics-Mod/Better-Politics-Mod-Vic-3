@@ -1,0 +1,221 @@
+﻿
+bpm_setup_party_issues_campaign = {
+	if = {
+		limit = {
+			is_player = yes
+		}
+		bpm_setup_issues_varlist = yes
+		clear_variable_list = bpm_box_of_issues
+		save_scope_as = country
+		every_in_list = {
+			variable = bpm_country_issues
+			scope:country = {
+				add_to_variable_list = {
+					name = bpm_box_of_issues
+					target = prev
+				}
+			}
+		}
+		every_active_party = {
+			save_scope_as = checking_party
+			scope:country = {
+				ordered_in_list = {
+					variable = bpm_box_of_issues
+					order_by = bpm_issue_attraction
+					position = 0
+					save_scope_as = selected_issue
+				}
+				# remove_list_variable = {
+				# 	name = bpm_box_of_issues
+				# 	target = scope:selected_issue
+				# }
+				bpm_splat_issue = yes
+			}
+		}
+		bpm_unsplat_issues = yes
+	}
+}
+
+
+bpm_splat_issue = {
+	bpm_splat_issue_subp = { PARTY = agrarian }
+	bpm_splat_issue_subp = { PARTY = anarchist }
+	bpm_splat_issue_subp = { PARTY = communist }
+	bpm_splat_issue_subp = { PARTY = conservative }
+	bpm_splat_issue_subp = { PARTY = fascist }
+	bpm_splat_issue_subp = { PARTY = free_trade }
+	bpm_splat_issue_subp = { PARTY = liberal }
+	bpm_splat_issue_subp = { PARTY = military }
+	bpm_splat_issue_subp = { PARTY = radical }
+	bpm_splat_issue_subp = { PARTY = reactionary }
+	bpm_splat_issue_subp = { PARTY = religious }
+	bpm_splat_issue_subp = { PARTY = social_democrat }    
+}
+
+bpm_splat_issue_subp = {
+	if = {
+		limit = {
+			scope:checking_party = py:$PARTY$_party
+		}
+		set_variable = {
+			name = bpm_splatted_issue_$PARTY$
+			value = scope:selected_issue
+		}
+	}
+}
+
+bpm_unsplat_issue = {
+	bpm_unsplat_issue_subp = { PARTY = agrarian }
+	bpm_unsplat_issue_subp = { PARTY = anarchist }
+	bpm_unsplat_issue_subp = { PARTY = communist }
+	bpm_unsplat_issue_subp = { PARTY = conservative }
+	bpm_unsplat_issue_subp = { PARTY = fascist }
+	bpm_unsplat_issue_subp = { PARTY = free_trade }
+	bpm_unsplat_issue_subp = { PARTY = liberal }
+	bpm_unsplat_issue_subp = { PARTY = military }
+	bpm_unsplat_issue_subp = { PARTY = radical }
+	bpm_unsplat_issue_subp = { PARTY = reactionary }
+	bpm_unsplat_issue_subp = { PARTY = religious }
+	bpm_unsplat_issue_subp = { PARTY = social_democrat }    
+}
+
+bpm_unsplat_issue_subp = {
+	if = {
+		limit = {
+			scope:checking_party = py:$PARTY$_party
+		}
+		var:bpm_splatted_issue_$PARTY$ = {
+			save_scope_as = sel_issue
+		}
+	}
+}
+
+bpm_unsplat_issues = {
+	save_scope_as = country
+	every_interest_group = {
+		remove_variable = bpm_party_issue
+	}
+	every_active_party = {
+		save_scope_as = checking_party
+		ordered_member = {
+			order_by = ig_clout
+			position = 0
+			save_scope_as = leader_ig
+		}
+		scope:country = {
+			bpm_unsplat_issue = yes
+			# calculate momentum impact
+			save_scope_value_as = {
+				name = bpm_momentum_impact
+				value = {
+					value = scope:sel_issue.bpm_issue_interest
+					subtract = 0.1
+					if = {
+						limit = {
+							scope:sel_issue.bpm_issue_interest <= 0.1
+						}
+						multiply = 0.25
+					}
+					else = {
+						multiply = {
+							value = scope:sel_issue.bpm_issue_interest
+							subtract = 0.1
+						}
+						multiply = 0.1
+					}
+					min = -0.02
+					max = 0.5
+				}
+			}
+		}
+		scope:leader_ig = {
+			set_variable = {
+				name = bpm_party_issue
+				value = scope:sel_issue
+			}
+			set_variable = {
+				name = bpm_party_issue_impact
+				value = scope:bpm_momentum_impact
+			}
+		}
+	}
+}
+
+bpm_add_macro_issue_subp = {
+	if = {
+		limit = {
+			NOT = {
+				has_variable = bpm_macro_issue_$issue$
+			}
+		}
+		set_variable = {
+			name = bpm_macro_issue_$issue$
+			value = 0
+		}
+	}
+	if = {
+		limit = {
+			var:bpm_current_target_issue = flag:bpm_issue_$issue$
+		}
+		change_variable = {
+			name = bpm_macro_issue_$issue$
+			add = scope:macro_value
+		}
+	}
+}
+
+bpm_setup_issues_varlist_subp = {
+	if = {
+		limit = {
+			bpm_issue_$issue$_interest > scope:threshold
+		}
+		add_to_variable_list = {
+			name = bpm_country_issues
+			target = flag:bpm_issue_$issue$
+		}
+	}
+}
+
+bpm_electoral_mandate_status_track = {
+	bpm_electoral_mandate_status_track_special = yes
+	change_variable = {
+		name = bpm_electoral_mandate_time_progress
+		add = 1
+	}
+	save_scope_value_as = {
+		name = bpm_electoral_mandate_time_progress_years
+		value = {
+			value = var:bpm_electoral_mandate_time_progress
+			divide = 12
+			floor = yes
+		}
+	}
+	if = {
+		limit = {
+			scope:bpm_electoral_mandate_time_progress_years > var:bpm_electoral_mandate_progress
+		}
+		random_list = {
+			9 = {}
+			1 = {
+				add_radicals = {
+					value = 0.01
+				}
+				bpm_auth_add_exhaustion_small = yes
+			}
+		}
+	}
+	else_if = {
+		limit = {
+			scope:bpm_electoral_mandate_time_progress_years < var:bpm_electoral_mandate_progress
+		}
+		random_list = {
+			9 = {}
+			1 = {
+				add_loyalists = {
+					value = 0.01
+				}
+				bpm_auth_remove_exhaustion_small = yes
+			}
+		}
+	}
+}

@@ -72,7 +72,7 @@ REPLACE:liberal_party = {
 				}
 			}
 			triggered_desc = {
-				desc = party_liberal_democrats
+				desc = party_liberal_swi
 				trigger = {
 					c:SWI ?= THIS
 				}
@@ -369,6 +369,12 @@ REPLACE:liberal_party = {
 		leader = { # far right won't join liberal parties
 			OR = {
 				owner = { c:USA ?= THIS }
+				AND = {
+					owner = { 
+						c:BEL ?= THIS
+						has_variable = liberal_party_congress_has_happened
+					}
+				}
 				NOR = {
 					bpm_leader_is_reactionary = yes
 					bpm_leader_is_fascist = yes
@@ -381,6 +387,15 @@ REPLACE:liberal_party = {
 		}
 		OR = {
 			owner = { c:USA ?= THIS }
+			AND = {
+				owner = { 
+					c:BEL ?= THIS
+					has_variable = liberal_party_congress_has_happened
+					NOT = {
+						has_variable = bpm_bel_conservative_catholic_party_created_var
+					}
+				}
+			}
 			NOR = {
 				AND = {
 					bpm_ig_is_traditionalist = yes
@@ -392,6 +407,7 @@ REPLACE:liberal_party = {
 		}
 		OR = {
 			owner = { c:USA ?= THIS }
+			has_ideology = ideology:ideology_sta_weak_state
 			NOT = { # unreformed conservatives should not join the liberals
 				bpm_ig_is_non_paternal_conservative = yes 
 			}
@@ -410,6 +426,10 @@ REPLACE:liberal_party = {
 		value = {
 			value = 0
 			desc = "base_value"
+		}
+		add = {
+			value = bpm_value_from_scandals
+			desc = "bpm_from_scandals"
 		}
 		############### ORGANIC DEMOCRACY
 
@@ -810,13 +830,40 @@ REPLACE:liberal_party = {
 				OR = {
 					bpm_ig_is_non_religious = yes
 					leader = { has_ideology = ideology:ideology_nihilist }
+					leader = { has_ideology = ideology:ideology_leader_anti_clericalist }
 				}
 			}
 			add = {
-				value = 3
+				value = 4
 				desc = "bpm_from_anticlerical"
 			}
 		}
+
+		if = { # no public schooling
+			limit = {
+				is_interest_group_type = ig_agrarian_populists
+				owner = {
+					NOT = {
+						has_law = law_type:law_public_schools
+					}
+				}
+			}
+			add = {
+				value = 4
+				desc = "bpm_from_no_public_schools"
+			}
+		}
+
+		if = { # moderate secularism
+			limit = {
+				has_ideology = ideology:ideology_rel_secularist
+			}
+			add = {
+				value = 2
+				desc = "bpm_from_moderate_secularism"
+			}
+		}
+		
 		if = { # republican
 			limit = {
 				OR = {
@@ -833,6 +880,44 @@ REPLACE:liberal_party = {
 			add = {
 				value = 3
 				desc = "from_republican"
+			}
+		}
+		if = { # big tent independence movements
+			limit = {
+				owner = {
+					THIS = c:KRA
+					is_subject = yes
+				}
+				OR = {
+					is_interest_group_type = ig_radicals
+					is_interest_group_type = ig_national_liberals
+					is_interest_group_type = ig_intelligentsia
+					is_interest_group_type = ig_agrarian_populists
+				}
+			}
+			add = {
+				value = 10
+				desc = "bpm_independence_radicals"
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					THIS = c:SWI
+					NOT = {
+						has_variable = BPM_switzerland_content_done_variable
+					}
+				}
+				OR = {
+					is_interest_group_type = ig_conservatives
+					is_interest_group_type = ig_liberals
+					is_interest_group_type = ig_radicals
+					is_interest_group_type = ig_agrarian_populists
+				}
+			}
+			add = {
+				value = 50
+				desc = "bpm_from_old_liberal_coalition"
 			}
 		}
 		if = { # peasants opposition to debt slavery
@@ -944,6 +1029,58 @@ REPLACE:liberal_party = {
 				desc = "from_descentralism"
 			}
 		}
+
+		if = {
+			limit = { owner = c:BEL }
+			if = { 
+				limit = {
+					OR = {
+						#is_interest_group_type = ig_socialists
+						is_interest_group_type = ig_agrarian_populists
+						is_interest_group_type = ig_trade_unions
+					}
+					NOT = { has_global_variable = first_intl_chain_complete_var }
+				}
+				add = {
+					value = -25
+					desc = "bpm_from_belgian_early_socialists"
+				}
+			}
+
+			if = { # Make socialists stick in the lib party until springtime
+				limit = {
+					owner = {
+						THIS = c:BEL
+						has_variable = liberal_party_congress_has_happened
+					}
+					NOR = {
+						has_global_variable = bpm_peoples_springtime_happened
+						has_global_variable = bpm_peoples_springtime_happening
+					}
+					is_interest_group_type = ig_socialists
+				}
+				add = {
+					value = 25
+					desc = "from_l_alliance_created"
+				}
+			}
+
+			else_if = { 
+				limit = {
+					is_interest_group_type = ig_socialists
+					NOT = { has_global_variable = first_intl_chain_complete_var }
+					NOR = {
+						has_global_variable = bpm_peoples_springtime_happened
+						has_global_variable = bpm_peoples_springtime_happening
+					}
+				}
+				add = {
+					value = -25
+					desc = "bpm_from_belgian_early_socialists"
+				}
+			}
+		}
+
 		if = { # north andean and mexican liberals like descentralism
 			limit = {
 				owner = {
@@ -1246,6 +1383,90 @@ REPLACE:liberal_party = {
 			}
 		}
 
+		if = {
+			limit = { owner = c:BEL }
+			if = { # Unions des Oppositions
+				limit = { owner = { has_variable = liberal_party_congress_has_happened } }
+				if = {
+					limit = { 
+						OR = {
+							is_interest_group_type = ig_armed_forces
+							is_interest_group_type = ig_national_liberals
+            				is_interest_group_type = ig_liberals
+						}
+					}
+					add = {
+						value = 25
+						desc = "bpm_liberal_party_core"
+					}
+				}
+				else_if = {
+					limit = { 
+						is_interest_group_type = ig_reactionaries 
+						has_ideology = ideology:ideology_rel_secularist
+					}
+					add = {
+						value = 25
+						desc = "bpm_liberal_party_anticlericals"
+					}
+				}
+				else_if = {
+					limit = { 
+						OR = {
+							is_interest_group_type = ig_radicals
+							is_interest_group_type = ig_intelligentsia
+						} 
+					}
+					add = {
+						value = 25
+						desc = "bpm_liberal_party_anticlericals"
+					}
+				}
+			}
+		}
+
+		else_if = {
+			limit = { owner = c:BEL }
+			if = { # Unions des Oppositions
+				limit = { owner = { has_variable = bpm_je_belgium_legacy_of_unionism } }
+				if = {
+					limit = {
+						OR = {
+							is_interest_group_type = ig_radicals
+							is_interest_group_type = ig_intelligentsia
+							is_interest_group_type = ig_reactionaries 
+						} 
+					}
+					add = {
+						value = owner.var:bpm_party_establishment_liberal
+						multiply = 2
+						desc = "bpm_liberal_party_anticlericals"
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							is_interest_group_type = ig_armed_forces
+							is_interest_group_type = ig_national_liberals
+            				is_interest_group_type = ig_liberals
+						}
+					}
+					add = {
+						value = owner.var:bpm_party_establishment_liberal
+						multiply = 2
+						desc = "bpm_liberal_party_core"
+					}
+				}
+				else = {
+					add = {
+						value = owner.var:bpm_party_establishment_liberal
+						multiply = -1
+						desc = "bpm_fom_opposition_to_unionism"
+					}
+				}
+			}
+		}
+
 		# ===========================================================================
 		# Hardcoded party affiliation
 		# ===========================================================================
@@ -1292,7 +1513,7 @@ REPLACE:liberal_party = {
 						OR = {
 							is_interest_group_type = ig_armed_forces
 							is_interest_group_type = ig_industrialists
-							is_interest_group_type = ig_radicals
+							is_interest_group_type = ig_liberals
             				is_interest_group_type = ig_devout
 						}
 					}
@@ -1306,7 +1527,7 @@ REPLACE:liberal_party = {
 					if = {
 						limit = { is_interest_group_type = ig_conservatives }
 						add = {
-							value = 50
+							value = 100
 							desc = "bpm_second_party_system"
 						}
 					}
@@ -1354,6 +1575,7 @@ REPLACE:liberal_party = {
 							is_interest_group_type = ig_armed_forces
 							is_interest_group_type = ig_industrialists
 							is_interest_group_type = ig_radicals
+							is_interest_group_type = ig_liberals
 							is_interest_group_type = ig_devout
 						}
 					}
@@ -1392,6 +1614,7 @@ REPLACE:liberal_party = {
 							is_interest_group_type = ig_agrarian_populists
 							is_interest_group_type = ig_armed_forces
 							is_interest_group_type = ig_industrialists
+							is_interest_group_type = ig_liberals
 							is_interest_group_type = ig_radicals
 							is_interest_group_type = ig_devout
 							AND = {
@@ -1437,6 +1660,7 @@ REPLACE:liberal_party = {
 						OR = {
 							is_interest_group_type = ig_armed_forces
 							is_interest_group_type = ig_industrialists
+							is_interest_group_type = ig_liberals
 							is_interest_group_type = ig_radicals
 							is_interest_group_type = ig_national_liberals
 							is_interest_group_type = ig_devout
@@ -1475,6 +1699,7 @@ REPLACE:liberal_party = {
 							is_interest_group_type = ig_armed_forces
 							is_interest_group_type = ig_industrialists
 							is_interest_group_type = ig_devout
+							is_interest_group_type = ig_liberals
 							AND = {
 								owner = { has_variable = bpm_spoils_stalwart }
 								is_interest_group_type = ig_radicals
@@ -1486,6 +1711,9 @@ REPLACE:liberal_party = {
 							AND = {
 								owner = { has_variable = bpm_no_solidarity }
 								is_interest_group_type = ig_agrarian_populists
+								NOT = {
+									owner = { has_law = law_type:law_council_republic }
+								}
 							}
 						}
 					}
@@ -1526,20 +1754,9 @@ REPLACE:liberal_party = {
 						desc = "bpm_third_party_system"
 					}
 				}
-				if = {
-					limit = {
-						owner = { 
-							c:USA  ?= THIS
-							NOT = { has_variable = bpm_no_solidarity }
-						}
-					}
-					add = {
-						value = 10
-						desc = "bpm_third_party_system"
-					}
-				}
 			}
 		}
+
 		# FRA
 		if = {
 			limit = { owner = { country_has_primary_culture = cu:french } }

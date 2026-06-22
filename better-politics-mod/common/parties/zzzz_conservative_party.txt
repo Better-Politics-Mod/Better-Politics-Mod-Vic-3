@@ -117,13 +117,19 @@ REPLACE:conservative_party = {
 				}
 			}
 			triggered_desc = {
+				desc = party_conservatives_swi
+				trigger = {
+					c:SWI ?= THIS
+				}
+			}
+			triggered_desc = {
 				desc = party_finnish_party
 				trigger = {
 					c:FIN ?= THIS
 				}
 			}
 			triggered_desc = {
-				desc = party_catholic_party
+				desc = party_conservative_bel
 				trigger = {
 					c:BEL ?= THIS
 				}
@@ -364,6 +370,10 @@ REPLACE:conservative_party = {
 		value = {
 			value = 0
 			desc = "base_value"
+		}
+		add = {
+			value = bpm_value_from_scandals
+			desc = "bpm_from_scandals"
 		}
 		if = {
 			limit = {
@@ -724,6 +734,16 @@ REPLACE:conservative_party = {
 			}
 		}
 
+		if = {
+			limit = {
+				has_ideology = ideology:ideology_cit_traditional_culture
+			}
+			add = {	
+				value = 3
+				desc = "bpm_from_traditonal_culture"
+			}
+		}
+
 		if = { # patriarchs more likely to join conservatives with women's suffrage
 			limit = {
 				bpm_ig_is_sexist = yes
@@ -794,6 +814,7 @@ REPLACE:conservative_party = {
 				desc = "from_no_police"
 			}
 		}
+		
 		if = { # legitimists dislike bonapartists
 			limit = {
 				is_interest_group_type = ig_reactionaries
@@ -1052,6 +1073,22 @@ REPLACE:conservative_party = {
 			}
 		}
 
+		if = {
+			limit = {
+				is_interest_group_type = ig_christian_democrats
+				NOT = {
+					has_global_variable = global_rerum_novarum_issued_var
+				}
+				owner = {
+					this = c:SWI
+				}
+			}
+			add = {
+				value = 10
+				desc = "bpm_from_similar_conservative_interests"
+			}
+		}
+
 		if = { # Christian Democrats hate cons except when strong radiicals/socialists
 			limit = {
 				is_interest_group_type = ig_christian_democrats
@@ -1187,8 +1224,11 @@ REPLACE:conservative_party = {
 					}
 					else_if = {
 						limit = {
-							is_interest_group_type = ig_liberals
-							NOT = { leader = { has_ideology = ideology:ideology_abolitionist } }
+							is_interest_group_type = ig_radicals
+							OR = {
+								NOT = { leader = { has_ideology = ideology:ideology_abolitionist } }
+								has_variable = bpm_usa_alt_path
+							}
 						}
 						add = {
 							value = 50
@@ -1294,7 +1334,7 @@ REPLACE:conservative_party = {
 						}
 					}
 					add = {
-						value = 25
+						value = 50
 						desc = "bpm_third_party_system"
 					}
 				}
@@ -1392,6 +1432,90 @@ REPLACE:conservative_party = {
 				}
 			}
 		}
+
+		# BEL
+
+		if = {
+			limit = { owner = c:BEL }
+			if = { # Unions des Oppositions
+				limit = { owner = { has_variable = era_of_unions_des_oppositions_variable } }
+				if = {
+					limit = {
+						OR = {
+							is_interest_group_type = ig_conservatives
+							is_interest_group_type = ig_landowners
+							is_interest_group_type = ig_rural_folk
+							is_interest_group_type = ig_petty_bourgeoisie
+							is_interest_group_type = ig_devout
+							is_interest_group_type = ig_industrialists
+							is_interest_group_type = ig_market_liberals
+							is_interest_group_type = ig_christian_democrats
+							
+							AND = {
+								owner = { 
+									NOT = { has_variable = bpm_belgium_devaux_paul_left }
+								}
+								is_interest_group_type = ig_intelligentsia
+							}
+							AND = {
+								owner = { 
+									NOT = { has_variable = liberal_party_congress_has_happened }
+								}
+								OR = {
+									is_interest_group_type = ig_national_liberals
+									is_interest_group_type = ig_armed_forces
+									is_interest_group_type = ig_liberals
+								}
+							}
+						}
+					}
+					add = {
+						value = 50
+						desc = "bpm_from_neccessary_union_des_oppositions_alliance"
+					}
+				}
+				else = {
+					add = {
+						value = -25
+						desc = "bpm_fom_opposition_to_unionism"
+					}
+				}
+			}
+		}
+
+		else_if = {
+			limit = { owner = c:BEL }
+			if = { # Unions des Oppositions
+				limit = { owner = { has_variable = bpm_je_belgium_legacy_of_unionism } }
+				if = {
+					limit = {
+						OR = {
+							is_interest_group_type = ig_conservatives
+							is_interest_group_type = ig_landowners
+							is_interest_group_type = ig_rural_folk
+							is_interest_group_type = ig_petty_bourgeoisie
+							is_interest_group_type = ig_devout
+							is_interest_group_type = ig_industrialists
+							is_interest_group_type = ig_market_liberals
+							is_interest_group_type = ig_christian_democrats
+						}
+					}
+					add = {
+						value = owner.var:bpm_party_establishment_liberal
+						multiply = 2
+						desc = "bpm_from_neccessary_union_des_oppositions_alliance"
+					}
+				}
+				else = {
+					add = {
+						value = owner.var:bpm_party_establishment_liberal
+						multiply = -1
+						desc = "bpm_fom_opposition_to_unionism"
+					}
+				}
+			}
+		}
+
 		# BRZ
 		else_if = {
 			limit = { owner = { country_has_primary_culture = cu:brazilian } }

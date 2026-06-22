@@ -1,0 +1,532 @@
+﻿bpm_scandal_response_distract = {
+	name = "bpm_scandal_response_distract"
+	desc = "bpm_scandal_response_distract_desc"
+
+	visible = {
+		has_journal_entry = je_bpm_crises_government_scandal
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "bpm_scandal_response_distract_possible_tooltip"
+			bpm_media_preparedness >= 20
+		}
+	}
+
+	ai_chance = {
+		value = 100
+	}
+
+	effect = {
+		random_list = {
+			1 = {
+				custom_tooltip = bpm_end_the_crisis_tt 
+				scope:journal_entry = {
+					set_variable = {
+						name = bpm_crisis_ended
+						days = 180
+					}
+				}
+				modifier = {
+					if = {
+						limit = {
+							has_variable = bpm_headofgov
+							var:bpm_headofgov = {
+								bpm_character_skill_level >= 2
+							}
+						}
+						add = 1
+					}
+					if = {
+						limit = {
+							has_variable = bpm_headofgov
+							var:bpm_headofgov = {
+								bpm_character_skill_level >= 4
+							}
+						}
+						add = 1
+					}
+				 	if = {
+						limit = {
+							OR = {
+								bpm_number_of_crises > 1
+							}
+						}
+						# More crises means easier to distract
+						add = bpm_number_of_crises
+					}
+				}
+			}
+			2 = {
+				custom_tooltip = bpm_crisis_progresses_tt
+				change_variable = {
+					name = bpm_government_scandal_progress
+					add = 10
+				}
+			}
+		}
+		change_variable = {
+			name = bpm_media_preparedness
+			subtract = 20
+		}
+		custom_tooltip = {
+			text = "bpm_scandal_response_distract_effect_tooltip"
+		}
+	}
+
+}
+
+bpm_scandal_response_cover_up = {
+	name = "bpm_scandal_response_cover_up"
+	desc = "bpm_scandal_response_cover_up_desc"
+
+	visible = {
+		has_journal_entry = je_bpm_crises_government_scandal
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_possible_tooltip"
+			bpm_political_preparedness >= 20
+		}
+		has_institution = institution_culture
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_possible_tooltip_2"
+			has_variable = bpm_minister_of_culture
+		}
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_possible_tooltip_3"
+			je:je_bpm_crises_government_scandal.var:bpm_government_scandal_progress <= 50
+		}
+	}
+
+	ai_chance = {
+		value = 50
+	}
+
+	effect = {
+		random_list = {
+			1 = {
+				custom_tooltip = bpm_end_the_crisis_tt 
+				scope:journal_entry = {
+					set_variable = {
+						name = bpm_crisis_ended
+						days = 180
+					}
+				}
+
+				modifier = {
+					if = {
+						limit = {
+							has_variable = bpm_minister_of_culture
+							var:bpm_minister_of_culture = {
+								bpm_character_skill_level >= 2
+							}
+						}
+						add = 1
+					}
+					if = {
+						limit = {
+							has_variable = bpm_minister_of_culture
+							var:bpm_minister_of_culture = {
+								bpm_character_skill_level >= 4
+							}
+						}
+						add = 1
+					}
+					if = {
+						limit = {
+							has_law = law_type:law_secret_police
+						}
+						add = 1
+					}
+
+				}
+			}
+			1 = {
+				custom_tooltip = bpm_crisis_progresses_tt
+				change_variable = {
+					name = bpm_government_scandal_progress
+					add = 10
+				}
+			}
+		}
+		change_variable = {
+			name = bpm_political_preparedness
+			subtract = 20
+		}
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_effect_tooltip"
+		}
+	}
+}
+
+bpm_scandal_response_admit_failure = {
+	name = "bpm_scandal_response_admit_failure"
+	desc = "bpm_scandal_response_admit_failure_desc"
+
+	visible = {
+		has_journal_entry = je_bpm_crises_government_scandal
+	}
+
+	possible = {
+		always = yes
+	}
+
+	ai_chance = {
+		value = 50
+	}
+
+	effect = {
+		every_interest_group = {
+			limit = {
+				is_in_government = yes
+			}
+			add_modifier = {
+				name = bpm_ig_government_admission_of_failure_happiness
+				days = 1825
+				is_decaying = yes
+			}
+		}
+		recalculate_pop_ig_support = yes
+		if = {
+			limit = {
+				country_has_voting_franchise = yes
+			}
+			call_election = { months = 6 }
+		}
+		else = {
+			ordered_scope_character = {
+				limit = {
+					NOT = {
+						this = prev.ruler
+					}
+					interest_group = {
+						is_in_government = no
+					}
+				}
+				position = 0
+				set_character_as_ruler = yes
+			}
+		}
+		scope:journal_entry = {
+			set_variable = {
+				name = bpm_crisis_ended
+				days = 180
+			}
+		}
+	}
+
+}
+
+bpm_scandal_response_scapegoat = {
+	name = "bpm_scandal_response_scapegoat"
+	desc = "bpm_scandal_response_scapegoat_desc"
+
+	visible = {
+		has_journal_entry = je_bpm_crises_government_scandal
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_possible_tooltip"
+			bpm_political_preparedness >= 20
+		}
+
+		any_interest_group = {
+			is_in_government = yes
+			ig_clout >= 0.1
+			count >= 2
+		}
+	}
+
+	ai_chance = {
+		value = 50
+	}
+
+	effect = {
+		trigger_event = {
+			id = bpm_scandal_events.5
+			popup = yes
+		}
+		if = {
+			limit = {
+				country_has_voting_franchise = yes
+			}
+			call_election = { months = 6 }
+		}
+		change_variable = {
+			name = bpm_political_preparedness
+			subtract = 20
+		}
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_effect_tooltip"
+		}
+		scope:journal_entry = {
+			set_variable = {
+				name = bpm_crisis_ended
+				days = 180
+			}
+		}
+	}
+
+}
+
+###### Hungry Forties
+
+bpm_hungry_forties_pursue_free_trade = {
+	name = "bpm_hungry_forties_pursue_free_trade_name"
+	desc = "bpm_hungry_forties_pursue_free_trade_desc"
+
+	visible = {
+		has_journal_entry = je_the_hungry_forties
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "bpm_hungry_forties_response_free_trade_possible_tooltip"
+			bpm_political_preparedness >= 20
+		}
+
+		any_interest_group = {
+			is_in_government = yes
+			OR = {
+				has_ideology = ideology:ideology_eco_laissez_faire
+				has_ideology = ideology:ideology_eco_modernizer
+			}
+		}
+
+		custom_tooltip = {
+			text = BPM_hungry_forties_potatoes_phase_tt
+			has_global_variable = hungry_forties_var
+		}
+
+		NOT = {
+			has_modifier = bpm_crisis_free_trade_measures
+		}
+	}
+
+	ai_chance = {
+		value = 10
+	}
+
+	effect = {
+		add_modifier = {
+			name = bpm_crisis_free_trade_measures
+			years = 1
+		}
+		add_modifier = {
+			name = modifier_european_potato_famine_relief_costs
+			multiplier = money_amount_multiplier_large
+			years = 1
+		}
+		change_variable = {
+			name = bpm_political_preparedness
+			subtract = 20
+		}
+		custom_tooltip = {
+			text = BPM_grain_high_subventions_tt
+			set_import_tariff_level = { goods = g:grain level = high_subventions }
+		}
+		
+	}
+}
+
+bpm_hungry_forties_export_bans = {
+	name = "bpm_hungry_forties_export_bans_name"
+	desc = "bpm_hungry_forties_export_bans_desc"
+
+	visible = {
+		has_journal_entry = je_the_hungry_forties
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "bpm_hungry_forties_response_free_trade_possible_tooltip"
+			bpm_political_preparedness >= 20
+		}
+
+		any_interest_group = {
+			is_in_government = yes
+			OR = {
+				has_ideology = ideology:ideology_eco_interventionist
+				has_ideology = ideology:ideology_eco_modern_agrarian
+				has_ideology = ideology:ideology_eco_conservative_agrarian
+			}
+		}
+
+		custom_tooltip = {
+			text = BPM_hungry_forties_potatoes_phase_tt
+			has_global_variable = hungry_forties_var
+		}
+
+		NOT = {
+			has_modifier = bpm_crisis_ban_on_exports_of_foodstuffs
+		}
+	}
+
+	ai_chance = {
+		value = 25
+	}
+
+	effect = {	
+		add_modifier = {
+			name = bpm_crisis_ban_on_exports_of_foodstuffs
+			years = 1
+		}
+		change_variable = {
+			name = bpm_political_preparedness
+			subtract = 20
+		}
+		custom_tooltip = {
+			text = BPM_grain_max_tariffs_tt
+			set_export_tariff_level = { goods = g:grain level = max_tariffs }
+		}
+		custom_tooltip = {
+			text = BPM_meat_max_tariffs_tt
+			set_export_tariff_level = { goods = g:meat level = max_tariffs }
+		}
+		custom_tooltip = {
+			text = BPM_fruit_max_tariffs_tt
+			set_export_tariff_level = { goods = g:fruit level = max_tariffs }
+		}
+	}
+}
+
+bpm_hungry_forties_intervention = {
+	name = "bpm_hungry_forties_intervention_name"
+	desc = "bpm_hungry_forties_intervention_desc"
+
+	visible = {
+		has_journal_entry = je_the_hungry_forties
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "bpm_hungry_forties_response_intervention_possible_tooltip"
+			bpm_political_preparedness >= 30
+		}
+
+		any_interest_group = {
+			is_in_government = yes
+			OR = {
+				has_ideology = ideology:ideology_eco_interventionist
+				has_ideology = ideology:ideology_eco_modern_agrarian
+			}
+		}
+
+		custom_tooltip = {
+			text = BPM_hungry_forties_potatoes_phase_tt
+			has_global_variable = hungry_forties_var
+		}
+
+		NOT = {
+			has_modifier = bpm_crisis_funds_loans_charity
+		}
+	}
+
+	ai_chance = {
+		value = 5
+	}
+
+	effect = {
+		add_modifier = {
+			name = bpm_crisis_funds_loans_charity
+			years = 1
+		}
+		change_variable = {
+			name = bpm_political_preparedness
+			subtract = 30
+		}
+		add_modifier = {
+			name = modifier_european_potato_famine_relief_costs
+			multiplier = money_amount_multiplier_large
+			years = 1
+		}
+	}
+}
+bpm_extremism_response_crackdown = {
+	name = "bpm_extremism_response_crackdown"
+	desc = "bpm_extremism_response_crackdown_desc"
+
+	visible = {
+		has_journal_entry = je_bpm_crises_rising_extremism
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_possible_tooltip"
+			bpm_political_preparedness >= 20
+		}
+		has_institution = institution_culture
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_possible_tooltip_2"
+			has_variable = bpm_minister_of_culture
+		}
+		OR = {
+			has_law = law_type:law_censorship
+			has_law = law_type:law_outlawed_dissent
+		}
+	}
+
+	ai_chance = {
+		value = 50
+	}
+
+	effect = {
+		random_list = {
+			1 = {
+				custom_tooltip = bpm_end_the_crisis_tt 
+				scope:journal_entry = {
+					set_variable = {
+						name = bpm_crisis_ended
+						days = 180
+					}
+				}
+
+				modifier = {
+					if = {
+						limit = {
+							has_variable = bpm_minister_of_culture
+							var:bpm_minister_of_culture = {
+								bpm_character_skill_level >= 2
+							}
+						}
+						add = 1
+					}
+					if = {
+						limit = {
+							has_variable = bpm_minister_of_culture
+							var:bpm_minister_of_culture = {
+								bpm_character_skill_level >= 4
+							}
+						}
+						add = 1
+					}
+					if = {
+						limit = {
+							has_law = law_type:law_secret_police
+						}
+						add = 1
+					}
+
+				}
+			}
+			1 = {
+				custom_tooltip = bpm_crisis_progresses_tt
+				change_variable = {
+					name = bpm_government_scandal_progress
+					add = 10
+				}
+			}
+		}
+		change_variable = {
+			name = bpm_political_preparedness
+			subtract = 20
+		}
+		custom_tooltip = {
+			text = "bpm_scandal_response_cover_up_effect_tooltip"
+		}
+		bpm_auth_add_exhaustion_large = yes
+	}
+}

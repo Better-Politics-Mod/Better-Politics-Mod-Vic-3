@@ -1,10 +1,24 @@
 ﻿je_march_to_radicalism = {
 	icon = "gfx/interface/icons/event_icons/phrygian.dds"
 
-	group = bpm_je_group_global
+	group = je_group_global_international_situations
+
+	scripted_button = je_bpm_springtime_begin
 
 	status_desc = {
 		first_valid = {
+			triggered_desc = {
+				desc = je_march_to_radicalism_the_echo_ripples
+				trigger = {
+					has_global_variable = bpm_peoples_springtime_event_chain_ended
+				}
+			}
+			triggered_desc = {
+				desc = je_march_to_radicalism_powderkeg_explosion_status
+				trigger = {
+					has_global_variable = bpm_peoples_springtime_spark_happened
+				}
+			}
 			triggered_desc = {
 				desc = je_march_to_radicalism_awaiting_spark_status
 				trigger = {
@@ -30,7 +44,7 @@
 	}
 
 	should_be_involved = {
-		bpm_country_is_in_mainland_europe = yes
+		bpm_country_is_in_europe = yes
 	}
 
 	#change this for the compatch
@@ -43,7 +57,7 @@
 	}
 
 	should_show_when_not_involved = {
-		bpm_country_is_in_mainland_europe = yes
+		bpm_country_is_in_europe = yes
 		#OR = {
 		#	#is_in_geographic_region = geographic_region_europe
 		#	#country_has_interest_marker_in_europe = yes
@@ -63,19 +77,47 @@
 	}
 
 	immediate = {
-		
+		set_global_variable = {
+			name = bpm_je_march_to_radicalism_progress
+			value = 0 # 120
+		}
+		set_global_variable = {
+			name = BPM_springtime_half_yearly_values_variable
+			months = 5
+		}
+		c:BAV ?= {
+			save_scope_as = BPM_bavaria_scope
+		}
+		c:FRA ?= {
+			save_scope_as = BPM_france_scope
+		}
 	}
 
 	complete = {
 		AND = {
+			custom_tooltip = {
+				text = bpm_peoples_springtime_it_is_the_beginning_of_the_year
+				trigger_if = {
+					limit = {
+						NOT = {
+							has_global_variable = bpm_peoples_springtime_event_chain_ended
+						}
+					}
+					bpm_it_is_the_beginning_of_the_year = yes
+				}
+			}
 			custom_tooltip = {
 				text = "bpm_je_progress_complete"
 				has_global_variable = bpm_je_march_to_radicalism_progress
 				global_var:bpm_je_march_to_radicalism_progress >= 120
 			}
 			custom_tooltip = {
-				text = "bpm_peoples_springtime_spark_happened"
-				has_global_variable = bpm_peoples_springtime_happening
+				text = "bpm_peoples_springtime_spark_has_ignited_the_fuse"
+				has_global_variable = bpm_peoples_springtime_spark_happened
+			}
+			custom_tooltip = {
+				text = "bpm_peoples_springtime_the_powderkeg_exploded"
+				has_global_variable = bpm_peoples_springtime_event_chain_ended
 			}
 		}
 	}
@@ -86,9 +128,29 @@
 				every_scope_je_involved = {
 					if = {
 						limit = {
-							is_in_geographic_region = geographic_region_europe
+							bpm_country_is_in_europe = yes 
+							NOT = { this = c:RUS }
+							global_var:bpm_je_march_to_radicalism_progress >= 100
+							NOT = {
+								has_global_variable = bpm_peoples_springtime_happened
+							}
+							NOT = {
+								has_global_variable = BPM_springtime_interests_name_set
+							}
+						}
+						owner = {
+							set_variable = bpm_springtime_special_interests
+							
+						}
+					}
+					if = {
+						limit = {
+							bpm_country_is_in_europe = yes
 							NOT = { this = c:RUS }
 						}
+
+						##### Springtime preparatory modifier
+
 						hidden_effect = {
 							remove_modifier = bpm_pre_peoples_springtime
 						}
@@ -101,17 +163,244 @@
 							}
 							months = 24
 						}
+
+						##### Gaining radicals
+
 						if = {
 							limit = {
 								global_var:bpm_je_march_to_radicalism_progress >= 100
 								bpm_country_laws_ok_voting = no
 								NOR = {
 									this = c:GBR
+									this = c:BEL
 								}
 								NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
 							}
-							add_radicals = {
-								value = small_radicals
+							if = {
+								limit = {
+									owner = {
+										bpm_springtime_laws_and_liberalism_check >= 20
+									}
+								}
+								add_radicals = {
+									strata = upper
+									value = 0.02
+								}
+								add_radicals = {
+									strata = middle
+									value = 0.01
+								}
+								add_radicals = {
+									strata = lower
+									value = 0.005
+								}
+							}
+						}
+
+						######################################################
+						############# Springtime monthly values
+
+						if = {
+							limit = { 
+								has_global_variable = bpm_je_march_to_radicalism_progress
+								NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+								OR = {
+									has_law_or_variant = law_type:law_autocracy
+									has_law_or_variant = law_type:law_landed_voting
+								}
+							}
+							### Clout of Moderate Liberals and Radical Liberals
+							change_global_variable = {
+								name = bpm_je_march_to_radicalism_progress
+								add = {
+									value = owner.ig:ig_liberals.ig_clout
+									divide = 3.5
+									divide = 2.5
+									min = 0
+								}
+							}
+							change_global_variable = {
+								name = bpm_je_march_to_radicalism_progress
+								add = {
+									value = owner.ig:ig_radicals.ig_clout
+									divide = 2.5
+									min = 0
+								}
+							}
+						}
+						if = {
+							limit = { 
+								has_global_variable = bpm_je_march_to_radicalism_progress
+								NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+							}
+							### Political Strength * Activism of Liberal, Liberal-Nationalist and Radical Movements
+							every_political_movement = {
+								limit = {
+									is_political_movement_type = movement_liberal
+								}
+								change_global_variable = {
+									name = bpm_je_march_to_radicalism_progress
+									add = {
+										value = this.political_movement_support
+										multiply = this.political_movement_radicalism
+										divide = 2.5
+										divide = 2.5
+										min = 0
+									}
+								}
+							}
+							every_political_movement = {
+								limit = {
+									is_political_movement_type = movement_radical
+								}
+								change_global_variable = {
+									name = bpm_je_march_to_radicalism_progress
+									add = {
+										value = this.political_movement_support
+										multiply = this.political_movement_radicalism
+										divide = 3.33
+										divide = 3.33
+										min = 0
+									}
+								}
+							}
+							every_political_movement = {
+								limit = {
+									is_political_movement_type = movement_national_liberal
+								}
+								change_global_variable = {
+									name = bpm_je_march_to_radicalism_progress
+									add = {
+										value = this.political_movement_support
+										multiply = this.political_movement_radicalism
+										divide = 3
+										divide = 3
+										min = 0
+									}
+								}
+							}
+						}
+						if = {
+							limit = { 
+								has_global_variable = bpm_je_march_to_radicalism_progress
+								NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+								country_rank = rank_value:great_power
+								var:bpm_consciousness_liberal >= 0
+							}
+							### Liberal Consiousness in Great Powers
+							change_global_variable = {
+								name = bpm_je_march_to_radicalism_progress
+								add = {
+									value = owner.var:bpm_consciousness_liberal
+									multiply = 0.0033
+									divide = 50
+									divide = 3.33
+									min = 0
+								}
+							}
+						}
+
+						if = {
+							limit = { 
+								has_global_variable = bpm_je_march_to_radicalism_progress
+								NOT = { has_global_variable = bpm_march_to_radicalism_complete_var }
+								this ?= c:FRA
+							}
+							### French Radical amount
+							change_global_variable = {
+								name = bpm_je_march_to_radicalism_progress
+								add = {
+									value = ROOT.radical_fraction
+									divide = 1.25
+									divide = 2.5
+									min = 0
+								}
+							}
+						}
+
+						######################################################
+						############# Springtime Half-yearly values
+
+						if = {
+							limit = {
+								has_global_variable = bpm_je_march_to_radicalism_progress
+								NOT = {
+									has_global_variable = BPM_springtime_half_yearly_values_variable
+								}
+							}
+
+							if = {
+								limit = {
+									country_rank = rank_value:great_power
+									bpm_country_is_in_europe = yes
+								}
+								every_scope_character = {
+									limit = {
+										has_role_of_type = agitator
+										OR = {
+											law_stance = {
+												law = law_type:law_parliamentary_republic
+												value > neutral
+											}
+											interest_group = {
+												law_stance = {
+													law = law_type:law_parliamentary_republic
+													value > neutral
+												}
+											}
+										}
+									}
+									change_global_variable = { 
+										name = bpm_je_march_to_radicalism_progress 
+										add = 0.1
+									}
+								}
+							}
+
+							if = {
+								limit = {
+									OR = {
+										country_rank = rank_value:great_power
+										country_rank = rank_value:major_power
+									}
+								}
+								change_global_variable = {
+									name = bpm_je_march_to_radicalism_progress
+									add = {
+										value = bpm_country_fraction_below_expected_sol
+										divide = 2
+										divide = 2
+										min = 0
+									}
+								}
+							}
+							if = {
+								limit = {
+									has_law = law_type:law_censorship
+								}
+								every_scope_character = {
+									limit = {
+										#is_interest_group_type = ig_liberals
+										bpm_ig_is_moderate_liberal = yes
+										has_role_of_type = politician
+										popularity >= 0
+									}
+									change_global_variable = {
+										name = bpm_je_march_to_radicalism_progress
+										add = {
+											value = this.popularity
+											multiply = 0.025
+											divide = 4.44
+											divide = 2.5
+											min = 0
+										}
+									}
+								}
+							}
+
+							set_global_variable = {
+								name = BPM_springtime_half_yearly_values_variable
+								months = 5
 							}
 						}
 					}
@@ -127,7 +416,61 @@
                     }
                 }
 				set_global_variable = peoples_springtime_happening
-            }   
+            }
+		}
+	}
+
+	on_yearly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					bpm_it_is_the_beginning_of_the_year = yes
+					global_var:bpm_je_march_to_radicalism_progress >= 120 # Springtime is about to begin!
+				}
+				set_global_variable = bpm_peoples_springtime_spark_happened
+				c:AUS = {
+					trigger_event = {
+						id = bpm_springtime_buildup.5 # The Milanese Tobacco Strike
+						days = 2
+						popup = yes
+					}
+				}
+			}
+		}
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			c:BAV ?= {
+				trigger_event = {
+					id = bpm_springtime_buildup.2 # Beer Riots in Bavaria, 1844
+					popup = yes
+				}
+			}
+			c:KRA ?= {
+				trigger_event = {
+					id = bpm_krakow_uprising.4 # Krakòw Uprising, 1846
+					popup = yes
+				}
+			}
+			c:PAP ?= {
+				trigger_event = {
+					id = bpm_springtime_buildup.12 # Election of Pius IX, 1846
+					popup = yes
+				}
+			}
+			c:FRA ?= {
+				trigger_event = {
+					id = bpm_springtime_buildup.3 # Buzançais Food Riot, 1847
+					popup = yes
+				}
+			}
+			c:PRU ?= {
+				trigger_event = {
+					id = bpm_springtime_buildup.4 # Kartoffelrevolution, 1847
+					popup = yes
+				}
+			}
 		}
 	}
 
@@ -149,12 +492,25 @@
 		set_variable = {
 			name = bpm_march_to_radicalism_complete_local_var
 		}
-		custom_tooltip = "bpm_activate_je_springtimes"
+		custom_tooltip = bpm_springtime_depending_on_how_liberal_are_we
+		if = {
+			limit = {
+				bpm_springtime_laws_and_liberalism_check >= 20
+			}
+			add_journal_entry = {
+				type = je_springtime_of_the_peoples
+			}
+		}
 	}
 
 	on_complete = {
-		hidden_effect = {
-			add_contextless_journal_entry = je_springtime_of_the_peoples
+		if = {
+			limit = {
+				bpm_springtime_laws_and_liberalism_check >= 20
+			}
+			add_journal_entry = {
+				type = je_springtime_of_the_peoples
+			}
 		}
 	}
 
@@ -166,14 +522,220 @@
 REPLACE_OR_CREATE:je_springtime_of_the_peoples = {
 	icon = "gfx/interface/icons/event_icons/48je.dds"
 
-	group = bpm_je_group_global
+	group = je_group_crises
 
-	should_be_involved = {
-		is_in_geographic_region = geographic_region_europe
+	modifiers_while_active = {
+		
 	}
 
-	immediate_all_involved = {
-		trigger_event = { id = 1848.4 }
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_springtime_of_the_peoples_status_calm_before_the_storm
+				trigger = {
+					NOR = {
+						has_variable = bpm_springtime_variable_revolution_phase
+						has_variable = bpm_springtime_variable_reform_phase
+						has_variable = bpm_springtime_variable_reaction_phase
+					}
+				}
+			}
+			triggered_desc = {
+				desc = je_springtime_of_the_peoples_status_revolution_phase
+				trigger = {
+					has_variable = bpm_springtime_variable_revolution_phase
+				}
+			}
+			triggered_desc = {
+				desc = je_springtime_of_the_peoples_status_reform_phase
+				trigger = {
+					has_variable = bpm_springtime_variable_reform_phase
+				}
+			}
+			triggered_desc = {
+				desc = je_springtime_of_the_peoples_status_reaction_phase
+				trigger = {
+					has_variable = bpm_springtime_variable_reaction_phase
+				}
+			}
+		}
+	}
+
+	#possible = {
+	#	#bpm_country_is_in_europe = yes
+	#}
+	
+	scripted_button = je_bpm_appeal_to_civic_decency
+	scripted_button = je_bpm_protect_private_property
+
+	scripted_button = je_bpm_reactionary_newspapers
+	scripted_button = je_bpm_reactionary_agitation
+	scripted_button = je_bpm_junker_parliament
+	scripted_button = je_bpm_win_over_peasants
+	scripted_button = je_bpm_win_over_artisans
+	scripted_button = je_bpm_win_over_proletarians
+
+	scripted_button = je_bpm_invade_hungary_by_croatia
+	scripted_button = je_bpm_invade_hungary_by_austria
+	scripted_button = je_bpm_a_new_ruler
+	scripted_button = je_bpm_springtime_self_coup
+	scripted_button = je_declare_indpendence_hungary
+	scripted_button = je_bpmutton_call_russia
+	scripted_button = je_bpm_invade_island_of_sicily
+	scripted_button = je_bpm_establish_honved_army
+
+	scripted_button = je_bpm_create_the_mobile_guard
+	scripted_button = je_bpm_restrict_the_national_guard
+	scripted_button = je_bpm_open_the_national_guard
+
+	scripted_button = je_bpm_implement_jury_trials
+	
+	scripted_button = je_bpm_ensure_freedom_of_education
+	scripted_button = je_bpm_abolish_land_privileges
+	scripted_button = je_bpm_abolish_seigneurial_jurisdictions
+
+	scripted_button = je_bpm_empower_guilds
+	scripted_button = je_bpm_establish_national_workshops
+	scripted_button = je_bpm_close_the_national_workshops
+
+	scripted_button = je_bpm_equality_before_the_law
+	scripted_button = je_bpm_responsible_ministers
+	scripted_button = je_bpm_recognise_minorities
+	scripted_button = je_bpm_modernize_the_army
+	scripted_button = je_bpm_reorganize_the_police
+
+	scripted_progress_bar = bpm_artisanal_revolutionary_consciousness_progress_bar
+	scripted_progress_bar = bpm_proletarian_revolutionary_consciousness_progress_bar
+	scripted_progress_bar = bpm_peasant_revolutionary_consciousness_progress_bar
+	scripted_progress_bar = bpm_counterrevolutionary_preparadness_progress_bar
+
+	#is_shown_when_inactive = {
+	#	#is_in_geographic_region = geographic_region_europe
+	#	bpm_country_is_in_europe = yes
+	#}
+
+	immediate = {
+		c:AUS ?= {
+			set_variable = bpm_springtime_country_specifially_with_flavor
+		}
+		c:PRU ?= {
+			set_variable = bpm_springtime_country_specifially_with_flavor
+		}
+		c:HUN ?= {
+			set_variable = bpm_springtime_country_specifially_with_flavor
+		}
+		c:SAR ?= {
+			set_variable = bpm_springtime_country_specifially_with_flavor
+		}
+		c:FRA ?= {
+			set_variable = bpm_springtime_country_specifially_with_flavor
+		}
+		c:WAL ?= {
+			set_variable = bpm_springtime_country_specifially_with_flavor
+		}
+		c:MOL ?= {
+			set_variable = bpm_springtime_country_specifially_with_flavor
+		}
+		c:SWI ?= {
+			set_variable = bpm_springtime_country_specifially_with_flavor
+		}
+		c:TRS = {
+			save_scope_as = bpm_transylvania
+		}
+		c:HUN = {
+			save_scope_as = bpm_springtime_hungary
+		}
+		c:AUS = {
+			save_scope_as = bpm_springtime_austria
+		}
+		c:AUS.ruler = {
+			save_scope_as = ferdinandy_the_first
+		}
+		c:AUS.heir = {
+			save_scope_as = bpm_sprintime_franz_josef
+		}
+		random_scope_state = {
+			limit = {
+				state_region = s:STATE_CENTRAL_HUNGARY
+			}
+			save_scope_as = BPM_1848_budapest_capital
+		}
+		random_scope_state = {
+			limit = {
+				state_region = s:STATE_BANAT
+			}
+			save_scope_as = BPM_1848_banat_state
+		}
+		random_scope_state = {
+			limit = {
+				state_region = s:STATE_DELVIDEK
+			}
+			save_scope_as = BPM_1848_vojevodina_state
+		}
+		
+		random_scope_state = {
+			limit = {
+				state_region = s:STATE_TRANSDANUBIA
+			}
+			save_scope_as = BPM_1848_transdanubia
+		}
+		random_scope_state = {
+			limit = {
+				state_region = s:STATE_SLOVAKIA
+			}
+			save_scope_as = BPM_1848_slovakia
+		}
+		set_global_variable = {
+			name = bpm_je_springtime_countries_affected_by_the_revolution
+			value = 0
+		}
+		set_global_variable = {
+			name = bpm_springtime_number_of_german_states_to_explode
+			value = 0
+		}
+		ROOT = {
+			save_scope_as = je_bpm_our_ruler_king_president
+			set_variable = {
+				name = bpm_springtime_artisanal_impatience_value
+				value = 0
+			}
+			set_variable = {
+				name = bpm_springtime_time_passed_with_negative_revolutionary_legitimacy
+				value = 0
+			}
+			set_variable = {
+				name = bpm_springtime_seigneurial_remants_variable
+				value = 0
+			}
+			set_variable = {
+				name = bpm_springtime_land_privileges_variable
+				value = 0
+			}
+			set_variable = {
+				name = bpm_springtime_objective_responsible_ministers
+				value = 0
+			}
+			set_variable = {
+				name = bpm_springtime_phases_changing_variable
+				value = 0
+			}
+			set_variable = {
+				name = bpm_springtime_abolished_privileges
+				value = 0
+			}
+			set_variable = {
+				name = bpm_je_springtime_overall_time_passed_and_reforms
+				value = 0
+			}
+
+			set_variable = {
+				name = bpm_je_springtime_artisanal_demands_and_reforms
+				value = 0
+			}
+
+			set_variable = bpm_springtime_special_interests
+		}
+		#trigger_event = { id = 1848.4 }
 		if = {
 			limit = {
 				NOT = {
@@ -249,9 +811,755 @@ REPLACE_OR_CREATE:je_springtime_of_the_peoples = {
 			name = bpm_peoples_springtime_modifier
 			months = 26
 		}
+		every_interest_group = {
+			limit = {
+				bpm_ig_is_ideological = yes
+			}
+			change_variable = {
+				name = bpm_ig_organization
+				add = 20
+			}
+		}
+		every_interest_group = {
+			set_variable = {
+				name = bpm_springtime_variable_its_revolutioning_time
+				value = 0
+			}
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_liberals
+					is_interest_group_type = ig_radicals
+					is_interest_group_type = ig_agrarian_populists
+					is_interest_group_type = ig_trade_unions
+				}
+			}
+			set_variable = {
+				name = bpm_springtime_variable_we_want_guaranteed_liberties
+				value = 0
+			}
+		}
+		every_interest_group = {
+			limit = {
+				OR = {
+					is_interest_group_type = ig_conservatives
+				}
+			}
+			set_variable = {
+				name = bpm_springtime_variable_we_are_unwilling_concessionists
+				value = 0
+			}
+		}
+		set_variable = {
+			name = bpm_springtime_wrath_of_the_revolution_buildup
+			value = 0
+		}
 	}
 
-	on_timeout_all_involved = {
+	on_monthly_pulse = {
+		random_events = {
+			100 = 0
+			10 = bpm_springtime_revolutionary_disorder.16
+			10 = bpm_springtime_revolutionary_disorder.17
+			10 = bpm_springtime_revolutionary_disorder.18
+		}
+		effect = {
+			
+			####################################################################
+			######################## Changing Phases Mechanic:
+			####################################################################
+			
+			if = {
+				limit = {
+					bpm_springtime_is_a_victim_of_the_revolution = yes
+					bpm_springtime_is_in_the_reform_phase = no
+				}
+				change_variable = {
+					name = bpm_springtime_phases_changing_variable
+					add = 1
+				}
+				if = {
+					limit = {
+						var:bpm_springtime_phases_changing_variable = 6
+					}
+					post_notification = bpm_1848_we_have_entered_the_reaction_phase
+					random_list = {
+						100 = {
+							bpm_springtime_enter_reaction_phase_as_victim = yes
+						}
+						1 = {
+							modifier = {
+								
+							}
+							trigger_event = {
+								id = bpm_springtime_counter_revolution.5
+								popup = yes
+							}
+						}
+					}
+				}
+				else_if = {
+					limit = {
+						var:bpm_springtime_phases_changing_variable = 12
+					}
+					post_notification = bpm_1848_we_have_entered_the_revolution_phase
+					bpm_springtime_enter_revolution_phase_as_victim = yes
+				}
+				else_if = {
+					limit = {
+						var:bpm_springtime_phases_changing_variable = 18
+					}
+					post_notification = bpm_1848_we_have_entered_the_reaction_phase
+					bpm_springtime_enter_reaction_phase_as_victim = yes
+				}
+			}
+
+			####################################################################
+			######################## Counter-Revolutionary Preparadness Effects:
+			####################################################################
+
+			if = { 
+				limit = {
+					scope:journal_entry.scripted_bar_progress:bpm_counterrevolutionary_preparadness_progress_bar >= 100
+					bpm_springtime_will_have_to_deal_with_wrath = no
+				} 
+				##### Have the King appoint a Reactionary PM
+				trigger_event = {
+					id = bpm_springtime_counter_revolution.1
+					popup = yes
+					days = 1
+				}
+			}
+
+			else_if = {
+				limit = {
+					scope:journal_entry.scripted_bar_progress:bpm_counterrevolutionary_preparadness_progress_bar >= 100
+					bpm_springtime_will_have_to_deal_with_wrath = yes
+				}
+				trigger_event = {
+					id = bpm_springtime_wrath_of_the_revolution.1
+					popup = yes
+				}
+			}
+
+			if = {
+				limit = {
+					has_law = law_type:law_separated_powers
+					OR = {
+						has_law = law_type:law_wealth_voting
+						has_law = law_type:law_census_voting
+						has_law = law_type:law_universal_suffrage
+					}
+				}
+				change_variable = {
+					name = bpm_springtime_objective_responsible_ministers
+					add = 1
+				}
+			}
+		}
+		events = {
+			bpm_springtime_wrath_of_the_revolution.11
+		}
+	}
+
+	on_weekly_pulse = {
+		events = {
+			bpm_springtime_of_the_peoples.513
+		}
+		effect = {
+			change_variable = {
+				name = bpm_je_springtime_artisanal_demands_and_reforms
+				add = 0.1
+			}
+			if = {
+				limit = {
+					NOT = {
+						has_variable = bpm_je_springtime_3_months_cooldown
+					}
+					bpm_springtime_is_in_the_reform_phase = no
+				}
+				change_variable = {
+					name = bpm_springtime_artisanal_impatience_value
+					add = 2
+				}
+			}
+			if = {
+				limit = {
+					this ?= c:CRO
+					has_global_variable = bpm_springtime_jelacic_battles_lost_count
+				}
+				if = {
+					limit = {
+						global_var:bpm_springtime_jelacic_battles_lost_count >= global_var:bpm_springtime_jelacic_battles_left
+					}
+					c:CRO = {
+						random_diplomatic_play = {
+							limit = {
+								any_scope_play_involved = {
+									c:CRO ?= this
+								}
+							}
+							resolve_play_for = c:HUN
+						}
+					}
+					c:HUN ?= {
+						je:je_springtime_of_the_peoples = {
+							remove_modifier = bpm_springtime_battles_until_croatians_retreat
+						}
+					}
+				}
+			}
+			if = {
+				limit = {
+					NOR = {
+						bpm_springtime_liberal_country = yes
+						bpm_springtime_is_a_victim_of_the_revolution = yes
+					}
+					NOT = {
+						has_variable = bpm_springtime_country_specifially_with_flavor
+					}
+				}
+				if = {
+					limit = {
+						has_variable = bpm_home_country_affected_by_revoluton
+					}
+					random = {
+						chance = {
+							add = 20
+							add = {
+								value = bpm_springtime_vulnerability_points
+								multiply = bpm_springtime_vulnerability_points
+								subtract = 25
+								divide = 2.5
+							}
+						}
+						trigger_event = {
+							id = bpm_springtime_of_the_peoples.50
+							popup = yes
+						}
+					}
+				}
+				
+				random = {
+					chance = {
+						add = 10
+						add = {
+							value = bpm_springtime_vulnerability_points
+							multiply = bpm_springtime_vulnerability_points
+							subtract = 25
+							divide = 3.33
+						}
+					}
+					trigger_event = {
+						id = bpm_springtime_of_the_peoples.51
+						popup = yes
+					}
+				}
+			}
+			set_variable = {
+				name = bpm_springtime_average_revdrift_variable
+				value = bpm_springtime_average_revolutionary_drift_value
+			}
+
+			if = { # This makes Wrath of the Revolution spawn
+				limit = {
+					bpm_springtime_average_revolutionary_drift_value >= 30
+					bpm_springtime_is_a_victim_of_the_revolution = yes
+					bpm_springtime_is_in_the_reform_phase = no
+					NOT = {
+						has_variable = bpM_springtime_we_will_have_wrath
+					}
+				}
+
+				change_variable = {
+					name = bpm_springtime_wrath_of_the_revolution_buildup
+					add = 1
+				}
+				random = {
+					chance = {
+						add = {
+							value = bpm_springtime_average_revolutionary_drift_value
+							divide = 3.33
+						}
+						add = ROOT.var:bpm_springtime_wrath_of_the_revolution_buildup
+						divide = 2
+					}
+							
+					trigger_event = {
+						id = bpm_springtime_wrath_of_the_revolution.5
+						popup = yes
+					}
+				}
+			}
+
+			if = { ######################## Revolution is about to unleash its wrath
+				limit = {
+					bpm_springtime_is_a_victim_of_the_revolution = yes
+					bpm_springtime_will_have_to_deal_with_wrath = yes
+					NOT = {
+						has_variable = bpm_springtime_wrath_destroyed_this_country
+					}
+					NOT = {
+						has_variable = bpm_springtime_wrath_of_the_revolution_6_months
+					}
+					bpm_springtime_is_in_the_reform_phase = no
+				}
+				random = {
+					chance = {
+						add = {
+							value = bpm_springtime_average_revolutionary_drift_value
+							divide = 2.5
+						}
+						if = {
+							limit = {
+								owner = {
+									has_variable = bpm_springtime_we_will_have_german_revolutions
+								}
+							}
+							divide = 1.5
+							add = 15
+						}
+					}
+							
+					random_list = {
+						5 = {
+							modifier = {
+								if = {
+									limit = {
+										owner = {
+											has_variable = bpm_springtime_we_will_have_german_revolutions
+										}
+									}
+									add = 15
+								}
+							}
+							trigger_event = {
+								id = bpm_springtime_wrath_of_the_revolution.6
+								popup = yes
+							}
+						}
+						10 = {
+							trigger_event = {
+								id = bpm_springtime_wrath_of_the_revolution.7
+								popup = yes
+							}
+						}
+					}
+				}
+			}
+
+			if = {
+				limit = {
+					NOT = {
+						has_variable = bpm_legal_equality_variable
+					}
+
+					bpm_springtime_equality_before_the_law_trigger = yes
+				}
+
+				set_variable = {
+					name = bpm_je_springtime_2_weeks_cooldown
+					weeks = 2
+				}
+
+				trigger_event = {
+					id = bpm_springtime_of_the_peoples.106
+					popup = yes
+				}
+
+				set_variable = bpm_legal_equality_variable
+
+				custom_tooltip = bpm_springtime_legal_inequality
+			}
+
+			if = {
+				limit = {
+					NOT = {
+						has_variable = bpm_responsible_ministers_variable
+					}
+
+					bpm_springtime_responsible_ministers_trigger = yes
+				}
+				set_variable = {
+					name = bpm_je_springtime_2_weeks_cooldown
+					weeks = 2
+				}
+
+				if = {
+					limit = {
+						has_law = law_type:law_appointed_by_hos
+					}
+					custom_tooltip = {
+						text = bpm_springtime_since_we_have_appointed_by_hos
+					}
+					activate_law = law_type:law_appointed_on_advice
+				}
+
+				trigger_event = {
+					id = bpm_springtime_of_the_peoples.109
+					popup = yes
+				}
+
+				set_variable = bpm_responsible_ministers_variable
+			}
+
+			if = {
+				limit = {
+					NOT = {
+						has_global_variable = bpm_springtime_austria_hungary_has_recognised_minorities
+					}
+
+					this ?= c:HUN
+
+					bpm_springtime_recognize_minorities_trigger = yes
+				}
+
+				set_variable = {
+					name = bpm_je_springtime_2_weeks_cooldown
+					weeks = 2
+				}
+
+				trigger_event = {
+					id = bpm_springtime_of_the_peoples.110
+					popup = yes
+				}
+
+				activate_law = law_type:law_devolved
+
+				custom_tooltip = {
+					text = bpm_springtime_until_you_complete_this_obj_minorities
+					set_global_variable = bpm_springtime_austria_hungary_has_recognised_minorities
+				}
+
+				custom_tooltip = {
+					text = bpm_springtime_legal_inequality
+				}
+			}
+
+			change_variable = {
+				name = bpm_springtime_seigneurial_remants_variable
+				add = 0.33
+			}
+
+			change_variable = {
+				name = bpm_springtime_land_privileges_variable
+				add = 0.25
+			}
+
+			######################## Child of the Revolution: Modifier
+
+			if = {
+				limit = {
+					bpm_springtime_is_a_child_of_the_revolution = yes
+					bpm_springtime_we_have_won_and_fulfilled_the_revolution = no
+				}
+				scope:journal_entry = {
+					remove_modifier = bpm_springtime_je_revolutionary_legitimacy
+					add_modifier = {
+						name = bpm_springtime_je_revolutionary_legitimacy
+						multiplier = ROOT.bpm_springtime_special_negative_drift_value
+					}
+				}
+
+				if = {
+					limit = {
+						ROOT.bpm_springtime_special_negative_drift_value <= 0
+						NOT = {
+							has_variable = bpm_springtime_new_enemy_appears_mario
+						}
+						NOT = {
+							has_variable = bpm_je_springtime_3_months_cooldown
+						}
+					}
+					change_variable = {
+						name = bpm_springtime_time_passed_with_negative_revolutionary_legitimacy
+						add = 3.33
+					}
+					random = {
+						chance = {
+							add = 10
+							add = bpm_springtime_revolutionary_legitimacy_time
+						}
+
+						trigger_event = {
+							id = bpm_springtime_counter_revolution.4
+							popup = yes
+						}
+
+						set_variable = bpm_springtime_new_enemy_appears_mario
+					}
+					if = {
+						limit = {
+							has_variable = bpm_springtime_new_man_variable_country_socialist
+						}
+						ig:ig_socialists.leader = {
+							add_modifier = {
+								name = bpm_springtime_je_new_man_of_the_future
+								multiplier = bpm_springtime_special_negative_drift_value
+								years = 10
+								is_decaying = yes
+							}
+						}
+					}
+
+					else_if = {
+						limit = {
+							has_variable = bpm_springtime_new_man_variable_country_natlib
+						}
+						ig:ig_national_liberals.leader = {
+							add_modifier = {
+								name = bpm_springtime_je_new_man_of_the_future
+								multiplier = bpm_springtime_special_negative_drift_value
+								years = 10
+								is_decaying = yes
+							}
+						}
+					}
+				}
+			}
+
+			######################## Revolutionary Disorder Events:
+			if = {
+				limit = {
+					OR = {
+						bpm_springtime_is_a_child_of_the_revolution = yes
+						bpm_springtime_is_a_victim_of_the_revolution = yes
+					}
+				}
+				random_list = {
+					20 = {
+						modifier = {
+							add = ROOT.bpm_springtime_law_and_order_values
+						}
+					}
+					60 = {
+						random = {
+							chance = {
+								add = 35
+								add = bpm_springtime_artisanal_disorder_wants
+								if = {
+									limit = {
+										bpm_springtime_is_a_child_of_the_revolution = yes
+									}
+									divide = 2
+								}
+								subtract = bpm_springtime_law_and_order_values
+								if = {
+									limit = {
+										bpm_springtime_is_in_the_reform_phase = yes
+									}
+									divide = 2
+								}
+								if = {
+									limit = {
+										bpm_springtime_we_have_won_and_fulfilled_the_revolution = yes
+									}
+									subtract = {
+										value = bpm_springtime_law_and_order_values
+										divide = 2
+									}
+								}
+							}
+							
+							random_list = {
+								25 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.1
+										popup = no
+									}
+								}
+								35 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.2
+										popup = no
+									}
+								}
+								5 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.3
+										popup = no
+									}
+								}
+								30 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.4
+										popup = no
+									}
+								}
+								20 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.5
+										popup = no
+									}
+								}
+							}
+						}
+						random = {
+							chance = {
+								add = 25
+								add = bpm_springtime_proletarian_disorder_wants
+								if = {
+									limit = {
+										bpm_springtime_is_a_child_of_the_revolution = yes
+									}
+									divide = 2
+								}
+								subtract = bpm_springtime_law_and_order_values
+								if = {
+									limit = {
+										bpm_springtime_is_in_the_reform_phase = yes
+									}
+									divide = 2
+								}
+								if = {
+									limit = {
+										bpm_springtime_we_have_won_and_fulfilled_the_revolution = yes
+									}
+									subtract = {
+										value = bpm_springtime_law_and_order_values
+										divide = 2
+									}
+								}
+							}
+							random_list = {
+								15 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.6
+										popup = no
+									}
+								}
+								20 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.7
+										popup = no
+									}
+								}
+								5 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.8
+										popup = no
+									}
+								}
+								10 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.9
+										popup = no
+									}
+								}
+							}
+						}
+						random = {
+							chance = {
+								add = 40
+								add = bpm_springtime_peasant_disorder_wants
+								if = {
+									limit = {
+										bpm_springtime_is_a_child_of_the_revolution = yes
+									}
+									divide = 2
+								}
+								subtract = bpm_springtime_law_and_order_values
+								if = {
+									limit = {
+										bpm_springtime_is_in_the_reform_phase = yes
+									}
+									divide = 2
+								}
+								if = {
+									limit = {
+										bpm_springtime_we_have_won_and_fulfilled_the_revolution = yes
+									}
+									subtract = {
+										value = bpm_springtime_law_and_order_values
+										divide = 2
+									}
+								}
+							}
+							random_list = {
+								15 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.10
+										popup = no
+									}
+								}
+								25 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.11
+										popup = no
+									}
+								}
+								20 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.12
+										popup = no
+									}
+								}
+								15 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.13
+										popup = no
+									}
+								}
+								10 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.14
+										popup = no
+									}
+								}
+								15 = {
+									trigger_event = {
+										id = bpm_springtime_revolutionary_disorder.15
+										popup = no
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	# immediate_all_involved
+
+	custom_completion_header = bpm_je_springtime_completion_democrat_victory
+
+	complete = {
+		hidden_trigger = {
+			always = no
+			bpm_springtime_we_have_had_a_counterrevolution = no
+		}
+
+		bpm_springtime_democrat_radical_victory_trigger = yes
+	}
+
+	custom_failure_header = bpm_je_springtime_completion_liberal_victory
+
+	fail = {
+		hidden_trigger = {
+			always = no
+			bpm_springtime_we_have_had_a_counterrevolution = no
+		}
+		bpm_springtime_reform_moderate_victory_trigger = yes
+	}
+
+	on_fail = {
+		
+	}
+
+	on_timeout = { #
+		ig:ig_radicals = {
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_progressive_state
+		}
+
+		ig:ig_liberals = {
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_moderate_democrat
+		}
+		custom_tooltip = bpm_springtime_victory_effects
+
 		set_variable = completed_peoples_springtime_je
 		remove_global_variable = bpm_peoples_springtime_happening
 		set_global_variable = bpm_peoples_springtime_happened
@@ -262,7 +1570,8 @@ REPLACE_OR_CREATE:je_springtime_of_the_peoples = {
 				months = 24
 			}
 		}
-		custom_tooltip = je_springtime_of_the_peoples_tt_3
+		remove_variable = bpm_springtime_special_interests
+		#custom_tooltip = je_springtime_of_the_peoples_tt_3
 		hidden_effect = {
 			remove_modifier = bpm_pre_peoples_springtime
 			remove_modifier = bpm_peoples_springtime_modifier
@@ -272,56 +1581,44 @@ REPLACE_OR_CREATE:je_springtime_of_the_peoples = {
 			if = {
 				limit = { is_player = no }
 				add_loyalists = {
-					value = 0.5
-					strata = upper
-				}
-				add_loyalists = {
-					value = 0.3
-					strata = middle
-				}
-				add_loyalists = {
 					value = 0.2
 					strata = lower
 				}
 			}
 		}
-		custom_tooltip = je_springtime_of_the_peoples_tt_4
+		trigger_event = {
+			id = bpm_springtime_of_the_peoples.111
+			popup = yes
+		}
+		#custom_tooltip = je_springtime_of_the_peoples_tt_4
 	}
 
-	on_weekly_pulse = {
-		effect = {
-			scope:journal_entry = {
-				every_scope_je_involved = {
-					trigger_event = peoples_springtime.100
-				}
-			}
-		}
-	}
+	#on_weekly_pulse = {
+	#	events = {
+	#		peoples_springtime.100
+	#	}
+	#}
 
-	on_monthly_pulse = {
-		effect = {
-			scope:journal_entry = {
-				every_scope_je_involved = {
-					trigger_event = 1848.5
-					trigger_event = bpm_radlib_utils.5
-					trigger_event = bpm_radlib_utils.6
-					random = {
-						chance = 8
-						trigger_event = peoples_springtime.3
-					}
-					random = {
-						chance = 8
-						trigger_event = peoples_springtime.4
-					}
-					random = {
-						chance = 8
-						trigger_event = peoples_springtime.5
-					}
-					bpm_setup_country_stubbornness = yes
-				}
-			}
-		}
-	}
+	#on_monthly_pulse = {
+	#	events = {
+	#		1848.5
+	#		bpm_radlib_utils.5
+	#		bpm_radlib_utils.6
+	#	}
+	#	random_events = {
+	#		100 = 0
+	#		10 = peoples_springtime.3
+	#		10 = peoples_springtime.4
+	#		10 = peoples_springtime.5
+	#	}
+	#	effect = {
+	#		scope:journal_entry = {
+	#			every_scope_je_involved = {
+	#				bpm_setup_country_stubbornness = yes
+	#			}
+	#		}
+	#	}
+	#}
 
 	invalid = {
 		has_variable = completed_peoples_springtime_je
@@ -336,10 +1633,319 @@ REPLACE_OR_CREATE:je_springtime_of_the_peoples = {
 	timeout = 730
 }
 
-je_frankfurt_parliament = {
-	icon = "gfx/interface/icons/event_icons/church_and_state.dds"
+je_italia_fara_de_se = {
+	icon = "gfx/interface/icons/goods_icons/prestige_goods/generic_paper_prestige.dds"
 
 	group = je_group_crises
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = je_florence_debating_civil_rights
+				trigger = {
+					has_global_variable = bpm_florence_assembly_civil_rights_debates
+				}
+			}
+			triggered_desc = {
+				desc = je_florence_debating_territory
+				trigger = {
+					has_global_variable = bpm_florence_assembly_territorial_debates
+				}
+			}
+			triggered_desc = {
+				desc = je_florence_all_is_well_in_the_assembly
+				trigger = {
+					always = yes
+				}
+			}
+		}
+	}
+	
+	scripted_progress_bar = bpm_italy_national_unity_progress_bar
+	scripted_progress_bar = bpm_italy_democrat_discontent
+
+	scripted_button = je_bpm_springtime_florence_calc
+
+	scripted_button = je_bpm_springtime_encourage_concilation
+
+	immediate = {
+		if = {
+			limit = {
+				NOT = {
+					has_global_variable = bpm_florence_parliament_progress
+				}
+			}
+			set_global_variable = {
+				name = bpm_florence_parliament_progress
+				value = 0
+			}
+			set_global_variable = {
+				name = bpm_countries_encouraging_concillation
+				value = 0
+			}
+		}
+		random_list = {
+			15 = {
+				every_country = {
+					limit = {
+						OR = {
+							country_has_primary_culture = cu:north_italian
+							country_has_primary_culture = cu:south_italian
+						}
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.5
+						weeks = 2
+						popup = yes
+					}
+				}
+			}
+			25 = {
+				every_country = {
+					limit = {
+						OR = {
+							country_has_primary_culture = cu:north_italian
+							country_has_primary_culture = cu:south_italian
+						}
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.5
+						weeks = 3
+						popup = yes
+					}
+				}
+			}
+			20 = {
+				every_country = {
+					limit = {
+						OR = {
+							country_has_primary_culture = cu:north_italian
+							country_has_primary_culture = cu:south_italian
+						}
+					}
+					trigger_event = {
+						id = bpm_springtime_italian_unification.5
+						weeks = 4
+						popup = yes
+					}
+				}
+			}
+		}
+	}
+
+	on_weekly_pulse = {
+		events = {
+			bpm_springtime_italian_unification.7 # The Sicilian and Venetian-Lombard question
+			bpm_springtime_italian_unification.8 # On local law and subjection to parliament
+			bpm_springtime_italian_unification.9 # Legge Territoriale
+
+			bpm_springtime_italian_unification.11
+			bpm_springtime_italian_unification.12
+			bpm_springtime_italian_unification.13
+			bpm_springtime_italian_unification.14
+
+			bpm_springtime_italian_unification.15
+
+			bpm_springtime_italian_unification.19
+			bpm_springtime_italian_unification.21
+			bpm_springtime_italian_unification.22
+			bpm_springtime_italian_unification.23
+		}
+		random_events = {
+			100 = 0
+		}
+		effect = {
+			if = {
+				limit = {
+					NOT = {
+						has_global_variable = bpm_springtime_civil_rights_bill_proposed
+					}
+					AND = {
+						OR = {
+							has_global_variable = bpm_springtime_italy_federation_proposed
+							has_global_variable = bpm_springtime_italy_confederation_proposed
+						}
+						NOT = {
+							has_global_variable = bpm_florence_assembly_territorial_debates 
+						}
+					}
+				}
+				random_list = {
+					25 = {
+						every_country = {
+							limit = {
+								OR = {
+									country_has_primary_culture = cu:north_italian
+									country_has_primary_culture = cu:south_italian
+								}
+							}
+							trigger_event = {
+								id = bpm_springtime_italian_unification.10
+								popup = yes
+							}
+						}
+					}
+					50 = {
+
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					NOR = {
+						has_global_variable = bpm_springtime_constitution_proposed
+						has_global_variable = bpm_florence_assembly_constitutional_debates
+					}
+					has_global_variable = bpm_springtime_civil_rights_bill_proposed
+				}
+				random_list = {
+					25 = {
+						every_country = {
+							limit = {
+								OR = {
+									country_has_primary_culture = cu:north_italian
+									country_has_primary_culture = cu:south_italian
+								}
+							}
+							trigger_event = {
+								id = bpm_springtime_italian_unification.20
+								popup = yes
+							}
+						}
+					}
+					50 = {
+						
+					}
+				}
+			}
+			
+			if = {
+				limit = {
+					has_global_variable = bpm_florence_assembly_debating_a_law
+				}
+				if = { ### Way of counting the progress
+					limit = {
+						this ?= c:SAR
+						OR = {
+							has_global_variable = bpm_florence_assembly_territorial_debates
+							has_global_variable = bpm_florence_assembly_civil_rights_debates
+							has_global_variable = bpm_florence_assembly_electoral_debates
+							has_global_variable = bpm_florence_assembly_constitutional_debates
+						}
+						NOT = {
+							has_global_variable = bpm_florence_slight_cooldown
+						}
+					}
+					change_global_variable = {
+						name = bpm_florence_parliament_progress
+						add = {
+							value = scope:journal_entry.scripted_bar_progress:bpm_italy_national_unity_progress_bar
+							multiply = 0.1
+						}
+					}
+					change_global_variable = {
+						name = bpm_florence_parliament_progress
+						add = {
+							value = scope:journal_entry.scripted_bar_progress:bpm_italy_democrat_discontent
+							multiply = 0.125
+						}
+					}
+					change_global_variable = {
+						name = bpm_florence_parliament_progress
+						add = {
+							value = global_var:bpm_florence_parliament_supreme_liberals_percent
+							multiply = 2
+							multiply = 5
+						}
+					}
+				}
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		
+	}
+
+	fail = {
+		OR = {
+			custom_tooltip = {
+				text = bpm_florence_italy_failure_condition
+				je:je_italia_fara_de_se.scripted_bar_progress:bpm_italy_national_unity_progress_bar <= 25
+			}
+		
+			AND = {
+				custom_tooltip = {
+					text = bpm_florence_italy_failure_condition_2
+					je:je_italia_fara_de_se.scripted_bar_progress:bpm_italy_national_unity_progress_bar <= 40
+				}
+				custom_tooltip = {
+					text = bpm_springtime_there_are_four_children_of_the_revolution
+					any_country = {
+						bpm_springtime_is_a_child_of_the_revolution = yes
+						OR = {
+							country_has_primary_culture = cu:north_italian
+							country_has_primary_culture = cu:south_italian
+						}
+						count >= 4
+					}
+				}
+			}
+		}
+	}
+
+	on_fail = {
+		
+	}
+
+	complete = {
+		custom_tooltip = {
+			text = bpm_florence_italy_countries_united
+			exists = c:ITA
+			has_global_variable = bpm_florence_assembly_constitution_completed
+		}
+		
+	}
+
+	on_complete = {
+		
+	}
+
+	progressbar = yes
+	current_value = {
+		value = global_var:bpm_florence_parliament_progress
+		max = 100
+	}
+
+	goal_add_value = {
+		add = 100
+		max = 100
+	}
+
+	weight = 10000
+	should_be_pinned_by_default_involved = yes
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}
+
+je_frankfurt_parliament = {
+	icon = "gfx/interface/icons/event_icons/germany.dds"
+
+	group = je_group_global_international_situations
+
+	should_be_involved = {
+		always = no
+		#country_is_in_german_confederation = yes
+	}
+
+	should_show_when_not_involved = {
+		#OR = {
+		#	country_is_in_german_confederation = yes
+        #    top_overlord ?= {
+        #        country_is_in_german_confederation = yes
+        #    }
+		#}
+		always = no
+	}
 
 	status_desc = {
 		first_valid = {
@@ -441,115 +2047,85 @@ je_frankfurt_parliament = {
 		}
 	}
 
-	# is_shown_when_inactive = {
-	# 	# always = no
-	# 	OR = {
-	# 		country_has_primary_culture = cu:north_german
-	# 		country_has_primary_culture = cu:south_german
-	# 	}
-	# 	NOT = { this ?= c:UBD }
-	# 	hidden_trigger = {
-	# 		has_game_rule = bpm_frankfurt_parliament_active
-	# 	}
-	# }
+	possible = {
+		custom_tooltip = {
+			text = bpm_springtime_frankfurt_elected
+			has_global_variable = bpm_springtime_frankfurt_parliament_elected
+		}
+		always = no
+	}
 
-	# possible = {
-	# 	# always = no
-	# 	has_journal_entry = je_springtime_of_the_peoples
-	# 	# global_var:bpm_frankfurt_parliament_progress <= 5
-	# 	OR = {
-	# 		country_has_primary_culture = cu:north_german
-	# 		country_has_primary_culture = cu:south_german
-	# 	}
-	# 	NOT = { this ?= c:UBD }
-	# 	exists = c:PRU
-	# }
+	should_be_pinned_by_default_involved = yes
+	should_be_pinned_by_default_uninvolved_or_context = yes
+
+
+	is_shown_when_inactive = {
+		NOT = {
+			has_global_variable = grunderzeit_happened_global_var
+		}
+	}
+
+	modifiers_while_active = {
+		
+	}
 
 	immediate = {
 		if = {
 			limit = {
-				OR = {
-					country_has_primary_culture = cu:north_german
-					country_has_primary_culture = cu:south_german
+				any_country = {
+					is_player = yes
+					country_is_in_german_confederation = yes
 				}
 			}
-			set_global_variable = {
-				name = bpm_frankfurt_parliament_progress
-				value = 0
-			}
-			bpm_calculate_frankfurt_parliament_seats = yes
-
-			c:LUX = {
-				if = {
-					limit = { is_subject = yes }
-					set_variable = boycotting_frankfurt
+			every_country = {
+				limit = {
+					is_player = yes
+					country_is_in_german_confederation = yes
 				}
+				set_variable = bpm_frankfurt_host_tag
 			}
-			c:SCH = {
-				if = {
-					limit = { is_subject = yes }
-					set_variable = boycotting_frankfurt
-				}
-			}
-			c:HOL = {
-				if = {
-					limit = { is_subject = yes }
-					set_variable = boycotting_frankfurt
-				}
-			}
-			# c:UBD = {
-			# 	if = {
-			# 		limit = { is_subject = yes }
-			# 		set_variable = boycotting_frankfurt
-			# 	}
-			# }
+			
 		}
-
-		every_country = {
-			limit = {
-				OR = {
-					country_has_primary_culture = cu:north_german
-					country_has_primary_culture = cu:south_german
-				}
-				NOT = { has_variable = boycotting_frankfurt }
+		else = {
+			c:PRU = {
+				set_variable = bpm_frankfurt_host_tag
 			}
-			add_to_global_variable_list = {name = frankfurt_participant target = THIS}
+		}
+		set_global_variable = {
+			name = bpm_frankfurt_progress
+			value = 0
 		}
 	}
 
-	scripted_button = je_frankfurt_button
-	scripted_button = je_frankfurt_boycott_button
+	immediate_all_involved = {
+		#trigger_event = { id = bpm_frankfurt_parliament_events.200 }
+	}
 
-	on_weekly_pulse = {
+	on_monthly_pulse = {
 		effect = {
-			if = {
-				limit = {
-					OR = {
-						country_has_primary_culture = cu:north_german
-						country_has_primary_culture = cu:south_german
-					}
-				}
-				bpm_calculate_frankfurt_parliament_seats = yes
-			}
 			change_global_variable = {
-				name = bpm_frankfurt_parliament_progress
+				name = bpm_frankfurt_progress
+				add = 10
 				add = {
 					value = 0
 					add = {
-						value = 0.5
+						value = 0.6
 						multiply = global_var:bpm_frankfurt_parliament_left_percent
 					}
 					add = {
-						value = 0.3
+						value = 0.4
 						multiply = global_var:bpm_frankfurt_parliament_center_percent
 					}
 					add = {
-						value = 0.1
+						value = 0.15
 						multiply = global_var:bpm_frankfurt_parliament_right_percent
 					}
 				}
 			}
 		}
+	}
+
+	on_weekly_pulse = {
 		events = {
 			bpm_frankfurt_parliament_events.1
 			bpm_frankfurt_parliament_events.2
@@ -557,86 +2133,21 @@ je_frankfurt_parliament = {
 			bpm_frankfurt_parliament_events.4
 			bpm_frankfurt_parliament_events.5
 			bpm_frankfurt_parliament_events.6
-			bpm_frankfurt_parliament_events.7
-			bpm_frankfurt_parliament_events.8
-			# bpm_frankfurt_parliament_events.23
+			#bpm_frankfurt_parliament_events.7
 		}
 	}
 
-	on_monthly_pulse = {
-		effect = {
-			every_country = {
-				limit = {
-					OR = {
-						country_has_primary_culture = cu:north_german
-						country_has_primary_culture = cu:south_german
-					}
-					NOT = { has_variable = boycotting_frankfurt }
-				}
-				add_to_global_variable_list = {name = frankfurt_member_list target = THIS }
-			}
-		}
-		# random_events = {
-		# 	20 = 0
-		# 	10 = bpm_frankfurt_parliament_events.20
-		# 	10 = bpm_frankfurt_parliament_events.21
-		# 	10 = bpm_frankfurt_parliament_events.22
-		# 	5 = bpm_frankfurt_parliament_events.25
-		# 	20 = bpm_frankfurt_parliament_events.28
-		# 	5 = bpm_frankfurt_parliament_events.29
-		# }
+
+	immediate_all_involved = {
+
 	}
 
-	fail = {
-		custom_tooltip ={
-			text = frankfurt_fail_tt
-			OR = {
-				has_global_variable = bpm_peoples_springtime_happened
-				has_global_variable = frankfurt_dissolved
-				any_country = {
-					has_variable = frankfurt_leader
-					has_modifier = country_humiliated
-	  		  	}
-			}
-			NOT = {
-				has_global_variable = bpm_frankfurt_complete
-				has_global_variable = bpm_frankfurt_war
-			}
-		}
-	}
-
-	on_fail = {
-		trigger_event = { id = bpm_frankfurt_parliament_events.11 }
-	}
-
-	complete = {
-		custom_tooltip ={
-			text = frankfurt_win_tt
-			OR = {
-				has_global_variable = bpm_frankfurt_complete
-				any_country = {
-					has_variable = frankfurt_opposer
-					has_modifier = country_humiliated
-	  		  	}
-			}
-		}
-	}
-
-	on_complete = {
-		random_country = {
-			limit = { has_variable = frankfurt_leader }
-			trigger_event = { id = bpm_frankfurt_parliament_events.13 }
-		}
-	}
-
-	# invalid = {
-	# 	has_variable = completed_peoples_springtime_je
-	# }
+	current_value = {
+        value = global_var:bpm_frankfurt_progress
+		max = 100
+    }
 
 	progressbar = yes
-	current_value = {
-		value = global_var:bpm_frankfurt_parliament_progress
-	}
 
 	goal_add_value = {
 		add = 100
@@ -644,15 +2155,510 @@ je_frankfurt_parliament = {
 	}
 
 	weight = 10000
+}
+
+je_bpm_last_vestige_of_poland = {
+	icon = "gfx/interface/icons/law_icons/democracy_template.dds"
+
+	group = je_group_historical_content
+
+	modifiers_while_active = {
+		bpm_city_of_artisans_and_art
+		bpm_conference_of_residents
+	}
+
+	possible = {
+		c:KRA ?= THIS
+	}
+
+	is_shown_when_inactive = {
+		c:KRA ?= THIS
+	}
+
+	is_shown_in_lobby = { c:KRA ?= THIS }
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = bpm_je_krakow_dreams_are_now_mere_ashes
+				trigger = {
+					has_global_variable = bpm_global_krakow_uprising_begun
+					has_global_variable = bpm_global_krakow_uprising_crushed
+				}
+			}
+			triggered_desc = {
+				desc = bpm_je_krakow_jeszcze_polska_nie_zginela
+				trigger = {
+					has_global_variable = bpm_global_krakow_uprising_begun
+				}
+			}
+			triggered_desc = {
+				desc = bpm_je_krakow_independence_is_only_on_paper
+				trigger = {
+					NOT = {
+						has_global_variable = bpm_global_krakow_uprising_begun
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		trigger_event = { 
+			id = bpm_krakow_uprising.1
+			days = 6
+			popup = yes 
+		}
+	}
+
+	is_progressing = {
+		
+	}
+
+	on_yearly_pulse = {
+		
+	}
+
+	on_monthly_pulse = {
+		#events = {
+		#	bpm_krakow_uprising.4
+		#}
+	} 
+
+	on_weekly_pulse = {
+		events = {
+			
+		}
+	}
+
+	complete = {
+		is_subject = no
+	}
+
+	on_complete = {
+		
+	}
+
+	fail = {
+		OR = {
+			has_law_or_variant = law_type:law_protected_speech
+			has_law_or_variant = law_type:law_national_guard
+			has_law = law_type:law_separated_powers
+			has_law = law_type:law_supreme_legislature
+		}
+	}
+
+	on_fail = {
+		trigger_event = { 
+			id = bpm_krakow_uprising.6
+			popup = yes 
+		}
+	}
+
+	weight = 10000
+	should_be_pinned_by_default_involved = yes
 	should_be_pinned_by_default_uninvolved_or_context = yes
 }
 
-# je_panslavism = {
-# 	is_shown_when_inactive = {
-# 		OR = {
-# 			any_primary_culture = { has_discrimination_trait = west_slavic }
-# 			any_primary_culture = { has_discrimination_trait = east_slavic }
-# 			any_primary_culture = { has_discrimination_trait = south_slavic }
-# 		}
-# 	}
-# }
+je_bpm_swiss_regeneration = {
+	icon = "gfx/interface/icons/law_icons/democracy_template.dds"
+
+	group = je_group_historical_content
+
+	modifiers_while_active = {
+		bpm_disintegration_of_liberals
+	}
+
+	possible = {
+		c:SWI ?= THIS
+	}
+
+	is_shown_when_inactive = {
+		c:SWI ?= THIS
+	}
+
+	is_shown_in_lobby = { c:SWI ?= THIS }
+
+
+	immediate = {
+		c:SWI ?= {
+			save_scope_as = switzerland_scope
+		}
+	}
+
+	is_progressing = {
+		
+	}
+
+	on_yearly_pulse = {
+		
+	}
+
+	on_monthly_pulse = {
+		events = {
+			
+		}
+	} 
+
+	on_weekly_pulse = {
+		events = {
+			bpm_switzerland_flavour.1
+			bpm_switzerland_flavour.2
+			bpm_switzerland_flavour.3
+			bpm_switzerland_flavour.4
+			bpm_switzerland_flavour.5
+			bpm_switzerland_flavour.6
+			bpm_switzerland_flavour.7
+			bpm_switzerland_flavour.8
+			bpm_switzerland_flavour.9
+		}
+	}
+
+	complete = {
+		custom_tooltip = {
+			text = BPM_switzerland_has_had_sonderbund_war_tt
+			has_global_variable = BPM_switzerland_has_had_the_sonderbund_war
+		}
+		has_law = law_type:law_universal_suffrage
+		has_law = law_type:law_protected_speech
+		NOT = {
+			has_law = law_type:law_confederated
+		}
+	}
+
+	on_complete = {
+		activate_law = law_type:law_national_supremacy
+
+		set_variable = BPM_switzerland_content_done_variable
+		every_interest_group = {
+			limit = {
+				OR = {
+					has_ideology = ideology:ideology_dop_authoritarian_parliamentarian
+					has_ideology = ideology:ideology_dop_moderate_parliamentarian
+				}
+			}
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_radical_parliamentarian
+		}		
+
+		ig:ig_radicals = {
+			set_interest_group_name = ig_democrats_swiss
+		}
+
+		ig:ig_liberals = {
+			set_interest_group_name = ig_reds
+		}
+
+		ig:ig_conservatives = {
+			set_interest_group_name = ig_greys
+		}
+
+		add_loyalists = {
+			value = 0.1
+			strata = middle
+		}
+		add_loyalists = {
+			value = 0.05
+			strata = lower
+		}
+		
+		#ig:ig_reactionaries = {
+		#	set_interest_group_name = ig_blacks_protestant
+		#}
+	}
+
+	fail = {
+		
+	}
+
+	on_fail = {
+		
+	}
+
+	weight = 10000
+	should_be_pinned_by_default_involved = yes
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}
+
+REPLACE:je_hungarian_revolution = {
+
+	group = je_group_historical_content
+	icon = "gfx/interface/icons/event_icons/waving_flag.dds"
+
+	is_shown_in_lobby = {
+		c:HUN ?= THIS
+		has_dlc_feature = ip3_content
+		always = no
+	}
+
+	modifiers_while_active = {
+		modifier_hungarian_renaissance
+	}
+
+	should_be_pinned_by_default_involved = yes
+	should_be_pinned_by_default_uninvolved_or_context = yes
+	transferable = no
+	weight = 10000
+
+	scripted_button = hungarian_revolution_twelve_points_button
+	scripted_button = hungarian_revolution_annex_transylvania_button
+	scripted_button = hungarian_revolution_establish_honved_button
+
+	immediate = {
+		cu:hungarian = {
+			save_scope_as = hungarian_culture_scope
+		}
+		cu:szekely = {
+			save_scope_as = szekely_culture_scope
+		}
+		cu:romanian = {
+			save_scope_as = romanian_culture_scope
+		}
+		cu:south_german = {
+			save_scope_as = south_german_culture_scope
+		}
+		c:TRS ?= {
+			save_scope_as = transylvania_scope
+		}
+		c:AUS ?= {
+			save_scope_as = austria_scope
+		}
+		c:CRO ?= {
+			save_scope_as = croatia_scope
+		}
+		springtime_save_conservative_laws = yes
+	}
+	on_monthly_pulse = {
+		random_events = {
+		#	1 = 0
+			1 = hungary_events.2 # Serbian Revolt
+			1 = hungary_events.3 # Slovak Revolt
+			1 = hungary_events.8 # Romanian Revolt
+		}
+	}
+	possible = {
+		always = no
+	}
+
+	complete = {
+		custom_tooltip = {
+			text = owns_all_hungarian_homelands_tt
+			any_scope_state = {
+				is_in_geographic_region = geographic_region_hungary
+				count >= 9
+			}
+		}
+		OR = {
+			is_subject = no
+			is_subject_type = subject_type_personal_union
+		}
+		country_has_voting_franchise = yes
+		NOR = {
+			has_law_or_variant = law_type:law_serfdom
+			has_law_or_variant = law_type:law_land_based_taxation
+			has_law_or_variant = law_type:law_traditionalism
+		}
+		root.gdp > 6000000
+		custom_tooltip = {
+			text = has_founded_budapest_tt
+			has_global_variable = budapest_founded_global_var
+		}
+	}
+
+	on_complete = {
+		trigger_event = { id = hungary_events.12 popup = yes }
+	}
+
+	event_outcome_completed_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = event_effects_hungary_events.12_tt
+			}
+		}
+	}
+
+	fail = {
+		custom_tooltip = {
+			text = je_hungarian_revolution_backed_down_fail
+			has_variable = hungary_folded_to_austria_var
+		}
+	}
+
+	on_fail = {
+		add_fervor_target_modifier = { #changes target
+			culture = cu:hungarian
+			days = stupidly_long_modifier_time
+			multiplier = -20
+		}
+		add_radicals = {
+			value = medium_radicals
+		}
+	}
+
+	timeout = 12410
+
+
+	on_timeout = {
+		add_modifier = {
+			name = modifier_hungary_timeout
+			days = long_modifier_time
+		}
+	}
+
+	invalid = {
+
+	}
+
+	on_invalid = {
+	}
+}
+
+REPLACE:je_matter_of_hungary = {
+	icon = "gfx/interface/icons/war_goals/unify_italy.dds"
+
+	group = je_group_historical_content
+
+	scripted_button = matter_of_hungary_dual_monarchy_button
+	scripted_button = matter_of_hungary_integrate_crown_lands_button
+
+	is_shown_in_lobby = {
+		c:AUS ?= this
+	}
+
+	immediate = {
+		cu:hungarian = {
+			save_scope_as = hungarian_scope
+		}
+		c:HUN ?= { save_scope_as = hungary_scope }
+		set_variable = { name = hungarian_acceptance_var value = 0 }
+	}
+
+	modifiers_while_active = {
+		modifier_young_hungary_movement
+	}
+
+	complete = {
+		OR = {
+			custom_tooltip = {
+				text = je_matter_of_hungary_completion_autonomy_tt
+				has_variable = established_austria_hungary_var
+			}
+			custom_tooltip = {
+				text = hungarian_above_80_acceptance_for_a_while_tt
+				has_variable = hungarian_acceptance_var
+				var:hungarian_acceptance_var >= 60 # This 60 has nothing to do with the acceptance value itself
+			}
+			AND = {
+				NOT = {
+					exists = c:HUN
+				}
+				custom_tooltip = {
+					text = hungarian_movements_pacified_tt
+					any_political_movement = {
+						is_political_movement_type = movement_cultural_minority
+						culture ?= cu:hungarian
+						political_movement_radicalism < define:NPolitics|RADICALISM_AGITATING_THRESHOLD
+					}
+				}
+				any_scope_state = {
+					state_region = {
+						is_homeland = cu:hungarian
+					}
+					count >= 8
+					is_incorporated = yes
+					turmoil < 0.05
+				}
+			}
+		}
+	}
+
+	on_monthly_pulse = {
+		effect = {
+			if = {
+				limit = {
+					country_average_culture_pop_acceptance = {
+						culture = cu:hungarian
+						value >= 80
+					}
+				}
+				change_variable = { name = hungarian_acceptance_var add = 1 }
+			}
+			else = {
+				set_variable = { name = hungarian_acceptance_var value = 0 }
+			}
+		}
+	}
+
+	on_complete = {
+		scope:journal_entry = {
+		remove_modifier = modifier_young_hungary_movement
+	}
+	}
+
+	fail = {
+		custom_tooltip = {
+			text = je_matter_of_hungary_fail_hungary_is_free
+			OR = {
+				AND = {
+					NOT = {
+						any_scope_state = {
+							is_in_geographic_region = geographic_region_hungary
+						}
+					}
+					c:HUN ?= {
+						NOT = {
+							is_subject_of = root
+						}
+					}
+				}
+				c:HUN ?= {
+					NOT = {
+						is_subject_of = root
+					}
+				}
+			}
+		}
+		c:HUN ?= {
+			any_scope_state = {
+				OR = {
+					state_region = s:STATE_SLOVAKIA
+					state_region = s:STATE_TRANSDANUBIA
+					state_region = s:STATE_CENTRAL_HUNGARY
+				}
+			}
+		}
+		custom_tooltip = {
+			text = je_matter_of_hungary_fail_not_at_war_with_hungary
+				c:HUN ?= {
+				NOR = {
+					is_secessionist = yes
+					is_revolutionary = yes
+					is_diplomatic_play_enemy_of = root
+					is_diplomatic_play_enemy_of = c:CRO
+				}
+			}
+		}
+	}
+
+	on_fail = {
+		trigger_event = { id = austria_events.3 popup = yes }
+		custom_tooltip = {
+			text = je_matter_of_hungary_on_fail_lose_control
+		}
+	}
+
+	event_outcome_failed_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = event_effects_austria_events.3_tt
+			}
+		}
+	}
+
+	invalid = {
+	}
+
+	weight = 100
+		
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}

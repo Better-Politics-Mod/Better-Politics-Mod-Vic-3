@@ -1,0 +1,239 @@
+﻿bpm_very_low_state_capacity = {
+	bpm_state_capacity <= 25
+}
+
+bpm_low_state_capacity = {
+	bpm_state_capacity > 25
+	bpm_state_capacity <= 50
+}
+
+bpm_medium_state_capacity = {
+	bpm_state_capacity > 50
+	bpm_state_capacity <= 75
+}
+
+bpm_high_state_capacity = {
+	bpm_state_capacity > 75
+}
+
+bpm_auth_will_spawn_partisans = { # Used when the state changes owners to ensure partisans can actually spawn in the region
+	has_modifier = recently_conquered_state
+	bpm_auth_partisans_accepted_by_regime = no
+	# always = yes
+}
+
+bpm_auth_fighting_critical_war = { # Used to make AI pick options that cost state exhaustion to try and win a war
+	has_revolution = yes
+}
+
+bpm_auth_partisans_love_terrain = { # Partisans in this terrain are way stronger
+	# any_province, or other similar iterators are broken. my apologies for the yandev style listing of strategic regions here (blame paradox).
+	#any_province = {
+	#	percent >= 0.33
+	#	OR = {
+	#		has_terrain = mountain
+	#		has_terrain = desert
+	#		has_terrain = jungle
+	#	}
+	#}
+
+	OR = {
+		is_in_geographic_region = geographic_region_pacific_coast_old
+		is_in_geographic_region = geographic_region_mexico_old
+		is_in_geographic_region = geographic_region_caribbean_old
+		is_in_geographic_region = geographic_region_andes
+		is_in_geographic_region = geographic_region_la_plata
+		is_in_geographic_region = geographic_region_ethiopia_old
+		is_in_geographic_region = geographic_region_south_germany_old
+		is_in_geographic_region = geographic_region_italy_old
+		is_in_geographic_region = geographic_region_balkans_old
+		is_in_geographic_region = geographic_region_anatolia_old
+		is_in_geographic_region = geographic_region_arabic_old
+		is_in_geographic_region = geographic_region_caucasus_old
+		is_in_geographic_region = geographic_region_persia_old
+		is_in_geographic_region = geographic_region_himalayas_old
+		is_in_geographic_region = geographic_region_indochina
+		is_in_geographic_region = geographic_region_indonesia
+		is_in_geographic_region = geographic_region_north_china
+		is_in_geographic_region = geographic_region_south_china
+		is_in_geographic_region = geographic_region_east_siberia_old
+		is_in_geographic_region = geographic_region_finland_old
+		is_in_geographic_region = geographic_region_baltic_old
+	}
+}
+
+bpm_auth_partisans_like_terrain = { # Partisans in this terrain are so9mewhat stronger
+	#any_province = {
+	#	percent >= 0.33
+	#	OR = {
+	#		has_terrain = hills
+	#		has_terrain = tundra
+	#		has_terrain = savanna
+	#		has_terrain = forest
+	#	}
+	#}
+
+	OR = {
+		region = sr:region_brazil
+		region = sr:region_gran_colombia
+		region = sr:region_north_africa
+		region = sr:region_nile_basin
+		is_in_geographic_region = geographic_region_congo_old
+		is_in_geographic_region = geographic_region_niger_old
+		is_in_geographic_region = geographic_region_senegal_old
+		is_in_geographic_region = geographic_region_iberia_old
+		region = sr:region_central_asia
+	}
+}
+
+bpm_auth_can_collapse = {
+	owner = { NOT = { is_country_type = decentralized } }
+	bpm_auth_state_has_collapsed_auth = no
+	bpm_auth_state_has_partisans = no
+	NOT = { has_variable = bpm_auth_setup_check_for_partisans }
+	#radical_fraction = {
+	#	value >= bpm_auth_radicals_in_state_collapse_threshold
+	#}
+	OR = {
+		modifier:state_bpm_auth_preventing_collapse = no
+		owner = { bpm_low_state_capacity = yes }
+	}
+}
+
+bpm_auth_culture_significant_for_partisans = {
+	OR = {
+		has_homeland = prev
+		#root = {
+		#	culture_percent_state = {
+		#		target = prev
+		#		value >= 0.33
+		#	}
+		#}
+	}
+}
+
+bpm_auth_partisans_accepted_by_regime = {
+	#every_scope_culture = {
+	#	OR = {
+	#		bpm_auth_culture_significant_for_partisans = no
+	#		root = {
+	#			state_cultural_acceptance = {  
+	#				target = prev
+	#				value >= 90
+	#			}
+	#		}
+	#	}
+	#}
+	AND = {
+		is_homeland_of_country_cultures = owner
+		owner = {
+			#OR = {
+				is_subject = no
+				#overlord ?= {
+				#	any_primary_culture = {
+				#		has_homeland = prev.prevprev # Theoretically won't have any partisans if your subject shares primary cultures with the homelands for some weird reason
+				#	}
+				#}
+			#}
+		}
+	}
+}
+
+bpm_auth_partisans_hated_by_regime = { # Local cultures are hated by regime
+	any_scope_culture = {
+		AND = {
+			bpm_auth_culture_significant_for_partisans = yes
+			root = {
+				state_cultural_acceptance = {  
+					target = prev
+					value <= 40
+				}
+			}
+		}
+	}
+}
+
+bpm_country_power_from_partisans_higher_than_this_state_can_give = {
+	OR = {
+		owner = { has_modifier = bpm_auth_partisans_assistance_overwhelming }
+		AND = {
+			owner = { has_modifier = bpm_auth_partisans_assistance_powerful }
+			NOT = { has_modifier = bpm_auth_partisans_overwhelming }
+		}
+		AND = {
+			owner = { has_modifier = bpm_auth_partisans_assistance_strong }
+			NOT = { has_modifier = bpm_auth_partisans_overwhelming }
+			NOT = { has_modifier = bpm_auth_partisans_powerful }
+		}
+		AND = {
+			owner = { has_modifier = bpm_auth_partisans_assistance_normal }
+			NOT = { has_modifier = bpm_auth_partisans_overwhelming }
+			NOT = { has_modifier = bpm_auth_partisans_powerful }
+			NOT = { has_modifier = bpm_auth_partisans_strong }
+		}
+		AND = {
+			owner = { has_modifier = bpm_auth_partisans_assistance_weak }
+			NOT = { has_modifier = bpm_auth_partisans_overwhelming }
+			NOT = { has_modifier = bpm_auth_partisans_powerful }
+			NOT = { has_modifier = bpm_auth_partisans_strong }
+			NOT = { has_modifier = bpm_auth_partisans_normal }
+		}
+	}
+}
+
+bpm_auth_partisans_can_be_strong = { # Strong partisans can only spawn if they are too persecuted or in the mountains
+	OR = {
+		bpm_auth_partisans_hated_by_regime = yes
+		bpm_auth_partisans_love_terrain = yes
+	}
+}
+
+bpm_auth_state_has_collapsed_auth = {
+	has_modifier = bpm_auth_collapsed
+}
+
+bpm_auth_state_has_partisans = {
+	OR = {
+		has_modifier = bpm_auth_partisans_overwhelming
+		has_modifier = bpm_auth_partisans_powerful
+		has_modifier = bpm_auth_partisans_strong
+		has_modifier = bpm_auth_partisans_normal
+		has_modifier = bpm_auth_partisans_weak
+	}
+}
+
+bpm_auth_has_authority_shortage = {
+	has_modifier = bpm_auth_shortage
+}
+
+bpm_auth_state_can_join_ideological_civil_war = { # Collapse
+	OR = {
+		owner = { bpm_auth_has_authority_shortage = yes }
+		bpm_auth_state_has_collapsed_auth = yes
+	}
+}
+
+bpm_auth_state_can_join_nonideological_civil_war = { # Partisans and Collapse
+	OR = {
+		owner = { bpm_auth_has_authority_shortage = yes }
+		bpm_auth_state_has_collapsed_auth = yes
+		AND = {
+			modifier:state_bpm_auth_preventing_partisan_secessions = no
+			bpm_auth_state_has_partisans = yes
+		}
+	}
+}
+
+bpm_auth_has_no_exhaustion = {
+	custom_tooltip = { 
+		text = "bpm_auth_has_no_exhaustion_tt"
+		bpm_high_state_capacity = yes
+	}
+}
+
+bpm_auth_in_danger = {
+	custom_tooltip = {
+		text = "bpm_auth_in_danger_tt"
+		bpm_low_state_capacity = yes
+	}
+}

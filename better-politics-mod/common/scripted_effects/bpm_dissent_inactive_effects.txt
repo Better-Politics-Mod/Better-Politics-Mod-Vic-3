@@ -1,0 +1,399 @@
+﻿
+bpm_dissent_inactive_je_effects = {
+	# FRONT RESET
+	bpm_reset_front_organization = yes
+	# NO CONFIDENCE
+	bpm_dissent_je_no_confidence_inactive_effect = yes
+	bpm_dissent_je_no_confidence_delete_if_delete = yes
+	# NEW REV REGISTER
+	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution }
+	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution1 }
+	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution2 }
+	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution3 }
+	# COUPS
+	# bpm_dissent_je_coup_inactive_effect = { je = je_bpm_dissent_bureaucratic_coup ig = petty_bourgeoisie }
+	# bpm_dissent_je_coup_inactive_effect = { je = je_bpm_dissent_palace_coup ig = landowners }
+	# bpm_dissent_je_coup_inactive_effect = { je = je_bpm_dissent_military_coup ig = armed_forces }
+	# bpm_dissent_je_coup_inactive_effect = { je = je_bpm_dissent_business_plot ig = industrialists }
+}
+
+bpm_dissent_je_no_confidence_delete_if_delete = {
+	if = {
+		limit = {
+			OR = {
+				has_law = law_type:law_repeatable_politics_motion_of_no_confidence
+				NOT = { 
+					exists = currently_enacting_law.type
+				}
+				NOT = {
+					currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
+				}
+			}
+			#has_journal_entry = je_bpm_dissent_no_confidence
+		}
+		every_interest_group = {
+			if = {
+				limit = {
+					has_ideology = ideology:ideology_no_confidence_government
+				}
+				remove_ideology = ideology_no_confidence_government
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_no_confidence_opponent
+				}
+				remove_ideology = ideology_no_confidence_opponent
+			}
+			else_if = {
+				limit = {
+					has_ideology = ideology:ideology_no_confidence_supporter
+				}
+				remove_ideology = ideology_no_confidence_supporter
+			}
+		}
+		remove_modifier = bpm_enacting_no_confidence
+		je:je_bpm_dissent_no_confidence = {
+			set_variable = {
+				name = bpm_je_deactivate
+				days = 365
+			}
+			clear_variable_list = bpm_planning_subversive_action_ig
+		}
+
+	}
+}
+
+bpm_dissent_je_no_confidence_inactive_effect = {
+	if = {
+		limit = {
+			has_inactive_journal_entry = je_bpm_dissent_no_confidence
+		}
+		je:je_bpm_dissent_no_confidence = {
+			clear_variable_list = bpm_planning_subversive_action_ig
+		}	
+		every_interest_group = {
+			limit = {
+				owner.je:je_bpm_dissent_no_confidence = {
+					NOT = {
+						is_target_in_variable_list = {
+							name = bpm_planning_subversive_action_ig
+							target = prev
+						}
+					}
+				}
+				bpm_interest_group_is_activated = yes
+				OR = { 
+					AND = {
+						is_in_government = no
+						ig_approval < neutral
+					}
+					AND = {
+						is_in_government = yes
+						ig_approval <= angry
+					}
+				}
+			}
+			owner.je:je_bpm_dissent_no_confidence = {
+				add_to_variable_list = {
+					name = bpm_planning_subversive_action_ig
+					target = prev
+				}
+			}
+		}
+	}
+			
+
+}
+
+# bpm_dissent_je_coup_inactive_effect = {
+# 	#set_variable = WAS_CALLED
+# 	if = {
+# 		limit = {
+# 			has_inactive_journal_entry = $je$
+# 		}
+# 		je:$je$ = {
+# 			save_scope_as = selected_je
+# 		}
+
+# 		scope:selected_je = {
+# 			set_variable = {
+# 				name = bpm_last_delta
+# 				value = 0
+# 			}	
+# 		}
+# 		if = { 
+# 			limit = {
+# 				scope:selected_je = {
+# 					NOT = { 
+# 						has_variable = bpm_front_currently_planning
+# 					}
+# 				}
+# 			}
+# 			if = {
+# 				limit = {
+# 					NOT = {
+# 						scope:selected_je = {
+# 							has_variable = bpm_current_front_organization
+# 						}
+# 					}
+# 				}
+# 				scope:selected_je = {
+# 					set_variable = {
+# 						name = bpm_current_front_organization
+# 						value = 0
+# 					}
+# 				}
+# 			}
+# 			scope:selected_je = {
+# 				set_variable = {
+# 					name = bpm_je_counter 
+# 					value = 0
+# 				}
+# 			}
+# 			bpm_dissent_je_revolution_inactive_effect_create_from_inst = { ig = $ig$ }
+	
+# 		}
+# 		else = {
+# 			scope:selected_je.var:bpm_front_currently_planning = {
+# 				save_scope_as = selected_front_name
+# 			}
+# 			bpm_save_front_organization_to_je = yes
+# 		}
+
+# 	}
+# }
+
+bpm_dissent_je_revolution_inactive_effect = {
+	#set_variable = WAS_CALLED
+	if = {
+		limit = {
+			has_inactive_journal_entry = $je$
+		}
+		je:$je$ = {
+			save_scope_as = selected_je
+		}
+		scope:selected_je = {
+			set_variable = {
+				name = bpm_last_delta
+				value = 0
+			}	
+		}
+		if = {
+			limit = {
+				je:$je$.var:bpm_front_currently_planning = {
+					save_temporary_scope_as = selected_front_name
+				}
+				any_interest_group = {
+					bpm_ig_in_front_check = yes
+					count = 0
+				}
+			}
+			scope:selected_je = {
+				remove_variable = bpm_front_currently_planning
+			}
+		}
+		if = { 
+			limit = {
+				scope:selected_je = {
+					NOT = { 
+						has_variable = bpm_front_currently_planning
+					}
+				}
+			}
+			scope:selected_je = {
+				set_variable = {
+					name = bpm_je_counter 
+					value = 0
+				}
+				remove_variable = bpm_je_is_urgent
+			}
+			bpm_dissent_je_revolution_inactive_effect_create_from_ig = { n = 0 }
+			bpm_dissent_je_revolution_inactive_effect_create_from_ig = { n = 1}
+			bpm_dissent_je_revolution_inactive_effect_create_from_mov = { n = 0 }
+			bpm_dissent_je_revolution_inactive_effect_create_from_mov = { n = 1}
+			bpm_dissent_je_revolution_inactive_effect_create_from_ig = { n = 2}
+			bpm_dissent_je_revolution_inactive_effect_create_from_ig = { n = 3}
+			bpm_dissent_je_revolution_inactive_effect_create_from_ig = { n = 4}
+			bpm_dissent_je_revolution_inactive_effect_create_from_mov = { n = 2}
+	
+		}
+		else = {
+			je:$je$.var:bpm_front_currently_planning = {
+				save_scope_as = selected_front_name
+			}
+			bpm_apply_to_front = {
+				effect = bpm_shrink_or_grow_in_states
+			}
+			bpm_apply_to_front = {
+				effect = bpm_update_front_organization
+			}
+			bpm_save_front_organization_to_je = yes
+
+			if = {
+				limit = {
+					scope:selected_je.var:bpm_current_front_organization >= 100
+					NOT = { has_variable = bpm_no_touch }
+				}
+				set_local_variable = bpm_is_rev
+				set_variable = {
+					name = bpm_victorious_front
+					value = scope:selected_front_name
+				}
+				bpm_nation_at_crossroads = yes
+				#bpm_post_rev_victory_wch = yes
+			}
+			if = {
+				limit = {
+					any_interest_group = {
+						bpm_ig_in_front_check = yes
+						count = 0
+					}
+					any_political_movement = {
+						bpm_movement_in_front_check = yes
+						count = 0
+					}
+					NOT = { bpm_trigger_front = {
+						trigger = bpm_any_state_has_rev
+					} }
+				}
+				scope:selected_je = {
+					remove_variable = bpm_front_currently_planning
+				}
+			}
+		}
+	}
+}
+
+bpm_dissent_je_revolution_inactive_effect_create_from_mov = {
+	if = {
+		limit = {
+			# check if this already has a revolution being prepared
+			scope:selected_je = {
+				NOT = { 
+					has_variable = bpm_front_currently_planning
+				}
+			}
+		}
+		# find a movement that wants to start a revolution
+		ordered_political_movement = {
+			limit = {
+				bpm_mov_wants_to_revolution = yes
+			}
+			position = $n$
+			order_by = political_movement_radicalism
+			save_scope_as = selected_mov
+		}
+		# find a front theyre in
+		if = {
+			limit = {
+				exists = scope:selected_mov
+			}
+			bpm_get_mov_front = yes
+			if = {
+				limit = {
+					exists = scope:member_front_name
+					bpm_front_currently_planning = no
+				}
+				scope:selected_je = {
+					set_variable = {
+						name = bpm_front_currently_planning
+						value = scope:member_front_name
+					}
+				}
+			}
+			clear_saved_scope = selected_mov
+		}
+	}
+	
+}
+
+bpm_dissent_je_revolution_inactive_effect_create_from_ig = {
+	if = {
+		limit = {
+			# check if this already has a revolution being prepared
+			scope:selected_je = {
+				NOT = { 
+					has_variable = bpm_front_currently_planning
+				}
+			}
+		}
+		# find a movement that wants to start a revolution
+		if = {
+			limit = {
+				any_interest_group = {
+					bpm_ig_wants_to_revolution = yes
+					count > $n$
+				}
+			}
+			ordered_interest_group = {
+				limit = {
+					bpm_ig_wants_to_revolution = yes
+				}
+				position = $n$
+				order_by = bpm_ig_revoluwant
+				save_scope_as = selected_ig
+			}
+		}
+
+		# find a front theyre in
+		if = {
+			limit = {
+				exists = scope:selected_ig
+			}
+			bpm_get_ig_front = yes
+			if = {
+				limit = {
+					exists = scope:member_front_name
+					bpm_front_currently_planning = no
+				}
+				scope:selected_je = {
+					set_variable = {
+						name = bpm_front_currently_planning
+						value = scope:member_front_name
+					}
+				}
+			}
+			clear_saved_scope = selected_ig
+		}
+	}
+}
+
+bpm_dissent_je_revolution_inactive_effect_create_from_inst = {
+	if = {
+		limit = {
+			# check if this already has a revolution being prepared
+			scope:selected_je = {
+				NOT = { 
+					has_variable = bpm_front_currently_planning
+				}
+			}
+			ig:ig_$ig$ = { bpm_ig_wants_to_revolution = yes }
+		}
+			# find a movement that wants to start a revolution
+		ig:ig_$ig$ = {			
+			save_scope_as = selected_ig
+		}
+		# find a front theyre in
+		if = {
+			limit = {
+				exists = scope:selected_ig
+			}
+			bpm_get_ig_front = yes
+			if = {
+				limit = {
+					exists = scope:member_front_name
+					# coups can be planned at the same time as a revolution
+					#bpm_front_currently_planning = no
+				}
+				scope:selected_je = {
+					set_variable = {
+						name = bpm_front_currently_planning
+						value = scope:member_front_name
+					}
+				}
+			}
+			clear_saved_scope = selected_ig
+		}
+	}
+
+}

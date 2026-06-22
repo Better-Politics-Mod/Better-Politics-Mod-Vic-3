@@ -1,0 +1,248 @@
+types bpm_cabinet_action_types
+{
+    type bpm_cabinet_action_next = button {
+        using = default_button
+
+        # block "onclick" {
+        # 	onclick = "[PowerBlocPanel.ToggleSelectionWindow(PowerBlocPrincipleSlot.AccessSelf)]"
+        # 	enabled = "[GreaterThan_int32(PowerBloc.GetNumMandates, '(int32)0')]"
+        # }
+
+        block "slot_tooltip" {
+            tooltip = "ADD_CABINET_ACTION"
+        }
+        
+        block "tooltip_alignment" {}
+
+        block "slot_size" {
+            size = { 120 50 }
+        }
+
+        onclick = "[GetVariableSystem.Toggle('bpm_cabinet_agenda_selection')]"
+        block "bpm_set_slot_num" {
+            onclick = "[GetVariableSystem.Set('bpm_cabinet_agenda_selection_slot', 'slot_1')]"
+        }
+
+        visible = "[ScriptedGui.IsValid( GuiScope.SetRoot(GetPlayer.MakeScope).End )]"
+
+        icon = {
+            size = { 36 36 }
+            parentanchor = vcenter
+            texture = "gfx/interface/buttons/button_icons/plus.dds"
+        }
+
+        textbox = {
+            align = nobaseline
+            parentanchor = vcenter
+            position = { 30 0 }
+            autoresize = yes
+            fontsize_min = 12
+            elide = right
+
+            block "slot_text" {
+                text = "New Action"
+            }
+
+            block "name_max_width" {
+                max_width = 120
+            }
+        }
+    }		
+    
+    type bpm_cabinet_action_active = widget {
+		allow_outside = yes
+
+		block "slot_size" {
+			size = { 120 50 }
+		}
+
+        visible = "[ScriptedGui.IsShown( GuiScope.SetRoot(GetPlayer.MakeScope).End )]"
+
+
+        paused_icon_bad = {
+            visible = "[GetScriptedGui('bpm_cabinet_action_cant_progress').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+            size = { 32 32 }
+            parentanchor = top|right
+            position = { 12 -12 }
+        }
+
+		button = {
+			#using = default_button_tertiary
+			allow_outside = yes
+			size = { 100% 100% }
+
+            close_button = {
+                size = { 24 24 }
+                position = { -6 -6}
+                tooltip = "CANCEL_CABINET_ACTION"
+                block "close_button" {}
+            }
+                    
+
+            background = {
+                using = entry_bg_simple
+
+            }
+
+                textbox = {
+                    block "action_name" {}
+                    align = nobaseline|hcenter
+                    parentanchor = vcenter|hcenter
+                    autoresize = yes
+                    fontsize_min = 12
+                    elide = right
+
+                    block "name_max_width" {
+                        max_width = 120
+                    }
+                }
+			
+				default_progressbar_horizontal = {
+                    name = "default_progressbar_horizontal"
+					tooltip = "TOOLTIP_BUILDING_EMPLOYMENT"
+					size = { 116.7 8 }
+					position = { 2 41 }
+
+                    state = {
+                        name = enter
+                        alpha = 1
+                    }
+
+                    # mouse enter
+
+                    blockoverride "frame" {
+                        widget = {
+                            size = { 100% 100% }
+                        }
+                    }
+
+                    blockoverride "background" {
+                        background = {
+                            texture = "gfx/interface/progressbar/progressbar_empty.dds"
+                            spriteType = Corneredtiled
+                            spriteborder = { 3 3 }
+                            texture_density = 24
+                            
+                            using = progressbar_texture_properties
+                        }
+                    }
+        
+
+                    blockoverride "progressbar" {
+                        progressbar = {
+                            block "noprogresstexture" {
+                                noprogresstexture = "gfx/interface/icons/generic_icons/transparent.dds"
+                            }
+                            size = { 100% 100% }
+                            spriteType = Corneredtiled
+                            spriteborder = { 0 0 }
+                            texture_density = 24
+                            skip_initial_animation = yes
+                            
+                            block "values" {}
+                            block "progresstexture" {}
+                            block "direction" {
+                                direction = horizontal
+                            }
+                            block "color" {}
+                            block "progress_changed_animation" {
+                                using = progressbar_changed_animation
+                            }
+                            block "animate_negative_change" {
+                                animate_negative_changes = yes
+                            }
+                            using = progressbar_marker_indicator
+                            using = progressbar_texture_properties
+                        }
+                    }
+                }
+                
+                    
+				
+		}
+	}
+
+    type bpm_cabinet_action_locked = widget {
+		alpha = 0.7
+		block "tooltip_alignment" {}
+
+		block "slot_size" {
+			size = { 120 50 }
+		}
+        visible = "[And(Not(ScriptedGui.IsShown( GuiScope.SetRoot(GetPlayer.MakeScope).End )), Not(ScriptedGui.IsValid( GuiScope.SetRoot(GetPlayer.MakeScope).End )))]"
+
+		background = {
+			using = entry_bg_simple
+		}
+
+		icon = {
+			size = { 55 55 }
+			parentanchor = vcenter
+			texture = "gfx/interface/buttons/button_icons/lock.dds"
+		}
+
+		textbox = {
+			text = "LOCKED_PRINCIPLE_SLOT"
+			align = nobaseline
+			parentanchor = vcenter
+			position = { 60 0 }
+			autoresize = yes
+			fontsize_min = 12
+			elide = right
+
+			block "name_max_width" {
+				max_width = 120
+			}
+		}
+	}
+
+    type bpm_cabinet_action = container {
+        bpm_cabinet_action_next = {}
+        bpm_cabinet_action_active = {}
+        bpm_cabinet_action_locked = {}
+    }
+
+    type cabinet_agenda_grid = dynamicgridbox {
+        name = "tutorial_highlight_available_principles"
+        flipdirection = yes
+        datamodel_wrap = 3
+
+        datamodel = "[GetGlobalList('bpm_cabinet_agenda_list')]"
+
+        item = {
+            widget = {
+                size = { 250 60 }
+                button_icon_square = {
+                    parentanchor = hcenter|vcenter
+                    #using = default_button_tertiary
+                    size = { 200 50 }
+                    block "bpm_on_agenda_select" {
+                        onclick = "[GetScriptedGui('bpm_cabinet_agenda_set_slot_one').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('slot', MakeScopeFlag(Scope.GetFlagName)).End)]"
+                    }
+                    tooltip = "bpm_cabinet_agenda_effect_tt_n"
+                    onclick = "[GetVariableSystem.Toggle('bpm_cabinet_agenda_selection')]"
+                    hbox = {
+                        layoutpolicy_horizontal = expanding
+                        margin = { 15 0}
+                        icon = {
+                            texture = "[GetInstitutionType(Concatenate(Scope.GetFlagName, '_icon')).GetIcon]"
+                            size = { 36 36 }
+                        }
+                        expand = {}
+                        textbox = {
+                            autoresize = yes
+                            fontsize_min = 12
+                            elide = hcenter
+                            align = nobaseline|hcenter
+                            text = "[Localize(Concatenate(Scope.GetFlagName, '_name'))]"
+
+                        }
+                        expand = {}
+                    }
+                }
+            }
+        }
+    }
+
+
+}

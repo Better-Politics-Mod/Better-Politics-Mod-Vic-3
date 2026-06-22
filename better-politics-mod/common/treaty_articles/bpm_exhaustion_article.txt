@@ -1,0 +1,214 @@
+﻿bpm_take_on_exhaustion = {
+	kind = directed
+	cost = 0
+
+	icon = "gfx/interface/icons/diplomatic_treaties_articles_icons/take_on_debt_treaties.dds"
+
+	flags = {
+		giftable
+	}
+
+	maintenance_paid_by = source_country
+	usage_limit = once_per_treaty
+
+	unlocked_by_technologies = {
+	}
+
+	visible = {
+	}
+
+	possible = {
+		NOT = { is_country_type = unrecognized }
+	}
+
+	can_ratify = {
+		custom_tooltip = bpm_source_can_take_on_nonzero_exhaustion
+		scope:target_country = {
+			has_variable = bpm_auth_state_exhaustion
+		}
+		scope:target_country.var:bpm_auth_state_exhaustion > 0
+		scope:source_country.bpm_state_capacity > scope:target_country.var:bpm_auth_state_exhaustion
+	}
+
+	on_entry_into_force = {
+		custom_tooltip = bpm_takes_on_exhaustion
+		scope:article_options = {
+			source_country = {
+				save_scope_as = debt_taker
+			}
+			target_country = {
+				save_scope_as = debt_giver
+			}
+
+			source_country = {
+				change_variable = {
+					name = bpm_auth_state_exhaustion
+					add = scope:debt_giver.var:bpm_auth_state_exhaustion
+				}
+			}
+
+			target_country = {
+				set_variable = {
+					name = bpm_auth_state_exhaustion
+					value = 0
+				}
+			}
+		}
+	}
+
+	on_withdrawal = {}
+	on_break = {
+		scope:withdrawing_country = {
+			change_infamy = {
+				value = {
+					add = 1
+					multiply = {
+						value = scope:treaty_options.remaining_binding_period
+						min = 365
+						divide = 365
+					}
+					max = 20
+					min = 5
+				}
+			}
+		}
+		scope:withdrawing_country = {
+			change_relations = { country = scope:non_withdrawing_country value = -10 }
+		}
+	}
+
+	ai = {
+
+		treaty_categories = {
+			none
+		}
+
+		evaluation_chance = {
+			value = 0.25
+		}
+
+		article_ai_usage = {
+            request
+        }
+
+		inherent_accept_score = {
+			value = 0
+
+			if = {
+				limit = {
+					scope:source_country ?= this
+				}
+				scope:source_country = {
+					save_temporary_scope_as = target
+				}
+				scope:target_country = {
+					save_temporary_scope_as = actor
+				}
+
+				multiply = {
+					desc = "concept_rank"
+					value = 1
+
+					add = {
+						value = 10
+						subtract = scope:target_country.country_rank
+						divide = 10
+					}
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+					if = {
+						limit = {
+							OR = {
+								has_attitude = {
+									who = scope:target_country
+									attitude = antagonistic
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = domineering
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = belligerent
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = rebellious
+								}
+							}
+						}
+						value = -1000
+					}
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_DEBT_TARGET"
+
+					value = {
+						value = var:bpm_auth_state_exhaustion
+						divide = 100
+						multiply = -1
+					}
+
+					add = {
+						value = scope:target_country.var:bpm_auth_state_exhaustion
+						divide = 100
+						multiply = -1
+					}
+				}
+			}
+			else = {
+				scope:source_country = {
+					save_temporary_scope_as = actor
+				}
+				scope:target_country = {
+					save_temporary_scope_as = target
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_BASE_ADDITIONAL"
+					value = -10
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_ATTITUDE"
+					if = {
+						limit = {
+							OR = {
+								has_attitude = {
+									who = scope:target_country
+									attitude = antagonistic
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = domineering
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = belligerent
+								}
+								has_attitude = {
+									who = scope:target_country
+									attitude = rebellious
+								}
+							}
+						}
+						value = -1000
+					}
+				}
+
+				add = {
+					desc = "DIPLOMATIC_ACCEPTANCE_DEBT_TARGET"
+
+					value = {
+						value = var:bpm_auth_state_exhaustion
+						divide = 100
+						multiply = -1
+					}
+				}
+			}
+		}
+	}
+}

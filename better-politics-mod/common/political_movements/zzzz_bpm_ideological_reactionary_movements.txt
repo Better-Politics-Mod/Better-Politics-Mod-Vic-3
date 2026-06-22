@@ -1105,50 +1105,165 @@ REPLACE:movement_fascist = {
 				limit = {
 					owner ?= {
 						any_political_movement = {
-							OR = {
-								is_political_movement_type = movement_socialist
-								is_political_movement_type = movement_anarchist
-								is_political_movement_type = movement_communist
-							}
-							political_movement_support >= 0.15 # (chuckles) im in danger
+							movement_is_socialist = yes
+							political_movement_support >= 0.05
 						}
 					}
 				}
 				multiply = {
-					value = 1.5
 					desc = "STRONG_SOCIALIST_MOVEMENT"
+					value = 1
+					owner ?= {
+						every_political_movement = {
+							limit = {
+								movement_is_socialist = yes
+							}
+							add = {
+								value = {
+									value = this.political_movement_support
+									multiply = 2.5
+								}
+								multiply = {
+									value = this.political_movement_radicalism
+									min = 0.1
+									multiply = 1.5
+								}
+							}
+						}
+					}
 				}
 			}
-		}
-
-		
-		owner = {
 			if = {
 				limit = {
-					number_of_claims > 0
+					owner = {
+						number_of_claims > 0
+					}
 				}
 
 				add = {
-					value = 5 # Add a base value for having claims at all
-					add = number_of_claims
-					multiply = 5
-					max = 50
+					value = culture.culture_current_fervor # Add a base value for having claims at all
+					divide = 100 # Culture is 1-100
+					multiply = {
+						value = owner.number_of_claims
+					}
+					max = 10
 					desc = "NUMBER_OF_CLAIMS"
 				}
 			}
 		}
-
-		if = {
+		else_if = {
 			limit = {
-				standard_of_living < state.average_expected_sol
 				strata = middle
 			}
-			add = { # Increases likelihood of support if impoverished
-				desc = "IS_BELOW_EXPECTED_SOL"
-				value = state.average_expected_sol
-				subtract = standard_of_living
-				max = 10
+			if = {
+				limit = {
+					owner ?= {
+						any_political_movement = {
+							movement_is_socialist = yes
+							political_movement_support >= 0.05
+						}
+					}
+				}
+				multiply = {
+					desc = "STRONG_SOCIALIST_MOVEMENT"
+					value = 1
+					owner ?= {
+						every_political_movement = {
+							limit = {
+								movement_is_socialist = yes
+							}
+							add = {
+								value = {
+									value = this.political_movement_support
+									multiply = 2.5
+								}
+								multiply = {
+									value = this.political_movement_radicalism
+									min = 0.1
+									multiply = 1.5
+								}
+							}
+						}
+					}
+				}
 			}
+			if = {
+				limit = {
+					owner = {
+						number_of_claims > 0
+					}
+				}
+				add = {
+					value = culture.culture_current_fervor # Add a base value for having claims at all
+					divide = 100 # Culture is 1-100
+					multiply = {
+						value = owner.number_of_claims
+					}
+					max = 10
+					desc = "NUMBER_OF_CLAIMS"
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				strata = lower
+			}
+			if = {
+				limit = {
+					OR = {
+						is_pop_type = clerks
+						is_pop_type = soldiers
+					}
+					owner = {
+						number_of_claims > 0
+					}
+				}
+				add = {
+					value = culture.culture_current_fervor # Add a base value for having claims at all
+					divide = 125 # Culture is 1-100
+					multiply = {
+						value = owner.number_of_claims
+					}
+					max = 5
+					desc = "NUMBER_OF_CLAIMS"
+				}
+			}
+		}
+		if = {
+			limit = {
+				OR = {
+					strata = middle
+					strata = upper
+				}
+			}
+		}
+		if = {
+			limit = {
+				OR = {
+					strata = middle
+					strata = upper
+				}
+			}
+			if = {
+				limit = {
+					standard_of_living < state.average_expected_sol
+				}
+				add = { # Increases likelihood of support if impoverished
+					desc = "IS_BELOW_EXPECTED_SOL"
+					value = state.average_expected_sol
+					subtract = standard_of_living
+					max = 10
+				}
+			}
+			else = {
+				add = { # Decreases likelihood of support if well-off
+					desc = "IS_ABOVE_EXPECTED_SOL"
+					value = state.average_expected_sol
+					subtract = standard_of_living
+					min = -5
+				}
+			}
+			
 		}
 
 		multiply = {
@@ -1169,15 +1284,12 @@ REPLACE:movement_fascist = {
 
 		multiply = { # Illiterate pops participate at 1/10 the rate of fully literate pops
 			desc = "POP_LITERACY"
-
 			value = literacy_rate
-
-			multiply = literacy_rate
 			add = 0.10
 		}
 
 		multiply = {
-			value = 0.006
+			value = 0.011
 			multiply = pop_acceptance
 			desc = "ACCEPTANCE"
 		}

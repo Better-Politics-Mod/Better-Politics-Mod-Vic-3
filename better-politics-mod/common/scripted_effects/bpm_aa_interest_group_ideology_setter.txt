@@ -58,6 +58,53 @@ bpm_cache_ig = {
     }
 }
 
+bpm_ig_becomes_liberal_republican_in_republic = {
+    if = {
+        limit = {
+            owner = { bpm_has_republic_entrenched = yes }
+        }
+        bpm_ig_set_ideology_no_re = {
+            type = gov
+            name = liberal_republican
+        }
+    }
+}
+
+bpm_ig_stops_caring_in_republic = {
+    if = {
+        limit = {
+            owner = { bpm_has_republic_entrenched = yes }
+        }
+        bpm_ig_set_ideology_no_re = {
+            type = gov
+            name = placeholder
+        }
+    }
+}
+
+bpm_ig_supports_serfdom = {
+    if = {
+        limit = {
+            owner = { bpm_ig_could_support_law = { law = law_serfdom } }
+        }
+        if = {
+            limit = {
+                owner = { bpm_has_law_entrenched = { law = law_isolationism } }
+            }
+            bpm_ig_set_ideology_no_re = {
+                type = eco
+                name = trad_isolationist
+            }
+        }
+        else = {
+            bpm_ig_set_ideology_no_re = {
+                type = eco
+                name = serf_economy
+            }
+        }
+    }
+}
+
 #=====================================
 # Aristocratic Interests
 #=====================================
@@ -216,27 +263,12 @@ bpm_update_ideology_landowners = {
 	}
 	else_if = {
 		limit = {
-			c:JAP ?= this
+			has_law = law_type:law_bakufu
 		}
 		ig:ig_landowners ?= {
-			bpm_ig_set_ideology_no_re = {
-				type = eco
-				name = trad_isolationist
-			}
 			bpm_ig_set_ideology_no_re = {
 				type = cit
 				name = traditional_culture
-			}
-		}
-	}
-	else_if = {
-		limit = {
-			c:KOR ?= this
-		}
-		ig:ig_landowners ?= {
-			bpm_ig_set_ideology_no_re = {
-				type = eco
-				name = trad_isolationist
 			}
 		}
 	}
@@ -252,10 +284,6 @@ bpm_update_ideology_landowners = {
 			bpm_ig_set_ideology_no_re = {
 				type = dop
 				name = meritocratic_autocrat
-			}
-			bpm_ig_set_ideology_no_re = {
-				type = eco
-				name = trad_isolationist
 			}
 		}
 	}
@@ -474,6 +502,15 @@ bpm_update_ideology_landowners = {
 			}
 		}
 	}
+
+    ig:ig_landowners ?= {
+        bpm_ig_supports_serfdom = yes
+    }
+
+    ig:ig_landowners ?= {
+        bpm_reorder_ideologies = yes
+
+    }
 }
 
 
@@ -561,10 +598,6 @@ bpm_update_ideology_armed_forces = {
                 name = radical_monarchist
             }
             bpm_ig_set_ideology_no_re = {
-                type = eco
-                name = trad_isolationist
-            }
-            bpm_ig_set_ideology_no_re = {
                 type = cit
                 name = samurai
             }
@@ -600,6 +633,7 @@ bpm_update_ideology_armed_forces = {
     }
 
     ig:ig_armed_forces ?= { 
+        bpm_ig_supports_serfdom = yes
         bpm_reorder_ideologies = yes
     }
 }
@@ -635,6 +669,10 @@ bpm_update_ideology_petty_bourgeoisie = {
             }
         }
     }
+
+    ig:ig_petty_bourgeoisie ?= {
+        bpm_reorder_ideologies = yes
+    }
 }
 
 #=====================================
@@ -658,6 +696,7 @@ bpm_update_ideology_rural_folk = {
             type = eco
             name = traditional_agrarian
         }
+        bpm_ig_supports_serfdom = yes
     }
 
     if = {
@@ -667,6 +706,10 @@ bpm_update_ideology_rural_folk = {
         ig:ig_rural_folk ?= {
             remove_ideology = ideology_agrarian_jeffersonian
         }
+    }
+    
+    ig:ig_rural_folk ?= {
+        bpm_ig_supports_serfdom = yes
     }
 
     ig:ig_rural_folk ?= {
@@ -860,16 +903,12 @@ bpm_update_ideology_reactionaries = {
             name = conservative_supremacist
         }
     }
-
+    # Country-specific stuff
     if = {
         limit = {
             bpm_country_is_new_world_republic = yes
         }
         ig:ig_reactionaries ?= {
-            bpm_ig_set_ideology_no_re = {
-                type = gov
-                name = liberal_republican
-            }
             bpm_ig_set_ideology_no_re = {
                 type = rel
                 name = secularist
@@ -893,7 +932,46 @@ bpm_update_ideology_reactionaries = {
         }
     }
 
+    if = {
+        limit = {
+            c:KRA ?= this
+        }
+        ig:ig_reactionaries ?= {
+            bpm_ig_set_ideology_no_re = {
+                type = gov
+                name = liberal_republican
+            }
+			bpm_remove_all_gov_ideologies = yes
+			add_ideology = ideology_gov_liberal_republican
+			bpm_remove_all_dop_ideologies = yes
+			add_ideology = ideology_dop_meritocratic_autocrat
+			bpm_remove_all_sta_ideologies = yes
+			add_ideology = ideology_sta_powerful_state
+			bpm_remove_all_rel_ideologies = yes
+			add_ideology = ideology_rel_moralist
+			bpm_remove_all_wel_ideologies = yes
+			add_ideology = ideology_wel_religious_welfare
+		}
+    }
+    
+
     ig:ig_reactionaries ?= { 
+        bpm_ig_becomes_liberal_republican_in_republic = yes
+        bpm_ig_supports_serfdom = yes
+    }
+    if = {
+        limit = {
+            has_law = law_type:law_bakufu
+        }
+        ig:ig_reactionaries ?= {
+            bpm_ig_set_ideology_no_re = {
+                type = eco
+                name = conservative_agrarian
+            }
+        }
+    }
+
+    ig:ig_reactionaries ?= {
         bpm_reorder_ideologies = yes
         bpm_handle_ideological_ig = yes
     }
@@ -967,6 +1045,28 @@ bpm_update_ideology_conservatives = {
         bpm_ig_set_ideology_no_re = {
             type = cit
             name = segregationist
+        }
+    }
+    else_if = {
+        limit = {
+            c:KRA ?= this
+        }
+        ig:ig_conservatives ?= {
+            bpm_ig_set_ideology_no_re = {
+                type = dop
+                name = moderate_democrat
+            }
+        }
+    }
+    else_if = {
+        limit = {
+            c:TUR ?= this
+        }
+        ig:ig_conservatives ?= {
+            bpm_ig_set_ideology_no_re = {
+                type = cit
+                name = multiethnic_nationalist
+            }
         }
     }
 
@@ -1133,17 +1233,6 @@ bpm_update_ideology_market_liberals = {
             name = averse
         }
     }
-
-    if = {
-        limit = { bpm_country_is_republic = yes }
-        ig:ig_market_liberals ?= {
-            bpm_ig_set_ideology_no_re = {
-                type = gov
-                name = liberal_republican
-            }
-        }
-    }
-
     if = {
         limit = {
             OR = {
@@ -1296,6 +1385,17 @@ bpm_update_ideology_market_liberals = {
             }
         }
     }
+
+    if = {
+        limit = { bpm_country_is_republic = yes }
+        ig:ig_market_liberals ?= {
+            bpm_ig_set_ideology_no_re = {
+                type = gov
+                name = liberal_republican
+            }
+        }
+    }
+
 
     ig:ig_market_liberals ?= {
         bpm_reorder_ideologies = yes
@@ -1715,7 +1815,7 @@ bpm_update_ideology_radicals = {
 
     if = {
         limit = {
-            bpm_has_law_entrenched = { law = law_supreme_legislature } 
+            bpm_ig_could_support_law = { law = law_supreme_legislature } 
         }
         ig:ig_radicals ?= {
             bpm_ig_set_ideology_no_re = {
@@ -1749,13 +1849,26 @@ bpm_update_ideology_radicals = {
     # CONDITIONAL COUNTRY SPECIFIC
     if = {
         limit = {
-            c:JAP ?= this
+            has_law = law_type:law_bakufu
         }
         ig:ig_radicals ?= {
             bpm_ig_set_ideology_no_re = {
                 type = gov
                 name = moderate_monarchist
             }
+        }
+    }
+    else_if = {
+        limit = {
+            c:USA ?= this
+        }
+        bpm_ig_set_ideology_no_re = {
+            type = rel
+            name = secularist
+        }
+        bpm_ig_set_ideology_no_re = {
+            type = eco
+            name = modern_agrarian
         }
     }
 

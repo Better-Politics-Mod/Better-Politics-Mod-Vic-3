@@ -1,0 +1,2566 @@
+﻿namespace = lobby_events
+
+# Impressive Tax Reform
+lobby_events.40 = {
+	type = country_event
+	placement = root
+	title = lobby_events.40.t
+	desc = lobby_events.40.d
+	flavor = lobby_events.40.f
+
+	event_image = {
+		video = "unspecific_signed_contract"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	dlc = dlc010
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		OR = {
+			AND = {
+				is_enacting_law = law_type:law_graduated_taxation
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_graduated_taxation
+						value > neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_graduated_taxation
+					}
+				}
+			}
+			AND = {
+				is_enacting_law = law_type:law_proportional_taxation
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_proportional_taxation
+						value > neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_proportional_taxation
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				is_enacting_law = law_type:law_graduated_taxation
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_graduated_taxation
+						value > neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_graduated_taxation
+					}
+				}
+			}
+			random_activated_interest_group = {
+				limit = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_graduated_taxation
+						value > neutral
+					}
+				}
+				save_scope_as = relevant_ig
+			}
+			random_political_lobby = {
+				limit = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_graduated_taxation
+					}
+				}
+				target = {
+					save_scope_as = relevant_lobby_country
+				}
+				save_scope_as = relevant_lobby
+			}
+		}
+		else_if = {
+			limit = {
+				is_enacting_law = law_type:law_proportional_taxation
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_proportional_taxation
+						value > neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_proportional_taxation
+					}
+				}
+			}
+			random_activated_interest_group = {
+				limit = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_proportional_taxation
+						value > neutral
+					}
+				}
+				save_scope_as = relevant_ig
+			}
+			random_political_lobby = {
+				limit = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_proportional_taxation
+					}
+				}
+				target = {
+					save_scope_as = relevant_lobby_country
+				}
+				save_scope_as = relevant_lobby
+			}
+		}
+		currently_enacting_law = {
+    		save_scope_as = relevant_law_scope
+    	}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { currently_enacting_law = scope:relevant_law_scope }
+			NOT = { exists = scope:relevant_lobby }
+			NOT = { exists = scope:relevant_lobby_country }
+		}
+	}
+
+	option = {
+		name = lobby_events.40.a
+		default_option = yes
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+			change_appeasement = {
+			   amount = 1
+			   factor = appeasement_lobby_pleased
+			}
+		}
+		add_enactment_modifier = {
+			name = ig_happy_with_law_enactment
+		}
+	}
+	option = {
+		name = lobby_events.40.b
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+		}
+		scope:relevant_ig = {
+			add_modifier = {
+				name = ig_join_pol_str_positive
+				days = short_modifier_time
+				is_decaying = yes
+			}
+		}
+		add_loyalists = {
+			value = small_radicals
+			interest_group = scope:relevant_ig
+		}
+	}
+}
+
+# Differences Aside
+lobby_events.31 = {
+	type = country_event
+	placement = root
+	title = lobby_events.31.t
+	desc = lobby_events.31.d
+	flavor = lobby_events.31.f
+
+	event_image = {
+		video = "ep1_clandestine_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	dlc = dlc010
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		OR = {
+			AND = { # IG with progressive or liberal IG leader joins lobby that has a conservative or reactionary member
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					leader = {
+						OR = {
+							has_progressive_ideology = yes
+							has_liberal_ideology = yes
+							has_socialist_ideology = yes
+						}
+					}
+				}
+				any_political_lobby = { # existing member has opposing ideology
+					is_political_lobby_type = lobby_pro_country
+					target = { has_technology_researched = film }
+					any_lobby_member = {
+						leader = {
+							OR = {
+								has_conservative_ideology = yes
+								has_reactionary_ideology = yes
+								has_monarchist_ideology = yes
+							}
+						}
+					}
+				}
+			}
+			AND = { # IG with conservative or reactionary IG leader joins lobby that has a progressive or liberal member
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					leader = {
+						OR = {
+							has_conservative_ideology = yes
+							has_reactionary_ideology = yes
+							has_monarchist_ideology = yes
+						}
+					}
+				}
+				any_political_lobby = { # existing member has opposing ideology
+					is_political_lobby_type = lobby_pro_country
+					target = { has_technology_researched = film }
+					any_lobby_member = {
+						leader = {
+							OR = {
+								has_progressive_ideology = yes
+								has_liberal_ideology = yes
+								has_socialist_ideology = yes
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					leader = {
+						OR = {
+							has_progressive_ideology = yes
+							has_liberal_ideology = yes
+							has_socialist_ideology = yes
+						}
+					}
+				}
+				any_political_lobby = { # existing member has opposing ideology
+					is_political_lobby_type = lobby_pro_country
+					target = { has_technology_researched = film }
+					any_lobby_member = {
+						leader = {
+							OR = {
+								has_conservative_ideology = yes
+								has_reactionary_ideology = yes
+								has_monarchist_ideology = yes
+							}
+						}
+					}
+				}
+			}
+			random_activated_interest_group = {
+				limit = {
+					is_member_of_any_lobby = no
+					leader = {
+						OR = {
+							has_progressive_ideology = yes
+							has_liberal_ideology = yes
+							has_socialist_ideology = yes
+						}
+					}
+				}
+				save_scope_as = relevant_ig
+				leader = {
+					save_scope_as = relevant_ig_leader
+				}
+			}
+			random_political_lobby = {
+				limit = {
+					is_political_lobby_type = lobby_pro_country
+					target = { has_technology_researched = film }
+					any_lobby_member = {
+						leader = {
+							OR = {
+								has_conservative_ideology = yes
+								has_reactionary_ideology = yes
+								has_monarchist_ideology = yes
+							}
+						}
+					}
+				}
+				random_lobby_member = {
+					limit ={
+						leader = {
+							OR = {
+								has_conservative_ideology = yes
+								has_reactionary_ideology = yes
+								has_monarchist_ideology = yes
+							}
+						}
+					}
+					save_scope_as = relevant_lobby_member
+				}
+				save_scope_as = relevant_lobby
+				target = {
+					save_scope_as = relevant_lobby_country
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					leader = {
+						OR = {
+							has_conservative_ideology = yes
+							has_reactionary_ideology = yes
+							has_monarchist_ideology = yes
+						}
+					}
+				}
+				any_political_lobby = { # existing member has opposing ideology
+					is_political_lobby_type = lobby_pro_country
+					target = { has_technology_researched = film }
+					any_lobby_member = {
+						leader = {
+							OR = {
+								has_progressive_ideology = yes
+								has_liberal_ideology = yes
+								has_socialist_ideology = yes
+							}
+						}
+					}
+				}
+			}
+			random_activated_interest_group = {
+				limit = {
+					is_member_of_any_lobby = no
+					leader = {
+						OR = {
+							has_conservative_ideology = yes
+							has_reactionary_ideology = yes
+							has_monarchist_ideology = yes
+						}
+					}
+				}
+				save_scope_as = relevant_ig
+				leader = {
+					save_scope_as = relevant_ig_leader
+				}
+			}
+			random_political_lobby = {
+				limit = {
+					is_political_lobby_type = lobby_pro_country
+					target = { has_technology_researched = film }
+					any_lobby_member = {
+						leader = {
+							OR = {
+								has_progressive_ideology = yes
+								has_liberal_ideology = yes
+								has_socialist_ideology = yes
+							}
+						}
+					}
+				}
+				random_lobby_member = {
+					limit ={
+						leader = {
+							OR = {
+								has_progressive_ideology = yes
+								has_liberal_ideology = yes
+								has_socialist_ideology = yes
+							}
+						}
+					}
+					save_scope_as = relevant_lobby_member
+				}
+				save_scope_as = relevant_lobby
+				target = {
+					save_scope_as = relevant_lobby_country
+				}
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:relevant_lobby }
+			NOT = { exists = scope:relevant_lobby_country }
+		}
+	}
+
+	option = {
+		name = lobby_events.31.a
+		default_option = yes
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+			change_appeasement = {
+			   amount = 2
+			   factor = appeasement_lobby_pleased
+			}
+		}
+		scope:relevant_lobby_member = {
+			add_modifier = {
+				name = ig_join_pol_str_positive
+				days = normal_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+	option = {
+		name = lobby_events.31.b
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+		}
+		scope:relevant_ig = {
+			add_modifier = {
+				name = ig_join_pol_str_negative
+				days = normal_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+# A Shining Example
+lobby_events.32 = {
+	type = country_event
+	placement = root
+	title = lobby_events.32.t
+	desc = lobby_events.32.d
+	flavor = lobby_events.32.f
+
+	event_image = {
+		video = "unspecific_ruler_speaking_to_people"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_map.dds"
+
+	dlc = dlc010
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		any_activated_interest_group = {
+			is_member_of_any_lobby = no
+			ig_counts_as_marginal = no
+			leader = {
+				OR = {
+					has_conservative_ideology = yes
+					has_reactionary_ideology = yes
+				}
+			}
+		}
+		any_political_lobby = {
+			is_political_lobby_type = lobby_pro_country
+			target = {
+				OR = {
+					has_law_or_variant = law_type:law_charitable_health_system
+					has_law_or_variant = law_type:law_religious_schools
+				}
+				ruler = {
+					OR = {
+						has_conservative_ideology = yes
+						has_reactionary_ideology = yes
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		random_activated_interest_group = {
+			limit = {
+				is_member_of_any_lobby = no
+				ig_counts_as_marginal = no
+				leader = {
+					OR = {
+						has_conservative_ideology = yes
+						has_reactionary_ideology = yes
+					}
+				}
+			}
+			save_scope_as = relevant_ig
+		}
+		random_political_lobby = {
+			limit = {
+				is_political_lobby_type = lobby_pro_country
+				target = {
+					OR = {
+						has_law_or_variant = law_type:law_charitable_health_system
+						has_law_or_variant = law_type:law_religious_schools
+					}
+					ruler = {
+						OR = {
+							has_conservative_ideology = yes
+							has_reactionary_ideology = yes
+						}
+					}
+				}
+			}
+			save_scope_as = relevant_lobby
+			target = {
+				save_scope_as = relevant_lobby_country
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:relevant_lobby }
+			NOT = { exists = scope:relevant_lobby_country }
+		}
+	}
+
+	option = {
+		name = lobby_events.32.a
+		default_option = yes
+			scope:relevant_lobby = {
+				add_lobby_member = scope:relevant_ig
+			}
+			scope:relevant_ig = {
+				add_modifier = {
+					name = ig_join_pol_str_positive
+					days = normal_modifier_time
+					is_decaying = yes
+				}
+			}
+	}
+	option = {
+		name = lobby_events.32.b
+		scope:relevant_lobby = {
+			change_appeasement = {
+			   amount = -2
+			   factor = appeasement_lobby_displeased
+			}
+		}
+		scope:relevant_ig = {
+			add_modifier = {
+				name = lobby_events_ig_blocked
+				days = normal_modifier_time
+			}
+		}
+		add_radicals = {
+			pop_type = clergymen
+			religion = root.religion
+			value = medium_radicals
+		}
+	}
+}
+
+# Less Is More
+lobby_events.33 = {
+	type = country_event
+	placement = root
+	title = lobby_events.33.t
+	desc = lobby_events.33.d
+	flavor = lobby_events.33.f
+
+	event_image = {
+		video = "unspecific_politicians_arguing"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	dlc = dlc010
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		any_political_lobby = {
+			OR = {
+				is_political_lobby_type = lobby_pro_country
+				is_political_lobby_type = lobby_anti_country
+			}
+			any_lobby_member = {
+				ig_counts_as_marginal = no
+				count >= 3
+			}
+		}
+	}
+
+	immediate = {
+		random_political_lobby = {
+			limit = {
+				OR = {
+					is_political_lobby_type = lobby_pro_country
+					is_political_lobby_type = lobby_anti_country
+				}
+				any_lobby_member = {
+					ig_counts_as_marginal = no
+					count >= 3
+				}
+			}
+			save_scope_as = relevant_lobby
+			random_lobby_member = {
+				limit = {
+					ig_counts_as_marginal = no
+				}
+				save_scope_as = relevant_ig
+			}
+			random_lobby_member = { # another ig in the same lobby
+				limit = {
+					ig_counts_as_marginal = no
+					NOT = { this = scope:relevant_ig }
+				}
+				save_scope_as = other_ig
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:relevant_lobby }
+			NOT = { exists = scope:relevant_lobby_country }
+		}
+	}
+
+	option = {
+		name = lobby_events.33.a
+		default_option = yes
+		scope:relevant_lobby = {
+			remove_lobby_member = scope:relevant_ig
+		}
+		scope:other_ig = {
+			add_modifier = {
+				name = ig_join_pol_str_positive
+				days = normal_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+	option = { # appears if relevant_ig is not in government
+		name = lobby_events.33.b
+		trigger = {
+			scope:relevant_ig = {
+				is_in_government = no
+			}
+		}
+		scope:relevant_ig = {
+			add_modifier = {
+				name = lobby_events_ig_blocked
+				days = short_modifier_time
+			}
+		}
+	}
+	option = { # appears if relevant_ig is in government
+		name = lobby_events.33.c
+		trigger = {
+			scope:relevant_ig = {
+				is_in_government = yes
+			}
+		}
+		scope:relevant_ig = {
+			add_modifier = {
+				name = lobby_events_ig_blocked
+				days = normal_modifier_time
+			}
+		}
+		add_radicals = {
+			value = medium_radicals
+			interest_group = scope:relevant_ig
+		}
+	}
+}
+
+# Laudable Legislation
+lobby_events.34 = {
+	type = country_event
+	placement = root
+	title = lobby_events.34.t
+	desc = lobby_events.34.d
+	flavor = lobby_events.34.f
+
+	event_image = {
+		video = "unspecific_world_fair"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	dlc = dlc010
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		has_law_or_variant = law_type:law_slavery_banned
+		any_political_lobby = {
+			is_political_lobby_type = lobby_anti_country
+			any_lobby_member = {
+				ig_counts_as_marginal = no
+				leader = {
+					OR = {
+						has_progressive_ideology = yes
+						has_liberal_ideology = yes
+					}
+				}
+			}
+			target = {
+					has_law_or_variant = law_type:law_slavery_banned
+					OR = {
+						has_law_or_variant = law_type:law_protected_speech
+						has_law_or_variant = law_type:law_womens_suffrage
+						has_law_or_variant = law_type:law_guaranteed_liberties
+					}
+					ruler = {
+						OR = {
+							has_progressive_ideology = yes
+							has_liberal_ideology = yes
+						}
+					}
+			}
+		}
+	}
+
+	immediate = {
+		random_political_lobby = {
+			limit = {
+				is_political_lobby_type = lobby_anti_country
+				target = {
+					has_law_or_variant = law_type:law_slavery_banned
+					OR = {
+						has_law_or_variant = law_type:law_protected_speech
+						has_law_or_variant = law_type:law_womens_suffrage
+						has_law_or_variant = law_type:law_guaranteed_liberties
+					}
+					ruler = {
+						OR = {
+							has_progressive_ideology = yes
+							has_liberal_ideology = yes
+						}
+					}
+				}
+			}
+			save_scope_as = relevant_lobby
+			target = {
+				save_scope_as = relevant_lobby_country
+			}
+		}
+		scope:relevant_lobby = {
+			random_lobby_member = {
+				limit = {
+					ig_counts_as_marginal = no
+					leader = {
+						OR = {
+							has_progressive_ideology = yes
+							has_liberal_ideology = yes
+						}
+					}
+				}
+				save_scope_as = relevant_ig
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:relevant_lobby }
+			NOT = { exists = scope:relevant_lobby_country }
+		}
+	}
+
+	option = {
+		name = lobby_events.34.a
+		default_option = yes
+		scope:relevant_lobby = {
+			remove_lobby_member = scope:relevant_ig
+		}
+	}
+	option = {
+		name = lobby_events.34.b
+		add_radicals = {
+			value = medium_radicals
+			interest_group = scope:relevant_ig
+		}
+	}
+}
+
+# Unfavorable Opinion
+lobby_events.35 = {
+	type = country_event
+	placement = root
+	title = lobby_events.35.t
+	desc = lobby_events.35.d
+	flavor = lobby_events.35.f
+
+	event_image = {
+		video = "ep1_printing_press"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	dlc = dlc010
+
+	duration = 3
+
+	cooldown = { days = stupidly_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		any_activated_interest_group = {
+			is_member_of_any_lobby = no
+			leader = {
+				OR = {
+					has_conservative_ideology = yes
+					has_reactionary_ideology = yes
+				}
+			}
+		}
+		any_political_lobby = {
+			is_political_lobby_type = lobby_anti_country
+			target = { # law_slavery_banned AND one from the list
+				has_law_or_variant = law_type:law_slavery_banned
+				OR = { # one of five laws that are progressiveness = 100
+					has_law_or_variant = law_type:law_womens_suffrage
+					has_law_or_variant = law_type:law_cooperative_ownership
+					has_law_or_variant = law_type:law_command_economy
+					has_law_or_variant = law_type:law_protected_speech
+					has_law_or_variant = law_type:law_guaranteed_liberties
+				}
+				ruler = {
+					OR = {
+						has_progressive_ideology = yes
+						has_liberal_ideology = yes
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		random_activated_interest_group = {
+			limit = {
+				is_member_of_any_lobby = no
+				leader = {
+					OR = {
+						has_conservative_ideology = yes
+						has_reactionary_ideology = yes
+					}
+				}
+			}
+			save_scope_as = relevant_ig
+		}
+		random_political_lobby = {
+			limit = {
+				is_political_lobby_type = lobby_anti_country
+				target = {
+					# law_slavery_banned AND one from the list
+					has_law_or_variant = law_type:law_slavery_banned
+					OR = { # one of five laws that are progressiveness = 100
+						has_law_or_variant = law_type:law_womens_suffrage
+						has_law_or_variant = law_type:law_cooperative_ownership
+						has_law_or_variant = law_type:law_command_economy
+						has_law_or_variant = law_type:law_protected_speech
+						has_law_or_variant = law_type:law_guaranteed_liberties
+					}
+					ruler = {
+						OR = {
+							has_progressive_ideology = yes
+							has_liberal_ideology = yes
+						}
+					}
+				}
+			}
+			save_scope_as = relevant_lobby
+			target = {
+				save_scope_as = relevant_lobby_country
+				ruler.interest_group ?= {
+					save_scope_as = relevant_ruler_ig
+				}
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:relevant_lobby }
+			NOT = { exists = scope:relevant_lobby_country }
+		}
+	}
+
+	option = {
+		name = lobby_events.35.a
+		default_option = yes
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+			change_appeasement = {
+			   amount = 2
+			   factor = appeasement_lobby_pleased
+			}
+		}
+		scope:relevant_ig = {
+			add_modifier = {
+				name = ig_join_pol_str_positive
+				days = short_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+	option = {
+		name = lobby_events.35.b
+		add_radicals = {
+			value = small_radicals
+			interest_group = scope:relevant_ig
+		}
+	}
+}
+
+# Against Free Trade Proposal
+lobby_events.36 = {
+	type = country_event
+	placement = root
+	title = lobby_events.36.t
+	desc = lobby_events.36.d
+	flavor = lobby_events.36.f
+
+	event_image = {
+		video = "southamerica_aristocrats"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	dlc = dlc010
+
+	duration = 3
+
+	cooldown = { days = stupidly_long_modifier_time }
+
+	trigger = { # Check if free trade is being enacted
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		is_enacting_law = law_type:law_free_trade
+		any_activated_interest_group = {
+			is_member_of_any_lobby = no
+			law_stance = {
+				law = law_type:law_free_trade
+				value < neutral
+			}
+		}
+		any_political_lobby = {
+			is_political_lobby_type = lobby_anti_country
+			target = {
+				has_law_or_variant = law_type:law_free_trade
+			}
+		}
+	}
+
+	immediate = {
+		random_activated_interest_group = {
+			limit = {
+				is_member_of_any_lobby = no
+				law_stance = {
+					law = law_type:law_free_trade
+					value < neutral
+				}
+			}
+			save_scope_as = relevant_ig
+			leader = {
+				save_scope_as = relevant_ig_leader
+			}
+		}
+		random_political_lobby = {
+			limit = {
+				is_political_lobby_type = lobby_anti_country
+				target = {
+					has_law_or_variant = law_type:law_free_trade
+				}
+			}
+			random_lobby_member = {
+				save_scope_as = relevant_lobby_member # An IG already in the lobby
+			}
+			save_scope_as = relevant_lobby
+			target = {
+				save_scope_as = relevant_lobby_country
+			}
+		}
+		currently_enacting_law = {
+    		save_scope_as = relevant_law_scope
+    	}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { currently_enacting_law = scope:relevant_law_scope }
+			NOT = { exists = scope:relevant_lobby }
+			NOT = { exists = scope:relevant_lobby_country }
+		}
+	}
+
+	option = {
+		name = lobby_events.36.a
+		default_option = yes
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+			change_appeasement = {
+			   amount = 1
+			   factor = appeasement_lobby_pleased
+			}
+		}
+		add_enactment_modifier = {
+			name = ig_unhappy_with_law_enactment
+		}
+	}
+	option = {
+		name = lobby_events.36.b
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+		}
+		add_radicals = {
+			value = small_radicals
+			interest_group = scope:relevant_ig
+		}
+	}
+}
+
+# Voting Matters
+lobby_events.37 = {
+	type = country_event
+	placement = root
+	title = lobby_events.37.t
+	desc = lobby_events.37.d
+	flavor = lobby_events.37.f
+
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	dlc = dlc010
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		OR = {
+			AND = {
+				is_enacting_law = law_type:law_universal_suffrage
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_universal_suffrage
+						value > neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_universal_suffrage
+					}
+				}
+			}
+			AND = {
+				is_enacting_law = law_type:law_census_voting
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_census_voting
+						value > neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_census_voting
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				is_enacting_law = law_type:law_universal_suffrage
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_universal_suffrage
+						value > neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_universal_suffrage
+					}
+				}
+			}
+			random_activated_interest_group = {
+				limit = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_universal_suffrage
+						value > neutral
+					}
+				}
+				save_scope_as = relevant_ig
+			}
+			random_political_lobby = {
+				limit = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_universal_suffrage
+					}
+				}
+				target = {
+					save_scope_as = relevant_lobby_country
+				}
+				save_scope_as = relevant_lobby
+			}
+		}
+		else_if = {
+			limit = {
+				is_enacting_law = law_type:law_census_voting
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_census_voting
+						value > neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_census_voting
+					}
+				}
+			}
+			random_activated_interest_group = {
+				limit = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_census_voting
+						value > neutral
+					}
+				}
+				save_scope_as = relevant_ig
+			}
+			random_political_lobby = {
+				limit = {
+					is_political_lobby_type = lobby_pro_country
+					target = {
+						has_law_or_variant = law_type:law_census_voting
+					}
+				}
+				target = {
+					save_scope_as = relevant_lobby_country
+				}
+				save_scope_as = relevant_lobby
+			}
+		}
+		currently_enacting_law = {
+    		save_scope_as = relevant_law_scope
+    	}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { currently_enacting_law = scope:relevant_law_scope }
+			NOT = { exists = scope:relevant_lobby }
+			NOT = { exists = scope:relevant_lobby_country }
+		}
+	}
+
+	option = {
+		name = lobby_events.37.a
+		default_option = yes
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+		}
+		add_enactment_modifier = {
+			name = ig_law_enactment_time_good
+		}
+	}
+	option = {
+		name = lobby_events.37.b
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+			change_appeasement = {
+			   amount = 1
+			   factor = appeasement_lobby_pleased
+			}
+		}
+	}
+}
+
+# Unwanted Legislation
+lobby_events.38 = {
+	type = country_event
+	placement = root
+	title = lobby_events.38.t
+	desc = lobby_events.38.d
+	flavor = lobby_events.38.f
+
+	event_image = {
+		video = "ep1_clandestine_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	dlc = dlc010
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		OR = {
+			AND = {
+				is_enacting_law = law_type:law_universal_suffrage
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_universal_suffrage
+						value < neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_anti_country
+					target = {
+						has_law_or_variant = law_type:law_universal_suffrage
+					}
+				}
+			}
+			AND = {
+				is_enacting_law = law_type:law_census_voting
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_census_voting
+						value < neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_anti_country
+					target = {
+						has_law_or_variant = law_type:law_census_voting
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				is_enacting_law = law_type:law_universal_suffrage
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_universal_suffrage
+						value < neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_anti_country
+					target = {
+						has_law_or_variant = law_type:law_universal_suffrage
+					}
+				}
+			}
+			random_activated_interest_group = {
+				limit = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_universal_suffrage
+						value < neutral
+					}
+				}
+				save_scope_as = relevant_ig
+			}
+			random_political_lobby = {
+				limit = {
+					is_political_lobby_type = lobby_anti_country
+					target = {
+						has_law_or_variant = law_type:law_universal_suffrage
+					}
+				}
+				target = {
+					save_scope_as = relevant_lobby_country
+				}
+				save_scope_as = relevant_lobby
+			}
+		}
+		else_if = {
+			limit = {
+				is_enacting_law = law_type:law_census_voting
+				any_activated_interest_group = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_census_voting
+						value < neutral
+					}
+				}
+				any_political_lobby = {
+					is_political_lobby_type = lobby_anti_country
+					target = {
+						has_law_or_variant = law_type:law_census_voting
+					}
+				}
+			}
+			random_activated_interest_group = {
+				limit = {
+					is_member_of_any_lobby = no
+					law_stance = {
+						law = law_type:law_census_voting
+						value < neutral
+					}
+				}
+				save_scope_as = relevant_ig
+			}
+			random_political_lobby = {
+				limit = {
+					is_political_lobby_type = lobby_anti_country
+					target = {
+						has_law_or_variant = law_type:law_census_voting
+					}
+				}
+				target = {
+					save_scope_as = relevant_lobby_country
+				}
+				save_scope_as = relevant_lobby
+			}
+		}
+		currently_enacting_law = {
+    		save_scope_as = relevant_law_scope
+    	}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = ROOT.currently_enacting_law }
+			NOT = { exists = scope:relevant_lobby }
+			NOT = { exists = scope:relevant_lobby_country }
+		}
+	}
+
+	option = {
+		name = lobby_events.38.a
+		default_option = yes
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+			change_appeasement = {
+			   amount = 1
+			   factor = appeasement_lobby_pleased
+			}
+		}
+		scope:relevant_ig = {
+			add_modifier = {
+				name = ig_join_pol_str_positive
+				days = normal_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+	option = {
+		name = lobby_events.38.b
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+		}
+		add_enactment_modifier = {
+			name = ig_law_enactment_time_stall
+		}
+	}
+}
+
+# Trading With Enthusiasm
+lobby_events.39 = {
+	type = country_event
+	placement = root
+	title = lobby_events.39.t
+	desc = lobby_events.39.d
+	flavor = lobby_events.39.f
+
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	dlc = dlc010
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		is_enacting_law = law_type:law_free_trade
+		any_activated_interest_group = {
+			is_member_of_any_lobby = no
+			law_stance = {
+				law = law_type:law_free_trade
+				value > neutral
+			}
+		}
+		any_political_lobby = {
+			is_political_lobby_type = lobby_pro_country
+			target = {
+				has_law_or_variant = law_type:law_free_trade
+			}
+		}
+	}
+
+	immediate = {
+		random_activated_interest_group = {
+			limit = {
+				is_member_of_any_lobby = no
+				law_stance = {
+					law = law_type:law_free_trade
+					value > neutral
+				}
+			}
+			save_scope_as = relevant_ig
+			leader = {
+				save_scope_as = relevant_ig_leader
+			}
+		}
+		random_political_lobby = {
+			limit = {
+				is_political_lobby_type = lobby_pro_country
+				target = {
+					has_law_or_variant = law_type:law_free_trade
+				}
+			}
+			target = {
+				save_scope_as = relevant_lobby_country
+			}
+			save_scope_as = relevant_lobby
+		}
+		currently_enacting_law = {
+    		save_scope_as = relevant_law_scope
+    	}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = ROOT.currently_enacting_law }
+			NOT = { exists = scope:relevant_lobby }
+			NOT = { exists = scope:relevant_lobby_country }
+		}
+	}
+
+	option = {
+		name = lobby_events.39.a
+		default_option = yes
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+		}
+		add_enactment_modifier = {
+			name = ig_law_enactment_time_good
+		}
+	}
+	option = {
+		name = lobby_events.39.b
+		scope:relevant_lobby = {
+			add_lobby_member = scope:relevant_ig
+		}
+		scope:relevant_ig = {
+			add_modifier = {
+				name = ig_join_pol_str_positive
+				days = normal_modifier_time
+				is_decaying = yes
+			}
+		}
+	}
+}
+
+# Ever-Increasing Influence
+
+lobby_events.51 = {
+	type = country_event
+	placement = root
+	title = lobby_events.51.t
+	desc = lobby_events.51.d
+	flavor = lobby_events.51.f
+
+	event_image = {
+		video = "ep1_octopus"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		has_technology_researched = mass_communication
+		any_political_lobby = {
+			any_lobby_member = {
+				is_powerful = yes
+			}
+		}
+	}
+
+	immediate = {
+		random_political_lobby = {
+			limit = {
+				any_lobby_member = {
+					is_powerful = yes
+				}
+			}
+			save_scope_as = relevant_lobby
+			random_lobby_member = {
+				limit = {
+					is_powerful = yes
+				}
+				save_scope_as = relevant_lobby_member
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:relevant_lobby }
+	}
+
+	option = { # Chastise a lobby member's actions
+		name = lobby_events.51.a
+		default_option = yes
+		scope:relevant_lobby_member = {
+			add_modifier = {
+				name = lobby_member_approval_lost
+				days = short_modifier_time
+			}
+		}
+	}
+	option = { # Allow lobby's actions
+		name = lobby_events.51.b
+		scope:relevant_lobby = {
+			change_appeasement = {
+				amount = 1
+				factor = appeasement_lobby_gain
+			}
+		}
+		add_modifier = {
+			name = lobbyists_unchecked
+			days = normal_modifier_time
+		}
+	}
+}
+
+# Business of Legislation
+
+lobby_events.52 = {
+	type = country_event
+	placement = root
+	title = lobby_events.52.t
+	desc = lobby_events.52.d
+	flavor = lobby_events.52.f
+
+	event_image = {
+		video = "ep1_clandestine_meeting"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		government_legitimacy < 75
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		any_political_lobby = {
+			any_lobby_member = {
+				leader = {
+					is_ruler_of_own_country = no
+				}
+			}
+		}
+	}
+
+	immediate = {
+		random_political_lobby = {
+			random_lobby_member = {
+				limit = {
+					leader = {
+						is_ruler_of_own_country = no
+					}
+				}
+				save_scope_as = relevant_lobby_member
+			}
+			save_scope_as = relevant_lobby
+			target = {
+				save_scope_as = relevant_lobby_country
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:relevant_lobby }
+	}
+
+	option = { # Scrutinize lobby member's actions
+		name = lobby_events.52.a
+		default_option = yes
+		scope:relevant_lobby_member = {
+			add_modifier = {
+				name = lobby_member_pol_str_negative
+				days = normal_modifier_time
+				is_decaying = yes
+			}
+		}
+		add_modifier = {
+			name = lobbyists_in_check
+			days = normal_modifier_time
+		}
+	}
+	option = { # Overlook lobby's actions
+		name = lobby_events.52.b
+		scope:relevant_lobby = {
+			change_appeasement = {
+				amount = 1
+				factor = appeasement_lobby_gain
+			}
+		}
+	}
+}
+
+# Contradictory Correspondence
+
+lobby_events.53 = {
+	type = country_event
+	placement = root
+	title = lobby_events.53.t
+	desc = lobby_events.53.d
+	flavor = lobby_events.53.f
+
+	event_image = {
+		video = "ep1_printing_press"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		has_technology_researched = mass_communication
+		any_political_lobby = {
+			OR = {
+				is_political_lobby_type = lobby_pro_country
+				is_political_lobby_type = lobby_pro_overlord
+			}
+			any_lobby_member = {
+				leader = {
+					is_ruler_of_own_country = no
+				}
+			}
+			target = { relations:root <= relations_threshold:poor }
+		}
+	}
+
+	immediate = {
+		random_political_lobby = {
+			limit = {
+				OR = {
+					is_political_lobby_type = lobby_pro_country
+					is_political_lobby_type = lobby_pro_overlord
+				}
+				any_lobby_member = {
+					leader = {
+						is_ruler_of_own_country = no
+					}
+				}
+				target = {
+					relations:root <= relations_threshold:poor
+				}
+			}
+			save_scope_as = relevant_lobby
+			random_lobby_member = {
+				limit = {
+					leader = {
+						is_ruler_of_own_country = no
+					}
+				}
+				save_scope_as = relevant_lobby_member
+			}
+			target = {
+				save_scope_as = relevant_lobby_country
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:relevant_lobby }
+	}
+
+	option = { # Damage is already done
+		name = lobby_events.53.a
+		default_option = yes
+		change_relations = {
+			country = scope:relevant_lobby_country
+			value = -10
+		}
+	}
+	option = { # Remove from circulation
+		name = lobby_events.53.b
+		add_loyalists = {
+			value = medium_radicals
+			interest_group = scope:relevant_lobby_member
+		}
+		add_modifier = {
+			name = lobbyists_unchecked
+			days = normal_modifier_time
+		}
+	}
+}
+
+# Unconventional Guest
+
+lobby_events.54 = {
+	type = country_event
+	placement = root
+	title = lobby_events.54.t
+	desc = lobby_events.54.d
+	flavor = lobby_events.54.f
+
+	event_image = {
+		video = "unspecific_ruler_speaking_to_people"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		any_scope_character = {
+			has_role_of_type = agitator
+			exists = home_country
+			NOT = { home_country = ROOT }
+			home_country = {
+				save_temporary_scope_as = agitator_home_country_temp
+			}
+		}
+		any_political_lobby = {
+			OR = {
+				is_political_lobby_type = lobby_anti_overlord
+				is_political_lobby_type = lobby_anti_country
+			}
+			target = {
+				scope:agitator_home_country_temp ?= THIS
+			}
+		}
+	}
+
+	immediate = {
+		random_scope_character = {
+			limit = {
+				has_role_of_type = agitator
+				exists = home_country
+				NOT = { home_country = ROOT }
+			}
+			home_country = {
+				save_scope_as = agitator_home_country
+			}
+			save_scope_as = relevant_agitator
+		}
+		random_political_lobby = {
+			limit = {
+				OR = {
+					is_political_lobby_type = lobby_anti_overlord
+					is_political_lobby_type = lobby_anti_country
+				}
+				target = {
+					scope:agitator_home_country ?= THIS
+				}
+			}
+			save_scope_as = relevant_lobby
+		}
+	}
+
+	cancellation_trigger = {
+		scope:relevant_agitator = {
+			is_character_alive = no
+		}
+	}
+
+	option = { # Discouraged
+		name = lobby_events.54.a
+		default_option = yes
+		scope:relevant_lobby = {
+			change_appeasement = {
+				amount = -1
+				factor = appeasement_lobby_loss
+			}
+		}
+	}
+	option = { # Encouraged
+		name = lobby_events.54.b
+		change_relations = {
+			country = scope:agitator_home_country
+			value = -10
+		}
+	}
+}
+
+# Problematic Policing
+
+lobby_events.55 = {
+	type = country_event
+	placement = root
+	title = lobby_events.55.t
+	desc = lobby_events.55.d
+	flavor = lobby_events.55.f
+
+	event_image = {
+		video = "ep1_transfer_of_authority"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		NOT = { has_law_or_variant = law_type:law_no_police }
+		any_political_lobby = {
+			OR = {
+				is_political_lobby_type = lobby_pro_overlord
+				is_political_lobby_type = lobby_pro_country
+			}
+			any_lobby_member = {
+				ig_counts_as_marginal = no
+				save_temporary_scope_as = temp_lobby_member
+			}
+		}
+		any_scope_state = {
+			is_incorporated = yes
+		}
+	}
+
+	immediate = {
+		random_political_lobby = {
+			limit = {
+				OR = {
+					is_political_lobby_type = lobby_pro_overlord
+					is_political_lobby_type = lobby_pro_country
+				}
+				any_lobby_member = {
+					ig_counts_as_marginal = no
+				}
+			}
+			save_scope_as = relevant_lobby
+			target = {
+				save_scope_as = relevant_lobby_country
+			}
+			random_lobby_member = {
+				limit = {
+					ig_counts_as_marginal = no
+				}
+				save_scope_as = relevant_lobby_member
+			}
+		}
+		random_scope_state = {
+			limit = {
+				is_incorporated = yes
+			}
+			save_scope_as = relevant_state
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:relevant_lobby }
+	}
+
+	option = { # Allow the pro-lobby & police activity to continue
+		name = lobby_events.55.a
+		default_option = yes
+		scope:relevant_state = {
+			add_radicals_in_state = {
+				value = medium_radicals
+			}
+		}
+		change_relations = {
+			country = scope:relevant_lobby_country
+			value = 5
+		}
+	}
+	option = { # Condone this
+		name = lobby_events.55.b
+		scope:relevant_state = {
+			add_loyalists_in_state = {
+				value = medium_radicals
+			}
+		}
+		scope:relevant_lobby = {
+			change_appeasement = {
+				amount = -1
+				factor = appeasement_lobby_loss
+			}
+		}
+	}
+}
+
+# A Disreputable Bookkeeper
+
+lobby_events.56 = {
+	type = country_event
+	placement = root
+	title = lobby_events.56.t
+	desc = lobby_events.56.d
+	flavor = lobby_events.56.f
+
+	event_image = {
+		video = "votp_hostile_court"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	cooldown = { days = stupidly_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		government_legitimacy < 75
+		any_political_lobby = { # Any lobby type
+			any_lobby_member = {
+				ig_counts_as_marginal = no
+			}
+		}
+		any_scope_state = { # Government admin building with bureaucrats in capital
+			is_capital = yes
+			has_building = building_government_administration
+			any_scope_pop = {
+				is_pop_type = bureaucrats
+				pop_employment_building = building_government_administration
+			}
+		}
+	}
+
+	immediate = {
+		random_political_lobby = {
+			random_lobby_member = {
+				limit = {
+					ig_counts_as_marginal = no
+				}
+				save_scope_as = relevant_lobby_member
+			}
+			save_scope_as = relevant_lobby
+		}
+		random_scope_state = {
+			limit = {
+				is_capital = yes
+				has_building = building_government_administration
+				any_scope_pop = {
+					is_pop_type = bureaucrats
+					pop_employment_building = building_government_administration
+				}
+			}
+			save_scope_as = relevant_state
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:relevant_lobby }
+	}
+
+	option = { # Hold lobby accountable
+		name = lobby_events.56.a
+		default_option = yes
+		add_modifier = {
+			name = lobbyists_in_check
+			days = normal_modifier_time
+		}
+		scope:relevant_lobby = {
+			change_appeasement = {
+				amount = -1
+				factor = appeasement_lobby_loss
+			}
+		}
+	}
+	option = { # Write it off as a bookkeeping error
+		name = lobby_events.56.b
+		scope:relevant_state = {
+			add_loyalists_in_state = {
+				pop_type = bureaucrats
+				value = medium_radicals
+			}
+		}
+		scope:relevant_lobby_member = {
+			add_modifier = {
+				name = lobby_member_approval_gained
+				days = normal_modifier_time
+			}
+		}
+	}
+}
+
+# Advancement in Medicine
+
+lobby_events.57 = {
+	type = country_event
+	placement = root
+	title = lobby_events.57.t
+	desc = lobby_events.57.d
+	flavor = lobby_events.57.f
+
+	event_image = {
+		video = "unspecific_world_fair"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	cooldown = { days = stupidly_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		any_political_lobby = {
+			OR = {
+				is_political_lobby_type = lobby_pro_country
+				is_political_lobby_type = lobby_pro_overlord
+			}
+			OR = {
+				AND = {
+					target = { has_technology_researched = medical_degrees }
+					ROOT = {
+						NOT = { has_technology_researched = medical_degrees }
+						can_research = medical_degrees
+					}
+				}
+				AND = {
+					target = { has_technology_researched = pharmaceuticals }
+					ROOT = {
+						NOT = { has_technology_researched = pharmaceuticals }
+						can_research = pharmaceuticals
+					}
+				}
+				AND = {
+					target = { has_technology_researched = quinine }
+					ROOT = {
+						NOT = { has_technology_researched = quinine }
+						can_research = quinine
+					}
+				}
+				AND = {
+					target = { has_technology_researched = malaria_prevention }
+					ROOT = {
+						NOT = { has_technology_researched = malaria_prevention }
+						can_research = malaria_prevention
+					}
+				}
+				AND = {
+					target = { has_technology_researched = antibiotics }
+					ROOT = {
+						NOT = { has_technology_researched = antibiotics }
+						can_research = antibiotics
+					}
+				}
+			}
+		}
+	}
+
+	immediate = {
+		random_political_lobby = {
+			limit = {
+				OR = {
+					is_political_lobby_type = lobby_pro_country
+					is_political_lobby_type = lobby_pro_overlord
+				}
+				OR = {
+					AND = {
+						target = { has_technology_researched = medical_degrees }
+						ROOT = {
+							NOT = { has_technology_researched = medical_degrees }
+							can_research = medical_degrees
+						}
+					}
+					AND = {
+						target = { has_technology_researched = pharmaceuticals }
+						ROOT = {
+							NOT = { has_technology_researched = pharmaceuticals }
+							can_research = pharmaceuticals
+						}
+					}
+					AND = {
+						target = { has_technology_researched = quinine }
+						ROOT = {
+							NOT = { has_technology_researched = quinine }
+							can_research = quinine
+						}
+					}
+					AND = {
+						target = { has_technology_researched = malaria_prevention }
+						ROOT = {
+							NOT = { has_technology_researched = malaria_prevention }
+							can_research = malaria_prevention
+						}
+					}
+					AND = {
+						target = { has_technology_researched = antibiotics }
+						ROOT = {
+							NOT = { has_technology_researched = antibiotics }
+							can_research = antibiotics
+						}
+					}
+				}
+			}
+			target = {
+				save_scope_as = relevant_lobby_country
+			}
+			save_scope_as = relevant_lobby
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:relevant_lobby }
+	}
+
+	option = { # Build up relationship with relevent_lobby_country
+		name = lobby_events.57.a
+		default_option = yes
+		change_relations = {
+			country = scope:relevant_lobby_country
+			value = 10
+		}
+		scope:relevant_lobby = {
+			change_appeasement = {
+				amount = 3
+				factor = appeasement_lobby_gain
+			}
+		}
+	}
+	option = {
+		name = lobby_events.57.b
+		add_modifier = { # Research tech relevent_lobby_country has
+			name = researching_medical_tech_modifer
+			multiplier = money_amount_multiplier_small
+			days = normal_modifier_time
+		}
+		 if = {
+ 			limit = {
+ 				NOT = { has_technology_researched = medical_degrees }
+ 				can_research = medical_degrees
+ 			}
+ 			add_technology_progress = { progress = 2500 technology = medical_degrees }
+ 		}
+ 		else_if = {
+ 			limit = {
+ 				NOT = { has_technology_researched = pharmaceuticals }
+ 				can_research = pharmaceuticals
+ 			}
+ 			add_technology_progress = { progress = 3500 technology = pharmaceuticals }
+ 		}
+ 		 else_if = {
+ 			limit = {
+ 				NOT = { has_technology_researched = quinine }
+ 				can_research = quinine
+ 			}
+ 			add_technology_progress = { progress = 3500 technology = quinine }
+ 		}
+ 		else_if = {
+ 			limit = {
+ 				NOT = { has_technology_researched = malaria_prevention }
+ 				can_research = malaria_prevention
+ 			}
+ 			add_technology_progress = { progress = 5000 technology = malaria_prevention }
+ 		}
+ 		else_if = {
+ 			limit = {
+ 				NOT = { has_technology_researched = antibiotics }
+ 				can_research = antibiotics
+ 			}
+ 			add_technology_progress = { progress = 5850 technology = antibiotics }
+ 		}
+	}
+}
+
+# Gifts Among Friends
+
+lobby_events.58 = {
+	type = country_event
+	placement = root
+	title = lobby_events.58.t
+	desc = lobby_events.58.d
+	flavor = lobby_events.58.f
+
+	event_image = {
+		video = "ep1_power_blocs"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		government_legitimacy < 75
+		any_scope_state = {
+			is_capital = yes
+		}
+		any_political_lobby = { # Any lobby type
+			any_lobby_member = {
+				leader = {
+					is_ruler_of_own_country = no
+					is_busy = no
+				}
+			}
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				is_capital = yes
+			}
+			save_scope_as = relevant_state
+		}
+		random_political_lobby = {
+			limit = {
+				any_lobby_member = {
+					leader = {
+						is_ruler_of_own_country = no
+						is_busy = no
+					}
+				}
+			}
+			random_lobby_member = {
+				limit = {
+					leader = {
+						is_ruler_of_own_country = no
+						is_busy = no
+					}
+				}
+				save_scope_as = relevant_lobby_member
+				leader = {
+					save_scope_as = relevant_lobby_leader
+				}
+			}
+			target ={
+				save_scope_as = relevant_lobby_country
+			}
+			save_scope_as = relevant_lobby
+		}
+	}
+
+	cancellation_trigger = {
+		OR = {
+			NOT = { exists = scope:relevant_lobby }
+			scope:relevant_lobby_leader = {
+				is_character_alive = no
+			}
+		}
+	}
+
+	option = { # Suggest lobbyists exercise caution in the future
+		name = lobby_events.58.a
+		default_option = yes
+		add_loyalists = {
+			value = medium_radicals
+			interest_group = scope:relevant_lobby_member
+		}
+	}
+	option = { # Lobby member leader steps down
+		name = lobby_events.58.b
+		trigger = {
+			scope:relevant_lobby_leader ={
+				is_immortal = no
+			}
+		}
+		custom_tooltip = {
+			text = lobby_member_resigns
+			scope:relevant_lobby_leader = {
+				retire_character = yes
+			}
+		}
+		add_modifier = {
+			name = lobbyists_in_check
+			days = normal_modifier_time
+		}
+	}
+}
+
+# Lobbyist Lectures in Capital
+
+lobby_events.59 = {
+	type = country_event
+	placement = root
+	title = lobby_events.59.t
+	desc = lobby_events.59.d
+	flavor = lobby_events.59.f
+
+	event_image = {
+		video = "southamerica_election"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_default.dds"
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		has_technology_researched = mass_communication
+		NOT = {
+			OR = {
+				has_law_or_variant = law_type:law_elder_council
+				has_law_or_variant = law_type:law_anarchy
+				has_law_or_variant = law_type:law_autocracy
+			}
+		}
+		any_scope_state = {
+			is_capital = yes
+		}
+		any_political_lobby = {
+			any_lobby_member = {
+				ig_counts_as_marginal = no
+			}
+		}
+	}
+
+	immediate = {
+		random_scope_state = {
+			limit = {
+				is_capital = yes
+			}
+			save_scope_as = relevant_state
+		}
+		random_political_lobby = {
+			random_lobby_member = {
+				limit = {
+					ig_counts_as_marginal = no
+				}
+				save_scope_as = relevant_lobby_member
+			}
+			target = {
+				save_scope_as = relevant_lobby_country
+			}
+			save_scope_as = relevant_lobby
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:relevant_lobby }
+	}
+
+	option = { # Challenge the lobbyists about this
+		name = lobby_events.59.a
+		default_option = yes
+		scope:relevant_lobby_member = {
+			add_modifier = {
+				name = lobby_member_pol_str_negative
+				days = normal_modifier_time
+
+			}
+		}
+		add_modifier = {
+			name = lobbyists_in_check
+			days = normal_modifier_time
+		}
+	}
+	option = { # Let the behavior stick
+		name = lobby_events.59.b
+		scope:relevant_lobby_member = {
+			add_modifier = {
+				name = lobby_member_pol_str_positive
+				days = normal_modifier_time
+
+			}
+		}
+	}
+}
+
+# Accidental Good Press for Anti-Lobby Country
+
+lobby_events.60 = {
+	type = country_event
+	placement = root
+	title = lobby_events.60.t
+	desc = lobby_events.60.d
+	flavor = lobby_events.60.f
+
+	event_image = {
+		video = "ep1_printing_press"
+	}
+
+	on_created_soundeffect = "event:/SFX/UI/Alerts/event_appear"
+
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	duration = 3
+
+	cooldown = { days = very_long_modifier_time }
+
+	trigger = {
+		has_dlc_feature = lobbies
+		is_revolutionary = no
+		has_technology_researched = mass_communication
+		any_political_lobby = {
+			OR = {
+				is_political_lobby_type = lobby_anti_country
+				is_political_lobby_type = lobby_anti_overlord
+			}
+			any_lobby_member = {
+				leader = {
+					is_ruler_of_own_country = no
+				}
+				count >= 2
+			}
+			target = { relations:root <= relations_threshold:poor }
+		}
+	}
+
+	immediate = {
+		random_political_lobby = {
+			limit ={
+				OR = {
+					is_political_lobby_type = lobby_anti_country
+					is_political_lobby_type = lobby_anti_overlord
+				}
+				any_lobby_member = {
+					leader = {
+						is_ruler_of_own_country = no
+					}
+					count >= 2
+				}
+				target = { relations:root <= relations_threshold:poor }
+			}
+			save_scope_as = relevant_lobby
+			random_lobby_member = {
+				save_scope_as = relevant_lobby_member
+			}
+			target = {
+				save_scope_as = relevant_lobby_country
+			}
+		}
+	}
+
+	cancellation_trigger = {
+		NOT = { exists = scope:relevant_lobby }
+	}
+
+	option = { # Let the good press about relevant_lobby_country circulate
+		name = lobby_events.60.a
+		default_option = yes
+		scope:relevant_lobby = {
+			change_appeasement = {
+				amount = -1
+				factor = appeasement_lobby_loss
+			}
+		}
+		change_relations = {
+			country = scope:relevant_lobby_country
+			value = 10
+		}
+	}
+	option = { # Remove the story from circulation
+		name = lobby_events.60.b
+		add_loyalists = {
+			value = medium_radicals
+			interest_group = scope:relevant_lobby_member
+		}
+	}
+}

@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>BPM Interest Group Trait Viewer</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161923;
+    --panel-2: #1d2130;
+    --border: #2a2f42;
+    --text: #e7e9f0;
+    --text-dim: #9aa0b4;
+    --text-faint: #666c82;
+    --accent: #7c9eff;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    --c-gov: #6366f1;
+    --c-exe: #8b5cf6;
+    --c-dop: #ec4899;
+    --c-sta: #f43f5e;
+    --c-eco: #f59e0b;
+    --c-wel: #10b981;
+    --c-cit: #14b8a6;
+    --c-rel: #0ea5e9;
+    --c-mil: #ef4444;
+    --c-fem: #d946ef;
+    --c-ban: #94a3b8;
+    --c-vanilla: #a3a3a3;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ---------- sidebar ---------- */
+
+  #sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #sidebar-header {
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  #sidebar-header h1 {
+    font-size: 14px;
+    margin: 0 0 2px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  #sidebar-header .sub {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  #search {
+    margin: 10px 14px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: var(--sans);
+  }
+  #search:focus { outline: 1px solid var(--accent); }
+
+  #trait-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0 8px 16px;
+  }
+
+  .cat-group { margin-bottom: 2px; }
+
+  .cat-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 6px;
+    cursor: pointer;
+    border-radius: 6px;
+    user-select: none;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-dim);
+  }
+  .cat-head:hover { background: var(--panel-2); }
+  .cat-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .cat-count { margin-left: auto; color: var(--text-faint); font-weight: 400; font-size: 11px; }
+  .cat-caret { width: 10px; color: var(--text-faint); transition: transform .12s; font-size: 10px; }
+  .cat-group.collapsed .cat-caret { transform: rotate(-90deg); }
+  .cat-group.collapsed .cat-traits { display: none; }
+
+  .cat-traits { padding: 2px 0 6px 6px; }
+
+  .trait-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 8px 5px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .trait-btn:hover { background: var(--panel-2); color: var(--text); }
+  .trait-btn.active {
+    background: rgba(124, 158, 255, 0.15);
+    color: var(--text);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .trait-btn.empty { opacity: 0.45; }
+
+  .no-match { padding: 10px 12px; color: var(--text-faint); font-size: 12px; }
+
+  /* ---------- main ---------- */
+
+  #main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 40px 80px;
+  }
+
+  #empty-state {
+    color: var(--text-faint);
+    font-size: 14px;
+    margin-top: 60px;
+    text-align: center;
+  }
+
+  #trait-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+
+  #trait-header h2 {
+    font-family: var(--mono);
+    font-size: 20px;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .cat-badge {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #0f1115;
+  }
+
+  #trait-sub {
+    color: var(--text-faint);
+    font-size: 12px;
+    margin-bottom: 26px;
+  }
+
+  #tree {
+    max-width: 900px;
+  }
+
+  .empty-body {
+    color: var(--text-faint);
+    font-size: 13px;
+    font-style: italic;
+    padding: 6px 0;
+  }
+
+  /* branch (if / else if / else) */
+  .branch {
+    border-left: 2px solid var(--border);
+    margin: 10px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+  .branch.type-if { border-left-color: #5b7fdb; }
+  .branch.type-else_if { border-left-color: #7a8ab8; }
+  .branch.type-else { border-left-color: #55597a; }
+
+  .branch-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .branch-tag {
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+  }
+  .branch-tag.if, .branch-tag.else_if { background: rgba(91,127,219,0.18); color: #9db3f0; }
+  .branch-tag.else { background: rgba(85,89,122,0.25); color: #b6bad8; }
+
+  .condition {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  .cond-list { list-style: none; margin: 0; padding-left: 16px; }
+  .cond-list.top { padding-left: 0; }
+  .cond-list li { position: relative; padding: 1px 0; }
+  .cond-leaf .k { color: #d6a8ff; }
+  .cond-leaf .op { color: var(--text-faint); }
+  .cond-leaf .v { color: #8fd3a8; }
+  .cond-op-label {
+    color: #ffb454;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+  }
+  .cond-key-label { color: #7aa2f7; }
+
+  .branch-body { margin-top: 4px; }
+
+  /* outcome rows */
+  .outcome-row { margin: 6px 0; }
+
+  .ideology-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 5px 11px;
+    border-radius: 7px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+  }
+  .ideology-pill .type-chip {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: #0f1115;
+  }
+  .ideology-pill .arrow { color: var(--text-faint); }
+  .ideology-pill .name { color: #fff; font-weight: 600; }
+
+  .traitref-row {
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+  .traitref-link {
+    background: none;
+    border: 1px dashed #4a5170;
+    color: #a9b6e6;
+    border-radius: 6px;
+    padding: 4px 9px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+  .traitref-link:hover { border-color: var(--accent); color: var(--text); }
+  .traitref-link.unknown { cursor: default; border-style: dotted; opacity: 0.7; }
+  .traitref-params { color: var(--text-faint); margin-left: 6px; }
+
+  .raw-row {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+  .raw-row .k { color: #c9ccd8; }
+
+  a.jump-hint { color: var(--text-faint); font-size: 11px; }
+
+  #footer-note {
+    margin-top: 50px;
+    color: var(--text-faint);
+    font-size: 11px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    max-width: 900px;
+  }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h1>BPM Trait Viewer</h1>
+    <div class="sub">bpm_aa_interest_group_traits.txt</div>
+  </div>
+  <input id="search" type="text" placeholder="Filter traits…" autocomplete="off" />
+  <div id="trait-list"></div>
+</div>
+
+<div id="main">
+  <div id="empty-state">Select a trait on the left to see its condition → ideology breakdown.</div>
+  <div id="trait-header" style="display:none"></div>
+  <div id="trait-sub" style="display:none"></div>
+  <div id="tree"></div>
+</div>
+
+<script>
+const DATA = __TRAITS_DATA__;
+
+const CAT_LABELS = {
+  gov: "Government", exe: "Executive", dop: "Distribution of Power", sta: "State",
+  eco: "Economy", wel: "Welfare", cit: "Citizenship", rel: "Religion",
+  mil: "Military", fem: "Feminism", ban: "Banned", vanilla: "Vanilla",
+};
+
+function catColor(cat) {
+  return `var(--c-${cat})`;
+}
+
+// ---------------------------------------------------------------- sidebar
+
+const listEl = document.getElementById('trait-list');
+const searchEl = document.getElementById('search');
+let activeTrait = null;
+
+function buildSidebar(filterText) {
+  listEl.innerHTML = '';
+  const q = (filterText || '').trim().toLowerCase();
+  let anyMatch = false;
+
+  DATA.categoryOrder.forEach(cat => {
+    const names = DATA.categories[cat] || [];
+    const filtered = q ? names.filter(n => n.toLowerCase().includes(q)) : names;
+    if (q && filtered.length === 0) return;
+    anyMatch = true;
+
+    const group = document.createElement('div');
+    group.className = 'cat-group';
+    if (!q && names.length === 0) group.classList.add('collapsed');
+
+    const head = document.createElement('div');
+    head.className = 'cat-head';
+    head.innerHTML = `
+      <span class="cat-caret">▾</span>
+      <span class="cat-dot" style="background:${catColor(cat)}"></span>
+      <span>${cat} · ${CAT_LABELS[cat] || ''}</span>
+      <span class="cat-count">${names.length}</span>
+    `;
+    head.addEventListener('click', () => group.classList.toggle('collapsed'));
+    group.appendChild(head);
+
+    const traitsWrap = document.createElement('div');
+    traitsWrap.className = 'cat-traits';
+    filtered.forEach(fullName => {
+      const t = DATA.traits[fullName];
+      const btn = document.createElement('button');
+      btn.className = 'trait-btn';
+      if (t.items.length === 0) btn.classList.add('empty');
+      if (fullName === activeTrait) btn.classList.add('active');
+      btn.textContent = t.shortName;
+      btn.title = fullName;
+      btn.addEventListener('click', () => selectTrait(fullName));
+      traitsWrap.appendChild(btn);
+    });
+    group.appendChild(traitsWrap);
+    listEl.appendChild(group);
+  });
+
+  if (!anyMatch) {
+    const div = document.createElement('div');
+    div.className = 'no-match';
+    div.textContent = 'No traits match.';
+    listEl.appendChild(div);
+  }
+}
+
+searchEl.addEventListener('input', () => buildSidebar(searchEl.value));
+
+// ---------------------------------------------------------------- condition tree
+
+function renderConditionList(entries, top) {
+  const ul = document.createElement('ul');
+  ul.className = 'cond-list' + (top ? ' top' : '');
+  entries.forEach(e => {
+    const li = document.createElement('li');
+    if (typeof e.v === 'string') {
+      li.className = 'cond-leaf';
+      const opText = e.op === '?=' ? ' ?= ' : ' = ';
+      li.innerHTML = `<span class="k">${escapeHtml(e.k)}</span><span class="op">${opText}</span><span class="v">${escapeHtml(e.v)}</span>`;
+    } else {
+      const isOp = e.k === 'AND' || e.k === 'OR' || e.k === 'NOT';
+      const label = document.createElement('div');
+      label.className = isOp ? 'cond-op-label' : 'cond-key-label';
+      label.textContent = isOp ? e.k : `${e.k}:`;
+      li.appendChild(label);
+      li.appendChild(renderConditionList(e.v, false));
+    }
+    ul.appendChild(li);
+  });
+  return ul;
+}
+
+function renderCondition(condition) {
+  const wrap = document.createElement('div');
+  wrap.className = 'condition';
+  if (!condition || condition.length === 0) {
+    wrap.innerHTML = '<em style="color:var(--text-faint)">— no explicit condition —</em>';
+    return wrap;
+  }
+  wrap.appendChild(renderConditionList(condition, true));
+  return wrap;
+}
+
+// ---------------------------------------------------------------- items tree
+
+function renderRawValue(value) {
+  if (typeof value === 'string') return escapeHtml(value);
+  return null; // block value handled separately
+}
+
+function renderItems(items, container) {
+  if (items.length === 0) {
+    const div = document.createElement('div');
+    div.className = 'empty-body';
+    div.textContent = '(no effect / no ideology set)';
+    container.appendChild(div);
+    return;
+  }
+
+  items.forEach(item => {
+    if (item.kind === 'branch') {
+      const branch = document.createElement('div');
+      branch.className = `branch type-${item.branchType}`;
+
+      const head = document.createElement('div');
+      head.className = 'branch-head';
+      const tag = document.createElement('span');
+      tag.className = `branch-tag ${item.branchType}`;
+      tag.textContent = item.branchType === 'if' ? 'IF' : item.branchType === 'else_if' ? 'ELSE IF' : 'ELSE';
+      head.appendChild(tag);
+      if (item.branchType !== 'else') {
+        head.appendChild(renderCondition(item.condition));
+      }
+      branch.appendChild(head);
+
+      const body = document.createElement('div');
+      body.className = 'branch-body';
+      renderItems(item.items, body);
+      branch.appendChild(body);
+
+      container.appendChild(branch);
+
+    } else if (item.kind === 'ideology') {
+      const row = document.createElement('div');
+      row.className = 'outcome-row';
+      const pill = document.createElement('span');
+      pill.className = 'ideology-pill';
+      pill.innerHTML = `
+        <span class="type-chip" style="background:${catColor(item.ideologyType)}">${escapeHtml(item.ideologyType)}</span>
+        <span class="arrow">→</span>
+        <span class="name">${escapeHtml(item.ideologyName)}</span>
+      `;
+      row.appendChild(pill);
+      container.appendChild(row);
+
+    } else if (item.kind === 'traitref') {
+      const row = document.createElement('div');
+      row.className = 'outcome-row traitref-row';
+      const known = !!DATA.traits[item.trait];
+      const btn = document.createElement('button');
+      btn.className = 'traitref-link' + (known ? '' : ' unknown');
+      btn.textContent = `↳ ${item.trait}`;
+      if (known) {
+        btn.addEventListener('click', () => selectTrait(item.trait));
+      } else {
+        btn.disabled = true;
+        btn.title = 'referenced effect, not a category trait';
+      }
+      row.appendChild(btn);
+      if (item.params && item.params.length) {
+        const p = document.createElement('span');
+        p.className = 'traitref-params';
+        p.textContent = '(' + item.params.filter(pe => typeof pe.v === 'string').map(pe => `${pe.k}=${pe.v}`).join(', ') + ')';
+        row.appendChild(p);
+      } else if (item.scalarValue && item.scalarValue !== 'yes') {
+        const p = document.createElement('span');
+        p.className = 'traitref-params';
+        p.textContent = `= ${item.scalarValue}`;
+        row.appendChild(p);
+      }
+      container.appendChild(row);
+
+    } else if (item.kind === 'raw') {
+      const row = document.createElement('div');
+      row.className = 'outcome-row raw-row';
+      if (typeof item.value === 'string') {
+        row.innerHTML = `<span class="k">${escapeHtml(item.key)}</span> ${item.op === '?=' ? '?=' : '='} ${escapeHtml(item.value)}`;
+      } else {
+        const label = document.createElement('div');
+        label.innerHTML = `<span class="k">${escapeHtml(item.key)}</span>:`;
+        row.appendChild(label);
+        row.appendChild(renderConditionList(item.value, false));
+      }
+      container.appendChild(row);
+    }
+  });
+}
+
+// ---------------------------------------------------------------- selection
+
+function selectTrait(fullName) {
+  activeTrait = fullName;
+  buildSidebar(searchEl.value);
+
+  const t = DATA.traits[fullName];
+  document.getElementById('empty-state').style.display = 'none';
+
+  const header = document.getElementById('trait-header');
+  header.style.display = 'flex';
+  header.innerHTML = `
+    <h2>${escapeHtml(t.name)}</h2>
+    <span class="cat-badge" style="background:${catColor(t.category)}">${t.category}</span>
+  `;
+
+  const sub = document.getElementById('trait-sub');
+  sub.style.display = 'block';
+  sub.textContent = CAT_LABELS[t.category] || '';
+
+  const tree = document.getElementById('tree');
+  tree.innerHTML = '';
+  renderItems(t.items, tree);
+
+  const footer = document.createElement('div');
+  footer.id = 'footer-note';
+  footer.textContent = 'Branches are evaluated top to bottom exactly as in the source file. "↳ trait_name" rows delegate to another trait\'s own condition chain — click to jump there.';
+  tree.appendChild(footer);
+
+  window.scrollTo(0, 0);
+  document.getElementById('main').scrollTo(0, 0);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+buildSidebar('');
+</script>
+
+</body>
+</html>

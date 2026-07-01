@@ -116,9 +116,6 @@ bpm_pick_cabinet_minister = {
                 }
             }
         }
-        scope:ranig.leader ?= {
-            set_variable = bpm_send_to_void_if_not_anchored
-        }
         add_to_variable_list = {
             name = bpm_CAB_char_select_pool
             target = scope:ranig.leader
@@ -137,9 +134,6 @@ bpm_pick_cabinet_minister = {
                     }
                 }
             }
-            scope:ranig.leader ?= {
-                set_variable = bpm_send_to_void_if_not_anchored
-            }
             add_to_variable_list = {
                 name = bpm_CAB_char_select_pool
                 target = scope:ranig.leader
@@ -148,9 +142,6 @@ bpm_pick_cabinet_minister = {
         else = {
             create_character = {
                 interest_group = scope:ranig
-                on_created = {
-                    place_character_in_void = 10000
-                }
                 trait_generation = { }
                 save_scope_as = ranchar
             }
@@ -177,15 +168,7 @@ bpm_clear_hog = {
 
 bpm_set_headofgov_sticky = {
     set_variable = bpm_headofgov_sticky
-    owner = {
-        bpm_clear_hog = yes
-        set_variable = {
-            name = bpm_headofgov
-            value = prev
-        }
-    }
-    add_character_role = bpm_character_role_hog
-    add_career_length = {role = bpm_character_role_hog years = 100}
+    bpm_make_headofgov = yes
 }
 
 bpm_remove_headofgov_sticky = {
@@ -235,9 +218,6 @@ bpm_choose_hog_parlelec = {
             else = {
                 create_character = {
                     interest_group = scope:ranig
-                    on_created = {
-                        place_character_in_void = 10000
-                    }
                     save_scope_as = ranchar
                 }
                 bpm_clear_hog = yes
@@ -261,15 +241,10 @@ bpm_choose_hog_parlelec = {
 
 bpm_make_headofgov = {
     owner = {
+        bpm_clear_hog = yes
         set_variable = {
             name = bpm_headofgov
             value = prev
-        }
-        every_scope_character = {
-            limit = {
-                has_role = bpm_character_role_hog
-            }
-            remove_character_role = bpm_character_role_hog
         }
     }
     add_character_role = bpm_character_role_hog
@@ -303,7 +278,7 @@ bpm_choose_hog = {
         }
         post_notification = bpm_dictatorial_hog_top
         remove_variable = bpm_hog_heir
-        bpm_do_hog_transition = yes
+        bpm_update_hog_heir = yes
     }
     else_if = {
         limit = {
@@ -369,7 +344,7 @@ bpm_choose_hog_others = {
             var:bpm_headofgov ?= {
                 set_variable = bpm_headofgov_sticky
             }
-            bpm_do_hog_transition = yes
+            bpm_update_hog_heir = yes
         }
         else_if = {
             limit = {
@@ -396,11 +371,15 @@ bpm_choose_hog_others = {
     bpm_reload_interim_penalty = yes
 }
 
-bpm_do_hog_transition = {
+bpm_update_hog_heir = {
     if = {
         limit = {
-            var:bpm_hog_heir ?= {
-                NOT = { is_character_alive = yes}
+            has_variable = bpm_hog_heir
+            OR = {
+                NOT = {exists = var:bpm_hog_heir}
+                var:bpm_hog_heir ?= {
+                    is_character_alive = no
+                }
             }
         }
         remove_variable = bpm_hog_heir
@@ -888,7 +867,7 @@ bpm_on_new_hog_dictatorship = {
                 remove_character_role = bpm_character_role_protege
             }
             remove_variable = bpm_hog_heir
-            bpm_do_hog_transition = yes
+            bpm_update_hog_heir = yes
         }
         else_if = {
             limit = {
@@ -907,7 +886,7 @@ bpm_on_new_hog_dictatorship = {
                     bpm_appoint_as_hog = yes
                 }
             }
-            bpm_do_hog_transition = yes
+            bpm_update_hog_heir = yes
         }
     }
 }

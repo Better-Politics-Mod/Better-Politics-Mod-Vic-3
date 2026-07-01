@@ -11,8 +11,86 @@ INJECT:law_canton_system = {
 	}
 }
 
-INJECT:law_sakoku = {
+# Special isolationism variant for Japan, allows TCs to be built only in Dejima
+REPLACE:law_sakoku = {
+	group = lawgroup_trade_policy
+	parent = law_isolationism # Inherits ideological stances from parent
+
+	icon = "gfx/interface/icons/law_icons/sakoku.dds"
+
+	progressiveness = -50
+
+	requires_law_or = {
+		law_traditionalism
+	}
+
+	is_visible = {
+		country_has_primary_culture = cu:japanese
+		any_scope_state = {
+			state_region = s:STATE_KYUSHU
+			is_largest_state_in_region = yes
+		}
+	}
+
 	modifier = {
+		country_authority_mult = 0.25
+		country_influence_mult = -0.50
+		country_tech_spread_mult = -0.20
+		state_trade_capacity_mult = -0.75
+		state_tariff_import_add = 0.50
+		state_tariff_export_add = 0.50
+		state_subvention_export_add = 0.20
+		state_subvention_import_add = 0.20
+		country_leverage_resistance_mult = 0.75
+
+		country_disallow_trade_outside_kyushu_bool = yes
+		state_trade_center_max_limit_add = 5
+		
+		country_disallow_aggressive_plays_bool = yes
 		country_rigidity_baseline_add = 10
+	}
+
+	ai_will_do = {
+		OR = {
+			has_journal_entry = je_sakoku
+			ruler = {
+				OR = {
+					has_ideology = ideology:ideology_traditionalist
+					has_ideology = ideology:ideology_vanguardist
+				}
+			}
+		}
+	}
+
+	on_activate = {
+		if = {
+			limit = {
+				has_game_started = yes
+				NOT = {
+					has_law = law_type:law_closed_borders
+				}
+			}
+			custom_tooltip = internal_controls_strengthened_tt
+			activate_law = law_type:law_closed_borders
+		}
+	}
+
+	on_deactivate = {
+		if = {
+			limit = {
+				has_law = law_type:law_closed_borders
+			}
+			custom_tooltip = internal_controls_relaxed_tt
+			activate_law = law_type:law_migration_controls
+		}
+	}
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+
+		if = {
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
+			add = 750
+		}
 	}
 }

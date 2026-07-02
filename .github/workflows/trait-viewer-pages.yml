@@ -5,6 +5,8 @@ on:
     branches: [main, declarative-ideologies]
     paths:
       - "better-politics-mod/common/scripted_effects/bpm_aa_interest_group_traits.txt"
+      - "better-politics-mod/common/scripted_effects/bpm_aa_interest_group_ideology_setter.txt"
+      - "better-politics-mod/gfx/interface/icons/ig_icons/**"
       - "support-scripts/trait_viewer/**"
   workflow_dispatch:
 
@@ -29,12 +31,19 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Generate viewer
-        run: python3 support-scripts/trait_viewer/parse_traits.py
+      - name: Install ImageMagick (for IG icon conversion)
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+
+      - name: Generate viewers
+        run: |
+          python3 support-scripts/trait_viewer/parse_traits.py
+          python3 support-scripts/trait_viewer/parse_igs.py
 
       - name: Prepare Pages artifact
         run: |
           mkdir -p _site
+          cp support-scripts/trait_viewer/traits_viewer.html _site/traits_viewer.html
+          cp support-scripts/trait_viewer/ig_viewer.html _site/ig_viewer.html
           cp support-scripts/trait_viewer/traits_viewer.html _site/index.html
 
       - name: Upload Pages artifact

@@ -173,19 +173,39 @@ je_bpm_russia_estates = {
 	#	c:RUS = this
 	#}
 
+	# Merged with the former je_bpm_russia_patchwork_governance: the zemstvo/obschina
+	# reforms and the estate abolitions are one interlocked chain (zemstvos gate the
+	# Gorozhane abolition, the obschina gates the Krestyanstvo abolition), so they
+	# now live in a single journal entry with buttons ordered by their dependencies.
 	immediate = {
 		set_variable = je_bpm_russia_estates_peasants_exists
 		set_variable = je_bpm_russia_estates_nobles_exists
 		set_variable = je_bpm_russia_estates_clergy_exists
 		set_variable = je_bpm_russia_estates_burghers_exists
 		set_variable = je_bpm_russia_estates_foreigners_exists
+		set_variable = je_bpm_russia_patchwork_governance_no_zemstvos
+		set_variable = je_bpm_russia_patchwork_governance_no_obschina_reform
+		add_modifier = {
+			name = bpm_russia_ad_hoc_governance
+		}
+		add_modifier = {
+			name = bpm_russia_obschina
+		}
+		bpm_rename_igs = yes
 	}
 
+	# Governance reforms first: they unlock the estate abolitions below
+	scripted_button = je_bpm_russia_patchwork_governance_institute_zemstvos_button
+	scripted_button = je_bpm_russia_patchwork_governance_abolish_zemstvos_button
+	scripted_button = je_bpm_russia_patchwork_governance_abolish_obschina_button
+	scripted_button = je_bpm_russia_patchwork_governance_empower_obschina_button
+	# Estates in dependency order: peasants + burghers gate foreigners, foreigners
+	# gates clergy (without full secularism), and all of them gate the nobles
 	scripted_button = je_bpm_russia_estates_abolish_peasants_button
-	scripted_button = je_bpm_russia_estates_abolish_nobles_button
-	scripted_button = je_bpm_russia_estates_abolish_clergy_button
 	scripted_button = je_bpm_russia_estates_abolish_burghers_button
 	scripted_button = je_bpm_russia_estates_abolish_foreigners_button
+	scripted_button = je_bpm_russia_estates_abolish_clergy_button
+	scripted_button = je_bpm_russia_estates_abolish_nobles_button
 
 	can_deactivate = no
 
@@ -212,6 +232,11 @@ je_bpm_russia_estates = {
 					text = "je_bpm_russia_estates_foreigners_abolished_trigger"
 					NOT = { has_variable = je_bpm_russia_estates_foreigners_exists }
 				}
+				NOT = { has_modifier = bpm_russia_ad_hoc_governance }
+				NOT = { has_modifier = bpm_russia_obschina }
+				NOT = { has_modifier = bpm_russia_obschina_abolished }
+				NOT = { has_modifier = bpm_russia_zemstvos }
+				NOT = { has_modifier = bpm_russia_zemstvos_abolished }
 			}
 			AND = {
 				OR = {
@@ -227,6 +252,7 @@ je_bpm_russia_estates = {
 	on_complete = {
 		hidden_effect = {
 			set_variable = je_bpm_russia_estates_over
+			set_variable = je_bpm_russia_patchwork_governance_over
 		}
 		if = { # Communist Russia abolishes estates
 			limit = { has_law = law_type:law_council_republic }
@@ -251,67 +277,32 @@ je_bpm_russia_estates = {
 				trigger_event = { id = bpm_russia.7 popup = yes	}
 			}
 		}
-	}
-
-	weight = 80
-
-	should_be_pinned_by_default_uninvolved_or_context = yes
-}
-
-je_bpm_russia_patchwork_governance = {
-	icon = "gfx/interface/icons/event_icons/event_map.dds"
-
-	group = je_group_historical_content
-
-	can_revolution_inherit = yes
-
-	#is_shown_when_inactive = {
-	#	c:RUS = this
-	#	NOT = { has_variable = je_bpm_russia_patchwork_governance_over }
-	#}
-	#possible = {
-	#	c:RUS = this
-	#}
-
-	immediate = {
-		set_variable = je_bpm_russia_patchwork_governance_no_zemstvos
-		set_variable = je_bpm_russia_patchwork_governance_no_obschina_reform
-		add_modifier = {
-			name = bpm_russia_ad_hoc_governance
-		}
-		add_modifier = {
-			name = bpm_russia_obschina
-		}
-		bpm_rename_igs = yes
-	}
-
-	scripted_button = je_bpm_russia_patchwork_governance_institute_zemstvos_button
-	scripted_button = je_bpm_russia_patchwork_governance_abolish_zemstvos_button
-	scripted_button = je_bpm_russia_patchwork_governance_abolish_obschina_button
-	scripted_button = je_bpm_russia_patchwork_governance_empower_obschina_button
-
-	can_deactivate = no
-
-	complete = {
-		OR = {
-			AND = {
-				NOT = { has_modifier = bpm_russia_ad_hoc_governance }
-				NOT = { has_modifier = bpm_russia_obschina }
-				NOT = { has_modifier = bpm_russia_obschina_abolished }
-				NOT = { has_modifier = bpm_russia_zemstvos }
-				NOT = { has_modifier = bpm_russia_zemstvos_abolished }
-			}
-			has_law = law_type:law_council_republic
-		}
-	}
-
-	on_complete = {
-		hidden_effect = {
-			set_variable = je_bpm_russia_patchwork_governance_over
-		}
+		# Governance resolution (from the former patchwork governance JE)
 		if = { # Radical changes (option to empower obschina if it's not removed yet)
 			limit = { has_law = law_type:law_council_republic }
 			trigger_event = { id = bpm_russia.8 popup = yes	}
+		} else_if = { # Completed via the liberal-republic shortcut with governance reforms
+			# unfinished: same cleanup as bpm_russia.8 without the council-republic popup
+			limit = {
+				OR = {
+					has_modifier = bpm_russia_ad_hoc_governance
+					has_modifier = bpm_russia_obschina
+					has_modifier = bpm_russia_obschina_abolished
+					has_modifier = bpm_russia_zemstvos
+					has_modifier = bpm_russia_zemstvos_abolished
+				}
+			}
+			add_modifier = {
+				name = bpm_russia_rapid_bureaucratic_modernization
+				years = 3
+				multiplier = bpm_russia_rapid_bureaucratic_modernization_severity
+				is_decaying = yes
+			}
+			remove_modifier = bpm_russia_ad_hoc_governance
+			remove_modifier = bpm_russia_obschina
+			remove_modifier = bpm_russia_obschina_abolished
+			remove_modifier = bpm_russia_zemstvos
+			remove_modifier = bpm_russia_zemstvos_abolished
 		} else = { # Normal completion
 			trigger_event = { id = bpm_russia.9 popup = yes	}
 		}

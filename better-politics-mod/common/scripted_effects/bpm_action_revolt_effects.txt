@@ -1,4 +1,367 @@
-﻿bpm_nation_at_crossroads = {
+﻿# preparation phase
+# this = action
+# scope:country
+# scope:movement
+bpm_action_revolt_on_monthly = {
+	bpm_shrink_or_grow_in_states = yes
+}
+
+bpm_shrink_or_grow_in_states = {
+	if = {
+		limit = {
+			any_scope_state = {
+				is_key_in_variable_map = {
+					name = bpm_revcells
+					target = scope:movement
+				}
+			}
+		}
+		every_scope_state = {
+			limit = {
+				is_key_in_variable_map = {
+					name = bpm_revcells
+					target = scope:movement
+				}
+			}
+			bpm_increase_or_shrink_cell_level = yes
+		}
+	}
+	else = {
+		update_variable_map_value = {
+			name = bpm_revolt_progress
+			key = scope:movement
+			value = 0
+		}
+		random_scope_state = {
+			limit = {
+				turmoil >= 0.25
+				NOT = {
+					is_target_in_variable_list = {
+						name = bpm_revcell_recently_subsided
+						target = scope:movement
+					}
+				}
+				NOT = {
+					owner = {
+						is_target_in_variable_list = {
+							name = bpm_revcell_recently_subsided
+							target = scope:movement
+						}					
+					}
+				}
+			}
+			bpm_increase_cell_level = yes
+		}
+	}
+}
+
+# I'm here !
+
+bpm_remove_revcell = {
+	remove_modifier = bpm_revcell_$front$_$lvl$
+	remove_variable = bpm_revcell_$front$
+}
+
+bpm_add_revcell = {
+	add_modifier = bpm_revcell_$front$_$lvl$
+	set_variable = bpm_revcell_$front$
+}
+
+bpm_increase_cell_level_spillover = {
+	if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv1
+		}
+		bpm_remove_revcell = { front = $front$ lvl = lv1 }
+		bpm_add_revcell = { front = $front$ lvl = lv2 }
+	}
+	else_if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv2
+		}
+		bpm_remove_revcell = { front = $front$ lvl = lv2 }
+		bpm_add_revcell = { front = $front$ lvl = lv3 }
+	}
+	else_if = {
+		limit = {
+			NOR = {
+				has_modifier = bpm_revcell_$front$_lv1
+				has_modifier = bpm_revcell_$front$_lv2
+				has_modifier = bpm_revcell_$front$_lv3
+			}
+		}
+		bpm_add_revcell = { front = $front$ lvl = lv1 }
+	}
+	save_scope_as = spillover_state
+	post_notification = bpm_revolution_spillover
+}
+
+bpm_increase_cell_level = {
+	set_local_variable = {
+		name = saved_front
+		value = flag:bpm_front_$front$_name
+	}
+	save_scope_as = starting_state
+	if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv1
+		}
+		bpm_remove_revcell = { front = $front$ lvl = lv1 }
+		bpm_add_revcell = { front = $front$ lvl = lv2 }
+		post_notification = bpm_revolution_grows
+	}
+	else_if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv2
+		}
+		bpm_remove_revcell = { front = $front$ lvl = lv2 }
+		bpm_add_revcell = { front = $front$ lvl = lv3 }
+		post_notification = bpm_revolution_grows
+	}
+	else_if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv3
+			any_neighbouring_state = {
+				turmoil > 0.25
+				NOT = {
+					has_modifier = bpm_revcell_$front$_lv3
+				}
+			}
+		}
+		random_neighbouring_state = {
+			limit = {
+				turmoil > 0.25
+				NOT = {
+					has_modifier = bpm_revcell_$front$_lv3
+				}
+			}
+			bpm_increase_cell_level_spillover = {front = $front$}
+		}
+	}
+	else_if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv3
+			is_coastal = yes
+			market = {
+				any_scope_country = {
+					any_scope_state = {
+						turmoil > 0.25
+						NOT = {
+							has_modifier = bpm_revcell_$front$_lv3
+						}
+					}
+				}
+			}
+		}
+		market = {
+			random_scope_country = {
+				random_scope_state = {
+					limit = {
+						turmoil > 0.25
+						NOT = {
+							has_modifier = bpm_revcell_$front$_lv3
+						}
+					}
+					bpm_increase_cell_level_spillover = {front = $front$}
+				}
+			}
+		}
+	}
+	else_if = {
+		limit = {
+			NOR = {
+				has_modifier = bpm_revcell_$front$_lv1
+				has_modifier = bpm_revcell_$front$_lv2
+				has_modifier = bpm_revcell_$front$_lv3
+			}
+		}
+		bpm_add_revcell = { front = $front$ lvl = lv1 }
+		post_notification = bpm_revolution_appears
+	}
+}
+
+bpm_reduce_cell_level = {
+	set_local_variable = {
+		name = saved_front
+		value = flag:bpm_front_$front$_name
+	}
+	save_scope_as = starting_state
+	if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv3
+		}
+		bpm_remove_revcell = { front = $front$ lvl = lv3 }
+		bpm_add_revcell = { front = $front$ lvl = lv2 }
+	}
+	else_if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv2
+		}
+		bpm_remove_revcell = { front = $front$ lvl = lv2 }
+		bpm_add_revcell = { front = $front$ lvl = lv1 }
+	}
+	else_if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv1
+		}
+		bpm_remove_revcell = { front = $front$ lvl = lv1 }
+		set_variable = {
+			name = bpm_revcell_$front$_recently_subsided
+			days = 365
+		}
+		owner = {
+			set_variable = {
+				name = bpm_revcell_$front$_recently_subsided
+				days = 180
+			}
+		}
+	}
+	else = {
+		remove_variable = bpm_revcell_$front$
+	}
+}
+
+bpm_destroy_all_cells = {
+	remove_modifier = bpm_revcell_$front$_lv1
+	remove_modifier = bpm_revcell_$front$_lv2
+	remove_modifier = bpm_revcell_$front$_lv3
+	remove_variable = bpm_revcell_$front$
+}
+
+bpm_increase_or_shrink_tt = {
+	flag:bpm_front_$front$ = {
+		save_scope_as = selected_front_name
+	}
+	remove_variable = bpm_shrinkmarker_$front$
+	remove_variable = bpm_growmarker_$front$
+	random_list = {
+		0 = {
+			modifier = {
+				# static for now
+				add = 2
+			}
+			set_variable = bpm_shrinkmarker_$front$
+			custom_tooltip = "bpm_cell_shrinks"
+		}
+		0 = {
+			modifier = {
+				add = owner.modifier:country_bpm_revolution_progress_threshold_add
+			}
+			set_variable = bpm_growmarker_$front$
+			custom_tooltip = "bpm_cell_grows"
+		}
+		5 = {
+			custom_tooltip = "bpm_cell_stays"
+		}
+	}
+}
+
+bpm_increase_or_shrink_cell_level = {
+	flag:bpm_front_$front$ = {
+		save_scope_as = selected_front_name
+	}
+
+	bpm_increase_or_shrink_tt = { front = $front$ }
+
+	if = {
+		limit = {
+			NOT = {
+				has_variable = bpm_revcell_$front$_progress
+			}
+		}
+		set_variable = {
+			name = bpm_revcell_$front$_progress
+			value = 2
+		}
+	}
+	else_if = {
+		limit = {
+			# below 25% turmoil it will go away
+			OR = {
+				has_variable = bpm_shrinkmarker_$front$
+				turmoil < 0.25
+			}
+		}
+		change_variable = {
+			name = bpm_revcell_$front$_progress
+			subtract = 1
+		}
+		#bpm_reduce_cell_level = { front = $front$ }
+		set_local_variable = bpm_shrinking
+	}
+	else_if = {
+		limit = {
+			has_variable = bpm_growmarker_$front$
+		}
+		change_variable = {
+			name = bpm_revcell_$front$_progress
+			add = 1
+		}
+		#bpm_increase_cell_level = { front = $front$ }
+		set_local_variable = bpm_growing
+	}
+	#==
+	if = {
+		limit = {
+			var:bpm_revcell_$front$_progress <= 0
+		}
+		set_variable = {
+			name = bpm_revcell_$front$_progress
+			value = 2
+		}
+		bpm_reduce_cell_level = { front = $front$ }
+	}
+	else_if = {
+		limit = {
+			var:bpm_revcell_$front$_progress >= 3
+		}
+		set_variable = {
+			name = bpm_revcell_$front$_progress
+			value = 2
+		}
+		bpm_increase_cell_level = { front = $front$ }
+	}
+}
+
+bpm_cache_size_level = {
+	if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv1
+		}
+		set_variable = {
+			name = bpm_front_$front$_current_cell_level
+			value = 1
+		}
+	}
+	else_if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv2
+		}
+		set_variable = {
+			name = bpm_front_$front$_current_cell_level
+			value = 2
+		}
+	}
+	else_if = {
+		limit = {
+			has_modifier = bpm_revcell_$front$_lv3
+		}
+		set_variable = {
+			name = bpm_front_$front$_current_cell_level
+			value = 3
+		}
+	}
+	else = {
+		set_variable = {
+			name = bpm_front_$front$_current_cell_level
+			value = 0
+		}
+	}
+}
+
+
+# execution phase
+bpm_nation_at_crossroads = {
 	# There are many options for what can happen here
 	# - Coup/March on the capital
 	# - Civil War
@@ -48,7 +411,6 @@ bpm_front_crossroads_happened = {
 		}
 	}
 }
-
 
 bpm_front_revolution_victorious = {
 	set_variable = {

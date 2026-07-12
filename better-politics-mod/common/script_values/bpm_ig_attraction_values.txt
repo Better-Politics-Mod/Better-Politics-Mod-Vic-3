@@ -166,17 +166,45 @@ ig_attraction_to_interests_from_stability = {
 }
 
 ig_attraction_to_ruler_ideology_from_stability = {
+	owner = {
+		if = {
+			limit = {has_law_or_variant = law_type:law_answers_to_legislature}
+			if = {
+				limit = {has_variable = bpm_acting_hog}
+				var:bpm_acting_hog ?= {
+					save_temporary_scope_as = ruler
+				}
+			}
+			else = {
+				var:bpm_headofgov ?= {
+					save_temporary_scope_as = ruler
+				}
+			}
+		}
+		else = {
+			if = {
+				limit = {has_variable = bpm_regent}
+				var:bpm_regent ?= {
+					save_temporary_scope_as = ruler
+				}
+			}
+			else = {
+				ruler ?= {
+					save_temporary_scope_as = ruler
+				}
+			}
+		}
+	}
 	desc = "BPM_RULER_IDEOLOGY_FROM_STABILITY"
 	add = {
 		if = {
 			limit = {
 				owner = {
-					has_variable = bpm_ruler_char
-					exists = var:bpm_ruler_char
-					var:bpm_ruler_char.interest_group = scope:interest_group
+					exists = scope:ruler
+					scope:ruler.interest_group ?= scope:interest_group
 					has_variable = bpm_political_stability
 					var:bpm_political_stability > 50
-					bpm_country_laws_no_voting = yes
+					country_has_voting_franchise = no
 				}
 			}
 			add = owner.var:bpm_political_stability
@@ -520,16 +548,44 @@ bpm_ig_agitator_popularity = {
 }
 
 bpm_ig_ruler_popularity = {
+	owner = {
+		if = {
+			limit = {has_law_or_variant = law_type:law_answers_to_legislature}
+			if = {
+				limit = {has_variable = bpm_acting_hog}
+				var:bpm_acting_hog ?= {
+					save_temporary_scope_as = ruler
+				}
+			}
+			else = {
+				var:bpm_headofgov ?= {
+					save_temporary_scope_as = ruler
+				}
+			}
+		}
+		else = {
+			if = {
+				limit = {has_variable = bpm_regent}
+				var:bpm_regent ?= {
+					save_temporary_scope_as = ruler
+				}
+			}
+			else = {
+				ruler ?= {
+					save_temporary_scope_as = ruler
+				}
+			}
+		}
+	}
 	desc = "BPM_POP_FROM_RULER_POPULARITY"
 	if = {
 		limit = { 
 			owner = { 
-				has_variable = bpm_ruler_char
-				exists = var:bpm_ruler_char
-				var:bpm_ruler_char.interest_group = scope:interest_group
+				exists = scope:ruler
+				scope:ruler.interest_group ?= scope:interest_group
 			 }
 		}
-		owner.var:bpm_ruler_char = {
+		scope:ruler = {
 			value = popularity
 			multiply = 0.005
 			add = 1
@@ -538,5 +594,107 @@ bpm_ig_ruler_popularity = {
 	}
 	else = {
 		value = 1.0
+	}
+}
+
+bpm_ig_monarch_weight = {
+	value = 1
+	if = {
+		limit = {
+			is_powerful = yes
+		}
+		multiply = {
+			value = 2
+		}
+	}
+	if = {
+		limit = {
+			OR = {
+				bpm_ig_is_institutional = no
+				is_interest_group_type = ig_trade_unions
+			}
+			
+		}
+		multiply = 0.5
+	}
+
+
+	# Factors which cannot stack (priority for more impactful factors)
+	if = {
+		limit = {
+			OR = {
+				bpm_ig_is_radical_opposition = yes
+				bpm_ig_is_very_radical_opposition = yes
+			}
+		}
+		multiply = 0.005 # tiny chance of funny, as a treat
+	}
+	else_if = {
+		limit = {
+			OR = {
+				law_stance = {
+					law = law_type:law_monarchy
+					value < neutral
+				}
+				AND = {
+					owner = {
+						bpm_country_laws_are_very_undemocratic = yes
+					}
+					bpm_ig_is_democrat = yes
+				}
+			}
+		}
+		multiply = 0.01
+	}
+	else_if = {
+		limit = {
+			owner = {
+				OR = {
+					bpm_country_laws_are_very_undemocratic = yes
+					bpm_country_laws_are_moderately_undemocratic = yes
+				}
+			}
+			bpm_ig_is_left_wing = yes
+		}
+		multiply = 0.05
+	}
+	else_if = {
+		limit = {
+			owner = {
+				has_law_or_variant = law_type:law_state_atheism
+			}
+			bpm_ig_is_religious = yes
+		}
+		multiply = 0.05
+	}
+	else_if = {
+		limit = {
+			bpm_ig_is_left_wing = yes
+		}
+		multiply = 0.1
+	}
+	else_if = {
+		limit = {
+			owner = {
+				bpm_country_is_pre_modern_absolutist = yes
+			}
+			bpm_ig_is_traditionalist = yes
+		}
+		multiply = 5
+	}
+	else_if = {
+		limit = {
+			owner = {
+				has_law_or_variant = law_type:law_organic_democracy
+			}
+			bpm_ig_is_organic_democrat = yes
+		}
+		multiply = 2
+	}
+	if = {
+		limit = {
+			bpm_interest_group_is_activated = no
+		}
+		multiply = 0
 	}
 }

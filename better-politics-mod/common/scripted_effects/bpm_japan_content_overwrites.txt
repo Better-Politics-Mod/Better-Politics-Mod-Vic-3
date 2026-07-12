@@ -121,7 +121,7 @@
 		}
 		if = {
 			limit = {
-				has_law_or_variant = law_type:law_answers_to_legislature
+				has_law = law_type:law_bakufu
 			}
 			trigger_event = { id = ep2_meiji.41 popup = yes }
 		}
@@ -141,7 +141,7 @@
 		scope:target ?= {
 			if = {
 				limit = {
-					has_law = law_type:law_peasant_levies
+					NOT = {has_law = law_type:law_warrior_caste}
 				}
 				activate_law = law_type:law_warrior_caste
 			}
@@ -506,3 +506,81 @@ REPLACE:character_japan_imperial_succession_chain_effect = {
 }
 
 REPLACE:character_appoint_new_shogun_when_no_heir = {}
+
+REPLACE:country_ezo_setup = {
+	custom_tooltip = {
+		text = establish_ezo_republic_tt
+		every_scope_character = {
+			limit = {
+				has_variable = tokugawa_exile
+			}
+			transfer_character = c:EZO
+		}
+		s:STATE_HOKKAIDO ?= {
+			random_scope_state = {
+				limit = {
+					owner ?= scope:tokugawa_scope
+				}
+				set_state_owner = c:EZO
+			}
+		}
+		c:EZO ?= {
+			copy_laws = scope:tokugawa_scope
+			activate_law = law_type:law_presidential_republic
+			hidden_effect = { 
+				activate_law = law_type:law_intermediate_edo_system
+				activate_law = law_type:law_no_separate_hog
+				activate_law = law_type:law_warrior_caste
+				activate_law = law_type:law_military_junta
+				random_active_law = {
+					limit = {
+						type = law_type:law_military_junta
+					}
+					add_amendment = {
+						type = bpm_amendment_samurai_democracy
+						sponsor = prev.ig:ig_armed_forces
+					}
+				}
+			}
+			scope:tokugawa_exile_leader_scope ?= {
+				set_character_as_ruler = yes
+			}
+			generate_ezo_military = yes
+			hidden_effect = {
+				clear_ownership_transfer_fleet = yes
+			}
+		}
+	}
+	c:EZO ?= {
+		call_election = {
+			months = 1
+		}
+		remove_primary_culture = cu:ainu
+		set_state_religion = c:JAP.religion
+		set_variable = ezo_republic_var
+		set_social_hierarchy = edo_system
+		capital ?= {
+			STATE_HOKKAIDO_state_name_assign = yes
+		}
+	}
+}
+
+REPLACE:on_new_ruler_japan_effect = {
+	if = {
+		limit = {
+			has_variable = house_yamato
+		}
+		save_temporary_scope_as = emperor_to_be_scope
+		c:JAP ?= {
+			set_variable = { name = emperor_var value = scope:emperor_to_be_scope }
+		}
+		if = {
+			limit = {
+				NOT = {
+					has_trait = special_character_japanese_emperor
+				}
+			}
+			add_trait = special_character_japanese_emperor
+		}
+	}
+}

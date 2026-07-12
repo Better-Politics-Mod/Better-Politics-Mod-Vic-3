@@ -159,6 +159,72 @@ bpm_appoint_minfor_effect = {
 			bpm_update_government_and_opposition = yes
 		}
 	}
+	# Appointing a Minister of Foreign Affairs
+    # This will affect lobbies and current forpol laws
+    if = {
+        limit = {
+            owner = { has_institution = institution_diplomacy }
+        }
+
+        # Law Change (If permitted by laws)
+        if = {
+            limit = { 
+				owner = {
+					modifier:country_bpm_forpol_minister_appointment_switches_law = yes
+					is_player = yes
+				}
+			}
+
+            if = { # Fash
+                limit = {
+                    OR = {
+                        bpm_leader_is_fascist = yes
+                        interest_group = {
+                            law_stance = {
+                                law = law_type:law_ultramilitarism
+                                value = strongly_approve
+                            }
+                        }
+                    }
+                }
+                owner = { activate_law = law_type:law_ultramilitarism }
+            } else_if = { # Hawk (2A)
+                limit = {
+                    OR = {
+                        bpm_leader_is_hawkish = yes
+                        AND = {
+                            bpm_leader_is_doveish = no
+                            interest_group = {
+                                law_stance = {
+                                    law = law_type:law_jingoism
+                                    value >= approve
+                                }
+                            }
+                        }
+                    }
+                } 
+                owner = { activate_law = law_type:law_jingoism }
+            } else_if = { # Dove
+                limit = {
+                    OR = {
+                        bpm_leader_is_doveish = yes
+                        AND = {
+                            bpm_leader_is_hawkish = no
+                            interest_group = {
+                                law_stance = {
+                                    law = law_type:law_dove_politics
+                                    value >= approve
+                                }
+                            }
+                        }
+                    }
+                }
+                owner = { activate_law = law_type:law_dove_politics }
+            } else = { # Everyone else makes policy flexible
+                owner = { activate_law = law_type:law_flexible_foreign_policy }
+            }
+        }
+    }
 }
 
 bpm_fire_mineco_effect = {
@@ -292,6 +358,23 @@ bpm_auto_cabinet_appoint_subp = {
 				}
 			}
 			set_variable = bpm_used_locked_for_$m$
+			if = {
+				limit = {
+					NOT = {
+						has_local_variable = bpm_$m$appt_candidate
+					}
+				}
+				create_character = {
+					interest_group = var:$m$_locked_to
+            		save_scope_as = bpm_selchar
+				}
+				scope:bpm_selchar = {
+					set_local_variable = {
+						name = bpm_$m$appt_candidate
+						value = this
+					}
+				}
+			}
 		}
 		else_if = {
 			limit = {
@@ -425,6 +508,52 @@ bpm_auto_cabinet_appoint_subp = {
 			set_variable = { name = bpm_used_char_cre_$m$ value = local_var:bpm_$m$appt_candidate } 
 		}
 
+		if = {
+			limit = {
+				NOT = {
+					has_local_variable = bpm_$m$appt_candidate
+				}
+			}
+			if = {
+				limit = {
+					exists = var:bpm_acting_hog.interest_group
+				}
+				var:bpm_acting_hog.interest_group = {
+					save_scope_as = selig
+				}
+			}
+			else_if = {
+				limit = {
+					exists = var:bpm_headofgov.interest_group
+				}
+				var:bpm_headofgov.interest_group = {
+					save_scope_as = selig
+				}
+			}
+			else_if = {
+				limit = {
+					exists = var:bpm_regent.interest_group
+				}
+				var:bpm_regent.interest_group = {
+					save_scope_as = selig
+				}
+			}
+			else = {
+				ruler.interest_group = {
+					save_scope_as = selig
+				}
+			}
+			create_character = {
+				interest_group = scope:selig
+            	save_scope_as = bpm_selchar
+			}
+			scope:bpm_selchar = {
+				set_local_variable = {
+					name = bpm_$m$appt_candidate
+					value = this
+				}
+			}
+		}
 		set_local_variable = {
 			name = bpm_minname
 			value = flag:$m$
@@ -464,7 +593,7 @@ bpm_auto_cabinet_appoint_pm = {
 				OR = {
 					has_law_or_variant = law_type:law_appointed_by_hos
 					has_law_or_variant = law_type:law_appointed_on_advice 
-					# protege sucession already handled in bpm_do_hog_transition
+					# protege sucession already handled in bpm_update_hog_heir
 				}
 				OR = {
 					NOT = { has_variable = bpm_headofgov }

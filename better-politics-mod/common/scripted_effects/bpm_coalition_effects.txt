@@ -24,7 +24,7 @@ bpm_coalition_and_actions = {
 	every_political_movement = {
 		save_scope_as = movement
 		bpm_movement_select_action = yes
-		clear_saved_scope = yes
+		clear_saved_scope = movement
 	}
 
 	every_in_list = {
@@ -58,7 +58,7 @@ bpm_ig_decide_strategy = {
 bpm_ig_decide_coalition = {
 	remove_variable = bpm_ig_coalition_mov
 
-	ordered_political_movement = {
+	OWNER = { ordered_political_movement = {
 		limit = {
 			bpm_ig_movement_attraction > 0
 		}
@@ -66,7 +66,7 @@ bpm_ig_decide_coalition = {
 		order_by = bpm_ig_movement_attraction
 
 		save_scope_as = selected_movement
-	}
+	} }
 
 	set_variable = {
 		name = bpm_ig_coalition_mov
@@ -79,58 +79,129 @@ bpm_ig_decide_coalition = {
 bpm_movement_select_action = {
 	if = {
 		limit = {
-			any_in_list = {
+			scope:country = { NOT = { any_in_list = {
 				variable = bpm_active_coalition_actions
 				var:bpm_initiator ?= scope:movement
-				count = 0
-			}
+			} } }
 		}
 		ordered_in_global_list = {
+			limit = {
+				bpm_movement_action_attraction > 0
+			}
 			variable = bpm_coalition_actions
 			position = 0
 			order_by = bpm_movement_action_attraction
 
 			save_scope_as = selected_action_type
 		}
-
-		create_struct = {
-			struct_scope = created_action
-			struct_type = bpm_coalition_action_num
-		}
-
-		scope:created_action = {
-			set_variable = {
-				name = bpm_initiator
-				value = scope:movement
+		if = {
+			limit = {
+				exists = scope:selected_action_type
 			}
-			set_variable = {
-				name = bpm_action_type
-				value = scope:selected_action_type
+			scope:country = {
+				create_struct = {
+					struct_scope = created_action
+					struct_type = bpm_coalition_action_num
+				}
 			}
-		}
 
-		scope:country = {
-			add_to_variable_list = {
+			scope:created_action = {
+				set_variable = {
+					name = bpm_initiator
+					value = scope:movement
+				}
+				set_variable = {
+					name = bpm_action_type
+					value = scope:selected_action_type
+				}
+			}
+
+			scope:country = {
+				add_to_variable_list = {
+					name = bpm_active_coalition_actions
+					target = scope:created_action
+				}
+			}
+
+			clear_saved_scope = created_action
+			clear_saved_scope = selected_action_type
+		}
+	}
+	else = {
+		random_in_list = {
+			variable = bpm_active_coalition_actions
+			var:bpm_initiator ?= scope:movement
+			save_scope_as = selected_action
+		}
+		if = {
+			limit = {
+				NOT = {
+					scope:selected_action.var:bpm_action_type = {
+						bpm_movement_action_attraction > 0
+					}
+				}
+			}
+			remove_list_variable = {
 				name = bpm_active_coalition_actions
-				target = scope:created_action
+				target = scope:selected_action
+			}
+			destroy_struct = {
+				struct = scope:selected_action
 			}
 		}
 
-		clear_saved_scope = created_action
-		clear_saved_scope = selected_action_type
 	}
 }
 # scope:country
 # scope:action
 bpm_action_on_monthly = {
-	save_scope_as = movement
-	scope:action = { 
-		if = {
-			limit = {
-				var:bpm_action_type = flag:bpm_action_revolt
+	if = {
+		limit = {
+			NOT = {
+				exists = scope:action.var:bpm_initiator
 			}
-			bpm_action_revolt_on_monthly = yes
+		}
+		remove_list_variable = {
+			name = bpm_active_coalition_actions
+			target = scope:action
+		}
+		destroy_struct = {
+			struct = scope:action
 		}
 	}
-	clear_saved_scope = movement
+	else = {
+		scope:action.var:bpm_initiator = { save_scope_as = movement }
+		scope:action = { 
+			if = {
+				limit = {
+					var:bpm_action_type = flag:bpm_action_revolt
+				}
+				bpm_action_revolt_on_monthly = yes
+			}
+			else = {
+				scope:country = {
+					remove_from_variable_map = {
+						name = bpm_revolt_progress
+						key = scope:movement
+					}
+					remove_from_variable_map = {
+						name = bpm_revcell_recently_subsided
+						key = scope:movement
+					}
+					every_scope_state = {
+						remove_from_variable_map = {
+							name = bpm_revcells
+							key = scope:movement
+						}
+						remove_from_variable_map = {
+							name = bpm_revcell_recently_subsided
+							key = scope:movement
+						}
+					}
+				}
+			}
+		}
+		clear_saved_scope = movement
+	}
+
 }

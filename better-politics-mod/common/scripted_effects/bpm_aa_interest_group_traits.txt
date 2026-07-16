@@ -224,6 +224,37 @@ bpm_trait_gov_adaptable_radical_monarchist = {
     }
 }
 
+bpm_trait_gov_moderate_monarchist = {
+    bpm_ig_set_ideology = {
+        type = gov
+        name = moderate_monarchist
+    }
+
+    if = {
+        limit = { 
+            owner = { bpm_has_inertia_with_republic = yes } 
+        }
+        bpm_ig_set_ideology = {
+            type = gov
+            name = liberal_republican
+        }
+    }
+    else_if = {
+        limit = { owner = { bpm_country_has_inertia_with_law = { law = law_council_republic } } }
+        bpm_ig_set_ideology = {
+            type = gov
+            name = anti_proletarian
+        }
+    }
+    else_if = {
+        limit = { owner = { bpm_country_has_inertia_with_law = { law = law_theocracy } } }
+        bpm_ig_set_ideology = {
+            type = gov
+            name = theocrat
+        }
+    }
+}
+
 #==========
 # EXE
 #==========
@@ -611,6 +642,9 @@ bpm_trait_dop_maximally_authoritarian = {
 }
 
 bpm_trait_dop_conservatives = {
+    bpm_trait_dop_democrat = {
+        name = authoritarian
+    }
     if = {
         limit = {
             owner = {
@@ -621,6 +655,19 @@ bpm_trait_dop_conservatives = {
 			type = dop
             name = metropole_loyalist
 		}
+    }
+    else_if = {
+        limit = {
+            owner = {
+                OR = { 
+                    bpm_country_has_inertia_with_law = { law = law_census_voting } 
+                    bpm_country_has_inertia_with_law = { law = law_universal_suffrage } 
+                }
+            }
+        }
+        bpm_trait_dop_democrat = {
+            name = moderate
+        }
     }
 }
 
@@ -829,6 +876,39 @@ bpm_trait_sta_right_wing_centralist = {
     }
 }
 
+bpm_trait_sta_moderate_centralist = { ## This one probably needs some work 
+    bpm_ig_set_ideology = {
+        type = sta
+        name = powerful_state
+    }
+    if = {
+        limit = { 
+            owner = { 
+                OR = {
+                    bpm_country_has_inertia_with_law = { law = law_confederated }
+                    bpm_country_has_inertia_with_law = { law = law_federated }
+                    active_law:lawgroup_centralization = {
+                        has_amendment = amendment_type:bpm_amendment_memory_of_jacobinism # there has been a centralizing unitary republic here
+                    }
+                }
+            } 
+        }
+        bpm_ig_set_ideology = {
+            type = sta
+            name = federated_state
+        }
+    }
+    if = {
+        limit = {
+            owner = { c:ARG ?= this }
+        }
+        bpm_ig_set_ideology = {
+			type = sta
+			name = decentralized_state
+		}
+    }
+}
+
 #==========
 # ECO
 #==========
@@ -837,23 +917,35 @@ bpm_trait_eco_agrarian = {
     if = {
         limit = { 
             owner = {
-                NOR = { 
-                    bpm_country_has_inertia_with_law = { law = law_serfdom } 
+                OR = { 
 			        bpm_country_has_inertia_with_law = { law = law_traditionalism } 
-			        bpm_country_has_inertia_with_law = { law = law_industry_banned } 
 			        bpm_country_has_inertia_with_law = { law = law_extraction_economy } 
                 }
             }
 		}
         bpm_ig_set_ideology = {
             type = eco
-            name = modern_agrarian
+            name = traditional_agrarian
+        }
+    }
+    else_if = {
+        limit = { 
+            owner = {
+                OR = { 
+			        bpm_country_has_inertia_with_law = { law = law_tenant_farmers } 
+			        bpm_country_has_inertia_with_law = { law = law_serfdom } 
+                }
+            }
+		}
+        bpm_ig_set_ideology = {
+            type = eco
+            name = conservative_agrarian
         }
     }
     else = {
         bpm_ig_set_ideology = {
             type = eco
-            name = traditional_agrarian
+            name = modern_agrarian
         }
     }
     bpm_trait_eco_artisanal = yes
@@ -1241,6 +1333,23 @@ bpm_trait_wel_reactionaries = {
     }
 }
 
+bpm_trait_wel_conservatives = {
+    bpm_ig_set_ideology = {
+        type = wel
+        name = religious_welfare
+    }
+    if = {
+        limit = {
+            owner = { has_variable = local_patcon_split_var }
+        }
+        bpm_ig_set_ideology = {
+            type = wel
+            name = paternalistic_welfare
+        }
+    }
+
+}
+
 bpm_trait_wel_trade_unions = {
     bpm_ig_set_ideology = {
         type = wel
@@ -1409,25 +1518,77 @@ bpm_trait_cit_maximally_exclusionary = {
         }
     }
     else_if = {
-        limit = { owner = { OR = {
-            has_variable = catholic_party_created_bel_variable
-            is_in_geographic_region = geographic_region_new_world
-        } } }
+        limit = { 
+            owner = { 
+                OR = {
+                    has_variable = catholic_party_created_bel_variable
+                    is_in_geographic_region = geographic_region_new_world
+                }       
+            } 
+        }
         bpm_ig_set_ideology = {
             type = cit
             name = nationalist
         }
     }
     else_if = {
-        limit = { owner = { 
-            bpm_country_has_different_heritage_primary_cultures = yes
-        } }
+        limit = { 
+            owner = { bpm_country_has_different_heritage_primary_cultures = yes } 
+        }
         bpm_ig_set_ideology = {
             type = cit
             name = multiethnic_nationalist
         }
     }
 
+}
+
+bpm_trait_cit_conservatives = {
+    if = {
+        limit = {
+            owner = {
+                is_in_geographic_region = geographic_region_new_world
+                NOT = { has_law = law_type:law_subjecthood }
+            } 
+        }
+        bpm_ig_set_ideology = {
+			type = cit
+			name = segregationist
+		}
+    }
+    else_if = {
+        limit = {
+            owner = { c:BIC ?= this } 
+        }
+        bpm_ig_set_ideology = {
+			type = cit
+			name = liberal_nationalist
+		}
+    }
+    else_if = {
+        limit = {
+            owner = { c:TUR ?= this } 
+        }
+        bpm_ig_set_ideology = {
+			type = cit
+			name = multiethnic_nationalist
+		}
+    }
+    else_if = {
+        limit = {
+            owner = { bpm_country_has_inertia_with_law = { law = law_extraction_economy } } 
+        }
+        bpm_ig_set_ideology = {
+			type = cit
+			name = colonial_segregationist
+		}
+    }
+    else = {
+        bpm_ig_set_ideology = {
+            type = cit
+            name = nationalist
+        }
+    }
 }
 
 #==========
@@ -1560,6 +1721,27 @@ bpm_trait_rel_reactionaries = {
         bpm_ig_set_ideology = {
             type = rel
             name = moralist
+        }
+    }
+}
+
+bpm_trait_moderate_moralist = {
+    bpm_ig_set_ideology = {
+        type = rel
+        name = moralist
+    }
+    if = {
+        limit = { owner = { c:USA ?= this } }
+        bpm_ig_set_ideology = {
+            type = rel
+            name = radical_secularist
+        }
+    }
+    if = {
+        limit = { owner = { c:BIC ?= this } }
+        bpm_ig_set_ideology = {
+            type = rel
+            name = pragmatic_moralist
         }
     }
 }
@@ -1761,6 +1943,29 @@ bpm_trait_mil_reactionaries = {
         bpm_ig_set_ideology = {
             type = mil
             name = frontier_expansion
+        }
+    }
+}
+
+bpm_trait_mil_patriotic = {
+    if = {
+        limit = { owner = { bpm_country_has_inertia_with_law = { law = law_armed_neutrality } } }
+        bpm_ig_set_ideology = {
+            type = mil
+            name = defensive_patriot
+        }
+    }
+    if = {
+        limit = { owner = { c:ARG ?= this } }
+        bpm_ig_set_ideology = {
+            type = mil
+            name = frontier_expansion
+        }
+    }
+    else = {
+        bpm_ig_set_ideology = {
+            type = mil
+            name = patriotic
         }
     }
 }

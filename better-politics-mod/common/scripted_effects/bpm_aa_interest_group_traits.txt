@@ -251,7 +251,7 @@ bpm_trait_gov_adaptable_radical_monarchist = {
     }
 }
 
-bpm_trait_gov_moderate_monarchist = {
+bpm_trait_gov_liberal_status_quo = {
     bpm_ig_set_ideology = {
         type = gov
         name = moderate_monarchist
@@ -570,19 +570,6 @@ bpm_trait_dop_industrialists ={
     }
 }
 
-bpm_trait_dop_intelligentsia = {
-    if = {
-        limit = { owner = { c:BEL ?= this } }
-        bpm_ig_set_ideology = {
-            type = dop
-            name = doctrinaire_democrat
-        }
-    }
-    bpm_trait_dop_democrat = {
-        name = moderate
-    }
-}
-
 bpm_trait_dop_trade_unions ={
     if = {
         limit = {
@@ -631,6 +618,40 @@ bpm_trait_dop_trade_unions ={
 }
 
 # Ideological
+
+bpm_trait_dop_liberal_democrat = {
+    bpm_trait_dop_democrat = {
+        name = moderate
+    }
+    if = {
+        limit = { 
+            owner = { 
+                bpm_country_is_in_europe = yes
+                NOR = { 
+                    bpm_country_has_inertia_with_law = { law = law_census_voting } 
+                    bpm_country_has_inertia_with_law = { law = law_universal_suffrage }
+                    bpm_country_has_inertia_with_law = { law = law_supreme_legislature }
+                }
+            } 
+        }
+        bpm_trait_dop_democrat = {
+            name = doctrinaire
+        }
+    }
+    else_if = {
+        limit = {
+            owner = {
+                OR = { 
+                    bpm_country_has_inertia_with_law = { law = law_census_voting } 
+                    bpm_country_has_inertia_with_law = { law = law_universal_suffrage } 
+                }
+            }
+        }
+        bpm_trait_dop_democrat = {
+            name = radical
+        }
+    }
+}
 
 
 bpm_trait_dop_radical = {    
@@ -862,28 +883,42 @@ bpm_trait_sta_industrialists = {
     }
 }
 
-bpm_trait_sta_intelligentsia = {
+bpm_trait_sta_moderate_federalist = {
+    bpm_ig_set_ideology = {
+        type = sta
+        name = weak_state
+    }
     if = {
-        limit = { 
-            OR = { # dunno if i can put logical operators into owner without breaking this stuff
-                owner = { bpm_country_has_inertia_with_law = { law = law_federated } }
-                    owner = {
-                        is_in_geographic_region = geographic_region_new_world
-                        NOT = { has_variable = guilty_land_fail_var }
-                    }
-                owner = { c:BEL ?= this }
+        limit = {
+            owner = {
+                OR = {
+                    c:ARG ?= this
+                    c:URU ?= this
+                }
             }
         }
         bpm_ig_set_ideology = {
 			type = sta
-			name = federated_state # Uruguay and Argentina used to be effective state but idk
+			name = effective_state
 		}
     }
-    else = {
-        bpm_ig_set_ideology = {
-            type = sta
-            name = weak_state
+    else_if = {
+        limit = {
+            owner = {
+                OR = {
+                    bpm_country_has_inertia_with_law = { law = law_federated }
+                    c:BEL ?= this
+                    AND = {
+                        is_in_geographic_region = geographic_region_new_world
+                        NOT = { has_variable = guilty_land_fail_var }
+                    }
+                }
+            }
         }
+        bpm_ig_set_ideology = {
+			type = sta
+			name = federated_state 
+		}
     }
 }
 
@@ -920,10 +955,6 @@ bpm_trait_sta_trade_unions = {
 			type = sta
 			name = minimal_state
 		}
-    }
-    bpm_ig_set_ideology = {
-        type = sta
-        name = progressive_state
     }
 }
 
@@ -1353,6 +1384,22 @@ bpm_trait_eco_reactionaries = {
     }
 }
 
+bpm_trait_eco_liberal_modernizer = {
+    if = {
+        limit = { owner = { has_variable = bpm_marlib_split_occurred } }
+        bpm_ig_set_ideology = {
+            type = eco
+            name = modernizer
+        }
+    }
+    else =  {
+        bpm_ig_set_ideology = {
+            type = eco
+            name = laissez_faire
+        }
+    }
+}
+
 #==========
 # WEL
 #==========
@@ -1452,6 +1499,23 @@ bpm_trait_wel_rural_welfare = {
     }
 }
 
+bpm_trait_wel_market_welfare = {
+    bpm_ig_set_ideology = {
+        type = wel
+        name = market_welfare
+    }
+    if = {
+        limit = {
+            is_interest_group_type = ig_liberals
+            owner = { bpm_country_is_latin_american = yes }
+        }
+        bpm_ig_set_ideology = {
+            type = wel
+            name = public_welfare
+        }
+    }
+}
+
 #==========
 # CIT
 #==========
@@ -1527,14 +1591,12 @@ bpm_trait_cit_institutional ={
     }
 }
 
-bpm_trait_cit_liberal = {
+bpm_trait_cit_liberal_nationalist = {
     if = {
         limit = {
             owner = {
-                AND = {
-                    is_in_geographic_region = geographic_region_new_world
-                    NOT = { has_law = law_type:law_subjecthood }
-                }
+                is_in_geographic_region = geographic_region_new_world
+                NOT = { has_law = law_type:law_subjecthood }
             } 
         }
         bpm_ig_set_ideology = {
@@ -1705,14 +1767,49 @@ bpm_trait_rel_institutional_secularist = {
     }
 } 
 
-bpm_trait_rel_liberal = {
+bpm_trait_rel_secularist = {
     bpm_ig_set_ideology = {
         type = rel
         name = secularist
     }
 }
 
-bpm_trait_rel_radical = {
+bpm_trait_rel_adaptable_secularist = {
+    bpm_ig_set_ideology = {
+        type = rel
+        name = secularist
+    }
+    if = {
+        limit = {
+            owner = {
+                has_variable = bpm_largest_faction
+				var:bpm_largest_faction = {
+					is_political_movement_type = movement_religious_majority
+				}
+            }
+        }
+        bpm_ig_set_ideology = {
+            type = rel
+            name = moralist
+        }
+    }
+    else_if = {
+        limit = {
+            owner = {
+                NOR = {
+                    bpm_country_has_inertia_with_law = { law = law_freedom_of_conscience }
+                    bpm_country_has_inertia_with_law = { law = law_state_religion }
+                }
+            }
+        }
+        bpm_ig_set_ideology = {
+            type = rel
+            name = radical_secularist
+        }
+    }
+}
+
+bpm_trait_rel_radical_secularist = {
     bpm_ig_set_ideology = {
         type = rel
         name = radical_secularist
@@ -2079,7 +2176,7 @@ bpm_trait_mil_popular_army = {
 	}
 }
 
-bpm_trait_mil_liberal = {
+bpm_trait_mil_liberal_patriotic = {
 	bpm_ig_set_ideology = {
 		type = mil
 		name = patriotic_liberal
@@ -2117,6 +2214,20 @@ bpm_trait_fem_patriarchal = {
     bpm_ig_set_ideology = {
         type = fem
         name = patriarchal
+    }
+}
+
+bpm_triat_fem_moderate_feminist = {
+    bpm_ig_set_ideology = {
+		type = fem
+		name = benevolent_sexism
+	}
+    if = {
+        limit = { owner = { has_technology_researched = feminism } } ## This can definitely be changed to be more meaningful
+        bpm_ig_set_ideology = {
+            type = fem
+            name = gender_egalitarian
+        }
     }
 }
 

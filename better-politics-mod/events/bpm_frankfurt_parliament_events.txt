@@ -377,7 +377,6 @@ bpm_frankfurt_parliament_events.12 = {
 	# Kleindeutschland
 	option = {
 		name = bpm_frankfurt_parliament_events.12.a
-		default_option = yes
 
 		change_tag = GER
 
@@ -421,6 +420,7 @@ bpm_frankfurt_parliament_events.12 = {
 				has_role_of_type = ruler
 			}
 			transfer_character = c:GER
+			set_is_noble = yes
 			remove_character_role = politician
 			add_character_role = magnate
 		}
@@ -445,6 +445,139 @@ bpm_frankfurt_parliament_events.12 = {
 	option = {
 		name = bpm_frankfurt_parliament_events.12.b
 
+		change_tag = GER
+
+		# Enacts selected laws to the constitution
+		bpm_enact_law = {
+			law = global_var:bpm_frankfurt_parliament_speech_law_chosen
+			level = constitutional
+		}
+
+		bpm_enact_law = {
+			law = global_var:bpm_frankfurt_parliament_centralization_law_chosen
+			level = constitutional
+		}
+
+		bpm_enact_law = {
+			law = global_var:bpm_frankfurt_parliament_voting_law_chosen
+			level = constitutional
+		}
+
+		bpm_enact_law = {
+			law = global_var:bpm_frankfurt_parliament_hog_law_chosen
+			level = constitutional
+		}
+
+		bpm_enact_law = {
+			law = law_type:law_separated_powers
+			level = constitutional
+		}
+
+		# Transfers leaders of minor states to the German Empire, integrates German states
+		every_character = {
+			limit = {
+				owner = {
+					country_is_in_german_confederation = yes
+					NOT = { has_variable = bpm_frankfurt_monarch_var }
+				}
+				has_role_of_type = ruler
+			}
+			transfer_character = c:GER
+			set_is_noble = yes
+			remove_character_role = politician
+			add_character_role = magnate
+		}
+
+		every_country = {
+			limit = {
+				country_is_in_german_confederation = yes
+				NOT = { has_variable = bpm_frankfurt_monarch_var }
+			}
+
+			c:GER ?= {
+				annex_with_incorporation = prev
+			}
+		}
+
+	}
+}
+
+# Splitting the Austrian realms in Großdeutschland
+bpm_frankfurt_parliament_events.13 = {
+	type = country_event
+	placement = root
+	title = bpm_frankfurt_parliament_events.13.t
+	flavor = bpm_frankfurt_parliament_events.13.f
+	desc = bpm_frankfurt_parliament_events.13.d
+	
+	event_image = {
+		video = "europenorthamerica_capitalists_meeting"
+	}
+	duration = 3
+
+	trigger = {
+		# event
+	}
+
+	immediate = {
+
+	}
+
+	# Assuming Austrian led empire
+	option = {
+		name = bpm_frankfurt_parliament_events.13.a
+		default_option = yes
+		
+		# Hungary (if it has not successfully split away)
+		if = {
+			limit = {
+				exists = c:HUN
+				c:HUN = {
+					is_subject = yes
+				}
+			}
+			make_independent = yes
+
+			# Maximillian is elected to rule Hungary seperatly (tfw Cancun trip cancelled)
+			create_character = {
+				template = aus_maximilian_I_habsburg_template
+				on_created = {
+					set_character_as_ruler = yes
+				}
+			}
+		}
+
+		# Galicia-Lodomeria
+		if = {
+			limit = {
+				exists = c:GAL
+				c:GAL = {
+					is_subject = yes
+				}
+			}
+			make_independent = yes
+
+			# Karl Joeseph of Austria-Este is elected to rule Galicia-Lodomeria seperatly
+			create_character = {
+				template = aus_ferdinand_karl_joseph_of_austria-este
+				on_created = {
+					set_character_as_ruler = yes
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				NOT = { exists = c:GAL }
+				c:GER = { owns_entire_state_region = STATE_EAST_GALICIA }
+			}
+			create_country = {
+				tag = GAL
+				origin = c:AUS
+				state = s:STATE_EAST_GALICIA.region_state:GER
+			}
+			s:STATE_WEST_GALICIA.region_state:GER = { set_state_owner = c:GAL set_state_type = incorporated }
+			s:STATE_BUKOVINA.region_state:GER = { set_state_owner = c:GAL set_state_type = incorporated }
+		}
 	}
 }
 

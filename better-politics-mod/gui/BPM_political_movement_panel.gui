@@ -89,7 +89,72 @@ types political_movement_panel_types
 		}
 	}
 
-		type political_movement_panel = default_block_window_two_lines {
+	type bpm_cell_level_icon = 	widget {
+		tooltip = "bpm_cell_increase_grow_show"
+		size = { 39 32 }
+		block "visible" {
+			visible = "[EqualTo_CFixedPoint(State.MakeScope.GetVariableFromVariableMap('bpm_revcells', PoliticalMovement.MakeScope).GetValue, '(CFixedPoint)1')]"
+		}
+		icon = {
+			size = { 32 32 }
+			parentanchor = vcenter|right
+			block "texture" {
+				texture = "gfx/interface/icons/tiered_interests/interest_levels_icons/interest_level_1_observant_small.dds"
+			}
+		}
+		icon = {
+			block "growing" {
+				visible = "[GetScriptedGui('bpm_cell_is_growing').IsShown(GuiScope.SetRoot(State.MakeScope).AddScope('movement', PoliticalMovement.MakeScope).End)]"
+			}
+			texture = "gfx/interface/icons/generic_icons/trend_up.dds"
+			size = { 20 20 }
+			parentanchor = left|vcenter
+		}
+		icon = {
+			block "shrinking" {
+				visible = "[Not(GetScriptedGui('bpm_cell_is_growing').IsShown(GuiScope.SetRoot(State.MakeScope).AddScope('movement', PoliticalMovement.MakeScope).End))]"
+			}
+			texture = "gfx/interface/icons/generic_icons/trend_down.dds"
+			size = { 20 20 }
+			parentanchor = left|vcenter
+		}
+	}
+
+	type bpm_revcell_setback_success = widget {
+		size = { 28 28 }
+
+		icon = {
+			name = icon_frame
+			block "icon_size" { size = { 28 28 } }
+			parentanchor = center
+			texture = "gfx/interface/backgrounds/round_button_bg.dds"
+
+			icon = {
+				parentanchor = center
+				block "cross_size" { size = { 16 16 } }
+				block "has_setback_visibility" {
+					#visible = "[EqualTo_int32(Law.GetNumberOfSetbacks, '(int32)0')]"
+				}
+
+				block "icon_texture" {
+					texture = "gfx/interface/icons/generic_icons/red_cross.dds"
+				}
+			}
+			icon = {
+				parentanchor = center
+				block "cross_size" { size = { 16 16 } }
+				block "has_checkmark_visibility" {
+					#visible = "[EqualTo_int32(Law.GetNumberOfSetbacks, '(int32)0')]"
+				}
+
+				block "icon_texture" {
+					texture = "gfx/interface/icons/generic_icons/green_checkmark.dds"
+				}
+			}
+		}
+	}
+
+	type political_movement_panel = default_block_window_two_lines {
 		name = "political_movement_panel"
 		enabled = yes
 
@@ -394,7 +459,92 @@ types political_movement_panel_types
 					using = default_content_fade
 					spacing = 10
 					margin_top = 10
+					### Interest Groups
+					flowcontainer = {
+						direction = vertical
 
+						default_header = {
+							blockoverride "text" {
+								text = "BPM_ACTIONS"
+							}
+						}
+						empty_state_dynamic_width = {
+							visible = "[IsDataModelEmpty(PoliticalMovement.GetInfluencedInterestGroups)]"
+							margin = { 0 15 }
+							autoresize = yes
+							max_width = 510
+							text = "POLITICAL_MOVEMENT_NO_INFLUENCED_INTEREST_GROUPS"
+						}
+						flowcontainer = {
+							direction = horizontal
+							addrow = @interest_group_grid_height
+							addcolumn = @interest_group_grid_width
+							datamodel_wrap = @interest_group_grid_columns
+							ignoreinvisible = yes
+							wrap_count = @interest_group_grid_columns
+							margin = { 25 0 }
+							spacing = 25
+							datamodel = "[PoliticalMovement.GetCountry.MakeScope.GetList('bpm_active_coalition_actions')]"
+						
+							item = {
+								button_icon_round = {
+									visible = "[EqualTo_string(PoliticalMovement.GetName, Scope.Var('bpm_initiator').GetPoliticalMovement.GetName)]"
+									size = { 64 64 }
+									blockoverride "icon" { texture = "gfx/interface/icons/action_icons/revolt_action.dds" }
+									onclick = "[InformationPanel.SelectTab('actions')]"
+								}
+							}
+						}
+
+
+
+						# fixedgridbox = {
+						# 	visible = "[Not(IsDataModelEmpty(PoliticalMovement.GetInfluencedInterestGroups))]"
+						# 	flipdirection = yes
+						# 	addrow = @interest_group_grid_height
+						# 	addcolumn = @interest_group_grid_width
+						# 	datamodel_wrap = @interest_group_grid_columns
+						# 	datamodel = "[PoliticalMovement.GetInfluencedInterestGroups]"
+
+						# 	item = {
+						# 		widget = {
+						# 			size = { @interest_group_grid_width @interest_group_grid_height }
+						# 			tooltip = "INTEREST_GROUP_MOVEMENT_SUPPORT_CLOUT_TOOLTIP"
+						# 			using = tooltip_se
+
+						# 			flowcontainer = {
+						# 				parentanchor = center
+						# 				direction = vertical
+						# 				spacing = 5
+						# 				margin = { 10 5 }
+
+						# 				background = {
+						# 					using = entry_bg_simple_solid
+						# 					color = "[InterestGroup.GetColor]"
+						# 					alpha = 0.6
+
+						# 					modify_texture = {
+						# 						using = texture_velvet
+						# 					}
+						# 				}
+
+						# 				ig_button = {
+						# 					size = { 70 70 }
+						# 					parentanchor = hcenter
+						# 				}
+
+						# 				textbox = {
+						# 					name = "approval"
+						# 					parentanchor = hcenter
+						# 					align = nobaseline
+						# 					autoresize = yes
+						# 					raw_text = "#v [InterestGroup.GetFractionOfCloutSupportingMovement(PoliticalMovementPanel.GetPoliticalMovement.Self)|%0]#!"
+						# 				}
+						# 			}
+						# 		}
+						# 	}
+						# }
+					}
 					### Interest Groups
 					vbox = {
 						layoutpolicy_horizontal = preferred
@@ -1113,7 +1263,8 @@ types political_movement_panel_types
 						expand = {}
 					}					
 				}
-
+				
+				### Coalition tab
 				flowcontainer = {
 					visible = "[InformationPanel.IsTabSelected('actions')]"
 					direction = vertical
@@ -1201,7 +1352,7 @@ types political_movement_panel_types
 								flowcontainer = {
 									direction = vertical
 									widget = { 
-										size = { @panel_width 120 }
+										size = { @panel_width 130 }
 										background = {
 											using = entry_bg
 										}
@@ -1209,7 +1360,7 @@ types political_movement_panel_types
 										flowcontainer = {
 											direction = horizontal
 											widget = {
-												size = { 105 95 }
+												size = { 105 130 }
 												parentanchor = vcenter|left
 												icon = {
 													size = { 95 95 }
@@ -1250,14 +1401,15 @@ types political_movement_panel_types
 														parentanchor = right
 														size = { 400 25 }
 														blockoverride "header" {
-																		textbox = {
+															textbox = {
 																align = nobaseline
 																autoresize = yes
 																text = "REVOLUTIONS_HEADER"
 															}
 														}
 													} }
-													widget = { size = { 420 25 }
+													widget = { 
+														size = { 420 25 }
 														flowcontainer = {
 															parentanchor = hcenter
 															direction = horizontal
@@ -1372,25 +1524,111 @@ types political_movement_panel_types
 												flowcontainer = {
 													minimumsize = { -1 40 }
 													direction = horizontal
+													spacing = 2
 													widget = { size = { 10 -1 }}
-														button = {
-															layoutpolicy_horizontal = expanding
-															size = { @panel_width_half 30 }
-															using = default_button
-															using = tooltip_ne
-															parentanchor = vcenter
+													button = {
+														layoutpolicy_horizontal = expanding
+														size = { @panel_width_half 30 }
+														using = default_button
+														using = tooltip_ne
+														parentanchor = vcenter
 
-															textbox = {
-																size = { 100% 100% }
-																margin = { 10 0 }
-														#		autoresize = yes
-																datacontext = "[State]"
-																text = "STATE_NAME_WITH_FOREIGN_FLAG_NO_FORMAT"
-																parentanchor = vcenter
-																align = nobaseline
-																elide =  right
-															}	
+														textbox = {
+															size = { 100% 100% }
+															margin = { 10 0 }
+															datacontext = "[State]"
+															text = "STATE_NAME_WITH_FOREIGN_FLAG_NO_FORMAT"
+															parentanchor = vcenter
+															align = nobaseline
+															elide =  right
+														}	
+													}
+													flowcontainer = {
+														direction = horizontal
+														parentanchor = vcenter
+														spacing = 5
+														bpm_cell_level_icon = {
+															blockoverride "growing" {
+																visible = "[GetScriptedGui('bpm_cell_is_growing').IsShown(GuiScope.SetRoot(State.MakeScope).AddScope('movement', PoliticalMovement.MakeScope).End)]"
+															}
+															blockoverride "shrinking" {
+																visible = "[Not(GetScriptedGui('bpm_cell_is_growing').IsShown(GuiScope.SetRoot(State.MakeScope).AddScope('movement', PoliticalMovement.MakeScope).End))]"
+															}
 														}
+														#Lv 2
+														bpm_cell_level_icon = {
+															blockoverride "visible" {
+																visible = "[EqualTo_CFixedPoint(State.MakeScope.GetVariableFromVariableMap('bpm_revcells', PoliticalMovement.MakeScope).GetValue, '(CFixedPoint)2')]"
+															}
+															blockoverride "texture" {
+																texture = "gfx/interface/icons/tiered_interests/interest_levels_icons/interest_level_2_engaged_small.dds"
+															}
+															blockoverride "growing" {
+																visible = "[GetScriptedGui('bpm_cell_is_growing').IsShown(GuiScope.SetRoot(State.MakeScope).AddScope('movement', PoliticalMovement.MakeScope).End)]"
+															}
+															blockoverride "shrinking" {
+																visible = "[Not(GetScriptedGui('bpm_cell_is_growing').IsShown(GuiScope.SetRoot(State.MakeScope).AddScope('movement', PoliticalMovement.MakeScope).End))]"
+															}
+														}
+														bpm_cell_level_icon = {
+															blockoverride "visible" {
+																visible = "[EqualTo_CFixedPoint(State.MakeScope.GetVariableFromVariableMap('bpm_revcells', PoliticalMovement.MakeScope).GetValue, '(CFixedPoint)3')]"
+															}
+															blockoverride "texture" {
+																texture = "gfx/interface/icons/tiered_interests/interest_levels_icons/interest_level_3_influential_small.dds"
+															}
+															blockoverride "growing" {
+																visible = "[GetScriptedGui('bpm_cell_is_growing').IsShown(GuiScope.SetRoot(State.MakeScope).AddScope('movement', PoliticalMovement.MakeScope).End)]"
+															}
+															blockoverride "shrinking" {
+																visible = "[Not(GetScriptedGui('bpm_cell_is_growing').IsShown(GuiScope.SetRoot(State.MakeScope).AddScope('movement', PoliticalMovement.MakeScope).End))]"
+															}
+														}
+													}
+													flowcontainer = {
+														direction = horizontal
+														parentanchor = vcenter
+														margin_left = 10
+														spacing = 10
+														textbox = {
+															raw_text = "BPM_PROGRESS_COLON"
+															parentanchor = vcenter
+															autoresize = yes
+															margin_right = 4
+															default_format = "#v;bold"
+														}
+														flowcontainer = {
+															direction = horizontal
+															parentanchor = vcenter
+															spacing = 10
+															bpm_revcell_setback_success = {
+																parentanchor = vcenter
+																blockoverride "has_setback_visibility" {
+																	visible = "[LessThan_CFixedPoint(State.MakeScope.GetVariableFromVariableMap('bpm_revcell_progress', PoliticalMovement.MakeScope).GetValue, State.MakeScope.ScriptValue('bpm_revcell_base_progress'))]"
+																}
+																blockoverride "has_checkmark_visibility" {
+																	visible = "[GreaterThan_CFixedPoint(State.MakeScope.GetVariableFromVariableMap('bpm_revcell_progress', PoliticalMovement.MakeScope).GetValue, State.MakeScope.ScriptValue('bpm_revcell_base_progress'))]"
+																}
+															}
+															bpm_revcell_setback_success = {
+																parentanchor = vcenter
+																blockoverride "has_setback_visibility" {
+																	visible = "[EqualTo_CFixedPoint(State.MakeScope.GetVariableFromVariableMap('bpm_revcell_progress', PoliticalMovement.MakeScope).GetValue, State.MakeScope.ScriptValue('bpm_revcell_progress_min'))]"
+																}
+																blockoverride "has_checkmark_visibility" {
+																	visible = "[EqualTo_CFixedPoint(State.MakeScope.GetVariableFromVariableMap('bpm_revcell_progress', PoliticalMovement.MakeScope).GetValue, State.MakeScope.ScriptValue('bpm_revcell_progress_max'))]"
+																}
+															}
+														}
+													}
+
+													textbox = {
+														parentanchor = vcenter
+														align = nobaseline
+														text = "[GuiScope.SetRoot(State.MakeScope).AddScope('movement', PoliticalMovement.MakeScope).ScriptValue('bpm_revolt_progress_value_state')|v-=2]#N %#!"
+														fontsize = 12
+														margin_left = 5
+													}
 												}
 											}
 												

@@ -6,6 +6,7 @@ bpm_action_revolt_on_monthly = {
 	scope:country = {
 		bpm_shrink_or_grow_in_states = yes
 		bpm_revolt_progress = yes
+		bpm_revcell_recently_subsided_tick = yes
 	}
 }
 
@@ -39,6 +40,17 @@ bpm_revolt_progress = {
 			value = local_var:temp
 		}
 		remove_local_variable = temp
+	}
+
+	if = {
+		limit = {
+			"variable_map(bpm_revolt_progress|scope:movement)" > 100
+		}
+		update_variable_map_value = {
+			name = bpm_revolt_progress
+			key = scope:movement
+			value = 100
+		}
 	}
 }
 
@@ -165,13 +177,13 @@ bpm_reduce_revcell = {
 		update_variable_map_value = {
 			name = bpm_revcell_recently_subsided
 			key = scope:movement
-			value = 6
+			value = 24
 		}
 		OWNER = {
 			update_variable_map_value = {
 				name = bpm_revcell_recently_subsided
 				key = scope:movement
-				value = 6
+				value = 24
 			}
 		}
 	}
@@ -268,28 +280,25 @@ bpm_increase_or_shrink_tt = {
 		0 = {
 			modifier = {
 				# static for now
-				add = bpm_cell_growth_chance
+				add = bpm_cell_shrinking_chance 
 			}
 			set_variable = bpm_shrinkmarker
 			custom_tooltip = "bpm_cell_shrinks"
 		}
 		0 = {
 			modifier = {
-				add = bpm_cell_shrinking_chance
+				add = bpm_cell_growth_chance
 			}
 			set_variable = bpm_growmarker
 			custom_tooltip = "bpm_cell_grows"
 		}
-		50 = {
-			custom_tooltip = "bpm_cell_stays"
-		}
+		# 0 = {
+		# 	custom_tooltip = "bpm_cell_stays"
+		# }
 	}
 }
 
 bpm_increase_or_shrink_cell_level = {
-
-	bpm_increase_or_shrink_tt = yes
-
 	if = {
 		limit = {
 			NOT = {
@@ -305,34 +314,25 @@ bpm_increase_or_shrink_cell_level = {
 			value = bpm_revcell_base_progress
 		}
 	}
-	else_if = {
-		limit = {
-			# below 25% turmoil it will go away
-			OR = {
-				has_variable = bpm_shrinkmarker
-				turmoil < 0.25
-			}
-		}
-		add_variable_map_value = {
-			name = bpm_revcell_progress
-			key = scope:movement
-			add = -1
+	bpm_increase_or_shrink_tt = yes
+	set_local_variable = {
+		name = current_value_p1
+		value = {
+			value = "variable_map(bpm_revcell_progress|scope:movement)"
+			add = 1
 		}
 	}
-	else_if = {
-		limit = {
-			has_variable = bpm_growmarker
-		}
-		add_variable_map_value = {
-			name = bpm_revcell_progress
-			key = scope:movement
-			add = 1
+	set_local_variable = {
+		name = current_value_m1
+		value = {
+			value = "variable_map(bpm_revcell_progress|scope:movement)"
+			add = -1
 		}
 	}
 	#==
 	if = {
 		limit = {
-			"variable_map(bpm_revcells|scope:movement)" <= 0
+			"variable_map(bpm_revcell_progress|scope:movement)" <= bpm_revcell_progress_min
 		}
 		update_variable_map_value = {
 			name = bpm_revcell_progress
@@ -343,7 +343,7 @@ bpm_increase_or_shrink_cell_level = {
 	}
 	else_if = {
 		limit = {
-			"variable_map(bpm_revcells|scope:movement)" >= bpm_revcell_progress_max
+			"variable_map(bpm_revcell_progress|scope:movement)" >= bpm_revcell_progress_max
 		}
 		update_variable_map_value = {
 			name = bpm_revcell_progress
@@ -352,6 +352,33 @@ bpm_increase_or_shrink_cell_level = {
 		}
 		bpm_increase_cell_level = yes
 	}
+	else_if = {
+		limit = {
+			# below 25% turmoil it will go away
+			OR = {
+				has_variable = bpm_shrinkmarker
+				turmoil < 0.25
+			}
+		}
+		update_variable_map_value = {
+			name = bpm_revcell_progress
+			key = scope:movement
+			value = local_var:current_value_m1
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable = bpm_growmarker
+		}
+		update_variable_map_value = {
+			name = bpm_revcell_progress
+			key = scope:movement
+			value = local_var:current_value_p1
+		}
+	}
+
+	remove_local_variable = current_value_m1
+	remove_local_variable = current_value_p1
 }
 
 # execution phase

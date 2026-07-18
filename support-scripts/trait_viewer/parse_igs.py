@@ -32,14 +32,16 @@ TEMPLATE_PATH = os.path.join(CWD, "ig_viewer_template.html")
 OUTPUT_PATH = os.path.join(CWD, "ig_viewer.html")
 ICONS_DIR = os.path.join(CWD, "..", "..", "better-politics-mod", "gfx", "interface", "icons", "ig_icons")
 
-APPLY_KEY = "bpm_apply_traits_ig"
+APPLY_KEY = ["bpm_apply_traits_ig", "bpm_apply_traits_ig_deactivatable"]
 
 
 _IMAGEMAGICK_BIN = shutil.which("magick") or shutil.which("convert")
 _icon_cache = {}
 
 ICON_FILENAME_OVERRIDES = {
-    "intelligentsia": "intelligensia"
+    "intelligentsia": "intelligensia",
+    "revolutionist_socialists": "revolutionists",
+    "reformist_socialists": "reformists"
 }
 
 def get_icon_data_uri(ig_name, small):
@@ -84,7 +86,7 @@ def find_apply_traits(entries, condition=None):
     local_condition = limit_entry["v"] if (limit_entry and isinstance(limit_entry["v"], list)) else condition
 
     for e in entries:
-        if e["k"] == APPLY_KEY and isinstance(e["v"], list):
+        if e["k"] in APPLY_KEY and isinstance(e["v"], list):
             results.append({"entries": e["v"], "condition": local_condition})
         elif isinstance(e["v"], list):
             if e["k"] in ("if", "else_if", "else"):
@@ -107,7 +109,7 @@ def build_igs(root_entries, known_traits):
             fields = {sub["k"]: sub["v"] for sub in occurrence["entries"] if isinstance(sub["v"], str)}
             ig_name = fields.get("ig")
             if not ig_name:
-                warnings.append(f"'{source_effect}' has a {APPLY_KEY} block with no 'ig = ...' field; skipped.")
+                warnings.append(f"'{source_effect}' has a {", ".join(APPLY_KEY)} block with no 'ig = ...' field; skipped.")
                 continue
 
             categories = {}
@@ -157,7 +159,7 @@ def main():
 
     igs, warnings = build_igs(root_entries, known_traits)
 
-    print(f"Parsed {len(igs)} interest groups using {APPLY_KEY}.")
+    print(f"Parsed {len(igs)} interest groups using {", ".join(APPLY_KEY)}.")
     for w in warnings:
         print(f"  WARNING: {w}")
 

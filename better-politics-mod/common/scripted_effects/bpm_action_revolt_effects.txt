@@ -7,6 +7,13 @@ bpm_action_revolt_on_monthly = {
 		bpm_shrink_or_grow_in_states = yes
 		bpm_revolt_progress = yes
 		bpm_revcell_recently_subsided_tick = yes
+		if = {
+			limit = {
+				"variable_map(bpm_revolt_progress|scope:movement)" >= 100
+				scope:movement = { bpm_movement_is_revolting = no } # this should be moved to 'bloodless'
+			}
+			bpm_nation_at_crossroads = yes
+		}
 	}
 }
 
@@ -380,8 +387,9 @@ bpm_increase_or_shrink_cell_level = {
 	remove_local_variable = current_value_m1
 	remove_local_variable = current_value_p1
 }
-
+#========================
 # execution phase
+
 bpm_nation_at_crossroads = {
 	# There are many options for what can happen here
 	# - Coup/March on the capital
@@ -390,200 +398,26 @@ bpm_nation_at_crossroads = {
 	# - Collapse into Warlordism
 	if = {
 		limit = {
-			bpm_trigger_front = {
-				trigger = bpm_front_crossroad_takes_over
-			}
+			bpm_coalition_crossroad_takes_over = yes
 			always = no # test
 		}
 		# 'March on Capital'
 	}
-	#else_if = {
-	#	limit = {
-	#		bpm_trigger_front = {
-	#			trigger = bpm_front_crossroad_bloodless
-	#		}
-	#		always = no # test
-	#	}
-	#	# 'Bloodless Revolution'
-	#}
+	else_if = {
+		limit = {
+			bpm_coalition_crossroad_bloodless = yes
+			always = no # test
+		}
+		# 'Bloodless Revolution'
+	}
 	else = {
 		# 'Civil War'
+		set_variable = { name = bpm_cw_mv value = scope:movement }
 		trigger_event = { id = bpm_revolution_results.100 popup = yes }
 	}
 }
 
-bpm_front_crossroads_happened = {
-	# Revolutionary Fervour
-	add_radicals = {
-		value = -0.85
-	}
-	every_interest_group = {
-		add_modifier = {
-			name = bpm_adapting_to_new_regime
-			days = 730
-			is_decaying = yes
-		}
-	}
-	every_political_movement = {
-		add_modifier = {
-			name = bpm_adapting_to_new_regime_mov
-			days = 730
-			is_decaying = yes
-		}
-	}
-}
-
-bpm_front_revolution_victorious = {
-	set_variable = {
-		name = bpm_no_touch 
-		days = 30
-	}
-
-	flag:bpm_front_$front$ = {
-		save_scope_as = selected_front_name
-	}
-	scope:selected_front_name =  {
-		save_scope_as = member_front_name
-	}
-
-	clear_variable_list = bpm_revolution_victory_igs
-	every_interest_group = {
-		remove_modifier = modifier_revolution_defeated_light
-		remove_modifier = modifier_revolution_victorious_light
-		remove_modifier = bpm_modifier_revolution_victorious_light
-	}
-	every_in_list = {
-		variable = bpm_civil_war_revolutionary_ig
-		add_modifier = {
-			name = bpm_modifier_revolution_victorious_light
-			multiplier = 5
-			days = 3650
-			is_decaying = yes
-		}
-		owner = { add_to_variable_list = {
-			name = bpm_revolution_victory_igs
-			target = prev
-		} }
-	}
-	every_scope_state = {
-		bpm_apply_to_all_fronts = {
-			effect = bpm_destroy_all_cells
-		}
-	}
-
-
-	bpm_front_crossroads_happened = yes
-
-
-	every_interest_group = {
-		limit = {
-			NOT = {
-				owner = {
-					is_target_in_variable_list = {
-						name = bpm_revolution_victory_igs
-						target = prev
-					}
-				}
-			}
-		}
-		add_modifier = {
-			name = modifier_revolution_defeated_light
-			days = 3650
-			is_decaying = yes
-		}
-		remove_modifier = bpm_empowered_ig
-	}
-	bpm_dissent_je_revolution_active_on_inactive = yes
-
-	bpm_remove_political_stability_huge = yes
-	bpm_remove_political_stability_huge = yes
-	bpm_choose_fronts = yes
-	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution }
-	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution1 }
-	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution2 }
-	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution3 }
-
-	if = {
-		limit = {
-			exists = scope:member_front_name
-		}
-		switch = {
-			trigger = scope:member_front_name
-			flag:bpm_front_peasant = {
-				trigger_event = {
-					id = bpm_revolution_results.1
-					days = 0
-					popup = yes
-				}
-			}
-			flag:bpm_front_urban = {
-				trigger_event = {
-					id = bpm_revolution_results.2
-					days = 0
-					popup = yes
-				}
-			}
-			flag:bpm_front_republican = {
-				trigger_event = {
-					id = bpm_revolution_results.3
-					days = 0
-					popup = yes
-				}
-			}
-			flag:bpm_front_popular = {
-				trigger_event = {
-					id = bpm_revolution_results.4
-					days = 0
-					popup = yes
-				}
-			}
-			flag:bpm_front_liberal = {
-				trigger_event = {
-					id = bpm_revolution_results.5
-					days = 0
-					popup = yes
-				}
-			}
-			flag:bpm_front_reactionary = {
-				trigger_event = {
-					id = bpm_revolution_results.6
-					days = 0
-					popup = yes
-				}
-			}
-			flag:bpm_front_nationalist = {
-				trigger_event = {
-					id = bpm_revolution_results.7
-					days = 0
-					popup = yes
-				}
-			}
-			flag:bpm_front_fascist = {
-				trigger_event = {
-					id = bpm_revolution_results.8
-					days = 0
-					popup = yes
-				}
-			}
-			flag:bpm_front_labor = {
-				trigger_event = {
-					id = bpm_revolution_results.9
-					days = 0
-					popup = yes
-				}
-			}
-			flag:bpm_front_socialist = {
-				trigger_event = {
-					id = bpm_revolution_results.10
-					days = 0
-					popup = yes
-				}
-			}
-		}
-	}
-	bpm_clear_front = { front = $front$ }
-}
-
+# civil war
 bpm_make_government_of_national_defence = {
 	activate_law = law_type:law_provisional_government
 	recalculate_pop_ig_support = yes
@@ -613,23 +447,6 @@ bpm_make_government_of_national_defence = {
 	call_election = {
 		months = 3
 	}
-	# every_interest_group = {
-	# 	limit = {
-	# 		NOT = { owner = { is_target_in_variable_list = {
-	# 			name = bpm_front_$front$_members
-	# 			target = prev
-	# 		} } }
-	# 	}
-	# 	add_ideology = ideology_provgov_ally
-	# }
-	# every_interest_group = {
-	# 	limit = {
-	# 		bpm_ig_is_fundamentally_antagonistic_to_$front$ = yes
-	# 	}
-	# 	remove_ideology = ideology_provgov_ally
-	# 	remove_ideology = ideology_provgov_member
-	# 	add_ideology = ideology_provgov_enemy
-	# }
 }
 
 bpm_start_civil_war = {
@@ -638,7 +455,7 @@ bpm_start_civil_war = {
 		limit = {
 			NOT = {
 				any_scope_state = {
-					NOT = { bpm_state_has_rev = { front = $front$ } }
+					NOT = { bpm_has_revcell = yes }
 				}
 			}
 		}
@@ -653,7 +470,7 @@ bpm_start_civil_war = {
 
 	every_scope_state = {
 		limit = {
-			bpm_state_has_rev = { front = $front$ }
+			bpm_has_revcell = yes
 			OR = {
 				NOT = { is_capital = yes }
 				NOT = { has_local_variable = bpm_civil_war_has_all }
@@ -677,8 +494,7 @@ bpm_start_civil_war = {
 			set_variable = bpm_coniq
 		}
 	}
-	every_in_list = {
-		variable = bpm_front_$front$_members
+	every_supportive_interest_group = {
 		owner = {
 			add_to_variable_list = {
 				name = bpmtotransferrev
@@ -692,8 +508,12 @@ bpm_start_civil_war = {
 		}
 		save_scope_as = new_country
 		set_variable = {
-			name = bpm_country_revolutionary_front
-			value = flag:bpm_front_$front$
+			name = bpm_country_revolutionary_movement
+			value = scope:movement
+		}
+		set_variable = {
+			name = bpm_country_revolutionary_movement_type
+			value = scope:movement.type
 		}
 		set_variable = {
 			name = bpm_civil_war_origin
@@ -766,9 +586,6 @@ bpm_do_jank_civil_war_end = {
 			save_scope_as = prevowner
 		}
 	}
-	var:bpm_country_revolutionary_front = {
-		save_scope_as = selected_front_name
-	}
 	every_country = {
 		remove_variable = bpm_civil_war_jank_country
 	}
@@ -796,11 +613,124 @@ bpm_do_jank_civil_war_end = {
 		}
 	}
 
-	bpm_apply_to_front = {
-		effect = bpm_front_revolution_victorious
-	}
+	bpm_coalition_revolution_victorious = yes
 	scope:new_country = {
 		remove_variable = bpm_civil_war_origin
-		remove_variable = bpm_country_revolutionary_front
+		remove_variable = bpm_country_revolutionary_movement
+		remove_variable = bpm_country_revolutionary_movement_type
 	}
 }
+
+# scope:target_country
+# scope:creator_country
+# scope:movement
+bpm_on_civil_war_end = {
+	var:bpm_holder = { save_scope_as = creator_country } 
+	var:bpm_target = { save_scope_as = target_country }
+	scope:creator_country = {
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_provgov_member
+			}
+			owner = {
+				add_to_variable_list = {
+					name = bpmtotransferrev
+					target = prev.type
+				}
+			}
+		}
+		play_as = scope:target_country
+	}
+	scope:target_country = {
+		set_variable = {
+			name = bpm_country_revolutionary_movement_type
+			value = scope:creator_country.var:bpm_country_revolutionary_movement_type
+		}
+		every_interest_group = {
+			limit = {
+				scope:creator_country = {
+					is_target_in_variable_list = {
+						name = bpmtotransferrev
+						target = prev.type
+					}
+				}
+			}
+			owner = {
+				add_to_variable_list = {
+					name = bpm_civil_war_revolutionary_ig
+					target = prev
+				}
+			}
+		}
+		annex_as_civil_war = scope:creator_country
+		every_diplomatic_play = {
+			limit = {
+				is_diplomatic_play_type = dp_revolution
+			}
+			end_play = yes # should this be here??
+		}
+
+		bpm_coalition_revolution_victorious = yes
+	}
+}
+
+
+bpm_coalition_crossroads_happened = {
+	# Revolutionary Fervour
+	add_radicals = {
+		value = -0.85
+	}
+	every_interest_group = {
+		add_modifier = {
+			name = bpm_adapting_to_new_regime
+			days = 730
+			is_decaying = yes
+		}
+	}
+	every_political_movement = {
+		add_modifier = {
+			name = bpm_adapting_to_new_regime_mov
+			days = 730
+			is_decaying = yes
+		}
+	}
+	bpm_make_government_of_national_defence = yes
+	bpm_setup_factions = yes
+}
+
+bpm_coalition_revolution_victorious = {
+	clear_variable_list = bpm_revolution_victory_igs
+	every_interest_group = {
+		remove_modifier = modifier_revolution_defeated_light
+		remove_modifier = modifier_revolution_victorious_light
+		remove_modifier = bpm_modifier_revolution_victorious_light
+	}
+	every_in_list = {
+		variable = bpm_civil_war_revolutionary_ig
+		owner = { add_to_variable_list = {
+			name = bpm_revolution_victory_igs
+			target = prev
+		} }
+	}
+
+	bpm_coalition_crossroads_happened = yes
+
+
+	every_interest_group = {
+		limit = {
+			NOT = {
+				owner = {
+					is_target_in_variable_list = {
+						name = bpm_revolution_victory_igs
+						target = prev
+					}
+				}
+			}
+		}
+		remove_modifier = bpm_empowered_ig
+	}
+
+	bpm_remove_political_stability_huge = yes
+	bpm_remove_political_stability_huge = yes
+}
+

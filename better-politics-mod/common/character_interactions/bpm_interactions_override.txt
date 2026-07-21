@@ -228,11 +228,12 @@ REPLACE:exile_character = {
 		is_ruler_of_own_country = no
 		is_heir_of_own_country = no
 		NOT = { has_variable = bpm_untouchable_char }
-		NOT = {
+		NOR = {
 			has_role = bpm_character_role_hog
 			has_role = bpm_character_role_protege
 			has_role = bpm_character_role_regent
             has_role = bpm_character_role_acting_hog
+			has_role = bpm_character_role_minister
 		}
 	}
 
@@ -797,40 +798,13 @@ REPLACE:arrange_accident = {
 			has_role_of_type = politician
 			has_role_of_type = agitator
 		}
-		bpm_char_is_not_untouchable_role = yes
-		is_immortal = no
+		NOT = { has_variable = bpm_untouchable_char }
 	}
 
 	show_requirements = yes
 
 	possible = {
 		owner ?= {
-			has_law_or_variant = law_type:law_secret_police
-		}
-		interest_group ?= {
-			ig_counts_as_marginal = no
-		}
-		custom_tooltip = {
-			text = pending_coup_event_tt
-			NOT = {
-				owner = {
-					has_variable = coup_event_active
-				}
-			}
-		}
-		trigger_if = {
-			limit = {
-				OR = {
-					has_dlc_feature = voice_of_the_people_content
-					has_dlc_feature = ip4_content
-				}
-			}
-			custom_tooltip = {
-				text = doing_coup_for_player_tt
-				NOT = {
-					has_variable = commander_doing_coup_on_player_behalf
-				}
-			}
 			has_law_or_variant = law_type:law_secret_police
 		}
 		interest_group = {
@@ -873,9 +847,6 @@ REPLACE:arrange_accident = {
 	}
 
 	effect = {
-		owner = { bpm_auth_add_exhaustion_large = yes }
-		this.interest_group = { add_modifier = { name = bpm_ig_disrupted_by_assassination years = 5 is_decaying = yes } }
-		this.interest_group ?= {
 		this.interest_group ?= {
 			save_scope_as = relevant_ig
 		}
@@ -886,137 +857,6 @@ REPLACE:arrange_accident = {
 			limit = {
 				exists = owner.institution:institution_home_affairs
 			}
-			random_list = {
-				40 = {
-					modifier = {
-						if = {
-							limit = {
-								owner.institution:institution_home_affairs.investment >= 2
-							}
-							add = 25
-						}
-						if = {
-							limit = {
-								owner.institution:institution_home_affairs.investment >= 3
-							}
-							add = 25
-						}
-						if = {
-							limit = {
-								owner.institution:institution_home_affairs.investment >= 4
-							}
-							add = 25
-						}
-						if = {
-							limit = {
-								owner.institution:institution_home_affairs.investment >= 5
-							}
-							add = 25
-						}
-					}
-					hidden_effect = {
-						if = {
-							limit = {
-								has_dlc_feature = ip3_content
-								scope:assassinated_scope ?= {
-									has_template = aus_klemens_von_metternich
-									is_immortal = yes
-								}
-							}
-							set_character_immortal = no
-						}
-					}
-					kill_character = yes
-				}
-				40 = {
-					owner ?= {
-						post_notification = arranged_accident_failed
-					}
-					custom_tooltip = assassination_attempt_failed_tt
-				}
-				20 = {
-					modifier = {
-						if = {
-							limit = {
-								owner.institution:institution_home_affairs.investment >= 2
-							}
-							subtract = 5
-						}
-						if = {
-							limit = {
-								owner.institution:institution_home_affairs.investment >= 3
-							}
-							subtract = 5
-						}
-						if = {
-							limit = {
-								owner.institution:institution_home_affairs.investment >= 4
-							}
-							subtract = 5
-						}
-						if = {
-							limit = {
-								owner.institution:institution_home_affairs.investment >= 5
-							}
-							subtract = 5
-						}
-					}
-					custom_tooltip = assassination_attempt_failed_loud_tt
-					owner ?= {
-						add_radicals = {
-							value = very_large_radicals
-							interest_group = scope:relevant_ig
-						}
-					}
-					if = {
-						limit = {
-							owner = {
-								has_journal_entry = je_ip4_coup
-							}
-							root = {
-								has_variable = golpista_var
-							}
-						}
-						owner = {
-							character_execute_immediate_coup = yes
-						}
-					}
-					if = {
-						limit = {
-							character_supports_political_movement = yes
-						}
-						this.political_movement = {
-							add_modifier = {
-								name = modifier_government_accident_attempt
-								days = long_modifier_time
-							}
-						}
-					}
-					else_if = {
-						limit = {
-							has_role_of_type = politician
-							THIS.interest_group ?= {
-								interest_group_supports_political_movement = yes
-							}
-						}
-						owner ?= {
-							random_political_movement = {
-								limit = {
-									any_influenced_interest_group = {
-										this = scope:relevant_ig
-									}
-								}
-								add_modifier = {
-									name = modifier_government_accident_attempt
-									days = long_modifier_time
-								}
-							}
-						}
-					}
-					owner ?= {
-						post_notification = arranged_accident_failed_incrimination
-					}
-				}
 			random_list = {
 				40 = {
 					modifier = {
@@ -1210,26 +1050,22 @@ REPLACE:arrange_accident = {
 	should_ai_evaluate = {
 		country_rank > rank_value:minor_power
 	}
-	
-	ai_will_do = {
-		is_heir_of_own_country = no
-	}
 
 	ai_chance = {
 		value = -50
 		if = {
 			limit = {
-				interest_group ?= {
+				interest_group = {
 					ig_approval <= -5
-				}
+				}		
 			}
 			add = 25
 		}
 		if = {
 			limit = {
-				interest_group ?= {
+				interest_group = {
 					ig_approval <= -10
-				}
+				}		
 			}
 			add = 30
 		}
@@ -1237,43 +1073,43 @@ REPLACE:arrange_accident = {
 			limit = {
 				scope:actor ?= {
 					NOR = {
-						has_law_or_variant = law_type:law_autocracy
-						has_law_or_variant = law_type:law_oligarchy
-						has_law_or_variant = law_type:law_single_party_state
+						has_law = law_type:law_autocracy
+						has_law = law_type:law_oligarchy
+						has_law = law_type:law_single_party_state
 					}
-				}
+				}			
 			}
 			add = -25
 		}
 		if = {
 			limit = {
 				scope:actor ?= {
-					has_law_or_variant = law_type:law_outlawed_dissent
-				}
+					has_law = law_type:law_outlawed_dissent
+				}			
 			}
 			add = 30
 		}
 		if = {
 			limit = {
 				scope:actor ?= {
-					has_law_or_variant = law_type:law_censorship
-				}
+					has_law = law_type:law_censorship
+				}			
 			}
 			add = 10
 		}
 		if = {
 			limit = {
 				scope:actor ?= {
-					has_law_or_variant = law_type:law_right_of_assembly
-				}
+					has_law = law_type:law_right_of_assembly
+				}			
 			}
 			add = -10
 		}
 		if = {
 			limit = {
 				scope:actor ?= {
-					has_law_or_variant = law_type:law_protected_speech
-				}
+					has_law = law_type:law_protected_speech
+				}			
 			}
 			add = -20
 		}
@@ -1281,9 +1117,9 @@ REPLACE:arrange_accident = {
 			limit = {
 				scope:actor ?= {
 					any_interest_group = {
-						is_revolutionary = yes
+						is_insurrectionary = yes
 					}
-				}
+				}			
 			}
 			add = 25
 		}
@@ -1295,7 +1131,7 @@ REPLACE:arrange_accident = {
 							has_trait = cruel
 						}
 					}
-				}
+				}			
 			}
 			add = 15
 		}
@@ -1307,7 +1143,7 @@ REPLACE:arrange_accident = {
 							has_trait = imperious
 						}
 					}
-				}
+				}			
 			}
 			add = 10
 		}
@@ -1506,5 +1342,602 @@ REPLACE:proclaim_regent_monarch = {
 
 	ai_chance = {
 		value = 1
+	}
+}
+
+REPLACE:patronize = {
+	icon = "gfx/interface/icons/generic_icons/ig_bolster.dds"
+	potential = {
+		is_in_exile_pool = no
+		is_in_void = no
+		is_ruler_of_own_country = no
+		has_dlc_feature = ep2_content
+	}
+
+	show_requirements = yes
+
+	possible = {
+		owner ?= {
+			authority >= ROOT.patronize_authority_cost
+			custom_tooltip = {
+				text = patronized_up_to_three_chars
+				any_scope_character = {
+					OR = {
+						has_modifier = modifier_agitator_political_patronage
+						has_modifier = modifier_political_patronage
+					}
+					count < 3
+				}
+			}
+		}
+		is_heir_of_own_country = no
+		NOR = {
+			character_has_been_patronized = yes
+			character_has_been_ostracized = yes
+		}
+		trigger_if = {
+			limit = {owner = {is_player = yes}}
+			custom_tooltip = {
+				text = ideology_close_enough_tt
+				bpm_synergy_with_executive > 0.6
+			}
+		}
+	}
+
+	effect = {
+		owner = {
+			add_modifier = { 
+				name = modifier_granted_character_patronage 
+				days = long_modifier_time
+				multiplier = ROOT.patronize_authority_cost
+			}
+		}
+		if = {
+			limit = {
+                has_role_of_type = agitator
+                OR = {
+                    has_role_of_type = general
+                    has_role_of_type = admiral
+                }
+			}
+			add_modifier = { name = modifier_agitator_commander_political_patronage days = long_modifier_time }
+		}
+		else_if = {
+			limit = {
+				has_role_of_type = agitator
+			}
+			add_modifier = { name = modifier_agitator_political_patronage days = long_modifier_time }
+		}
+		else_if = {
+			limit = {
+				NOT = {
+					has_role_of_type = politician
+				}
+				OR = {
+					has_role_of_type = general
+					has_role_of_type = admiral
+				}
+			}
+			add_modifier = { name = modifier_commander_political_patronage days = long_modifier_time }
+		}
+		else = {
+			add_modifier = { name = modifier_political_patronage days = long_modifier_time }
+		}
+		# IG Effects
+		if = {
+			limit = {
+				is_interest_group_leader = yes
+			}
+			interest_group ?= {
+				add_modifier = {
+					name = modifier_patronized_leader
+					days = long_modifier_time
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				has_role_of_type = politician
+			}
+			interest_group ?= {
+				add_modifier = {
+					name = modifier_patronized_politician
+					days = long_modifier_time
+				}
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					has_trait = expensive_tastes
+				}
+			}
+			random_list = {
+				10 = {
+					add_trait = expensive_tastes
+				}
+				90 = {
+					
+				}
+			}
+		}
+	}
+
+	should_ai_evaluate = {
+		country_rank >= rank_value:minor_power # Don't burn performance on tiny AI countries messing around with character interactions
+		relative_authority >= 0.5
+	}
+	
+	ai_chance = {
+		value = -25
+		if = {
+			limit = {
+				exists = owner
+				OR = {
+					AND = {
+						owner.ruler ?= {
+							has_socialist_ideology = yes
+						}
+						has_socialist_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_progressive_ideology = yes
+						}
+						has_progressive_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_liberal_ideology = yes
+						}
+						has_liberal_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_reactionary_ideology = yes
+						}
+						has_reactionary_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_conservative_ideology = yes
+						}
+						has_conservative_ideology = yes
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group ?= {
+					ig_approval <= 5
+				}
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				this.ideology = owner.ruler.ideology
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				loyalty > 75
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				owner ?= {
+					relative_authority <= 0.75
+				}
+			}
+			add = -100
+		}
+		if = {
+			limit = {
+				owner ?= {
+					has_journal_entry = je_tenpo_crisis
+					has_variable = ai_tenpo_reform_agenda
+				}
+				is_interest_group_type = ig_petty_bourgeoisie
+			}
+			add = 100
+		}
+	}
+}
+
+REPLACE:ostracize = {
+	icon = "gfx/interface/icons/generic_icons/ig_suppress.dds"
+	potential = {
+		is_in_exile_pool = no
+		is_in_void = no
+		is_ruler_of_own_country = no
+		has_dlc_feature = ep2_content
+	}
+
+	show_requirements = yes
+
+	possible = {
+		owner ?= {
+			authority >= ROOT.ostracize_authority_cost
+			custom_tooltip = {
+				text = ostracized_up_to_three_chars
+				any_scope_character = {
+					OR = {
+						has_modifier = modifier_agitator_political_smears
+						has_modifier = modifier_commander_political_smears
+						has_modifier = modifier_political_smears
+					}
+					count < 3
+				}
+			}
+		}
+		is_heir_of_own_country = no
+		NOR = {
+			character_has_been_patronized = yes
+			character_has_been_ostracized = yes
+		}
+		trigger_if = {
+			limit = {owner = {is_player = yes}}
+			custom_tooltip = {
+				text = ideology_not_too_close_tt
+				bpm_synergy_with_executive < 0.7
+			}
+		}
+	}
+
+	effect = {
+		owner = {
+			add_modifier = { 
+				name = modifier_smeared_character 
+				days = long_modifier_time
+				multiplier = ROOT.ostracize_authority_cost
+			}
+		}
+		if = {
+			limit = {
+                has_role_of_type = agitator
+                OR = {
+                    has_role_of_type = general
+                    has_role_of_type = admiral
+                }
+			}
+			add_modifier = { name = modifier_agitator_commander_political_smears days = long_modifier_time }
+		}
+		else_if = {
+			limit = {
+				has_role_of_type = agitator
+			}
+			add_modifier = { name = modifier_agitator_political_smears days = long_modifier_time }
+		}
+		else_if = {
+			limit = {
+				NOT = {
+					has_role_of_type = politician
+				}
+				OR = {
+					has_role_of_type = general
+					has_role_of_type = admiral
+				}
+			}
+			add_modifier = { name = modifier_commander_political_smears days = long_modifier_time }
+		}
+		else = {
+			add_modifier = { name = modifier_political_smears days = long_modifier_time }
+		}
+		# IG Effects
+		if = {
+			limit = {
+				is_interest_group_leader = yes
+			}
+			interest_group ?= {
+				add_modifier = {
+					name = modifier_ostracized_leader
+					days = long_modifier_time
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				has_role_of_type = politician
+			}
+			interest_group ?= {
+				add_modifier = {
+					name = modifier_ostracized_politician
+					days = long_modifier_time
+				}
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					has_trait = wrathful
+				}
+			}
+			random_list = {
+				10 = {
+					add_trait = wrathful
+				}
+				90 = {
+					
+				}
+			}
+		}
+	}
+
+	should_ai_evaluate = {
+		country_rank >= rank_value:minor_power # Don't burn performance on tiny AI countries messing around with character interactions
+		relative_authority >= 0.5
+	}
+
+	ai_chance = {
+		value = -25
+		if = {
+			limit = {
+				OR = {
+					AND = {
+						owner.ruler ?= {
+							OR = {
+								has_reactionary_ideology = yes
+								has_conservative_ideology = yes
+							}
+						}
+						has_socialist_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_reactionary_ideology = yes
+						}
+						has_progressive_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_liberal_ideology = yes
+						}
+						has_liberal_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_socialist_ideology = yes
+						}
+						has_conservative_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							NOR = {
+								has_socialist_ideology = yes
+								has_progressive_ideology = yes
+							}
+						}
+						has_reactionary_ideology = yes
+					}
+				}
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					any_interest_group = {
+						is_revolutionary = yes
+					}
+				}
+			}
+			add = 30
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler = {
+						has_trait = cruel
+					}
+				}
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				scope:actor ?= {
+					ruler = {
+						has_trait = imperious
+					}
+				}
+			}
+			add = 5
+		}
+		if = {
+			limit = {
+				is_interest_group_leader = yes
+				interest_group ?= {
+					ig_approval <= 10
+				}
+			}
+			add = -10
+		}
+		if = {
+			limit = {
+				loyalty < 25
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				owner ?= {
+					relative_authority <= 0.75
+				}
+			}
+			add = -100
+		}
+		if = {
+			limit = {
+				owner ?= {
+					has_journal_entry = je_tenpo_crisis
+					has_variable = ai_tenpo_hardline_agenda
+				}
+				is_interest_group_type = ig_petty_bourgeoisie
+			}
+			add = 100
+		}
+		if = { # Dangerous agitators have a greater chance of getting booted
+			limit = {
+				has_role_of_type = agitator
+				OR = {
+					has_trait = ambitious
+					has_trait = wrathful
+					has_trait = ruthless
+					has_trait = bandit
+					has_trait = social_bandit
+					has_trait = special_character_luxemburg_in_exile
+				}
+			}
+			multiply = 1.5
+		}
+	}
+}
+
+REPLACE:grant_peerage = {
+	icon = "gfx/interface/icons/law_icons/crownland_diets.dds"
+	potential = {
+		is_noble = no
+		is_ruler_of_own_country = no
+		is_heir_of_own_country = no
+		is_in_exile_pool = no
+		is_in_void = no
+		has_dlc_feature = ep2_content
+		scope:actor ?= {
+			has_law = law_type:law_monarchy
+		}
+	}
+
+	show_requirements = yes
+
+	possible = {
+		owner ?= {
+			authority >= ROOT.peerage_authority_cost
+		}
+		is_heir_of_own_country = no
+		trigger_if = {
+			limit = {owner = {is_player = yes}}
+			custom_tooltip = {
+				text = ideology_close_enough_tt
+				bpm_synergy_with_executive > 0.6
+			}
+		}
+	}
+
+	effect = {
+		owner = {
+			add_modifier = {
+				name = modifier_granted_character_peerage
+				days = short_modifier_time
+				multiplier = ROOT.peerage_authority_cost
+			}
+		}
+		set_is_noble = yes
+		if = {
+			limit = {
+				interest_group ?= {
+					NOT = {
+						law_stance = {
+							law = law_type:law_monarchy
+							value < neutral
+						}
+					}
+				}
+			}
+			interest_group ?= {
+				add_modifier = {
+					name = modifier_granted_peerage
+					days = normal_modifier_time
+				}
+			}
+		}
+	}
+
+	should_ai_evaluate = {
+		country_rank >= rank_value:minor_power # Don't burn performance on tiny AI countries messing around with character interactions
+		relative_authority >= 0.5
+	}
+
+	ai_chance = {
+		value = -25
+		if = {
+			limit = {
+				OR = {
+					AND = {
+						owner.ruler ?= {
+							has_socialist_ideology = yes # Hail to the Red King
+						}
+						has_socialist_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_progressive_ideology = yes
+						}
+						has_progressive_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_liberal_ideology = yes
+						}
+						has_liberal_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_reactionary_ideology = yes
+						}
+						has_reactionary_ideology = yes
+					}
+					AND = {
+						owner.ruler ?= {
+							has_conservative_ideology = yes
+						}
+						has_conservative_ideology = yes
+					}
+				}
+			}
+			add = 25
+		}
+		if = {
+			limit = {
+				interest_group ?= {
+					ig_approval <= 5
+				}
+			}
+			add = 15
+		}
+		if = {
+			limit = {
+				this.ideology = owner.ruler.ideology
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				loyalty > 75
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				owner ?= {
+					relative_authority <= 0.75
+				}
+			}
+			add = -50
+		}
+		if = {
+			limit = {
+				owner ?= {
+					has_journal_entry = je_tenpo_crisis
+					has_variable = ai_tenpo_reform_agenda
+				}
+				is_interest_group_type = ig_petty_bourgeoisie
+			}
+			add = 100
+		}
 	}
 }

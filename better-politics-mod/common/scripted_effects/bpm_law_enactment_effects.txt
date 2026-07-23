@@ -328,46 +328,6 @@ bpm_set_ig_preferred_over_enacting_law_change_steps = {
 	}
 }
 
-bpm_set_party_whip_ig = {
-	random_member = {
-		save_scope_as = reference_ig
-	}
-	every_member = {
-		if = {
-			### Update most powerful IG if not set or if this IG is more powerful
-			limit = {
-				OR = {
-					NOT = { scope:reference_ig = { has_variable = bpm_most_powerful_ig } }
-					scope:reference_ig.var:bpm_most_powerful_ig.ig_clout < this.ig_clout
-				}
-			}
-			scope:reference_ig = {
-				set_variable = { name = bpm_most_powerful_ig value = prev }
-			}
-		}
-	}
-	every_member = {
-		set_variable = {
-			name = bpm_most_powerful_ig
-			value = scope:reference_ig.var:bpm_most_powerful_ig
-		}
-	}
-}
-
-bpm_set_ig_party_whip_enacting_law_change_steps = {
-	if = {
-		limit = { has_variable = bpm_most_powerful_ig }
-		set_variable = {
-			name = bpm_ig_party_whip_enacting_law_change_steps
-			# Unweighted law support
-			value = {
-				add = var:bpm_most_powerful_ig.var:bpm_ig_enacting_law_stance
-				subtract = var:bpm_most_powerful_ig.var:bpm_ig_current_law_stance
-			}
-		}
-	}
-}
-
 bpm_set_ig_law_support_ruler = {
 	ruler ?= {
 		bpm_set_ig_enacting_law_stance_to_number = yes
@@ -418,12 +378,6 @@ bpm_set_ig_law_support_stance_vars = {
 bpm_set_all_igs_law_support_cached_vars = {
 	every_interest_group = {
 		bpm_set_ig_law_support_stance_vars = yes
-	}
-	every_active_party = {
-		bpm_set_party_whip_ig = yes
-	}
-	every_interest_group = {
-		bpm_set_ig_party_whip_enacting_law_change_steps = yes
 	}
 	bpm_set_ig_law_support_ruler = yes
 }
@@ -718,6 +672,95 @@ bpm_ig_decrease_law_enactment_approval_big = {
 				}
 				owner = { bpm_update_law_enactment_variables_modifiers = yes }
 			}
+		}
+	}
+}
+
+bpm_sway_remove = {
+	save_scope_as = sway
+	var:sponsor = {
+		every_in_list = {
+			variable = bpm_sways
+			limit = {
+				NOT = {
+					this = scope:sway
+				}
+			}
+			add_to_temporary_list = other_sways
+		}
+		clear_variable_list = bpm_sways
+		every_in_list = {
+			list = other_sways
+			var:sponsor = {
+				add_to_variable_list = {
+					name = bpm_sways
+					target = prev
+				}
+			}
+		}
+	}
+	free_character_from_void = yes
+	kill_character = {
+		hidden = yes
+		value = yes
+	}
+}
+
+bpm_ig_refresh_sways = {
+	clear_variable_list = bpm_sways
+	save_scope_as = ig
+	while = {
+		count = 5
+		bpm_gen_random_sway = yes
+	}
+}
+
+bpm_gen_random_sway = {
+	random_list = {
+		10 = {
+			trigger = {
+				bpm_is_sway_enacting_amendment_valid = yes
+			}
+			bpm_gen_sway_enacting_amendment = yes
+		}
+	}
+}
+
+bpm_gen_sway_enacting_amendment = {
+	owner = {
+		create_character = {
+			template = struct_template
+			save_scope_as = sway_struct
+		}
+		#currently_enacting_law = {
+		#	random_possible_amendment_type = {
+		#		limit = {
+		#			bpm_valid_sway_enacting_amendment_type = yes
+		#		}
+		#		save_scope_as = selected_amendment_type
+		#	}
+		#}
+		add_to_variable_list = {
+			name = bpm_sways
+			target = scope:sway_struct
+		}
+	}
+	scope:sway_struct = {
+		set_variable = {
+			name = sway_strength
+			value = 10
+		}
+		#set_variable = {
+		#	name = amendment
+		#	value = scope:selected_amendment_type
+		#}
+		set_variable = {
+			name = sway_type
+			value = flag:sway_enacting_amendment
+		}
+		set_variable = {
+			name = sponsor
+			value = prev
 		}
 	}
 }

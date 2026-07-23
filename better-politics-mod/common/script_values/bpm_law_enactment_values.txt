@@ -1,88 +1,4 @@
-﻿bpm_law_enactment_movement_pressure = {
-	value = 0
-	add = bpm_law_enactment_movement_pressure_support
-	round = yes
-}
-
-# Total Support
-bpm_law_enactment_movement_pressure_support = {
-	value = 0
-	every_political_movement = {
-		if = {
-			limit = { bpm_movement_supports_enacting_current_law = yes }
-			add = bpm_law_enactment_movement_pressure_value
-		}
-	}
-}
-
-bpm_adjusted_movement_radicalism = {
-	value = political_movement_radicalism
-	if = {
-		limit = {
-			law_stance = {
-				law = owner.currently_enacting_law.type
-				value = approve
-			}
-		}
-		add = 0.2
-	}
-	else_if = {
-		limit = {
-			law_stance = {
-				law = owner.currently_enacting_law.type
-				value = strongly_approve
-			}
-		}
-		add = 0.4
-	}
-}
-
-bpm_law_enactment_movement_pressure_value = {
-	value = {
-		value = political_movement_support
-		multiply = 100
-		desc = "bpm_from_movement_support"
-	}
-	if = {
-		limit = {
-			bpm_adjusted_movement_radicalism > define:NPolitics|RADICALISM_AGITATING_THRESHOLD
-		}
-		multiply = {
-			value = 2
-			desc = "bpm_from_movement_activism"
-		}
-	}
-	else_if = {
-		limit = {
-			bpm_adjusted_movement_radicalism > define:NPolitics|RADICALISM_PROTESTING_THRESHOLD
-		}
-		multiply = {
-			value = 3
-			desc = "bpm_from_movement_activism"
-		}
-	}
-	else_if = {
-		limit = {
-			bpm_adjusted_movement_radicalism > define:NPolitics|RADICALISM_MILITANT_THRESHOLD
-		}
-		multiply = {
-			value = 5
-			desc = "bpm_from_movement_activism"
-		}
-	}
-	round = yes
-}
-
-bpm_number_of_supporting_movements = {
-	value = 0
-	every_political_movement = {
-		limit = { bpm_movement_supports_enacting_current_law = yes }
-		add = 1
-	}
-}
-
-
-bpm_law_sway_maneuvers_value = {
+﻿bpm_law_sway_maneuvers_value = {
 	value = 0
 	if = {
 		limit = { has_variable = bpm_law_sway_maneuvers }
@@ -90,278 +6,469 @@ bpm_law_sway_maneuvers_value = {
 	}
 }
 
+bpm_country_neutral_clout = {
+	value = 0
+	every_interest_group = {
+		limit = {
+			bpm_ig_law_support_total_value = 0
+		}
+		add = ig_clout
+	}
+}
+
+bpm_country_nay_votes = {
+	value = 1
+	subtract = bpm_country_yea_votes
+}
+
+bpm_country_yea_votes = {
+	value = 0
+	every_interest_group = {
+		limit = {
+			bpm_ig_law_support_total_value > 0
+		}
+		add = ig_clout
+	}
+}
+
+bpm_country_opposing_clout = {
+	value = 0
+	every_interest_group = {
+		limit = {
+			bpm_ig_law_support_total_value < 0
+			bpm_ig_law_support_total_value > -2
+		}
+		add = ig_clout
+	}
+}
+
+bpm_country_strongly_opposing_clout = {
+	value = 0
+	every_interest_group = {
+		limit = {
+			bpm_ig_law_support_total_value <= -2
+		}
+		add = ig_clout
+	}
+}
+
+bpm_country_supporting_clout = {
+	value = 0
+	every_interest_group = {
+		limit = {
+			bpm_ig_law_support_total_value > 0
+			bpm_ig_law_support_total_value < 2
+		}
+		add = ig_clout
+	}
+}
+
+bpm_country_strongly_supporting_clout = {
+	value = 0
+	every_interest_group = {
+		limit = {
+			bpm_ig_law_support_total_value >= 2
+		}
+		add = ig_clout
+	}
+}
+
+bpm_law_hos_power = {
+	save_temporary_scope_as = law_to_check
+	if = {
+		limit = {
+			owner = {
+				NOT = {modifier:country_bpm_hog_veto = yes}
+			}
+		}
+		if = {
+			limit = {
+				scope:law_to_check.type = law_type:law_advisory_body
+			}
+			value = 5
+		}
+		if = {
+			limit = {
+				scope:law_to_check.type = law_type:law_separated_powers
+			}
+			value = 2.5
+		}
+		if = {
+			limit = {
+				scope:law_to_check.type = law_type:law_supreme_legislature
+			}
+			value = 0
+		}
+	}
+	
+	if = {
+		limit = {
+			scope:law_to_check.type = law_type:law_no_separate_hog
+		}
+		value = 5
+	}
+	if = {
+		limit = {
+			scope:law_to_check.type = law_type:law_appointed_by_hos
+		}
+		value = 3
+	}
+	if = {
+		limit = {
+			scope:law_to_check.type = law_type:law_appointed_on_advice
+		}
+		value = 2
+	}
+	if = {
+		limit = {
+			scope:law_to_check.type = law_type:law_answers_to_legislature
+		}
+		value = 0
+	}
+}
+
+bpm_law_hog_power = {
+	save_temporary_scope_as = law_to_check
+	if = {
+		limit = {
+			owner = {
+				modifier:country_bpm_hog_veto = yes
+			}
+		}
+		if = {
+			limit = {
+				scope:law_to_check.type = law_type:law_advisory_body
+			}
+			value = 5
+		}
+		if = {
+			limit = {
+				scope:law_to_check.type = law_type:law_separated_powers
+			}
+			value = 2.5
+		}
+		if = {
+			limit = {
+				scope:law_to_check.type = law_type:law_supreme_legislature
+			}
+			value = 0
+		}
+	}
+	
+	if = {
+		limit = {
+			scope:law_to_check.type = law_type:law_no_separate_hog
+		}
+		value = 0
+	}
+	if = {
+		limit = {
+			scope:law_to_check.type = law_type:law_appointed_by_hos
+		}
+		value = 2
+	}
+	if = {
+		limit = {
+			scope:law_to_check.type = law_type:law_appointed_on_advice
+		}
+		value = 3
+	}
+	if = {
+		limit = {
+			scope:law_to_check.type = law_type:law_answers_to_legislature
+		}
+		value = 5
+	}
+}
+
+# bpm_law_ig_support_value with the args flipped
+# root: IG scope
+# law: saved Law scope to check
+bpm_ig_law_support_value = {
+	value = 0
+	add = {
+		if = {
+			limit = {
+				law_enactment_stance = {
+    			    law = scope:law.type
+    			    value > approve
+    			}
+			}
+			value = 2
+		}
+		else_if = {
+			limit = {
+				law_enactment_stance = {
+    			    law = scope:law.type
+    			    value < disapprove
+    			}
+			}
+			value = -2
+		}
+		else_if = {
+			limit = {
+				law_enactment_stance = {
+    			    law = scope:law.type
+    			    value > neutral
+    			}
+			}
+			value = 1
+		}
+		else_if = {
+			limit = {
+				law_enactment_stance = {
+    			    law = scope:law.type
+    			    value < neutral
+    			}
+			}
+			value = -1
+		}
+		desc = bpm_ig_law_support_enacting_law
+	}
+}
+
+# bpm_ig_law_support_value with the args flipped
+# root: Law scope
+# ig: saved IG scope to check
+bpm_law_ig_support_value = {
+	value = 0
+	add = {
+		scope:ig = {
+			if = {
+				limit = {
+					law_enactment_stance = {
+						law = prev.type
+						value > approve
+					}
+				}
+				value = 2
+			}
+			else_if = {
+				limit = {
+					law_enactment_stance = {
+						law = prev.type
+						value < disapprove
+					}
+				}
+				value = -2
+			}
+			else_if = {
+				limit = {
+					law_enactment_stance = {
+						law = prev.type
+						value > neutral
+					}
+				}
+				value = 1
+			}
+			else_if = {
+				limit = {
+					law_enactment_stance = {
+						law = prev.type
+						value < neutral
+					}
+				}
+				value = -1
+			}
+		}
+		desc = bpm_ig_law_support_enacting_law
+	}
+}
+
+bpm_vetoer_law_support_from_movements = {
+	interest_group = {
+		save_temporary_scope_as = ig_for_calc
+		value = 0
+		if = { #positive movements
+			limit = {
+				owner = {
+					any_political_movement = {
+						bpm_ig_law_support_value > 0
+						any_influenced_interest_group = {
+							this = scope:ig_for_calc
+						}
+					}
+				}
+			}
+			add = {
+				desc = "amenability_pressuring_supporting_movements"
+				owner = {
+					every_political_movement = {
+						limit = {
+							bpm_ig_law_support_value > 0
+							any_influenced_interest_group = {
+								this = scope:ig_for_calc
+							}
+						}
+						add = {
+							value = "movement_pressure(scope:ig_for_calc)"
+							multiply = movement_balance_factor
+							divide = 2
+							max = 20
+						}
+					}
+				}
+			}
+		}
+
+		if = { #negative movements
+			limit = {
+				owner = {
+					any_political_movement = {
+						bpm_ig_law_support_value < 0
+						any_influenced_interest_group = {
+							this = scope:ig_for_calc
+						}
+					}
+				}
+			}
+			add = {
+				desc = "amenability_pressuring_opposing_movements"
+				owner = {
+					every_political_movement = {
+						limit = {
+							bpm_ig_law_support_value < 0
+							any_influenced_interest_group = {
+								this = scope:ig_for_calc
+							}
+						}
+						add = {
+							value = "movement_pressure(scope:ig_for_calc)"
+							multiply = movement_balance_factor
+							divide = 2
+							max = 20
+							multiply = -1
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+bpm_vetoer_support_from_vote = {
+	owner = {
+		if = {
+			limit = {
+				bpm_country_yea_votes > 0.5
+			}
+			# Vote in autocracy: 0 to 10
+			if = {
+				limit = { has_law = law_type:law_appointed_by_hos }
+				add = {
+					value = bpm_country_yea_votes
+					subtract = 0.5
+					multiply = 10
+					desc = "bpm_ruler_law_support_from_vote_appointed_by_hos"
+				}
+			}
+			# Vote otherwise: 0 to 20
+			else = {
+				add = {
+					value = bpm_country_yea_votes
+					subtract = 0.5
+					multiply = 20
+					desc = "bpm_ruler_law_support_from_vote"
+				}
+			}
+		}
+	}
+}
+
 bpm_ig_law_support_total_value = {
 	value = 0
 
 	if = {
+		limit = {
+			NOT = {exists = scope:law}
+		}
+		owner.currently_enacting_law ?= {
+			save_temporary_scope_as = law
+		}
+	}
+
+	if = {
 		limit = { 
 			owner = { 
-				enacting_any_law = yes 
-				NOT = { currently_enacting_law.type = law_type:law_repeatable_politics_repeal_amendment } 
-			}
-		}
-		add = owner.modifier:country_base_law_enactment_support_add
-		if = {
-			limit = {
-				is_insurrectionary = yes
-				# Trigger this if the revolutionary movement is not supporting the law
-				NOT = {
-					owner = {
-						any_political_movement = {
-							is_revolutionary = yes
-							law_stance = {
-								law = prev.currently_enacting_law.type
-								value > approve
-							}
-						}
-					}
-				}
-			}
-			add = {
-				value = -999
-				desc = "bpm_ig_law_support_from_insurrectionary"
+				#NOT = { scope:law.type = law_type:law_repeatable_politics_repeal_amendment } 
 			}
 		}
 
 		if = {
-			limit = { 
-				var:bpm_ig_enacting_law_change_steps > 0
+			limit = {
+				law_enactment_stance = {
+					law = scope:law.type
+					value > neutral
+				}
 				owner = {
 					has_journal_entry = je_government_petition
 					has_variable = desired_law_var
-					var:desired_law_var.type = currently_enacting_law.type
+					var:desired_law_var.type = scope:law.type
 				}
 			}
 			add = {
-				value = 20
+				value = 1
 				desc = "bpm_ig_law_support_from_petition"
 			}
 		}
 
-		add = {
-			value = owner.bpm_law_enactment_movement_pressure
-			desc = "bpm_ig_law_support_from_movement"
-		}
-		if = {
-			limit = {
-				owner = { has_variable = bpm_law_enactment_desired_by_revolution }
-			}
-			add = {
-				desc = "bpm_ig_law_support_from_insurrection_threat"
-				value = 10
-			}
-		}
+		add = bpm_ig_law_support_value
 
-		if = {
-			limit = {
-				has_variable = bpm_ig_enacting_law_change_steps
-			}
-			add = {
-				if = {
-					limit = { var:bpm_ig_enacting_law_change_steps = 0 }
-					add = 0
-				}
-				else = {
-					# 10*(steps^2) + 10
-					add = var:bpm_ig_enacting_law_change_steps
-					multiply = var:bpm_ig_enacting_law_change_steps # Squared
-					multiply = 10
-					add = 10
-					if = {
-						limit = { var:bpm_ig_enacting_law_change_steps < 0 }
-						multiply = -1
-					}
-				}
-				desc = "bpm_ig_law_support_enacting_law"
-			}			
-		}
-		if = {
-			limit = {
-				has_variable = bpm_ig_preferred_over_enacting_law_change_steps
-				var:bpm_ig_enacting_law_change_steps >= 0
-			}
-			subtract = {
-				if = {
-					limit = { 
-						has_variable = bpm_ig_preferred_over_enacting_law_change_steps
-						var:bpm_ig_preferred_over_enacting_law_change_steps <= 0 
-					}
-					add = 0
-				}
-				else_if = {
-					limit = {
-						has_variable = preferred_law
-						var:preferred_law.type = { save_temporary_scope_as = preferred_law_type }
-						scope:preferred_law_type = {
-							bpm_is_repeatable_law = yes
-						}
-					}
-					# Don't apply law preference to repeatables
-					add = 0
-				}
-				else = {
-					add = { value = this.ig_clout }
-					multiply = { value = this.ig_clout }
-					multiply = 500
-					multiply = var:bpm_ig_preferred_over_enacting_law_change_steps
-				}
-				desc = "bpm_ig_law_support_dislikes_compromise"
-			}
-		}
-	
-		if = {
-			limit = {
-				has_variable = bpm_ig_party_whip_enacting_law_change_steps
-				ig_clout < var:bpm_most_powerful_ig.ig_clout
-			}
-			add = {
-				value = var:bpm_ig_party_whip_enacting_law_change_steps
-				# Weigh by clout difference with party whip
-				multiply = {
-					add = var:bpm_most_powerful_ig.ig_clout
-					subtract = this.ig_clout
-					divide = var:bpm_most_powerful_ig.ig_clout
-				}
-				multiply = 10
-				desc = "bpm_ig_law_support_from_party_whip"
-			}
-		}
+		#if = {
+		#	limit = {
+		#		bpm_ig_law_support_value > 0
+		#		save_temporary_scope_value_as = {
+		#			name = stance
+		#			value = bpm_ig_law_support_value
+		#		}
+		#		save_temporary_scope_as = ig
+		#		any_preferred_law = {
+		#			is_same_law_group_as = scope:law.type
+		#			bpm_law_ig_support_value > scope:stance
+		#		}
+		#	}
+		#	max = {
+		#		value = 0
+		#		desc = "bpm_ig_law_support_dislikes_compromise"
+		#	}
+		#}
 
-		if = {
-			limit = {
-				owner = {
-					has_variable = bpm_political_stability
-					var:bpm_political_stability > 50
-				}
-			}
-			add = {
-				value = owner.var:bpm_political_stability
-				# Weigh by clout difference with party whip
-				multiply = -0.1
-				desc = "bpm_ig_law_support_from_stability"
-			}
-		}
-	
-		if = {
-			limit = {
-				ig_approval < -10
-				NOR = { 
-					has_variable = bpm_blackmail_leader_sway_used
-					has_variable = bpm_redeem_favors_sway_used
-				}
-				law_stance = {
-					law = owner.currently_enacting_law.type
-					value < strongly_approve
-				}
-				owner = { NAND = {
-					exists = currently_enacting_law.type
-					currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
-				} }
-			} 
-			add = {
-				value = -100
-				desc = "bpm_ig_law_support_from_very_low_approval"
-			}
-		}
-		else_if = {
-			limit = {
-				ig_approval < 0
-				NOR = { 
-					has_variable = bpm_blackmail_leader_sway_used
-					has_variable = bpm_redeem_favors_sway_used
-				}
-				law_stance = {
-					law = owner.currently_enacting_law.type
-					value < approve
-				}
-				owner = { NAND = {
-					exists = currently_enacting_law.type
-					currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
-				} }
-			}
-			add = {
-				value = ig_approval
-				desc = "bpm_ig_law_support_from_low_approval"
-			}
-		}
-		else_if = {
-			limit = {
-				ig_approval < 0
-				owner = { AND = {
-					exists = currently_enacting_law.type
-					currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
-				} }
-			}
-			add = {
-				value = ig_approval
-				multiply = -2
-				desc = "bpm_ig_law_support_from_low_approval"
-			}
-		}
-		else_if = {
-			limit = {
-				ig_approval < -10
-				owner = { AND = {
-					exists = currently_enacting_law.type
-					currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
-				} }
-			}
-			add = {
-				value = 100
-				desc = "bpm_ig_law_support_from_very_low_approval"
-			}
-		}
-
-		if = {
-			limit = {
-				is_in_government = yes
-				owner = { AND = {
-					exists = currently_enacting_law.type
-					currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
-				} }
-			}
-			add = {
-				value = -50
-				desc = "bpm_ig_law_support_from_target_government"
-			}
-		}
-
-		add = bpm_law_enactment_ruler_effect_on_ig
-
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			add = { 
-				value = var:bpm_law_enactment_approval_from_events
-				desc = "bpm_law_enactment_approval_from_events_desc"
-			}	
-		}
-
-		add = bpm_law_enactment_sway_modifiers_value
-		
-		# add = modifier:interest_group_law_support_add
+		#if = {
+		#	limit = {
+		#		is_in_government = yes
+		#		owner = { AND = {
+		#			exists = currently_enacting_law.type
+		#			currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
+		#		} }
+		#	}
+		#	add = {
+		#		value = -2
+		#		desc = "bpm_ig_law_support_from_target_government"
+		#	}
+		#}
 
 		# Base country multiplier 
 		# and IG multiplier 
-		multiply = {
-			add = 1
-			add = modifier:interest_group_law_support_mult
-			if = {
-				limit = {
-					owner.currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
-				}
-				multiply = -1
-			}
-		}
-		multiply = {
-			add = 1
-			add = owner.modifier:country_base_law_enactment_support_mult
-			if = {
-				limit = {
-					owner.currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
-				}
-				multiply = -1
-			}
-		}
+		#multiply = {
+		#	add = 1
+		#	add = modifier:interest_group_law_support_mult
+		#	if = {
+		#		limit = {
+		#			owner.currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
+		#		}
+		#		multiply = -1
+		#	}
+		#}
+		#multiply = {
+		#	add = 1
+		#	add = owner.modifier:country_base_law_enactment_support_mult
+		#	if = {
+		#		limit = {
+		#			owner.currently_enacting_law.type = law_type:law_repeatable_politics_motion_of_no_confidence
+		#		}
+		#		multiply = -1
+		#	}
+		#}
 
 
 	}
@@ -370,7 +477,6 @@ bpm_ig_law_support_total_value = {
 			owner = { enacting_any_law = yes }
 			owner = { currently_enacting_law.type = law_type:law_repeatable_politics_repeal_amendment }
 		}
-		add = owner.modifier:country_base_law_enactment_support_add
 		if = {
 			limit = {
 				is_insurrectionary = yes
@@ -415,90 +521,16 @@ bpm_ig_law_support_total_value = {
 				desc = "bpm_ig_law_support_enacting_law"
 			}			
 		}
+		
 		if = {
 			limit = {
 				owner.var:bpm_repealing_amendment.sponsor = this
 			}
 			add = {
-				value = -100
+				value = -2
 				desc = "bpm_ig_is_sponsor"
 			}
 		}
-		if = {
-			limit = {
-				owner = {
-					has_variable = bpm_political_stability
-					var:bpm_political_stability > 50
-				}
-			}
-			add = {
-				value = owner.var:bpm_political_stability
-				# Weigh by clout difference with party whip
-				multiply = -0.1
-				desc = "bpm_ig_law_support_from_stability"
-			}
-		}
-	
-		if = {
-			limit = {
-				ig_approval < -10
-				NOR = { 
-					has_variable = bpm_blackmail_leader_sway_used
-					has_variable = bpm_redeem_favors_sway_used
-				}
-				law_stance = {
-					law = owner.currently_enacting_law.type
-					value < strongly_approve
-				}
-			}
-			add = {
-				value = -100
-				desc = "bpm_ig_law_support_from_very_low_approval"
-			}
-		}
-		else_if = {
-			limit = {
-				ig_approval < 0
-				NOR = { 
-					has_variable = bpm_blackmail_leader_sway_used
-					has_variable = bpm_redeem_favors_sway_used
-				}
-				law_stance = {
-					law = owner.currently_enacting_law.type
-					value < approve
-				}
-			}
-			add = {
-				value = ig_approval
-				desc = "bpm_ig_law_support_from_low_approval"
-			}
-		}
-
-		add = bpm_law_enactment_ruler_effect_on_ig
-
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			add = { 
-				value = var:bpm_law_enactment_approval_from_events
-				desc = "bpm_law_enactment_approval_from_events_desc"
-			}	
-		}
-
-		add = bpm_law_enactment_sway_modifiers_value
-		
-		# add = modifier:interest_group_law_support_add
-
-		# Base country multiplier 
-		# and IG multiplier 
-		multiply = {
-			add = 1
-			add = modifier:interest_group_law_support_mult
-		}
-		multiply = {
-			add = 1
-			add = owner.modifier:country_base_law_enactment_support_mult
-		}
-
 	}
 
 	min = -999
@@ -554,466 +586,167 @@ bpm_law_enactment_ruler_effect_on_ig = {
 	}	
 }
 
+bpm_character_law_support = {
+	value = 0
+
+	if = {
+		limit = {
+			NOT = {exists = scope:law}
+		}
+		owner.currently_enacting_law ?= {
+			save_temporary_scope_as = law
+		}
+	}
+	add = {
+		if = {
+			# If no ruler stance, use interest group stance
+			limit = {
+				bpm_ig_law_support_value = 0
+			}
+			add = interest_group.bpm_ig_law_support_value
+		}
+		else = {
+			add = bpm_ig_law_support_value
+		}
+		multiply = 8
+		desc = "bpm_ig_law_support_from_ideology"
+	}
+	multiply = {
+		value = 1
+		add = modifier:character_bpm_veto_assertiveness
+		desc = "bpm_ig_law_support_from_traits"
+	}
+	add = bpm_vetoer_support_from_vote
+	add = bpm_vetoer_law_support_from_movements
+
+
+	if = {
+		limit = {
+			OR = {
+				is_ruler_of_own_country = yes
+				has_role = bpm_character_role_regent
+			}
+		}
+		add = {
+			scope:law = { value = bpm_law_hos_power }
+			scope:law.currently_active_law_in_group = { subtract = bpm_law_hos_power}
+			multiply = 4
+			desc = "bpm_hos_power_difference"
+		}
+	}
+	else_if = {
+		limit = {
+			OR = {
+				has_role = bpm_character_role_hog
+				has_role = bpm_character_role_acting_hog
+			}
+		}
+		add = {
+			scope:law = { value = bpm_law_hog_power }
+			scope:law.currently_active_law_in_group = { subtract = bpm_law_hog_power}
+			multiply = 4
+			desc = "bpm_hog_power_difference"
+		}
+	}
+
+	if = {
+		limit = {
+			law_type:law_monarchy = {
+				is_same_law_group_as = scope:law.type
+			}
+		}
+		add = {
+			value = -10
+			desc = "bpm_changing_gov_principle"
+		}
+	}
+}
+
 bpm_law_enactment_hog_approval = {
 	value = 0
+
+	if = {
+		limit = {
+			NOT = {exists = scope:law}
+		}
+		owner.currently_enacting_law ?= {
+			save_temporary_scope_as = law
+		}
+	}
 
 	if = {
 		limit = {
 			bpm_has_acting_hog = yes
 		}
 		var:bpm_acting_hog ?= {
-			save_temporary_scope_as = acting_hog
+			save_temporary_scope_as = executive_scope
 		}
 	}
 	else = {
 		var:bpm_headofgov ?= {
-			save_temporary_scope_as = acting_hog
+			save_temporary_scope_as = executive_scope
 		}
 	}
-	if = {
-		limit = {
-			var:bpm_law_enactment_yea_votes_cached < bpm_law_enactment_vote_threshold
-		}
-		add = {
-			value = -999
-			desc = "bpm_ruler_law_support_from_legislative_vote_fail"
-		}
-	}
-	else = {
-		# Vote in autocracy: 0 to 10
-		if = {
-			limit = { has_law = law_type:law_appointed_by_hos }
-			add = {
-				value = var:bpm_law_enactment_yea_votes_cached
-				multiply = 10
-				desc = "bpm_ruler_law_support_from_vote_appointed_by_hos"
-			}
-		}
-		# Vote otherwise: 0 to 20
-		else = {
-			add = {
-				value = var:bpm_law_enactment_yea_votes_cached
-				multiply = 20
-				desc = "bpm_ruler_law_support_from_vote"
-			}
-		}
-	}
-	if = {
-		limit = {
-			scope:acting_hog ?= {
-				OR = {
-					has_variable = bpm_ig_enacting_law_change_steps
-					interest_group = { has_variable = bpm_ig_enacting_law_change_steps }
-				}
-			}
-		}
-		# HoG base law support: -32 to 32 (8 per step)
-		scope:acting_hog ?= {
-			add = {
-				value = 0
-				if = {
-					limit = {
-						OR = {
-							NOT = { has_variable = bpm_ig_enacting_law_change_steps }
-							var:bpm_ig_enacting_law_change_steps = 0
-						}
-					}
-					interest_group = { add = var:bpm_ig_enacting_law_change_steps }
-				}
-				else = {
-					add = var:bpm_ig_enacting_law_change_steps
-				}
-				multiply = 8
-				if = {
-					limit = {
-						owner = {
-							has_law_or_variant = law_type:law_answers_to_legislature
-							has_law = law_type:law_advisory_body
-							OR = {
-								currently_enacting_law.type = law_type:law_separated_powers
-								currently_enacting_law.type = law_type:law_supreme_legislature
-								currently_enacting_law.type = law_type:law_appointed_by_hos
-								currently_enacting_law.type = law_type:law_appointed_on_advice
-								currently_enacting_law.type = law_type:law_no_separate_hog
-							}
-						}
-					}
-					multiply = 0
-					add = -3
-				}
-				desc = "bpm_ig_law_support_from_hog_ideology"
-			}
-			if = {
-				limit = {
-					OR = {
-						AND = {
-							has_variable = bpm_ig_enacting_law_change_steps
-							var:bpm_ig_enacting_law_change_steps < 0
-						}
-						AND = {
-							OR = {
-								NOT = { has_variable = bpm_ig_enacting_law_change_steps }
-								var:bpm_ig_enacting_law_change_steps = 0
-							}
-							interest_group.var:bpm_ig_enacting_law_change_steps < 0
-						}
-					}
-				}
-				if = {
-					limit = { has_trait = persistent }
-					add = {
-						value = -5
-						desc = "bpm_ruler_law_support_from_trait_persistent"
-					}
-				}
-				else_if = {
-					limit = { has_trait = arrogant }
-					add = {
-						value = -10
-						desc = "bpm_ruler_law_support_from_trait_arrogant"
-					}
-				}
-				else_if = {
-					limit = { has_trait = imposing }
-					add = {
-						value = -10
-						desc = "bpm_ruler_law_support_from_trait_imposing"
-					}
-				}
-				else_if = {
-					limit = { has_trait = imperious }
-					add = {
-						value = -15
-						desc = "bpm_ruler_law_support_from_trait_imperious"
-					}
-				}
-				if = {
-					limit = { has_trait = tactful }
-					add = {
-						value = 5
-						desc = "bpm_ruler_law_support_from_trait_tactful"
-					}
-				}
-				else_if = {
-					limit = { has_trait = honorable }
-					add = {
-						value = 10
-						desc = "bpm_ruler_law_support_from_trait_honorable"
-					}
-				}
-			}
-		}
-
-	}
-
-
-	# Insurrection: 20
-	# Movement: 10
-	add = {
-		value = owner.bpm_law_enactment_movement_pressure
-		desc = "bpm_ig_law_support_from_movement"
-	}
-	if = {
-		limit = {
-			has_variable = bpm_law_enactment_desired_by_revolution
-		}
-		add = {
-			desc = "bpm_ruler_law_support_from_insurrection"
-			value = 15
-		}
-	}
-	ruler ?= {
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			add = { 
-				value = var:bpm_law_enactment_approval_from_events
-				desc = "bpm_law_enactment_approval_from_events_desc"
-			}	
-		}
+	
+	scope:executive_scope = {
+		add = bpm_character_law_support
 	}
 }
 
-bpm_law_enactment_ruler_approval = {
+bpm_law_enactment_hos_approval = {
 	value = 0
+
+	if = {
+		limit = {
+			NOT = {exists = scope:law}
+		}
+		owner.currently_enacting_law ?= {
+			save_temporary_scope_as = law
+		}
+	}
+	
 	if = {
 		limit = {
 			bpm_has_gov_regency = yes
 		}
 		var:bpm_regent ?= {
-			save_temporary_scope_as = acting_ruler
+			save_temporary_scope_as = executive_scope
 		}
 	}
 	else = {
 		ruler = {
-			save_temporary_scope_as = acting_ruler
+			save_temporary_scope_as = executive_scope
 		}
 	}
+
+	scope:executive_scope = {
+		add = bpm_character_law_support
+	}
+
 	if = {
 		limit = {
-			var:bpm_law_enactment_yea_votes_cached < bpm_law_enactment_vote_threshold
+			modifier:country_bpm_hog_advice_on_ruler_veto = yes
 		}
-		add = {
-			value = -999
-			desc = "bpm_ruler_law_support_from_legislative_vote_fail"
-		}
-	}
-	else = {
-		# Vote in autocracy: 0 to 10
 		if = {
-			limit = { has_law = law_type:law_appointed_by_hos }
-			add = {
-				value = var:bpm_law_enactment_yea_votes_cached
-				multiply = 10
-				desc = "bpm_ruler_law_support_from_vote_appointed_by_hos"
+			limit = {
+				bpm_has_acting_hog = yes
+			}
+			var:bpm_acting_hog ?= {
+				save_temporary_scope_as = hog_scope
 			}
 		}
-		# Vote otherwise: 0 to 20
 		else = {
-			add = {
-				value = var:bpm_law_enactment_yea_votes_cached
-				multiply = 20
-				desc = "bpm_ruler_law_support_from_vote"
-			}
-		}
-	}
-	if = {
-		limit = {
-			scope:acting_ruler ?= {
-				has_variable = bpm_ig_enacting_law_change_steps
-				interest_group = { has_variable = bpm_ig_enacting_law_change_steps }
-			}
-		}
-		# Ruler base law support: -32 to 32 (8 per step)
-		add = {
-			value = 0
-			if = {
-				# If no ruler stance, use interest group stance
-				limit = {
-					scope:acting_ruler.var:bpm_ig_enacting_law_change_steps = 0
-				}
-				add = scope:acting_ruler.interest_group.var:bpm_ig_enacting_law_change_steps
-			}
-			else = {
-				add = scope:acting_ruler.var:bpm_ig_enacting_law_change_steps
-			}
-			if = {
-				limit = {
-					has_law = law_type:law_appointed_on_advice
-					bpm_ruler_is_acting_as_interim_head_of_government = no
-				}
-				multiply = 4
-			}
-			else = {
-				multiply = 8
-			}
-			desc = "bpm_ig_law_support_from_ruler_ideology"
-		}
-		if = {
-			limit = {
-				scope:acting_ruler = {
-					OR = {
-						var:bpm_ig_enacting_law_change_steps < 0
-						AND = {
-							var:bpm_ig_enacting_law_change_steps = 0
-							interest_group.var:bpm_ig_enacting_law_change_steps < 0
-						}
-					}
-				}
-			}
-			if = {
-				limit = { scope:acting_ruler = { has_trait = persistent } }
-				add = {
-					value = -5
-					desc = "bpm_ruler_law_support_from_trait_persistent"
-				}
-			}
-			else_if = {
-				limit = { scope:acting_ruler = { has_trait = arrogant } }
-				add = {
-					value = -10
-					desc = "bpm_ruler_law_support_from_trait_arrogant"
-				}
-			}
-			else_if = {
-				limit = { scope:acting_ruler = { has_trait = imposing } }
-				add = {
-					value = -10
-					desc = "bpm_ruler_law_support_from_trait_imposing"
-				}
-			}
-			else_if = {
-				limit = { scope:acting_ruler = { has_trait = imperious } }
-				add = {
-					value = -15
-					desc = "bpm_ruler_law_support_from_trait_imperious"
-				}
-			}
-		}
-	}
-	if = {
-		limit = {
-			has_law = law_type:law_advisory_body
-			NOT = {
-				has_law_or_variant = law_type:law_answers_to_legislature
-			}
-			OR = {
-				currently_enacting_law.type = law_type:law_separated_powers
-				currently_enacting_law.type = law_type:law_supreme_legislature
+			var:bpm_headofgov ?= {
+				save_temporary_scope_as = hog_scope
 			}
 		}
 		add = {
-			value = -24
-			desc = "bpm_ruler_reluctant_to_relinquish_power"
-		}
-	}
-	if = {
-		limit = {
-			OR = {
-				has_law = law_type:law_no_separate_hog
-				has_law = law_type:law_appointed_by_hos
+			scope:executive_scope = {
+				value = bpm_character_law_support
 			}
-			OR = {
-				currently_enacting_law.type = law_type:law_appointed_on_advice
-				currently_enacting_law.type = law_type:law_answers_to_legislature
-			}
-		} 
-		add = {
-			value = -24
-			desc = "bpm_ruler_reluctant_to_relinquish_power"
-		}
-	}
-	# Insurrection: 20
-	# Movement: 10
-	add = {
-		value = owner.bpm_law_enactment_movement_pressure
-		desc = "bpm_ig_law_support_from_movement"
-	}
-	if = {
-		limit = { movement_supports_enaction = yes }
-		if = {
-			limit = {
-				has_variable = bpm_law_enactment_desired_by_revolution
-			}
-			add = {
-				desc = "bpm_ruler_law_support_from_insurrection"
-				value = 15
-			}
-		}
-	}
-	if = {
-		limit = { scope:acting_ruler = { has_trait = tactful } }
-		add = {
-			value = 5
-			desc = "bpm_ruler_law_support_from_trait_tactful"
-		}
-	}
-	else_if = {
-		limit = { scope:acting_ruler = { has_trait = honorable } }
-		add = {
-			value = 10
-			desc = "bpm_ruler_law_support_from_trait_honorable"
-		}
-	}
-	if = {
-		# Only applies to non-republics OR countries with no voting
-		limit = {
-			OR = {
-				bpm_country_is_republic = no
-				country_has_voting_franchise = no
-			}
-		}
-		if = {
-			limit = { scope:acting_ruler.age <= 12 }
-			add = {
-				value = 32
-				desc = "bpm_ruler_law_support_from_young"
-			}
-		}
-		else_if = {
-			limit = { scope:acting_ruler.age <= 16 }
-			add = {
-				value = 32
-				subtract = {
-					value = scope:acting_ruler.age
-					subtract = 12
-					multiply = 8
-				}
-				desc = "bpm_ruler_law_support_from_young"
-			}
-		}
-		else_if = {
-			limit = { scope:acting_ruler.age >= 66 }
-			add = {
-				value = scope:acting_ruler.age
-				subtract = 66
-				multiply = 2
-				max = 40
-				min = 0
-				desc = "bpm_ruler_law_support_from_old"
-			}
-		}
-	}
-
-	if = {
-		limit = {
-			has_law = law_type:law_appointed_on_advice
-			bpm_ruler_is_acting_as_interim_head_of_government = no
-		}
-		add = {
-			value = 0
-			desc = "bpm_ruler_law_support_from_hog_opinion"
-			if = {
-				limit = {bpm_has_acting_hog = yes}
-				var:bpm_acting_hog ?= {
-					if = {
-						limit = {
-							OR = {
-								NOT = {
-									has_variable = bpm_ig_enacting_law_change_steps
-								}
-								var:bpm_ig_enacting_law_change_steps = 0
-							}
-						}
-						interest_group = {
-							add = var:bpm_ig_enacting_law_change_steps
-						}
-					}
-					else = {
-						add = var:bpm_ig_enacting_law_change_steps
-					}
-				}
-			}
-			else = {
-				var:bpm_headofgov ?= {
-					if = {
-						limit = {
-							OR = {
-								NOT = {
-									has_variable = bpm_ig_enacting_law_change_steps
-								}
-								var:bpm_ig_enacting_law_change_steps = 0
-							}
-						}
-						interest_group = {
-							add = var:bpm_ig_enacting_law_change_steps
-						}
-					}
-					else = {
-						add = var:bpm_ig_enacting_law_change_steps
-					}
-				}
-			}
-			multiply = 4
-		}
-	}
-
-	ruler ?= {
-		if = {
-			limit = { has_variable = bpm_law_enactment_approval_from_events }
-			add = { 
-				value = var:bpm_law_enactment_approval_from_events
-				desc = "bpm_law_enactment_approval_from_events_desc"
-			}	
+			subtract = bpm_law_enactment_hog_approval
+			divide = -2
+			desc = "bpm_ruler_law_support_from_hog_stance"
 		}
 	}
 }
@@ -1025,7 +758,7 @@ bpm_law_enactment_executive_approval = {
 		add = bpm_law_enactment_hog_approval
 	}
 	else = {
-		add = bpm_law_enactment_ruler_approval
+		add = bpm_law_enactment_hos_approval
 	}
 	if = {
 		limit = {
@@ -1410,7 +1143,6 @@ bpm_law_enactment_desire = {
 	}
 	if = {
 		limit = {
-			owner = {ai_has_reasons_to_not_oppose_law = no}
 			scope:lawtype = {
 				bpm_is_repeatable_law = yes
 				NOT = {is_same_law_group_as = law_type:law_repeatable_economy_none}
@@ -1420,7 +1152,6 @@ bpm_law_enactment_desire = {
 	}
 	if = {
 		limit = {
-			owner = {ai_has_reasons_to_not_oppose_law = no}
 			scope:lawtype = {	
 				OR = {
 					law_type:law_repeatable_military_parades_and_drills = scope:lawtype
@@ -1445,5 +1176,654 @@ bpm_law_enactment_desire = {
 			}
 		}
 		multiply = 3
+	}
+	min = 0
+}
+
+REPLACE:movement_balance_factor = 80
+REPLACE:movement_max_factor = 50
+
+REPLACE:ig_clout_neg_multiplier = 2 #Relation between clout and amenability used in multiple places
+
+REPLACE:amenability = { #runs in IG scope. owner is the county.
+	#min and max set by defines
+	save_temporary_scope_as = ig_for_calc
+	if = {
+		limit = {owner = {is_player = yes}}
+		value = {
+		add = { #legitimacy adds base value
+			desc = "amenability_base"
+			add = 50
+		}
+
+		add = { #legitimacy adds base value
+			desc = "amenability_legitimacy"
+			add = {
+				owner = {value = bpm_cab_synergy_value}
+			}
+			subtract = 40
+			multiply = 0.25
+		}
+
+		add = { #clout removes
+			desc = "amenability_clout"
+			add = ig_clout
+			multiply = 100
+			subtract = 4 #IG smaller than this actually seeks to get bigger.
+			multiply = -1
+			multiply = ig_clout_neg_multiplier
+			max = 20
+		}
+
+		add = { #approval adds (can be negative)
+			desc = "amenability_approval"
+			add = ig_approval
+		}
+
+		if = { #ruler popularity
+			limit = {
+				exists = owner.ruler
+			}
+			add = {
+				desc = "amenability_ruler_popularity"
+				add = {
+					owner = {
+						if = {
+							limit = {
+								bpm_has_gov_regency = yes
+							}
+							var:bpm_regent = {
+								value = popularity
+							}
+						}
+						else_if = {
+							limit = {
+								bpm_has_acting_hog = yes
+							}
+							var:bpm_acting_hog = {
+								value = popularity
+							}
+						}
+						else_if = {
+							limit = {
+								modifier:country_bpm_hog_veto = yes
+							}
+							var:bpm_headofgov = {
+								value = popularity
+							}
+						}
+						else = {
+							ruler = {
+								value = popularity
+							}
+						}
+					}
+				}
+				multiply = 0.05
+			}
+		}
+
+		# if = { #boost if in government. TESTING: Seems not required.
+		# 	limit = {
+		# 		is_in_government = yes
+		# 	}
+		# 	add = {
+		# 		desc = "amenability_in_gov"
+		# 		add = 0
+		# 	}
+		# }
+
+		if = { #positive movements
+			limit = {
+				owner = {
+					any_political_movement = {
+						supports_law = yes
+						any_influenced_interest_group = {
+							this = scope:ig_for_calc
+						}
+					}
+				}
+			}
+			add = {
+				desc = "amenability_pressuring_supporting_movements"
+				owner = {
+					every_political_movement = {
+						limit = {
+							supports_law = yes
+							any_influenced_interest_group = {
+								this = scope:ig_for_calc
+							}
+						}
+						add = {
+							value = "movement_pressure(scope:ig_for_calc)"
+							multiply = movement_balance_factor
+							max = movement_max_factor
+						}
+					}
+				}
+			}
+		}
+
+		if = { #negative movements
+			limit = {
+				owner = {
+					any_political_movement = {
+						opposes_law = yes
+						any_influenced_interest_group = {
+							this = scope:ig_for_calc
+						}
+					}
+				}
+			}
+			add = {
+				desc = "amenability_pressuring_opposing_movements"
+				owner = {
+					every_political_movement = {
+						limit = {
+							opposes_law = yes
+							any_influenced_interest_group = {
+								this = scope:ig_for_calc
+							}
+						}
+						add = {
+							value = "movement_pressure(scope:ig_for_calc)"
+							multiply = movement_balance_factor
+							max = movement_max_factor
+							multiply = -1 #take away
+						}
+					}
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				opposes_law = yes
+				ig_approval > unhappy
+			}
+			add = {
+				desc = "amenability_neutral_and_opposing"
+				add = {
+					add = ig_clout
+					multiply = 100
+					subtract = 8 #IG smaller than this actually seeks to get bigger.
+					multiply = ig_clout_neg_multiplier
+					multiply = 0.5
+				}
+			}
+		}
+		# else_if = { #TESTING: This doesn't seem needed as approval already is hard hit.
+		# 	limit = {
+		# 		root = {
+		# 			opposes_law = yes
+		# 			ig_approval <= angry
+		# 		}
+		# 	}
+		# 	add = {
+		# 		desc = "amenability_angry_and_opposing"
+		# 		add = {
+		# 			add = ig_clout
+		# 			multiply = 100
+		# 			subtract = 8 #IG smaller than this actually seeks to get bigger.
+		# 			multiply = ig_clout_neg_multiplier
+		# 			multiply = 0.25 #there is already approval effect, softening
+		# 			multiply = -1 #negative effect
+		# 		}
+		# 	}
+		# }
+
+		if = { #drain if strongly oppose, as opposed to just oppose
+			limit = {
+				law_enactment_stance = {
+                    law = owner.currently_enacting_law.type
+                    value < disapprove
+                }
+			}
+			add = {
+				desc = "amenability_strongly_oppose"
+				add = -15
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					has_variable = bpm_political_stability
+					var:bpm_political_stability > 66
+				}
+			}
+			add = {
+				value = owner.var:bpm_political_stability
+				subtract = 66
+				# Weigh by clout difference with party whip
+				multiply = -0.5
+				desc = "bpm_ig_law_support_from_stability"
+			}
+		}
+
+		##modifiers on IG
+		add = {
+			value = modifier:interest_group_amenability_add
+			desc = "amenability_ig_additional_adds"
+		}
+
+		##modifiers on Nation
+		add = {
+			value = owner.modifier:country_amenability_add
+			desc = "amenability_country_additional_adds"
+		}
+
+		### Enactment chance
+		##if looking very likely will pass even without negotiating, scaled slightly based on lead. The IG are looking for a freebie, since law is gonna pass anyway.
+		if = {
+			limit = {
+				owner = {
+					bpm_country_yea_votes > bpm_law_enactment_vote_threshold
+				}
+			}
+			add = {
+				add = 25
+				desc = "amenability_law_likely_to_pass"
+			}
+		}
+		##Otherwise, extra amenability if sure their support will make no difference and it will fail anyway. Two levels.
+		else_if = {
+			limit = {
+				opposes_law = yes
+				ig_clout > {
+					owner = {
+						value = bpm_law_enactment_vote_threshold
+						subtract = bpm_country_yea_votes
+					}
+				}
+			}
+			add = {
+				add = -15
+				desc = "amenability_law_worried_to_be_tie_breaker"
+			}
+		}
+		else_if = {
+			limit = {
+				ig_clout > {
+					owner = {
+						value = bpm_law_enactment_vote_threshold
+						subtract = bpm_country_yea_votes
+					}
+				}
+			}
+			add = {
+				add = -5
+				desc = "amenability_law_worried_to_be_tie_breaker"
+			}
+		}
+		else_if = {
+			limit = {
+				owner = {
+					bpm_law_enactment_vote_threshold > {
+						value = bpm_country_yea_votes
+						multiply = 4
+					}
+				}
+			}
+			add = {
+				add = 20
+				desc = "amenability_law_makes_no_difference"
+			}
+		}
+		else_if = {
+			limit = {
+				owner = {
+					bpm_law_enactment_vote_threshold > {
+						value = bpm_country_yea_votes
+						multiply = 4
+					}
+				}
+			}
+			add = {
+				add = 10
+				desc = "amenability_law_makes_no_difference"
+			}
+		}
+		else_if = {
+			limit = {
+				owner = {
+					bpm_law_enactment_vote_threshold > {
+						value = bpm_country_yea_votes
+						multiply = 4
+					}
+				}
+			}
+			add = {
+				add = 5
+				desc = "amenability_law_makes_no_difference"
+			}
+		}
+		##Otherwise, afraid of being the tiebreaker
+		##Balance note, this is an easy way to make negotiation harder whenever it is most effective, while keeping it the same in other places. BEST LEVER HERE.
+
+		#if = { #happy IGs do not block laws, even if they support them
+		#	limit = {
+		#		opposes_law = yes
+		#		ig_approval >= happy
+		#	}
+		#	add = {
+		#		value = -500
+		#		desc = "amenability_already_letting_go"
+		#	}
+		#}
+
+		if = { # If there is more than two "steps" between the IG's stance on the currently enacting law and the currently active law, they will not negotiate
+			limit = {
+				OR = {
+					AND = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value = strongly_disapprove
+						}
+						law_stance = {
+							law = owner.currently_enacting_law.currently_active_law_in_group.type
+							value >= approve
+						}
+					}
+					AND = {
+						law_stance = {
+							law = owner.currently_enacting_law.type
+							value <= disapprove
+						}
+						law_stance = {
+							law = owner.currently_enacting_law.currently_active_law_in_group.type
+							value = strongly_approve
+						}
+					}
+				}
+			}
+			add = {
+				value = -500
+				desc = "amenability_too_large_gap"
+			}
+		}
+		
+	if = {
+		limit = {
+			has_variable = bpm_times_ig_swayed
+		}
+		add = {
+			value = var:bpm_times_ig_swayed
+			multiply = -20
+			desc = "amenability_times_swayed"
+		}
+	}
+
+		round = 1
+		min = define:NPolitics|MIN_AMENABILITY
+		max = define:NPolitics|MAX_AMENABILITY
+	}
+	}
+	else = {
+		value = 100
+	}
+}
+
+bpm_concessiveness = { #runs in IG scope. owner is the county.
+	#min and max set by defines
+	save_temporary_scope_as = ig_for_calc
+	if = {
+		limit = {owner = {is_player = yes}}
+		value = {
+		add = { #legitimacy adds base value
+			desc = "amenability_base"
+			add = 50
+		}
+
+		add = { #legitimacy adds base value
+			desc = "amenability_legitimacy"
+			add = {
+				owner = {value = bpm_cab_synergy_value}
+			}
+			subtract = 40
+			multiply = 0.25
+		}
+
+		add = {
+			desc = "amenability_clout"
+			add = ig_clout
+			multiply = 100
+			subtract = 8
+			multiply = ig_clout_neg_multiplier
+			max = 0
+			min = -20
+		}
+
+		add = { #approval adds (can be negative)
+			desc = "amenability_approval"
+			add = ig_approval
+		}
+
+		if = { #ruler popularity
+			limit = {
+				exists = owner.ruler
+			}
+			add = {
+				desc = "amenability_ruler_popularity"
+				add = {
+					owner = {
+						if = {
+							limit = {
+								bpm_has_gov_regency = yes
+							}
+							var:bpm_regent = {
+								value = popularity
+							}
+						}
+						else_if = {
+							limit = {
+								bpm_has_acting_hog = yes
+							}
+							var:bpm_acting_hog = {
+								value = popularity
+							}
+						}
+						else_if = {
+							limit = {
+								modifier:country_bpm_hog_veto = yes
+							}
+							var:bpm_headofgov = {
+								value = popularity
+							}
+						}
+						else = {
+							ruler = {
+								value = popularity
+							}
+						}
+					}
+				}
+				multiply = 0.05
+			}
+		}
+
+		# if = { #boost if in government. TESTING: Seems not required.
+		# 	limit = {
+		# 		is_in_government = yes
+		# 	}
+		# 	add = {
+		# 		desc = "amenability_in_gov"
+		# 		add = 0
+		# 	}
+		# }
+
+		if = { #positive movements
+			limit = {
+				owner = {
+					any_political_movement = {
+						supports_law = yes
+						any_influenced_interest_group = {
+							this = scope:ig_for_calc
+						}
+					}
+				}
+			}
+			add = {
+				desc = "amenability_pressuring_supporting_movements"
+				owner = {
+					every_political_movement = {
+						limit = {
+							supports_law = yes
+							any_influenced_interest_group = {
+								this = scope:ig_for_calc
+							}
+						}
+						add = {
+							value = "movement_pressure(scope:ig_for_calc)"
+							multiply = movement_balance_factor
+							max = movement_max_factor
+						}
+					}
+				}
+			}
+		}
+
+		if = { #negative movements
+			limit = {
+				owner = {
+					any_political_movement = {
+						opposes_law = yes
+						any_influenced_interest_group = {
+							this = scope:ig_for_calc
+						}
+					}
+				}
+			}
+			add = {
+				desc = "amenability_pressuring_opposing_movements"
+				owner = {
+					every_political_movement = {
+						limit = {
+							opposes_law = yes
+							any_influenced_interest_group = {
+								this = scope:ig_for_calc
+							}
+						}
+						add = {
+							value = "movement_pressure(scope:ig_for_calc)"
+							multiply = movement_balance_factor
+							max = movement_max_factor
+							multiply = -1 #take away
+						}
+					}
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				opposes_law = yes
+				ig_approval > unhappy
+			}
+			add = {
+				desc = "amenability_neutral_and_opposing"
+				add = {
+					add = ig_clout
+					multiply = 100
+					subtract = 8 #IG smaller than this actually seeks to get bigger.
+					multiply = ig_clout_neg_multiplier
+					multiply = 0.5
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				owner = {
+					has_variable = bpm_political_stability
+					var:bpm_political_stability > 66
+				}
+			}
+			add = {
+				value = owner.var:bpm_political_stability
+				subtract = 66
+				# Weigh by clout difference with party whip
+				multiply = -0.5
+				desc = "bpm_ig_law_support_from_stability"
+			}
+		}
+
+		##modifiers on IG
+		add = {
+			value = modifier:interest_group_amenability_add
+			desc = "amenability_ig_additional_adds"
+		}
+
+		##modifiers on Nation
+		add = {
+			value = owner.modifier:country_amenability_add
+			desc = "amenability_country_additional_adds"
+		}
+
+		### Enactment chance
+		##if looking very likely will pass even without negotiating, scaled slightly based on lead. The IG are looking for a freebie, since law is gonna pass anyway.
+		if = {
+			limit = {
+				owner = {
+					bpm_country_yea_votes > bpm_law_enactment_vote_threshold
+				}
+			}
+			add = {
+				add = -25
+				desc = "amenability_law_likely_to_pass"
+			}
+		}
+
+		##Otherwise, extra amenability if sure their support will make no difference and it will fail anyway. Two levels.
+		else_if = {
+			limit = {
+				string_law = yes
+				ig_clout > {
+					owner = {
+						value = bpm_law_enactment_vote_threshold
+						subtract = bpm_country_yea_votes
+					}
+				}
+			}
+			add = {
+				add = 15
+				desc = "amenability_law_worried_to_be_tie_breaker"
+			}
+		}
+		else_if = {
+			limit = {
+				owner = {
+					bpm_law_enactment_vote_threshold > {
+						value = bpm_country_yea_votes
+						multiply = 4
+					}
+				}
+			}
+			add = {
+				add = -20
+				desc = "amenability_law_makes_no_difference"
+			}
+		}
+		##Otherwise, afraid of being the tiebreaker
+		##Balance note, this is an easy way to make negotiation harder whenever it is most effective, while keeping it the same in other places. BEST LEVER HERE.
+		
+	if = {
+		limit = {
+			has_variable = bpm_times_ig_swayed
+		}
+		add = {
+			value = var:bpm_times_ig_swayed
+			multiply = -20
+			desc = "amenability_times_swayed"
+		}
+	}
+
+		round = 1
+		min = define:NPolitics|MIN_AMENABILITY
+		max = define:NPolitics|MAX_AMENABILITY
+	}
+	}
+	else = {
+		value = 100
 	}
 }

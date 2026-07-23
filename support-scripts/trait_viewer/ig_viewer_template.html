@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>BPM Interest Group Viewer</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161923;
+    --panel-2: #1d2130;
+    --border: #2a2f42;
+    --text: #e7e9f0;
+    --text-dim: #9aa0b4;
+    --text-faint: #666c82;
+    --accent: #7c9eff;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    --c-gov: #6366f1;
+    --c-exe: #8b5cf6;
+    --c-dop: #ec4899;
+    --c-sta: #f43f5e;
+    --c-eco: #f59e0b;
+    --c-wel: #10b981;
+    --c-cit: #14b8a6;
+    --c-rel: #0ea5e9;
+    --c-mil: #ef4444;
+    --c-fem: #d946ef;
+    --c-ban: #94a3b8;
+    --c-vanilla: #a3a3a3;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ---------- sidebar ---------- */
+
+  #sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #sidebar-header {
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  #sidebar-header h1 {
+    font-size: 14px;
+    margin: 0 0 2px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  #sidebar-header .sub {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  #page-nav {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  #page-nav a {
+    flex: 1;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 5px 8px;
+    border-radius: 5px;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  #page-nav a:hover { color: var(--text); border-color: var(--accent); }
+  #page-nav a.current { background: var(--panel-2); color: var(--accent); border-color: var(--accent); }
+
+  #ig-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px;
+  }
+
+  .ig-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-bottom: 2px;
+  }
+  .ig-btn:hover { background: var(--panel-2); color: var(--text); }
+  .ig-btn.active {
+    background: rgba(124, 158, 255, 0.15);
+    color: var(--text);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .ig-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--panel-2);
+    object-fit: cover;
+  }
+  .ig-icon.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+  .ig-name { font-weight: 500; }
+  .ig-source { font-size: 10px; color: var(--text-faint); margin-left: auto; font-family: var(--mono); }
+
+  /* ---------- main ---------- */
+
+  #main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 40px 80px;
+  }
+
+  #empty-state {
+    color: var(--text-faint);
+    font-size: 14px;
+    margin-top: 60px;
+    text-align: center;
+  }
+
+  #ig-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 6px;
+  }
+
+  #ig-header img {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+  }
+
+  #ig-header h2 {
+    font-size: 22px;
+    margin: 0;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  #ig-sub {
+    color: var(--text-faint);
+    font-size: 12px;
+    margin-bottom: 8px;
+    font-family: var(--mono);
+  }
+
+  #ig-condition {
+    margin: 14px 0 26px;
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    max-width: 760px;
+  }
+  #ig-condition .label {
+    font-weight: 700;
+    color: #ffb454;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+  }
+
+  .cond-list { list-style: none; margin: 0; padding-left: 16px; font-family: var(--mono); font-size: 12.5px; }
+  .cond-list.top { padding-left: 0; }
+  .cond-list li { position: relative; padding: 1px 0; }
+  .cond-leaf .k { color: #d6a8ff; }
+  .cond-leaf .op { color: var(--text-faint); }
+  .cond-leaf .v { color: #8fd3a8; }
+  .cond-op-label { color: #ffb454; font-weight: 700; font-size: 11px; letter-spacing: 0.3px; }
+  .cond-key-label { color: #7aa2f7; }
+
+  #cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    max-width: 960px;
+  }
+
+  .cat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .cat-card .cat-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .cat-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+  .cat-value-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: var(--panel-2);
+    border: 1px dashed #4a5170;
+    color: #fff;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .cat-value-link:hover { border-color: var(--accent); }
+
+  .cat-value-static {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 5px 10px;
+    border-radius: 6px;
+  }
+  .cat-value-static.todo { color: #ffb454; background: rgba(255, 180, 84, 0.1); }
+  .cat-value-static.unset { color: var(--text-faint); background: var(--panel-2); font-style: italic; }
+  .cat-value-static.missing { color: #ff6b6b; background: rgba(255, 107, 107, 0.1); }
+
+  #footer-note {
+    margin-top: 40px;
+    color: var(--text-faint);
+    font-size: 11px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    max-width: 960px;
+  }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h1>BPM Interest Groups</h1>
+    <div class="sub">bpm_aa_interest_group_ideology_setter.txt</div>
+    <nav id="page-nav">
+      <a href="traits_viewer.html">Traits</a>
+      <a href="ig_viewer.html" class="current">Interest Groups</a>
+    </nav>
+  </div>
+  <div id="ig-list"></div>
+</div>
+
+<div id="main">
+  <div id="empty-state">Select an interest group on the left to see the traits it's assigned per category.</div>
+  <div id="ig-header" style="display:none"></div>
+  <div id="ig-sub" style="display:none"></div>
+  <div id="ig-condition" style="display:none"></div>
+  <div id="cat-grid"></div>
+  <div id="footer-note" style="display:none">Values link to the matching trait's condition → ideology breakdown on the Traits page. "TODO" / missing entries mean that category isn't implemented yet for this interest group.</div>
+</div>
+
+<script>
+const DATA = __IGS_DATA__;
+
+const CAT_LABELS = {
+  gov: "Government", exe: "Executive", dop: "Distribution of Power", sta: "State",
+  eco: "Economy", wel: "Welfare", cit: "Citizenship", rel: "Religion",
+  mil: "Military", fem: "Feminism", ban: "Banned", vanilla: "Vanilla",
+};
+
+function catColor(cat) { return `var(--c-${cat})`; }
+
+const listEl = document.getElementById('ig-list');
+let activeIndex = null;
+
+function igDisplayName(ig) {
+  return ig.replace(/_/g, ' ');
+}
+
+function buildSidebar() {
+  listEl.innerHTML = '';
+  DATA.igs.forEach((igData, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'ig-btn';
+    if (idx === activeIndex) btn.classList.add('active');
+
+    if (igData.iconSmall) {
+      const img = document.createElement('img');
+      img.className = 'ig-icon';
+      img.src = igData.iconSmall;
+      img.alt = igData.ig;
+      btn.appendChild(img);
+    } else {
+      const ph = document.createElement('div');
+      ph.className = 'ig-icon placeholder';
+      ph.textContent = igData.ig.slice(0, 2).toUpperCase();
+      btn.appendChild(ph);
+    }
+
+    const name = document.createElement('span');
+    name.className = 'ig-name';
+    name.textContent = igDisplayName(igData.ig);
+    btn.appendChild(name);
+
+    btn.addEventListener('click', () => selectIg(idx));
+    listEl.appendChild(btn);
+  });
+}
+
+function renderConditionList(entries, top) {
+  const ul = document.createElement('ul');
+  ul.className = 'cond-list' + (top ? ' top' : '');
+  entries.forEach(e => {
+    const li = document.createElement('li');
+    if (typeof e.v === 'string') {
+      li.className = 'cond-leaf';
+      const opText = e.op === '?=' ? ' ?= ' : ' = ';
+      li.innerHTML = `<span class="k">${escapeHtml(e.k)}</span><span class="op">${opText}</span><span class="v">${escapeHtml(e.v)}</span>`;
+    } else {
+      const isOp = e.k === 'AND' || e.k === 'OR' || e.k === 'NOT';
+      const label = document.createElement('div');
+      label.className = isOp ? 'cond-op-label' : 'cond-key-label';
+      label.textContent = isOp ? e.k : `${e.k}:`;
+      li.appendChild(label);
+      li.appendChild(renderConditionList(e.v, false));
+    }
+    ul.appendChild(li);
+  });
+  return ul;
+}
+
+function selectIg(idx) {
+  activeIndex = idx;
+  buildSidebar();
+  const igData = DATA.igs[idx];
+
+  document.getElementById('empty-state').style.display = 'none';
+
+  const header = document.getElementById('ig-header');
+  header.style.display = 'flex';
+  header.innerHTML = '';
+  if (igData.iconLarge) {
+    const img = document.createElement('img');
+    img.src = igData.iconLarge;
+    img.alt = igData.ig;
+    header.appendChild(img);
+  }
+  const h2 = document.createElement('h2');
+  h2.textContent = igDisplayName(igData.ig);
+  header.appendChild(h2);
+
+  const sub = document.getElementById('ig-sub');
+  sub.style.display = 'block';
+  sub.textContent = `from ${igData.sourceEffect}`;
+
+  const condWrap = document.getElementById('ig-condition');
+  if (igData.condition) {
+    condWrap.style.display = 'block';
+    condWrap.innerHTML = '<div class="label">ONLY APPLIED WHEN</div>';
+    condWrap.appendChild(renderConditionList(igData.condition, true));
+  } else {
+    condWrap.style.display = 'none';
+    condWrap.innerHTML = '';
+  }
+
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = '';
+  DATA.categoryOrder.forEach(cat => {
+    const info = igData.categories[cat];
+    const card = document.createElement('div');
+    card.className = 'cat-card';
+
+    const label = document.createElement('div');
+    label.className = 'cat-label';
+    label.innerHTML = `<span class="cat-dot" style="background:${catColor(cat)}"></span><span>${cat} · ${CAT_LABELS[cat]}</span>`;
+    card.appendChild(label);
+
+    if (!info || info.status === 'unset') {
+      const span = document.createElement('span');
+      span.className = 'cat-value-static unset';
+      span.textContent = '— not set —';
+      card.appendChild(span);
+    } else if (info.status === 'todo') {
+      const span = document.createElement('span');
+      span.className = 'cat-value-static todo';
+      span.textContent = 'TODO';
+      card.appendChild(span);
+    } else if (info.status === 'missing') {
+      const span = document.createElement('span');
+      span.className = 'cat-value-static missing';
+      span.title = `${info.trait} not found in traits file`;
+      span.textContent = `${info.value} (missing trait!)`;
+      card.appendChild(span);
+    } else {
+      const a = document.createElement('a');
+      a.className = 'cat-value-link';
+      a.href = `traits_viewer.html#${info.trait}`;
+      a.innerHTML = `${escapeHtml(info.value)} <span style="color:var(--text-faint)">↗</span>`;
+      card.appendChild(a);
+    }
+
+    grid.appendChild(card);
+  });
+
+  document.getElementById('footer-note').style.display = 'block';
+
+  window.scrollTo(0, 0);
+  document.getElementById('main').scrollTo(0, 0);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+buildSidebar();
+if (DATA.igs.length > 0) selectIg(0);
+</script>
+
+</body>
+</html>

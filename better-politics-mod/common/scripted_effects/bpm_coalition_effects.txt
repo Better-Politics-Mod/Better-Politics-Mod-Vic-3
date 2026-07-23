@@ -1,0 +1,252 @@
+bpm_coalition_and_actions_init = {
+	add_to_global_variable_list = {
+		name = bpm_ig_strategies
+		target = flag:bpm_strategy_default
+	}
+	add_to_global_variable_list = {
+		name = bpm_coalition_actions
+		target = flag:bpm_action_revolt
+	}
+}
+
+bpm_coalition_and_actions = {
+	save_scope_as = country
+	# == Coalition and Actions
+	# First each IG should decide on a strategy & what coalition (movement) to join
+	every_activated_interest_group = {
+		save_scope_as = ig
+		bpm_ig_decide_strategy = yes #v
+		bpm_ig_decide_coalition = yes
+		clear_saved_scope = ig
+	}
+
+	# Then, movements select which action they wanna do
+	every_political_movement = {
+		save_scope_as = movement
+		bpm_movement_select_action = yes
+		clear_saved_scope = movement
+	}
+
+
+	clear_saved_scope = country
+}
+
+bpm_actions_weekly = {
+	save_scope_as = country
+
+	every_in_list = {
+		variable = bpm_active_coalition_actions
+		save_scope_as = action
+		bpm_action_on_monthly = yes
+		clear_saved_scope = action
+	}
+
+	clear_saved_scope = country
+}
+
+bpm_ig_decide_strategy = {
+	ordered_in_global_list = {
+		variable = bpm_ig_strategies
+		position = 0
+		order_by = bpm_strategy_attraction
+
+		save_scope_as = selected_strategy
+	}
+
+	set_variable = {
+		name = bpm_ig_strategy
+		value = scope:selected_strategy
+	}
+
+	clear_saved_scope = selected_strategy
+}
+
+
+bpm_ig_decide_coalition = {
+	scope:ig = { remove_variable = bpm_ig_coalition_mov }
+
+	owner = { 
+		if = {
+			limit = {
+				any_political_movement = {
+					bpm_ig_movement_attraction > 0
+				}
+			}
+			ordered_political_movement = {
+				position = 0
+				order_by = bpm_ig_movement_attraction
+
+				scope:ig = { 
+					set_variable = {
+						name = bpm_ig_coalition_mov
+						value = prev
+					} 
+				}
+			} 
+		}
+	}
+}
+
+bpm_movement_select_action = {
+	if = {
+		limit = {
+			scope:country = { NOT = { any_in_list = {
+				variable = bpm_active_coalition_actions
+				var:bpm_initiator ?= scope:movement
+			} } }
+		}
+		ordered_in_global_list = {
+			limit = {
+				bpm_movement_action_attraction > 0
+			}
+			variable = bpm_coalition_actions
+			position = 0
+			order_by = bpm_movement_action_attraction
+
+			save_scope_as = selected_action_type
+		}
+		if = {
+			limit = {
+				exists = scope:selected_action_type
+			}
+			scope:country = {
+				create_struct = {
+					struct_scope = created_action
+					struct_type = bpm_coalition_action_num
+				}
+			}
+
+			scope:created_action = {
+				set_variable = {
+					name = bpm_initiator
+					value = scope:movement
+				}
+				set_variable = {
+					name = bpm_action_type
+					value = scope:selected_action_type
+				}
+			}
+
+			scope:country = {
+				add_to_variable_list = {
+					name = bpm_active_coalition_actions
+					target = scope:created_action
+				}
+			}
+
+			clear_saved_scope = created_action
+			clear_saved_scope = selected_action_type
+		}
+	}
+	else = {
+		scope:country = {
+			random_in_list = {
+				variable = bpm_active_coalition_actions
+				var:bpm_initiator ?= scope:movement
+				save_scope_as = selected_action
+			}
+			if = {
+				limit = {
+					NOT = {
+						scope:selected_action.var:bpm_action_type = {
+							bpm_movement_action_attraction > 0
+						}
+					}
+				}
+				remove_list_variable = {
+					name = bpm_active_coalition_actions
+					target = scope:selected_action
+				}
+				destroy_struct = {
+					remove_variable = bpm_initiator
+					struct = scope:selected_action
+				}
+			}
+			clear_saved_scope = selected_action
+		}
+
+	}
+
+
+	# clear revolt stuff
+	if = {
+		limit = {
+			scope:country = {
+				NOT = { any_in_list = {
+					variable = bpm_active_coalition_actions
+					var:bpm_initiator ?= scope:movement
+					var:bpm_action_type ?= flag:bpm_action_revolt
+				} } 
+			}  
+		}
+		bpm_clear_revolt_stuff = yes
+	}
+}
+
+bpm_clear_revolt_stuff = {
+	scope:country = {
+		remove_from_variable_map = {
+			name = bpm_revolt_progress
+			key = scope:movement
+		}
+		if = {
+			limit = {
+				bpm_revcell_recently_subsided = yes
+			}
+			scope:movement = {
+				add_modifier = {
+					name = bpm_recently_failed_revolt
+					months = 60
+					is_decaying = yes
+				}
+			}
+		}
+		remove_list_variable = {
+			name = bpm_revcell_recently_subsided
+			target = scope:movement
+		}
+		every_scope_state = {
+			remove_from_variable_map = {
+				name = bpm_revcells
+				key = scope:movement
+			}
+			remove_from_variable_map = {
+				name = bpm_revcell_progress
+				key = scope:movement
+			}
+			remove_list_variable = {
+				name = bpm_revcell_recently_subsided
+				target = scope:movement
+			}
+		}
+	}	
+
+}
+# scope:country
+# scope:action
+bpm_action_on_monthly = {
+	if = {
+		limit = {
+			NOT = {
+				exists = scope:action.var:bpm_initiator
+			}
+		}
+		remove_list_variable = {
+			name = bpm_active_coalition_actions
+			target = scope:action
+		}
+		destroy_struct = {
+			remove_varaible = bpm_initiator
+			struct = scope:action
+		}
+	}
+	else = {
+		scope:action.var:bpm_initiator = { save_scope_as = movement }
+		if  {
+			limit = {
+				scope:action.var:bpm_action_type ?= flag:bpm_action_revolt
+			}
+			bpm_action_revolt_on_monthly = yes
+		}
+	}
+}

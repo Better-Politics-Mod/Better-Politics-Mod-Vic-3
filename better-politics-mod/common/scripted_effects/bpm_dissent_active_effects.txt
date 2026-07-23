@@ -1,266 +1,419 @@
-﻿bpm_dissent_je_revolution_active_weekly = {
-	if = {
-		limit = {
-			NOT = {
-				scope:journal_entry= {
-					has_variable = revclockc
-				}
-			}
+﻿# bpm_dissent_je_revolution_active_weekly = {
+# 	if = {
+# 		limit = {
+# 			NOT = {
+# 				scope:journal_entry= {
+# 					has_variable = revclockc
+# 				}
+# 			}
 			
-		}
-		scope:journal_entry= {
-			set_variable = {
-				name = revclockc
-				value = 0
-			}
-		}
-	}
-	trigger_event = {
-		id = bpm_crisis_debug_utils.4
-		days = 1
-	}
-	trigger_event = {
-		id = bpm_crisis_debug_utils.4
-		days = 2
-	}
-	trigger_event = {
-		id = bpm_crisis_debug_utils.4
-		days = 3
-	}
-	trigger_event = {
-		id = bpm_crisis_debug_utils.4
-		days = 4
-	}
-	trigger_event = {
-		id = bpm_crisis_debug_utils.4
-		days = 5
-	}
-	trigger_event = {
-		id = bpm_crisis_debug_utils.4
-		days = 6
-	}
-	trigger_event = {
-		id = bpm_crisis_debug_utils.4
-		days = 7
-	}
-	if = {
-		limit = {
-			scope:journal_entry= {
-				bpm_resource_percentage > 0.2
-			}
-		}
-		scope:journal_entry= {
-			save_scope_value_as = {
-				name = vallost
-				value = {
-					value = var:bpm_left_alone_counter
-					multiply = 20
-				}
-			}
-			if = {
-				limit = {
-					scope:vallost >= var:bpm_revolution_resource_amount
-				}
-				set_variable = {
-					name = bpm_left_alone_counter
-					value = 1
-				}
-			}
-			change_variable = {
-				name = bpm_revolution_resource_amount
-				add = {
-					value = var:bpm_left_alone_counter
-					multiply = -20
-				}
-			}
-			if = {
-				limit = { 
-					bpm_resource_percentage <= 0.2
-				}
-				set_variable = {
-					name = bpm_left_alone_counter
-					value = {
-						value = var:bpm_revolution_resource_amount_max
-						divide = 200
-						ceiling = yes
-					}
-				}
-				random_list = {
-					9 = {}
-					1 = {
-						owner = { bpm_dissent_je_revolution_active_on_inactive = yes }
-					}
-				}
-			}
-		}
-		random_list = {
-			2 = {}
-			2 = {
-				change_variable = {
-					name = bpm_auth_state_exhaustion
-					add = {
-						value = scope:journal_entry.var:bpm_left_alone_counter
-						multiply = 30
-					}
-				}
-			}
-			1 = {
-				change_variable = {
-					name = bpm_auth_state_exhaustion
-					add = {
-						value = scope:journal_entry.var:bpm_left_alone_counter
-						multiply = 50
-					}
-				}
-			}
-		}
-		je:je_bpm_revolutionary_damage = {
-			random_list = {
-				3 = {
-					add_progress = {
-						name = bpm_revolutionary_bureaucratic_damage_progress
-						value = 0.01
-					}
-				}
-				3 = {
-					add_progress = {
-						name = bpm_revolutionary_military_damage_progress
-						value = 0.01
-					}
-				}
-				3 = {
-					add_progress = {
-						name = bpm_revolutionary_economic_damage_progress
-						value = 0.01
-					}
-				}
-				1 = {
-					add_progress = {
-						name = bpm_revolutionary_bureaucratic_damage_progress
-						value = 0.05
-					}
-				}
-				1 = {
-					add_progress = {
-						name = bpm_revolutionary_military_damage_progress
-						value = 0.05
-					}
-				}
-				1 = {
-					add_progress = {
-						name = bpm_revolutionary_economic_damage_progress
-						value = 0.05
-					}
-				}
-			}
-		}
-	}
-	else = {
-		scope:journal_entry = {
-
-			change_variable = {
-				name = bpm_revolution_resource_amount
-				add = {
-					value = 50
-					multiply = var:bpm_left_alone_counter
-				}
-			}
-		}
-	}
-	scope:journal_entry = {
-		change_variable = {
-			name = bpm_left_alone_counter
-			add = 1
-		}
-	}
-	scope:journal_entry = {
-		clamp_variable = {
-			name = bpm_revolution_resource_amount
-			min = 0
-			max = var:bpm_revolution_resource_amount_max
-		}
-	}
-	scope:journal_entry.var:bpm_front_currently_planning = {
-		save_scope_as = member_front_name
-	}
-	bpm_post_rev_victory = yes
-	bpm_post_rev_defeat = yes
-}
-
-bpm_dissent_je_revolution_active_immediate = {
-	scope:journal_entry= {
-		set_variable = {
-			name = bpm_left_alone_counter
-			value = 0
-		}
-		save_scope_value_as = {
-			name = current_organization_value
-			value = var:bpm_current_front_organization
-		}
-		var:bpm_front_currently_planning = {
-			save_scope_as = selected_front_name
-		}
-		set_variable = {
-			name = bpm_revolution_resource_amount
-			value = owner.bpm_resource_amount
-		}
-		set_variable = {
-			name = bpm_revolution_resource_amount_max
-			value = var:bpm_revolution_resource_amount
-		}
-	}
-}
-
-bpm_post_rev_defeat = {
-	if = {
-		limit = {
-			OR = {
-				scope:journal_entry.var:bpm_revolution_resource_amount <= 0
-				NOT = {
-					any_interest_group = {
-						bpm_ig_in_front_check = yes
-					}
-				}
-			}
-		}
-		bpm_dissent_je_revolution_active_on_inactive = yes
-	}
-}
-
-bpm_dissent_je_revolution_active_on_inactive = {
-	scope:journal_entry= {
-		var:bpm_front_currently_planning = {
-			save_scope_as = selected_front_name
-		}
-		owner = { bpm_apply_to_all_fronts = { effect = bpm_setzero_front_organization_subp } }
-		remove_variable = bpm_front_currently_planning
-		remove_variable = bpm_revolution_resource_amount
-		remove_variable = bpm_revolution_resource_amount_max
-		remove_variable = bpm_current_front_organization
-		remove_variable = bpm_last_delta
-		remove_variable = bpm_je_counter
-	}
-}
-
-# bpm_post_rev_victory_wch_coup = {
-# 	scope:member_front_name = {
-# 		save_scope_as = selected_front_name
+# 		}
+# 		scope:journal_entry= {
+# 			set_variable = {
+# 				name = revclockc
+# 				value = 0
+# 			}
+# 		}
 # 	}
+# 	trigger_event = {
+# 		id = bpm_crisis_debug_utils.4
+# 		days = 1
+# 	}
+# 	trigger_event = {
+# 		id = bpm_crisis_debug_utils.4
+# 		days = 2
+# 	}
+# 	trigger_event = {
+# 		id = bpm_crisis_debug_utils.4
+# 		days = 3
+# 	}
+# 	trigger_event = {
+# 		id = bpm_crisis_debug_utils.4
+# 		days = 4
+# 	}
+# 	trigger_event = {
+# 		id = bpm_crisis_debug_utils.4
+# 		days = 5
+# 	}
+# 	trigger_event = {
+# 		id = bpm_crisis_debug_utils.4
+# 		days = 6
+# 	}
+# 	trigger_event = {
+# 		id = bpm_crisis_debug_utils.4
+# 		days = 7
+# 	}
+# 	if = {
+# 		limit = {
+# 			scope:journal_entry= {
+# 				bpm_resource_percentage > 0.2
+# 			}
+# 		}
+# 		scope:journal_entry= {
+# 			save_scope_value_as = {
+# 				name = vallost
+# 				value = {
+# 					value = var:bpm_left_alone_counter
+# 					multiply = 20
+# 				}
+# 			}
+# 			if = {
+# 				limit = {
+# 					scope:vallost >= var:bpm_revolution_resource_amount
+# 				}
+# 				set_variable = {
+# 					name = bpm_left_alone_counter
+# 					value = 1
+# 				}
+# 			}
+# 			change_variable = {
+# 				name = bpm_revolution_resource_amount
+# 				add = {
+# 					value = var:bpm_left_alone_counter
+# 					multiply = -20
+# 				}
+# 			}
+# 			if = {
+# 				limit = { 
+# 					bpm_resource_percentage <= 0.2
+# 				}
+# 				set_variable = {
+# 					name = bpm_left_alone_counter
+# 					value = {
+# 						value = var:bpm_revolution_resource_amount_max
+# 						divide = 200
+# 						ceiling = yes
+# 					}
+# 				}
+# 				random_list = {
+# 					9 = {}
+# 					1 = {
+# 						owner = { bpm_dissent_je_revolution_active_on_inactive = yes }
+# 					}
+# 				}
+# 			}
+# 		}
+# 		random_list = {
+# 			2 = {}
+# 			2 = {
+# 				change_variable = {
+# 					name = bpm_auth_state_exhaustion
+# 					add = {
+# 						value = scope:journal_entry.var:bpm_left_alone_counter
+# 						multiply = 30
+# 					}
+# 				}
+# 			}
+# 			1 = {
+# 				change_variable = {
+# 					name = bpm_auth_state_exhaustion
+# 					add = {
+# 						value = scope:journal_entry.var:bpm_left_alone_counter
+# 						multiply = 50
+# 					}
+# 				}
+# 			}
+# 		}
+# 		je:je_bpm_revolutionary_damage = {
+# 			random_list = {
+# 				3 = {
+# 					add_progress = {
+# 						name = bpm_revolutionary_bureaucratic_damage_progress
+# 						value = 0.01
+# 					}
+# 				}
+# 				3 = {
+# 					add_progress = {
+# 						name = bpm_revolutionary_military_damage_progress
+# 						value = 0.01
+# 					}
+# 				}
+# 				3 = {
+# 					add_progress = {
+# 						name = bpm_revolutionary_economic_damage_progress
+# 						value = 0.01
+# 					}
+# 				}
+# 				1 = {
+# 					add_progress = {
+# 						name = bpm_revolutionary_bureaucratic_damage_progress
+# 						value = 0.05
+# 					}
+# 				}
+# 				1 = {
+# 					add_progress = {
+# 						name = bpm_revolutionary_military_damage_progress
+# 						value = 0.05
+# 					}
+# 				}
+# 				1 = {
+# 					add_progress = {
+# 						name = bpm_revolutionary_economic_damage_progress
+# 						value = 0.05
+# 					}
+# 				}
+# 			}
+# 		}
+# 	}
+# 	else = {
+# 		scope:journal_entry = {
+
+# 			change_variable = {
+# 				name = bpm_revolution_resource_amount
+# 				add = {
+# 					value = 50
+# 					multiply = var:bpm_left_alone_counter
+# 				}
+# 			}
+# 		}
+# 	}
+# 	scope:journal_entry = {
+# 		change_variable = {
+# 			name = bpm_left_alone_counter
+# 			add = 1
+# 		}
+# 	}
+# 	scope:journal_entry = {
+# 		clamp_variable = {
+# 			name = bpm_revolution_resource_amount
+# 			min = 0
+# 			max = var:bpm_revolution_resource_amount_max
+# 		}
+# 	}
+# 	scope:journal_entry.var:bpm_front_currently_planning = {
+# 		save_scope_as = member_front_name
+# 	}
+# 	bpm_post_rev_victory = yes
+# 	bpm_post_rev_defeat = yes
+# }
+
+# bpm_dissent_je_revolution_active_immediate = {
+# 	scope:journal_entry= {
+# 		set_variable = {
+# 			name = bpm_left_alone_counter
+# 			value = 0
+# 		}
+# 		save_scope_value_as = {
+# 			name = current_organization_value
+# 			value = var:bpm_current_front_organization
+# 		}
+# 		var:bpm_front_currently_planning = {
+# 			save_scope_as = selected_front_name
+# 		}
+# 		set_variable = {
+# 			name = bpm_revolution_resource_amount
+# 			value = owner.bpm_resource_amount
+# 		}
+# 		set_variable = {
+# 			name = bpm_revolution_resource_amount_max
+# 			value = var:bpm_revolution_resource_amount
+# 		}
+# 	}
+# }
+
+# bpm_post_rev_defeat = {
+# 	if = {
+# 		limit = {
+# 			OR = {
+# 				scope:journal_entry.var:bpm_revolution_resource_amount <= 0
+# 				NOT = {
+# 					any_interest_group = {
+# 						bpm_ig_in_front_check = yes
+# 					}
+# 				}
+# 			}
+# 		}
+# 		bpm_dissent_je_revolution_active_on_inactive = yes
+# 	}
+# }
+
+# bpm_dissent_je_revolution_active_on_inactive = {
+# 	scope:journal_entry= {
+# 		var:bpm_front_currently_planning = {
+# 			save_scope_as = selected_front_name
+# 		}
+# 		owner = { bpm_apply_to_all_fronts = { effect = bpm_setzero_front_organization_subp } }
+# 		remove_variable = bpm_front_currently_planning
+# 		remove_variable = bpm_revolution_resource_amount
+# 		remove_variable = bpm_revolution_resource_amount_max
+# 		remove_variable = bpm_current_front_organization
+# 		remove_variable = bpm_last_delta
+# 		remove_variable = bpm_je_counter
+# 	}
+# }
+
+# # bpm_post_rev_victory_wch_coup = {
+# # 	scope:member_front_name = {
+# # 		save_scope_as = selected_front_name
+# # 	}
+# # 	set_variable = {
+# # 		name = bpm_no_touch 
+# # 		days = 7
+# # 	}
+# # 	every_scope_state = {
+# # 		bpm_apply_to_all_fronts = {
+# # 			effect = bpm_reduce_cell_level
+# # 		}
+# # 	}
+# # 	scope:member_front_name = {
+# # 		save_scope_as = selected_front_name
+# # 	}
+# # 	bpm_apply_to_front = {
+# # 		effect = bpm_clear_front
+# # 	}
+# # 	# Revolutionary Fervour
+# # 	add_radicals = {
+# # 		value = -0.85
+# # 	}
+# # 	set_variable = {
+# # 		name = bpm_auth_state_exhaustion
+# # 		value = 0
+# # 	}
+# # 	clear_variable_list = bpm_revolution_victory_igs
+# # 	every_interest_group = {
+# # 		remove_modifier = modifier_revolution_defeated_light
+# # 		remove_modifier = modifier_revolution_victorious_light
+# # 		remove_modifier = bpm_modifier_revolution_victorious_light
+# # 	}
+# # 	every_interest_group = {
+# # 		limit = {
+# # 			bpm_ig_in_front_check = yes
+# # 		}
+# # 		add_modifier = {
+# # 			name = bpm_modifier_revolution_victorious_light
+# # 			multiplier = 5
+# # 			days = 3650
+# # 			is_decaying = yes
+# # 		}
+# # 		owner = { add_to_variable_list = {
+# # 			name = bpm_revolution_victory_igs
+# # 			target = prev
+# # 		} }
+# # 	}
+# # 	every_interest_group = {
+# # 		limit = {
+# # 			NOT = {
+# # 				bpm_ig_in_front_check = yes
+# # 			}
+# # 		}
+# # 		add_modifier = {
+# # 			name = modifier_revolution_defeated_light
+# # 			days = 3650
+# # 			is_decaying = yes
+# # 		}
+# # 		remove_modifier = bpm_empowered_ig
+# # 	}
+# # 	bpm_dissent_je_revolution_active_on_inactive = yes
+
+# # 	bpm_add_political_stability_huge = yes
+# # 	bpm_add_political_stability_huge = yes
+# # 	if = {
+# # 		limit = {
+# # 			exists = scope:member_front_name
+# # 		}
+# # 		switch = {
+# # 			trigger = scope:member_front_name
+# # 			flag:bpm_front_peasant = {
+# # 				trigger_event = {
+# # 					id = bpm_revolution_results.1
+# # 					days = 14
+# # 					popup = yes
+# # 				}
+# # 			}
+# # 			flag:bpm_front_urban = {
+# # 				trigger_event = {
+# # 					id = bpm_revolution_results.2
+# # 					days = 14
+# # 					popup = yes
+# # 				}
+# # 			}
+# # 			flag:bpm_front_republican = {
+# # 				trigger_event = {
+# # 					id = bpm_revolution_results.3
+# # 					days = 14
+# # 					popup = yes
+# # 				}
+# # 			}
+# # 			flag:bpm_front_popular = {
+# # 				trigger_event = {
+# # 					id = bpm_revolution_results.4
+# # 					days = 14
+# # 					popup = yes
+# # 				}
+# # 			}
+# # 			flag:bpm_front_liberal = {
+# # 				trigger_event = {
+# # 					id = bpm_revolution_results.5
+# # 					days = 14
+# # 					popup = yes
+# # 				}
+# # 			}
+# # 			flag:bpm_front_reactionary = {
+# # 				trigger_event = {
+# # 					id = bpm_revolution_results.6
+# # 					days = 14
+# # 					popup = yes
+# # 				}
+# # 			}
+# # 			flag:bpm_front_nationalist = {
+# # 				trigger_event = {
+# # 					id = bpm_revolution_results.7
+# # 					days = 14
+# # 					popup = yes
+# # 				}
+# # 			}
+# # 			flag:bpm_front_fascist = {
+# # 				trigger_event = {
+# # 					id = bpm_revolution_results.8
+# # 					days = 14
+# # 					popup = yes
+# # 				}
+# # 			}
+# # 			flag:bpm_front_labor = {
+# # 				trigger_event = {
+# # 					id = bpm_revolution_results.9
+# # 					days = 14
+# # 					popup = yes
+# # 				}
+# # 			}
+# # 			flag:bpm_front_socialist = {
+# # 				trigger_event = {
+# # 					id = bpm_revolution_results.10
+# # 					days = 14
+# # 					popup = yes
+# # 				}
+# # 			}
+# # 		}
+# # 	}
+# # 	else = {
+# # 		# No more revs for a while
+# # 		bpm_setzero_everyfront_organization = yes
+# # 		every_interest_group = {
+# # 			limit = {
+# # 				bpm_ig_is_ideological = yes
+# # 			}
+# # 			set_variable = {
+# # 				name = bpm_ig_organization
+# # 				value = 0
+# # 			}
+# # 		}
+# # 	}
+# # }
+
+# bpm_post_rev_victory_wch = {
 # 	set_variable = {
 # 		name = bpm_no_touch 
-# 		days = 7
+# 		days = 30
 # 	}
 # 	every_scope_state = {
 # 		bpm_apply_to_all_fronts = {
-# 			effect = bpm_reduce_cell_level
+# 			effect = bpm_destroy_all_cells
 # 		}
 # 	}
-# 	scope:member_front_name = {
-# 		save_scope_as = selected_front_name
+# 	scope:selected_front_name =  {
+# 		save_scope_as = member_front_name
 # 	}
-# 	bpm_apply_to_front = {
-# 		effect = bpm_clear_front
-# 	}
+
 # 	# Revolutionary Fervour
 # 	add_radicals = {
 # 		value = -0.85
@@ -274,6 +427,20 @@ bpm_dissent_je_revolution_active_on_inactive = {
 # 		remove_modifier = modifier_revolution_defeated_light
 # 		remove_modifier = modifier_revolution_victorious_light
 # 		remove_modifier = bpm_modifier_revolution_victorious_light
+# 	}
+# 	every_interest_group = {
+# 		add_modifier = {
+# 			name = bpm_adapting_to_new_regime
+# 			days = 730
+# 			is_decaying = yes
+# 		}
+# 	}
+# 	every_political_movement = {
+# 		add_modifier = {
+# 			name = bpm_adapting_to_new_regime_mov
+# 			days = 730
+# 			is_decaying = yes
+# 		}
 # 	}
 # 	every_interest_group = {
 # 		limit = {
@@ -304,282 +471,115 @@ bpm_dissent_je_revolution_active_on_inactive = {
 # 		remove_modifier = bpm_empowered_ig
 # 	}
 # 	bpm_dissent_je_revolution_active_on_inactive = yes
-
-# 	bpm_add_political_stability_huge = yes
-# 	bpm_add_political_stability_huge = yes
 # 	if = {
 # 		limit = {
-# 			exists = scope:member_front_name
+# 			scope:member_front_name = flag:bpm_front_peasant
 # 		}
-# 		switch = {
-# 			trigger = scope:member_front_name
-# 			flag:bpm_front_peasant = {
-# 				trigger_event = {
-# 					id = bpm_revolution_results.1
-# 					days = 14
-# 					popup = yes
-# 				}
+
+# 	}
+
+# 	bpm_remove_political_stability_huge = yes
+# 	bpm_remove_political_stability_huge = yes
+# 	bpm_choose_fronts = yes
+# 	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution }
+# 	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution1 }
+# 	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution2 }
+# 	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution3 }
+
+
+# 	switch = {
+# 		trigger = scope:member_front_name
+# 		flag:bpm_front_peasant = {
+# 			trigger_event = {
+# 				id = bpm_revolution_results.1
+# 				days = 0
+# 				popup = yes
 # 			}
-# 			flag:bpm_front_urban = {
-# 				trigger_event = {
-# 					id = bpm_revolution_results.2
-# 					days = 14
-# 					popup = yes
-# 				}
+# 		}
+# 		flag:bpm_front_urban = {
+# 			trigger_event = {
+# 				id = bpm_revolution_results.2
+# 				days = 0
+# 				popup = yes
 # 			}
-# 			flag:bpm_front_republican = {
-# 				trigger_event = {
-# 					id = bpm_revolution_results.3
-# 					days = 14
-# 					popup = yes
-# 				}
+# 		}
+# 		flag:bpm_front_republican = {
+# 			trigger_event = {
+# 				id = bpm_revolution_results.3
+# 				days = 0
+# 				popup = yes
 # 			}
-# 			flag:bpm_front_popular = {
-# 				trigger_event = {
-# 					id = bpm_revolution_results.4
-# 					days = 14
-# 					popup = yes
-# 				}
+# 		}
+# 		flag:bpm_front_popular = {
+# 			trigger_event = {
+# 				id = bpm_revolution_results.4
+# 				days = 0
+# 				popup = yes
 # 			}
-# 			flag:bpm_front_liberal = {
-# 				trigger_event = {
-# 					id = bpm_revolution_results.5
-# 					days = 14
-# 					popup = yes
-# 				}
+# 		}
+# 		flag:bpm_front_liberal = {
+# 			trigger_event = {
+# 				id = bpm_revolution_results.5
+# 				days = 0
+# 				popup = yes
 # 			}
-# 			flag:bpm_front_reactionary = {
-# 				trigger_event = {
-# 					id = bpm_revolution_results.6
-# 					days = 14
-# 					popup = yes
-# 				}
+# 		}
+# 		flag:bpm_front_reactionary = {
+# 			trigger_event = {
+# 				id = bpm_revolution_results.6
+# 				days = 0
+# 				popup = yes
 # 			}
-# 			flag:bpm_front_nationalist = {
-# 				trigger_event = {
-# 					id = bpm_revolution_results.7
-# 					days = 14
-# 					popup = yes
-# 				}
+# 		}
+# 		flag:bpm_front_nationalist = {
+# 			trigger_event = {
+# 				id = bpm_revolution_results.7
+# 				days = 0
+# 				popup = yes
 # 			}
-# 			flag:bpm_front_fascist = {
-# 				trigger_event = {
-# 					id = bpm_revolution_results.8
-# 					days = 14
-# 					popup = yes
-# 				}
+# 		}
+# 		flag:bpm_front_fascist = {
+# 			trigger_event = {
+# 				id = bpm_revolution_results.8
+# 				days = 0
+# 				popup = yes
 # 			}
-# 			flag:bpm_front_labor = {
-# 				trigger_event = {
-# 					id = bpm_revolution_results.9
-# 					days = 14
-# 					popup = yes
-# 				}
+# 		}
+# 		flag:bpm_front_labor = {
+# 			trigger_event = {
+# 				id = bpm_revolution_results.9
+# 				days = 0
+# 				popup = yes
 # 			}
-# 			flag:bpm_front_socialist = {
-# 				trigger_event = {
-# 					id = bpm_revolution_results.10
-# 					days = 14
-# 					popup = yes
-# 				}
+# 		}
+# 		flag:bpm_front_socialist = {
+# 			trigger_event = {
+# 				id = bpm_revolution_results.10
+# 				days = 0
+# 				popup = yes
 # 			}
 # 		}
 # 	}
-# 	else = {
-# 		# No more revs for a while
-# 		bpm_setzero_everyfront_organization = yes
-# 		every_interest_group = {
-# 			limit = {
-# 				bpm_ig_is_ideological = yes
-# 			}
-# 			set_variable = {
-# 				name = bpm_ig_organization
-# 				value = 0
-# 			}
-# 		}
+# 	bpm_apply_to_front = {
+# 		effect = bpm_clear_front
 # 	}
+# 	bpm_make_government_of_national_defence = yes
 # }
 
-bpm_post_rev_victory_wch = {
-	set_variable = {
-		name = bpm_no_touch 
-		days = 30
-	}
-	every_scope_state = {
-		bpm_apply_to_all_fronts = {
-			effect = bpm_destroy_all_cells
-		}
-	}
-	scope:selected_front_name =  {
-		save_scope_as = member_front_name
-	}
-
-	# Revolutionary Fervour
-	add_radicals = {
-		value = -0.85
-	}
-	set_variable = {
-		name = bpm_auth_state_exhaustion
-		value = 0
-	}
-	clear_variable_list = bpm_revolution_victory_igs
-	every_interest_group = {
-		remove_modifier = modifier_revolution_defeated_light
-		remove_modifier = modifier_revolution_victorious_light
-		remove_modifier = bpm_modifier_revolution_victorious_light
-	}
-	every_interest_group = {
-		add_modifier = {
-			name = bpm_adapting_to_new_regime
-			days = 730
-			is_decaying = yes
-		}
-	}
-	every_political_movement = {
-		add_modifier = {
-			name = bpm_adapting_to_new_regime_mov
-			days = 730
-			is_decaying = yes
-		}
-	}
-	every_interest_group = {
-		limit = {
-			bpm_ig_in_front_check = yes
-		}
-		add_modifier = {
-			name = bpm_modifier_revolution_victorious_light
-			multiplier = 5
-			days = 3650
-			is_decaying = yes
-		}
-		owner = { add_to_variable_list = {
-			name = bpm_revolution_victory_igs
-			target = prev
-		} }
-	}
-	every_interest_group = {
-		limit = {
-			NOT = {
-				bpm_ig_in_front_check = yes
-			}
-		}
-		add_modifier = {
-			name = modifier_revolution_defeated_light
-			days = 3650
-			is_decaying = yes
-		}
-		remove_modifier = bpm_empowered_ig
-	}
-	bpm_dissent_je_revolution_active_on_inactive = yes
-	if = {
-		limit = {
-			scope:member_front_name = flag:bpm_front_peasant
-		}
-
-	}
-
-	bpm_remove_political_stability_huge = yes
-	bpm_remove_political_stability_huge = yes
-	bpm_choose_fronts = yes
-	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution }
-	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution1 }
-	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution2 }
-	bpm_dissent_je_revolution_inactive_effect = { je = je_bpm_dissent_revolution3 }
-
-
-	switch = {
-		trigger = scope:member_front_name
-		flag:bpm_front_peasant = {
-			trigger_event = {
-				id = bpm_revolution_results.1
-				days = 0
-				popup = yes
-			}
-		}
-		flag:bpm_front_urban = {
-			trigger_event = {
-				id = bpm_revolution_results.2
-				days = 0
-				popup = yes
-			}
-		}
-		flag:bpm_front_republican = {
-			trigger_event = {
-				id = bpm_revolution_results.3
-				days = 0
-				popup = yes
-			}
-		}
-		flag:bpm_front_popular = {
-			trigger_event = {
-				id = bpm_revolution_results.4
-				days = 0
-				popup = yes
-			}
-		}
-		flag:bpm_front_liberal = {
-			trigger_event = {
-				id = bpm_revolution_results.5
-				days = 0
-				popup = yes
-			}
-		}
-		flag:bpm_front_reactionary = {
-			trigger_event = {
-				id = bpm_revolution_results.6
-				days = 0
-				popup = yes
-			}
-		}
-		flag:bpm_front_nationalist = {
-			trigger_event = {
-				id = bpm_revolution_results.7
-				days = 0
-				popup = yes
-			}
-		}
-		flag:bpm_front_fascist = {
-			trigger_event = {
-				id = bpm_revolution_results.8
-				days = 0
-				popup = yes
-			}
-		}
-		flag:bpm_front_labor = {
-			trigger_event = {
-				id = bpm_revolution_results.9
-				days = 0
-				popup = yes
-			}
-		}
-		flag:bpm_front_socialist = {
-			trigger_event = {
-				id = bpm_revolution_results.10
-				days = 0
-				popup = yes
-			}
-		}
-	}
-	bpm_apply_to_front = {
-		effect = bpm_clear_front
-	}
-	bpm_make_government_of_national_defence = yes
-}
-
-bpm_post_rev_victory = {
-	if = {
-		limit = {
-			bpm_state_capacity < 0
-			NOT = {
-				has_variable = bpm_no_touch
-			}
-		}
-		#bpm_post_rev_victory_wch = yes
-		# else_if = {
-		# 	limit = {
-		# 		scope:member_front_name = flag:bpm_front_socialist
-		# 	}
-		# 	activate_law = law_type:law_council_republic
-		# }
-	}
-}
+# bpm_post_rev_victory = {
+# 	if = {
+# 		limit = {
+# 			bpm_state_capacity < 0
+# 			NOT = {
+# 				has_variable = bpm_no_touch
+# 			}
+# 		}
+# 		#bpm_post_rev_victory_wch = yes
+# 		# else_if = {
+# 		# 	limit = {
+# 		# 		scope:member_front_name = flag:bpm_front_socialist
+# 		# 	}
+# 		# 	activate_law = law_type:law_council_republic
+# 		# }
+# 	}
+# }

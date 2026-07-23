@@ -1,13 +1,23 @@
+bpm_the_docket_cooldown = {
+	add_to_variable_list = {
+		name = bpm_cooldown_laws
+		target = currently_enacting_law.type
+		months = 6
+	}
+}
+
 bpm_the_docket_effect = {
 	clear_variable_list = bpm_considered_laws
 	every_law = {
 		limit = {
-			NOT = {
-				owner = {
+			owner = {
+				NOR = {
 					has_law = prev.type
+					currently_enacting_law.type ?= prev.type
+					is_target_in_variable_list = { name = bpm_cooldown_laws target = prev.type }
 				}
 			}
-			can_be_enacted = yes
+			law_is_available = yes
 			bpm_law_enactment_desire_delta > 0
 		}
 		prev = { add_to_variable_list = { name = bpm_considered_laws target = prev } }
@@ -18,4 +28,27 @@ bpm_the_docket_effect = {
 		order_by = bpm_law_enactment_desire_delta
 		prev = { add_to_variable_list = { name = bpm_the_docket target = prev } }
 	}
+}
+
+bpm_update_law_enactment_docket = {
+	if = {
+		limit = {
+			enacting_any_law = no
+		}
+		ordered_in_list = {
+			variable = bpm_the_docket
+			order_by = bpm_law_enactment_desire_delta
+			position = 0
+			owner = { start_enactment = prev.type }
+			save_scope_as = enacted_law
+		}
+		clear_variable_list = bpm_the_docket
+		ordered_in_list = {
+			variable = bpm_considered_laws
+			order_by = bpm_law_enactment_desire_delta
+			prev = { add_to_variable_list = { name = bpm_the_docket target = prev } }
+		}
+		clear_saved_scope = enacted_law
+	}
+	bpm_the_docket_effect = yes
 }

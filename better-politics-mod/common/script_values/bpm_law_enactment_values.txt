@@ -73,6 +73,46 @@ bpm_country_strongly_supporting_clout = {
 	}
 }
 
+bpm_country_potential_support = {
+	value = 0
+	every_interest_group = {
+		limit = {
+			OR = {
+				bpm_ig_law_support_total_value > 0
+				AND = {
+					bpm_ig_law_support_total_value = 0
+					amenability >= 25
+				}
+				AND = {
+					bpm_ig_law_support_total_value >= -1
+					amenability >= 50
+				}
+				AND = {
+					bpm_ig_law_support_total_value >= -2
+					amenability >= 75
+				}
+			}
+		}
+		add = ig_clout
+	}
+}
+
+bpm_country_easy_potential_support = {
+	value = 0
+	every_interest_group = {
+		limit = {
+			OR = {
+				bpm_ig_law_support_total_value > 0
+				AND = {
+					bpm_ig_law_support_total_value = 0
+					amenability >= 50
+				}
+			}
+		}
+		add = ig_clout
+	}
+}
+
 bpm_law_hos_power = {
 	save_temporary_scope_as = law_to_check
 	if = {
@@ -1588,7 +1628,7 @@ bpm_concessiveness = { #runs in IG scope. owner is the county.
 			desc = "amenability_clout"
 			add = ig_clout
 			multiply = 100
-			subtract = 8
+			subtract = 12
 			multiply = ig_clout_neg_multiplier
 			max = 0
 			min = -20
@@ -1641,16 +1681,6 @@ bpm_concessiveness = { #runs in IG scope. owner is the county.
 				multiply = 0.05
 			}
 		}
-
-		# if = { #boost if in government. TESTING: Seems not required.
-		# 	limit = {
-		# 		is_in_government = yes
-		# 	}
-		# 	add = {
-		# 		desc = "amenability_in_gov"
-		# 		add = 0
-		# 	}
-		# }
 
 		if = { #positive movements
 			limit = {
@@ -1749,16 +1779,16 @@ bpm_concessiveness = { #runs in IG scope. owner is the county.
 		}
 
 		##modifiers on IG
-		add = {
-			value = modifier:interest_group_amenability_add
-			desc = "amenability_ig_additional_adds"
-		}
+		#add = {
+		#	value = modifier:interest_group_amenability_add
+		#	desc = "amenability_ig_additional_adds"
+		#}
 
 		##modifiers on Nation
-		add = {
-			value = owner.modifier:country_amenability_add
-			desc = "amenability_country_additional_adds"
-		}
+		#add = {
+		#	value = owner.modifier:country_amenability_add
+		#	desc = "amenability_country_additional_adds"
+		#}
 
 		### Enactment chance
 		##if looking very likely will pass even without negotiating, scaled slightly based on lead. The IG are looking for a freebie, since law is gonna pass anyway.
@@ -1769,7 +1799,7 @@ bpm_concessiveness = { #runs in IG scope. owner is the county.
 				}
 			}
 			add = {
-				add = -25
+				add = -50
 				desc = "amenability_law_likely_to_pass"
 			}
 		}
@@ -1777,12 +1807,8 @@ bpm_concessiveness = { #runs in IG scope. owner is the county.
 		##Otherwise, extra amenability if sure their support will make no difference and it will fail anyway. Two levels.
 		else_if = {
 			limit = {
-				string_law = yes
-				ig_clout > {
-					owner = {
-						value = bpm_law_enactment_vote_threshold
-						subtract = bpm_country_yea_votes
-					}
+				owner = {
+					bpm_country_easy_potential_support > bpm_law_enactment_vote_threshold
 				}
 			}
 			add = {
@@ -1793,14 +1819,11 @@ bpm_concessiveness = { #runs in IG scope. owner is the county.
 		else_if = {
 			limit = {
 				owner = {
-					bpm_law_enactment_vote_threshold > {
-						value = bpm_country_yea_votes
-						multiply = 4
-					}
+					bpm_country_potential_support < bpm_law_enactment_vote_threshold
 				}
 			}
 			add = {
-				add = -20
+				add = -40
 				desc = "amenability_law_makes_no_difference"
 			}
 		}

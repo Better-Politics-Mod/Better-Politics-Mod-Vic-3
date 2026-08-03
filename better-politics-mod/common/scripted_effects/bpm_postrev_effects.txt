@@ -1,0 +1,206 @@
+bpm_postrev_weekly_effect = {
+	save_scope_as = country
+	every_activated_interest_group = {
+		if = {
+			limit = {
+				has_variable = bpm_on_happy_tictoc
+				NOT = { has_variable = bpm_happy_tictoc }
+				bpm_ig_is_left_wing = yes
+				NOT = { 
+					has_ideology = ideology:ideology_provgov_member
+				}
+			}
+			owner = { set_variable = { name = igt value = prev } }
+			owner = { trigger_event = { id = bpm_postrev_events.1 } }
+		}
+		else_if = {
+			limit = {
+				has_variable = bpm_on_unhappy_tictoc
+				NOT = { has_variable = bpm_unhappy_tictoc } 
+				has_ideology = ideology:ideology_provgov_member
+			}
+			owner = { set_variable = { name = igt value = prev } }
+			owner = { trigger_event = { id = bpm_postrev_events.2 } }
+		}
+
+		if = {
+			limit = {
+				ig_approval <= unhappy
+			}
+			if = { limit = { NOT = { has_variable = bpm_unhappy_tictoc } } 
+			set_variable = {
+				name = bpm_unhappy_tictoc
+				months = 6
+			} }
+			set_variable = {
+				name = bpm_on_unhappy_tictoc
+			}
+		}
+		else = {
+			remove_variable = bpm_unhappy_tictoc
+			remove_variable = bpm_on_unhappy_tictoc
+		}
+
+		if = {
+			limit = {
+				ig_approval >= happy
+			}
+			if = { limit = { NOT = { has_variable = bpm_happy_tictoc } } 
+			set_variable = {
+				name = bpm_happy_tictoc
+				months = 2
+			} }
+			set_variable = bpm_on_happy_tictoc
+		}
+		else = {
+			remove_variable = bpm_happy_tictoc
+			remove_variable = bpm_on_happy_tictoc
+		}
+		
+	}
+	every_in_list = {
+		variable = bpm_sweeping_away_the_old_factions
+		limit = {
+			# revolutionary IGs are in this faction
+			save_temporary_scope_as = faction
+			scope:country = { 
+				any_factional_interest_group = {
+					count > 0
+					prev = { 
+						is_target_in_variable_list = {
+							name = bpm_revolution_victory_igs
+							target = prev
+						}
+					}
+				} 
+
+			}
+		}
+		## MODIFY ZEAL
+		if = {
+			limit = {
+				NOT = {
+					has_variable = bpm_revolutionary_zeal
+				}
+			}
+			set_variable = {
+				name = bpm_revolutionary_zeal
+				value = 100
+			}
+		}
+		else = {
+			save_scope_as = faction
+			change_variable = {
+				name = bpm_revolutionary_zeal
+				add = scope:country.bpm_revolutionary_zeal_change_value
+			}
+		}
+		## APPLY ZEAL MODIFIERS
+		scope:country = {
+			if = {
+				limit = {
+					scope:faction = {
+						bpm_faction_is_disillusioned = yes
+					}
+				}
+				bpm_apply_zeal_modifier = { zeal = disillusioned }
+			}
+			else_if = {
+				limit = {
+					scope:faction = {
+						bpm_faction_is_wavering = yes
+					}
+				}
+				bpm_apply_zeal_modifier = { zeal = wavering }
+			}
+			else_if = {
+				limit = {
+					scope:faction = {
+						bpm_faction_is_stalwart = yes
+					}
+				}
+				bpm_apply_zeal_modifier = { zeal = stalwart }
+			}
+			else_if = {
+				limit = {
+					scope:faction = {
+						bpm_faction_is_fanatical = yes
+					}
+				}
+				bpm_apply_zeal_modifier = { zeal = fanatical }
+			}
+		}
+	}
+	## APPLY ZEAL AMENDMENT
+	if = {
+		limit = {
+			bpm_country_is_disillusioned = yes
+		}
+		bpm_apply_zeal_amendment = { type = disillusioned }
+	}
+	else_if = {
+		limit = {
+			bpm_country_is_wavering = yes
+		}
+		bpm_apply_zeal_amendment = { type = wavering }
+	}
+	else_if = {
+		limit = {
+			bpm_country_is_stalwart = yes
+		}
+		bpm_apply_zeal_amendment = { type = stalwart }
+	}
+	else_if = {
+		limit = {
+			bpm_country_is_fanatical = yes
+		}
+		bpm_apply_zeal_amendment = { type = fanatical }
+	}
+}
+
+bpm_remove_all_zeal_modifiers = {
+	remove_modifier = bpm_revolutionary_zeal_disillusioned
+	remove_modifier = bpm_revolutionary_zeal_wavering
+	remove_modifier = bpm_revolutionary_zeal_stalwart
+	remove_modifier = bpm_revolutionary_zeal_fanatical
+}
+
+bpm_apply_zeal_modifier = {
+	every_factional_interest_group = {
+		remove_modifier = bpm_revolutionary_zeal_disillusioned
+		remove_modifier = bpm_revolutionary_zeal_wavering
+		remove_modifier = bpm_revolutionary_zeal_stalwart
+		remove_modifier = bpm_revolutionary_zeal_fanatical
+		add_modifier = bpm_revolutionary_zeal_$zeal$
+	} 
+}
+
+bpm_apply_zeal_amendment = {
+	if = {
+		limit = {
+			NOT = {
+				active_law:lawgroup_distribution_of_power = {
+					has_amendment = amendment_type:bpm_amendment_sweeping_away_the_old_$type$
+				}
+			}
+		}
+		active_law:lawgroup_distribution_of_power = {
+			every_scope_amendment = {
+				limit = {
+					OR = {
+						type = amendment_type:bpm_amendment_sweeping_away_the_old_fanatical
+						type = amendment_type:bpm_amendment_sweeping_away_the_old_stalwart
+						type = amendment_type:bpm_amendment_sweeping_away_the_old_wavering
+						type = amendment_type:bpm_amendment_sweeping_away_the_old_disillusioned
+					}
+				}
+				remove_amendment = yes
+			}
+			add_amendment = {
+				type = bpm_amendment_sweeping_away_the_old_$type$
+				sponsor = prev.ruler.interest_group
+			}
+		}
+	}
+}
+

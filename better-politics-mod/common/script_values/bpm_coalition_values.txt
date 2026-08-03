@@ -1,0 +1,81 @@
+bpm_coalition_action_num = 68 # mai 68 never forget - we can win !
+
+# this = flag
+# scope:ig
+bpm_strategy_attraction = {
+	value = 0
+	if = {
+		limit = {
+			this ?= flag:bpm_strategy_default
+		}
+		add = 100
+	}
+}
+
+# this = flag
+# scope:ig
+bpm_ig_movement_attraction = {
+	value = 0
+
+	if = {
+		limit = {
+			scope:ig.var:bpm_ig_strategy ?= flag:bpm_strategy_default
+		}
+		# for now just highest pressure movement is the one that gets the IG
+		value = "movement_pressure(scope:ig)"
+		if = {
+			limit = {
+				NOT = { any_influenced_interest_group = {
+					this ?= scope:ig
+				} }
+			}
+			multiply = 0
+		}
+	}
+}
+
+# this = flag
+# scope:movement
+bpm_movement_action_attraction = {
+	value = 0
+
+	if = {
+		limit = {
+			this ?= flag:bpm_action_revolt
+		}
+		value = 0
+		if = {
+			limit = {
+				scope:movement.political_movement_radicalism >= define:NPolitics|RADICALISM_MILITANT_THRESHOLD
+				scope:movement.political_movement_support >= define:NPolitics|SUPPORT_RELEVANT_THRESHOLD
+				scope:movement.owner = { any_interest_group = {
+					var:bpm_ig_coalition_mov ?= scope:movement
+				} }
+			}
+			add = 10
+		}
+		if = {
+			limit = {
+				OR = { scope:movement.owner = { NOT = {
+					any_scope_state = {
+						OR = {
+							# possible for revcell to spawn
+							AND = {
+								bpm_revcell_recently_subsided = no
+								turmoil >= 0.25
+							}
+							# already has revcell
+							bpm_has_revcell = yes
+						}
+					}
+				} } 
+					scope:movement = {
+						has_modifier = bpm_recently_failed_revolt
+					}
+					bpm_can_revolt_movement = no
+				}
+			}
+			multiply = 0
+		}
+	}
+}

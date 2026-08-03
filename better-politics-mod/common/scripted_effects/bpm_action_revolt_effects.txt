@@ -1,0 +1,707 @@
+﻿# preparation phase
+# this = action
+# scope:country
+# scope:movement
+bpm_action_revolt_on_monthly = {
+	scope:country = {
+		bpm_shrink_or_grow_in_states = yes
+		bpm_revolt_progress = yes
+		if = {
+			limit = {
+				"variable_map(bpm_revolt_progress|scope:movement)" >= 100
+				scope:movement = { bpm_movement_is_revolting = no } # this should be moved to 'bloodless'
+			}
+			bpm_nation_at_crossroads = yes
+		}
+	}
+}
+
+bpm_revolt_progress = {
+	if = {
+		limit = {
+			NOT = {
+				is_key_in_variable_map = {
+					name = bpm_revolt_progress
+					target = scope:movement
+				}
+			}
+		}
+		update_variable_map_value = {
+			name = bpm_revolt_progress
+			key = scope:movement
+			value = bpm_revolt_progress_value
+		}
+	}
+	else = {
+		set_local_variable = {
+			name = temp
+			value = {
+				value = "variable_map(bpm_revolt_progress|scope:movement)"
+				add = bpm_revolt_progress_value
+			}
+		}
+		update_variable_map_value = {
+			name = bpm_revolt_progress
+			key = scope:movement
+			value = local_var:temp
+		}
+		remove_local_variable = temp
+	}
+
+	if = {
+		limit = {
+			"variable_map(bpm_revolt_progress|scope:movement)" > 100
+		}
+		update_variable_map_value = {
+			name = bpm_revolt_progress
+			key = scope:movement
+			value = 100
+		}
+	}
+}
+
+# revcell varmap -> determines the cell in the state
+# revcell_progress varmap -> progress to up or down
+# recently subsided varlist
+
+bpm_shrink_or_grow_in_states = {
+	if = {
+		limit = {
+			any_scope_state = {
+				is_key_in_variable_map = {
+					name = bpm_revcells
+					target = scope:movement
+				}
+			}
+		}
+		every_scope_state = {
+			limit = {
+				is_key_in_variable_map = {
+					name = bpm_revcells
+					target = scope:movement
+				}
+			}
+			bpm_increase_or_shrink_cell_level = yes
+		}
+	}
+	else = {
+		update_variable_map_value = {
+			name = bpm_revolt_progress
+			key = scope:movement
+			value = 0
+		}
+		random_scope_state = {
+			limit = {
+				turmoil >= 0.25
+				bpm_revcell_recently_subsided = no
+			}
+			bpm_increase_cell_level = yes
+		}
+	}
+}
+
+bpm_increase_revcell = {
+	if = {
+		limit = {
+			NOT = {
+				is_key_in_variable_map = {
+					name = bpm_revcells
+					target = scope:movement
+				}
+			}
+		}
+		update_variable_map_value = {
+			name = bpm_revcells
+			key = scope:movement
+			value = 1
+		}
+		post_notification = bpm_revolution_appears
+	}
+	else = {
+		set_local_variable = {
+			name = new_level
+			value = {
+				value = "variable_map(bpm_revcells|scope:movement)"
+				add = 1
+			}
+		}
+		update_variable_map_value = {
+			name = bpm_revcells
+			key = scope:movement
+			value = local_var:new_level
+		}
+		remove_local_variable = new_level
+		post_notification = bpm_revolution_grows
+	}
+}
+
+bpm_reduce_revcell = {
+	if = {
+		limit = {
+			bpm_has_revcell_level = { lvl = 1 }
+		}
+		remove_from_variable_map = {
+			name = bpm_revcells
+			key = scope:movement
+		}
+		add_to_variable_list = {
+			name = bpm_revcell_recently_subsided
+			target = scope:movement
+			months = 24
+		}
+		OWNER = {
+			add_to_variable_list = {
+				name = bpm_revcell_recently_subsided
+				target = scope:movement
+				months = 24
+			}
+		}
+	}
+	else_if = {
+		limit = {
+			bpm_has_revcell = yes
+		}
+		set_local_variable = {
+			name = new_level
+			value = {
+				value = "variable_map(bpm_revcells|scope:movement)"
+				add = -1
+			}
+		}
+		update_variable_map_value = {
+			name = bpm_revcells
+			key = scope:movement
+			value = local_var:new_level
+		}
+		remove_local_variable = new_level
+	}
+}
+
+bpm_reduce_cell_level = {
+	save_scope_as = starting_state
+	bpm_reduce_revcell = yes
+}
+
+bpm_increase_cell_level_spillover = {
+	bpm_increase_revcell = yes
+	save_scope_as = spillover_state
+	post_notification = bpm_revolution_spillover
+}
+
+bpm_increase_cell_level = {
+	save_scope_as = starting_state
+	if = {
+		limit = {
+			NOT = { bpm_has_revcell_level = { lvl = 3 } }
+		}
+		bpm_increase_revcell = yes
+	}
+	else_if = {
+		limit = {
+			bpm_has_revcell_level = { lvl = 3 }
+			any_neighbouring_state = {
+				bpm_revcell_can_be_spread_to = yes
+			}
+		}
+		random_neighbouring_state = {
+			limit = {
+				bpm_revcell_can_be_spread_to = yes
+			}
+			bpm_increase_cell_level_spillover = yes
+		}
+	}
+	else_if = {
+		limit = {
+			bpm_has_revcell_level = { lvl = 3 }
+			is_coastal = yes
+			market = {
+				any_scope_country = {
+					any_scope_state = {
+						bpm_revcell_can_be_spread_to = yes
+					}
+				}
+			}
+		}
+		market = {
+			random_scope_country = {
+				random_scope_state = {
+					limit = {
+						bpm_revcell_can_be_spread_to = yes
+					}
+					bpm_increase_cell_level_spillover = yes
+				}
+			}
+		}
+	}
+}
+
+
+bpm_destroy_all_cells = {
+	remove_from_variable_map = {
+		name = bpm_revcells
+		key = scope:movement
+	}
+}
+
+bpm_increase_or_shrink_tt = {
+	remove_variable = bpm_shrinkmarker
+	remove_variable = bpm_growmarker
+	random_list = {
+		0 = {
+			modifier = {
+				# static for now
+				add = bpm_cell_shrinking_chance 
+			}
+			set_variable = bpm_shrinkmarker
+			custom_tooltip = "bpm_cell_shrinks"
+		}
+		0 = {
+			modifier = {
+				add = bpm_cell_growth_chance
+			}
+			set_variable = bpm_growmarker
+			custom_tooltip = "bpm_cell_grows"
+		}
+		# 0 = {
+		# 	custom_tooltip = "bpm_cell_stays"
+		# }
+	}
+}
+
+bpm_increase_or_shrink_cell_level = {
+	if = {
+		limit = {
+			NOT = {
+				is_key_in_variable_map = {
+					name = bpm_revcell_progress
+					target = scope:movement
+				}
+			}
+		}
+		update_variable_map_value = {
+			name = bpm_revcell_progress
+			key = scope:movement
+			value = bpm_revcell_base_progress
+		}
+	}
+	bpm_increase_or_shrink_tt = yes
+	set_local_variable = {
+		name = current_value_p1
+		value = {
+			value = "variable_map(bpm_revcell_progress|scope:movement)"
+			add = 1
+		}
+	}
+	set_local_variable = {
+		name = current_value_m1
+		value = {
+			value = "variable_map(bpm_revcell_progress|scope:movement)"
+			add = -1
+		}
+	}
+	#==
+	if = {
+		limit = {
+			"variable_map(bpm_revcell_progress|scope:movement)" <= bpm_revcell_progress_min
+		}
+		update_variable_map_value = {
+			name = bpm_revcell_progress
+			key = scope:movement
+			value = bpm_revcell_base_progress
+		}
+		bpm_reduce_cell_level = yes
+	}
+	else_if = {
+		limit = {
+			"variable_map(bpm_revcell_progress|scope:movement)" >= bpm_revcell_progress_max
+		}
+		update_variable_map_value = {
+			name = bpm_revcell_progress
+			key = scope:movement
+			value = bpm_revcell_base_progress
+		}
+		bpm_increase_cell_level = yes
+	}
+	else_if = {
+		limit = {
+			# below 25% turmoil it will go away
+			OR = {
+				has_variable = bpm_shrinkmarker
+				turmoil < 0.25
+			}
+		}
+		update_variable_map_value = {
+			name = bpm_revcell_progress
+			key = scope:movement
+			value = local_var:current_value_m1
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable = bpm_growmarker
+		}
+		update_variable_map_value = {
+			name = bpm_revcell_progress
+			key = scope:movement
+			value = local_var:current_value_p1
+		}
+	}
+
+	remove_local_variable = current_value_m1
+	remove_local_variable = current_value_p1
+}
+#========================
+# execution phase
+
+bpm_nation_at_crossroads = {
+	# There are many options for what can happen here
+	# - Coup/March on the capital
+	# - Civil War
+	# - Bloodless Revolution
+	# - Collapse into Warlordism
+	if = {
+		limit = {
+			bpm_coalition_crossroad_takes_over = yes
+			always = no # test
+		}
+		# 'March on Capital'
+	}
+	else_if = {
+		limit = {
+			bpm_coalition_crossroad_bloodless = yes
+			always = no # test
+		}
+		# 'Bloodless Revolution'
+	}
+	else = {
+		# 'Civil War'
+		set_variable = { name = bpm_cw_mv value = scope:movement }
+		trigger_event = { id = bpm_revolution_results.100 popup = yes }
+	}
+}
+
+# civil war
+bpm_make_government_of_national_defence = {
+	activate_law = law_type:law_provisional_government
+	activate_law = law_type:law_popular_power
+
+	recalculate_pop_ig_support = yes
+	bpm_setup_basic_igs = yes
+	bpm_forcibly_initialize = yes
+	recalculate_pop_ig_support = yes
+	every_in_list = {
+		variable = bpm_civil_war_revolutionary_ig
+		add_ideology = ideology_provgov_member
+	}
+	if = {
+		limit = {
+			NOT = { is_target_in_variable_list = {
+				name = bpm_civil_war_revolutionary_ig
+				target = ruler.interest_group
+			} }
+		}
+		ordered_in_list = {
+			variable = bpm_civil_war_revolutionary_ig
+			order_by = ig_clout
+			position = 0
+			leader = {
+				set_character_as_ruler = yes
+			}
+		}
+	}
+	active_law:lawgroup_distribution_of_power ?= {
+		add_amendment = {
+			type = bpm_amendment_sweeping_away_the_old_fanatical
+			sponsor = PREV.ruler.interest_group
+		}
+	}
+	call_election = {
+		months = 3
+	}
+}
+
+bpm_start_civil_war = {
+	save_scope_as = origin_country
+	if = {
+		limit = {
+			NOT = {
+				any_scope_state = {
+					NOT = { bpm_has_revcell = yes }
+				}
+			}
+		}
+		set_local_variable = bpm_civil_war_has_all
+	}
+	else = {
+		remove_local_variable = bpm_civil_war_has_all
+	}
+	every_state = {
+		remove_variable = bpm_state_to_cede
+	}
+
+	every_scope_state = {
+		limit = {
+			bpm_has_revcell = yes
+			OR = {
+				NOT = { is_capital = yes }
+				NOT = { has_local_variable = bpm_civil_war_has_all }
+			}
+		}
+		set_variable = bpm_state_to_cede
+	}
+	every_country = {
+		remove_variable = bpm_coniq
+	}
+	random_scope_state = {
+		limit = {
+			has_variable = bpm_state_to_cede
+		}
+		save_scope_as = state_to_give
+	}
+	create_country = {
+		origin = scope:origin_country
+		state = scope:state_to_give
+		on_created = {
+			set_variable = bpm_coniq
+		}
+	}
+	every_supportive_interest_group = {
+		owner = {
+			add_to_variable_list = {
+				name = bpmtotransferrev
+				target = prev.type
+			}
+		}
+	}
+	random_country = {
+		limit = {
+			has_variable = bpm_coniq
+		}
+		save_scope_as = new_country
+		set_variable = {
+			name = bpm_country_revolutionary_movement
+			value = scope:movement
+		}
+		set_variable = {
+			name = bpm_country_revolutionary_movement_type
+			value = scope:movement.type
+		}
+		set_variable = {
+			name = bpm_civil_war_origin
+			value = scope:origin_country
+		}
+		every_interest_group = {
+			limit = {
+				scope:origin_country = {
+					is_target_in_variable_list = {
+						name = bpmtotransferrev
+						target = prev.type
+					}
+				}
+			}
+			owner = {
+				add_to_variable_list = {
+					name = bpm_civil_war_revolutionary_ig
+					target = prev
+				}
+			}
+		}
+		bpm_make_government_of_national_defence = yes
+	}
+	clear_variable_list = bpmtotransferrev
+	every_scope_state = {
+		limit = {
+			has_variable = bpm_state_to_cede
+		}
+		set_state_owner = scope:new_country
+	}
+	scope:new_country = { create_diplomatic_play = { 
+		target_country = scope:origin_country
+		type = bpm_dp_revolution
+		add_war_goal = { holder = scope:origin_country type = bpm_civil_war_preserve target_country = scope:new_country  }  
+	} }
+	scope:new_country = {
+		if = {
+			limit = {
+				exists = var:bpm_civil_war_origin
+			}
+			every_country = {
+				limit = {
+					has_variable = bpm_civil_war_origin
+					var:bpm_civil_war_origin = prev.var:bpm_civil_war_origin
+					NOT = {
+						this = prev
+					}
+				}
+				save_scope_as = target_country
+				prev = {
+					create_diplomatic_play = { 
+						target_country = scope:target_country
+						type = dp_revolution
+						escalation = 80
+						annex_as_civil_war = yes
+					}  
+				}
+			}
+		}
+	}
+}
+
+bpm_do_jank_civil_war_end = {
+	random_state = {
+		limit = {
+			state_region = s:STATE_MADEIRA
+		}
+		save_scope_as = jank_state
+		owner = {
+			save_scope_as = prevowner
+		}
+	}
+	every_country = {
+		remove_variable = bpm_civil_war_jank_country
+	}
+	create_country = {
+		origin = this
+		state = scope:jank_state
+		on_created = {
+			set_variable = bpm_civil_war_jank_country
+		}
+	}
+	random_country = {
+		limit = {
+			has_variable = bpm_civil_war_jank_country
+		}
+		save_scope_as = new_country
+	}
+	play_as = scope:new_country
+	scope:new_country = {
+		annex_as_civil_war = prev
+		every_scope_state = {
+			limit = {
+				state_region = s:STATE_MADEIRA
+			}
+			set_state_owner = scope:prevowner
+		}
+	}
+
+	bpm_coalition_revolution_victorious = yes
+	scope:new_country = {
+		remove_variable = bpm_civil_war_origin
+		remove_variable = bpm_country_revolutionary_movement
+		remove_variable = bpm_country_revolutionary_movement_type
+	}
+}
+
+# scope:target_country
+# scope:creator_country
+# scope:movement
+bpm_on_civil_war_end = {
+	var:bpm_holder = { save_scope_as = creator_country } 
+	var:bpm_target = { save_scope_as = target_country }
+	scope:creator_country = {
+		every_interest_group = {
+			limit = {
+				has_ideology = ideology:ideology_provgov_member
+			}
+			owner = {
+				add_to_variable_list = {
+					name = bpmtotransferrev
+					target = prev.type
+				}
+			}
+		}
+		play_as = scope:target_country
+	}
+	scope:target_country = {
+		set_variable = {
+			name = bpm_country_revolutionary_movement_type
+			value = scope:creator_country.var:bpm_country_revolutionary_movement_type
+		}
+		every_interest_group = {
+			limit = {
+				scope:creator_country = {
+					is_target_in_variable_list = {
+						name = bpmtotransferrev
+						target = prev.type
+					}
+				}
+			}
+			owner = {
+				add_to_variable_list = {
+					name = bpm_civil_war_revolutionary_ig
+					target = prev
+				}
+			}
+		}
+		annex_as_civil_war = scope:creator_country
+		every_diplomatic_play = {
+			limit = {
+				is_diplomatic_play_type = dp_revolution
+			}
+			end_play = yes # should this be here??
+		}
+
+		bpm_coalition_revolution_victorious = yes
+	}
+}
+
+
+bpm_coalition_crossroads_happened = {
+	# Revolutionary Fervour
+	add_radicals = {
+		value = -0.85
+	}
+	every_interest_group = {
+		add_modifier = {
+			name = bpm_adapting_to_new_regime
+			days = 730
+			is_decaying = yes
+		}
+	}
+	every_political_movement = {
+		add_modifier = {
+			name = bpm_adapting_to_new_regime_mov
+			days = 730
+			is_decaying = yes
+		}
+	}
+	bpm_make_government_of_national_defence = yes
+	bpm_setup_factions = yes
+}
+
+bpm_coalition_revolution_victorious = {
+	clear_variable_list = bpm_revolution_victory_igs
+	every_interest_group = {
+		remove_modifier = modifier_revolution_defeated_light
+		remove_modifier = modifier_revolution_victorious_light
+		remove_modifier = bpm_modifier_revolution_victorious_light
+	}
+	every_in_list = {
+		variable = bpm_civil_war_revolutionary_ig
+		owner = { add_to_variable_list = {
+			name = bpm_revolution_victory_igs
+			target = prev
+		} }
+	}
+
+	bpm_coalition_crossroads_happened = yes
+
+
+	every_interest_group = {
+		limit = {
+			NOT = {
+				owner = {
+					is_target_in_variable_list = {
+						name = bpm_revolution_victory_igs
+						target = prev
+					}
+				}
+			}
+		}
+		remove_modifier = bpm_empowered_ig
+	}
+
+	bpm_remove_political_stability_huge = yes
+	bpm_remove_political_stability_huge = yes
+}
+

@@ -11,7 +11,7 @@
 			limit = {
 				modifier:country_bpm_ruler_partial_veto_enabled = yes
 			}
-			var:bpm_law_enactment_yea_votes_cached > 0.6666
+			bpm_country_yea_votes > 0.6666
 		}
 		trigger_else = {
 			always = yes
@@ -19,7 +19,7 @@
 		has_modifier = bpm_enacting_no_confidence
 	}
 	NAND = {
-		var:bpm_law_enactment_yea_votes_cached < 0.66
+		bpm_country_yea_votes < 0.66
 		bpm_is_changing_constitutional_law = yes
 	}
 }
@@ -148,4 +148,53 @@ bpm_ig_neutral_to_approves_enactment ={
 	has_variable = bpm_ig_enacting_law_change_steps 
 	bpm_ig_not_strongly_approves_enactment = yes
 	var:bpm_ig_enacting_law_change_steps > -1
+}
+
+strongly_supports_law = { #IG scope, checks currently enacting law
+	law_enactment_stance = {
+        law = owner.currently_enacting_law.type
+        value > approve
+    }
+}
+
+strongly_opposes_law = { #IG scope, checks currently enacting law
+    law_enactment_stance = {
+        law = owner.currently_enacting_law.type
+        value < disapprove
+    }
+}
+
+bpm_valid_sway_enacting_amendment_type = {
+	save_temporary_scope_as = possible_amendment
+	scope:ig = {
+		any_in_list = {
+			variable = bpm_sways
+			count = 0
+			has_variable = amendment
+			var:amendment = scope:possible_amendment
+		}
+	}
+	scope:ig = {would_sponsor_amendment = scope:possible_amendment}
+	amendment_banned_from_enactment = no
+	NOT = {
+		prev = {
+			any_scope_amendment = {
+				type ?= scope:possible_amendment
+			}
+		}
+	}
+}
+
+bpm_is_sway_enacting_amendment_valid = {
+	owner = {
+		currently_enacting_law = {
+			any_possible_amendment_type = {
+				bpm_valid_sway_enacting_amendment_type = yes
+			}
+		}
+	}
+}
+
+bpm_is_amendment_type_implementation = {
+	
 }

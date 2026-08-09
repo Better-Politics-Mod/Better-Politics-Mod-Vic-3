@@ -1,4 +1,4 @@
-﻿bpm_handle_law_entrenchment = {
+﻿bpm_make_newly_enacted = {
     save_scope_as = law
     owner = {
         if = {
@@ -36,57 +36,46 @@
     }
 }
 
-bpm_handle_previous_law_saving = {    
-    save_scope_as = law
-    owner = {
-        if = {
+bpm_update_entrenched_laws = {
+    if = {
+        limit = {
+            has_variable_list = bpm_country_entrenched_laws
+        }
+        every_in_list = {
+            variable = bpm_country_entrenched_laws
             limit = {
-                NOT = {
-                    has_variable_list = bpm_country_laws_list
+                currently_active_law_in_group = {
+                    has_amendment = amendment_type:bpm_amendment_newly_enacted
                 }
             }
-            bpm_handle_previous_law_saving_to_varlist = yes
-        }
-
-        random_in_list = {
-            variable = bpm_country_laws_list
-            limit = { this ?= scope:law.type }
-            save_scope_as = prev_law_type
-        }
-        if = {
-            limit = {
-                NOT = {
-                    scope:law = {
-                        has_amendment = amendment_type:bpm_amendment_newly_enacted
-                    }
+            owner = {
+                add_to_variable_list = {
+                    name = bpm_old_laws_still_entrenched
+                    target = prev
                 }
             }
-            update_variable_map_value = { 
-                name = bpm_previous_laws 
-                key = scope:law.type 
-                value = scope:prev_law_type 
-            }
         }
-        else = {
-            update_variable_map_value = { 
-                name = bpm_previous_laws 
-                key = scope:law.type 
-                value = variable_map(bpm_previous_laws|scope:prev_law_type)
-            }
-        }
-
     }
-
-}
-
-bpm_handle_previous_law_saving_to_varlist = {
-    clear_variable_list = bpm_country_laws_list
+    clear_variable_list = bpm_country_entrenched_laws
     every_active_law = {
+        limit = {
+            NOT = { has_amendment = amendment_type:bpm_amendment_newly_enacted }
+        }
         owner = {
             add_to_variable_list = {
-                name = bpm_country_laws_list
-                target = prev.type
+                name = bpm_country_entrenched_laws
+                target = prev
             }
         }
     }
+    every_in_list = {
+        variable = bpm_old_laws_still_entrenched
+        owner = {
+            add_to_variable_list = {
+                name = bpm_country_entrenched_laws
+                target = prev
+            }
+        }
+    }
+    clear_variable_list = bpm_old_laws_still_entrenched
 }

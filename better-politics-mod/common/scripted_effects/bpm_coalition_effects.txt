@@ -41,147 +41,106 @@ bpm_ig_decide_strategy = {
 }
 
 bpm_ig_select_action = {
-	if = {
+	# get what action type this IG is most attracted to
+	ordered_in_global_list = {
 		limit = {
-			scope:country = { NOT = { any_in_list = {
-				variable = bpm_active_actions
-				var:bpm_initiator ?= scope:ig
-			} } }
+			bpm_ig_action_attraction > 0
 		}
-		ordered_in_global_list = {
-			limit = {
-				bpm_ig_action_attraction > 0
-			}
-			variable = bpm_coalition_actions
-			position = 0
-			order_by = bpm_ig_action_attraction
+		variable = bpm_coalition_actions
+		position = 0
+		order_by = bpm_ig_action_attraction
 
-			save_scope_as = selected_action_type
-		}
-		if = {
-			limit = {
-				exists = scope:selected_action_type
-			}
-			scope:country = {
-				create_container = {
-					parent = scope:country
-					tags = { bpm_action }
-					save_scope_as = created_action
-				}
-			}
-
-			scope:created_action = {
-				set_variable = {
-					name = bpm_initiator
-					value = scope:ig
-				}
-				set_variable = {
-					name = bpm_action_type
-					value = scope:selected_action_type
-				}
-			}
-			
-			scope:ig = {
-				set_variable = {
-					name = bpm_action
-					value = scope:created_action
-				}
-			}
-
-			scope:country = {
-				add_to_variable_list = {
-					name = bpm_active_actions
-					target = scope:created_action
-				}
-			}
-
-			clear_saved_scope = created_action
-			clear_saved_scope = selected_action_type
-		}
-	}
-	else = {
-		scope:country = {
-			random_in_list = {
-				variable = bpm_active_actions
-				limit = {var:bpm_initiator ?= scope:ig}
-				save_scope_as = selected_action
-			}
-			if = {
-				limit = {
-					NOT = {
-						scope:selected_action.var:bpm_action_type = {
-							bpm_ig_action_attraction > 0
-						}
-					}
-				}
-				remove_list_variable = {
-					name = bpm_active_actions
-					target = scope:selected_action
-				}
-				scope:selected_action = {
-					destroy_container = yes
-				}
-			}
-			clear_saved_scope = selected_action
-		}
-
+		save_scope_as = selected_action_type
 	}
 
+	# if the IG wants to do the same action as currently
+	# we just do nothing
+	# if the IG wants to do a different action as currently
+	# we do the process for the IG doing that action
+	# if the IG doesn't want to do any action, we do nothing
 
-	# clear revolt stuff
 	if = {
 		limit = {
-			scope:country = {
-				NOT = { any_in_list = {
+			# if the IG is involved it must be in an action of a different type than the one it wants to do
+			# because otherwise we should just do nothing
+			exists = scope:selected_action_type
+			scope:country = { 
+				any_in_list = {
 					variable = bpm_active_actions
-					var:bpm_initiator ?= scope:ig
-					var:bpm_action_type ?= flag:bpm_action_revolt
-				} } 
-			}  
+					count = all
+					OR = {
+						NOT = { is_target_in_variable_list = {
+							name = bpm_actively_involved
+							target = scope:ig
+						} }
+						NOT = { var:bpm_action_type ?= scope:selected_action_type }
+					}
+				} 
+			}
 		}
-		bpm_clear_revolt_stuff = yes
-	}
-}
 
-bpm_clear_revolt_stuff = {
-	scope:country = {
-		remove_from_variable_map = {
-			name = bpm_revolt_progress
-			key = scope:ig
-		}
-		if = {
-			limit = {
-				bpm_revcell_recently_subsided = yes
-			}
-			scope:ig = {
-				add_modifier = {
-					name = bpm_recently_failed_revolt
-					months = 60
-					is_decaying = yes
-				}
+		scope:country = {
+			create_container = {
+				parent = scope:country
+				tags = { bpm_action }
+				save_scope_as = created_action
 			}
 		}
-		remove_list_variable = {
-			name = bpm_revcell_recently_subsided
-			target = scope:ig
+
+		scope:created_action = {
+			add_to_variable_list = {
+				name = bpm_actively_involved
+				target = scope:ig
+			}
+			set_variable = {
+				name = bpm_action_type
+				value = scope:selected_action_type
+			}
 		}
-		every_scope_state = {
-			remove_from_variable_map = {
-				name = bpm_revcells
-				key = scope:ig
+		
+		scope:ig = {
+			set_variable = {
+				name = bpm_action
+				value = scope:created_action
 			}
-			remove_from_variable_map = {
-				name = bpm_revcell_progress
-				key = scope:ig
+		}
+
+		scope:country = {
+			add_to_variable_list = {
+				name = bpm_active_actions
+				target = scope:created_action
 			}
-			remove_list_variable = {
-				name = bpm_revcell_recently_subsided
+		}
+
+		scope:created_action = {
+			save_scope_as = current_action
+		}
+
+		clear_saved_scope = created_action
+		clear_saved_scope = selected_action_type
+	}
+
+	# An IG can only be actively involved in one action at a time
+	every_in_list = {
+		variable = bpm_active_actions
+		limit = {
+			NOT = {
+				scope:current_action ?= this
+			}
+			is_target_in_variable_list = {
+				name = bpm_actively_involved
 				target = scope:ig
 			}
 		}
-	}	
+		remove_list_variable = {
+			name = bpm_actively_involved
+			target = scope:ig
+		}
+	}
 
+	clear_saved_scope = current_action
 }
+
 
 
 
@@ -200,28 +159,11 @@ bpm_actions_weekly = {
 # scope:country
 # scope:action
 bpm_do_action = {
+	bpm_delete_action_if_needed = yes
 	if = {
 		limit = {
-			NOT = {
-				exists = scope:action.var:bpm_initiator
-			}
+			exists = scope:action
 		}
-		remove_list_variable = {
-			name = bpm_active_actions
-			target = scope:action
-		}
-		scope:action = {
-			var:bpm_initiator = {
-				remove_variable = bpm_action
-			}
-			remove_variable = bpm_initiator
-		}
-		destroy_struct = {
-			struct = scope:action
-		}
-	}
-	else = {
-		scope:action.var:bpm_initiator = { save_scope_as = ig }
 		if = {
 			limit = {
 				scope:action.var:bpm_action_type ?= flag:bpm_action_revolt
@@ -229,4 +171,57 @@ bpm_do_action = {
 			bpm_action_revolt_do = yes
 		}
 	}
+}
+
+bpm_delete_action_if_needed = {
+	if = {
+		limit = {
+			scope:action = {
+				variable_list_size = {
+					name = bpm_actively_involved
+					value = 0
+				}
+			}
+		}
+		if = {
+			limit = {
+				var:bpm_action_type ?= flag:bpm_action_revolt
+			}
+			bpm_clear_revolt_stuff = yes
+		}
+		remove_list_variable = {
+			name = bpm_active_actions
+			target = scope:action
+		}
+		scope:action = {
+			destroy_container = yes
+		}
+	}
+}
+
+bpm_clear_revolt_stuff = {
+	scope:country = {
+		remove_from_variable_map = {
+			name = bpm_revolt_progress
+			key = scope:action
+		}
+		remove_list_variable = {
+			name = bpm_revcell_recently_subsided
+			target = scope:action
+		}
+		every_scope_state = {
+			remove_from_variable_map = {
+				name = bpm_revcells
+				key = scope:action
+			}
+			remove_from_variable_map = {
+				name = bpm_revcell_progress
+				key = scope:action
+			}
+			remove_list_variable = {
+				name = bpm_revcell_recently_subsided
+				target = scope:action
+			}
+		}
+	}	
 }

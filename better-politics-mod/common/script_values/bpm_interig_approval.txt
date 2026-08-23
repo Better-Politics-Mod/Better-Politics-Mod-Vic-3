@@ -1,0 +1,157 @@
+bpm_lawgroup_size = {
+	value = 0
+	save_temporary_scope_as = law
+	owner = {
+		every_law = {
+			limit = {
+				type = { save_temporary_scope_as = law_type }
+				scope:law_type = {
+					is_same_law_group_as = scope:law.type
+				}
+			}
+			add = 1
+		}
+	}
+}
+
+bpm_aggregate_salience = {
+	value = bpm_salience_weight
+	divide = {
+		owner = { 
+			every_active_law = {
+				add = bpm_salience_weight
+			}
+		}
+	}
+}
+
+bpm_salience_weight = {
+	value = 1
+	if = {
+		limit = {
+			type = { save_temporary_scope_as = law_type }
+			scope:law_type = {
+				is_same_law_group_as = law_type:law_monarchy
+			} 
+		}
+		multiply = 2
+	}
+	else = { 
+		multiply = 1
+	}
+}
+
+#
+bpm_inter_ig_approval = {
+	value = 1
+	save_temporary_scope_as = first_ig
+	scope:ig = {
+		save_temporary_scope_as = second_ig
+	}
+	owner = {
+		every_law = {
+			limit = {
+				owner = {
+					NOT = { has_law = prev.type }
+				}
+			}
+			save_temporary_scope_as = law
+			subtract = {
+				value = scope:first_ig.bpm_ig_pos_law_stance
+				subtract = scope:second_ig.bpm_ig_pos_law_stance
+				divide = 2
+				max = 1
+				if = {
+					limit = {
+						scope:first_ig.bpm_ig_pos_law_stance < scope:second_ig.bpm_ig_pos_law_stance
+					}
+					multiply = -1
+				}
+				divide = {
+					value = "global_variable_map(bpm_lawgroup_size|scope:law.type)"
+					min = 1
+				}
+				multiply = bpm_aggregate_salience
+			}
+		}
+	}
+}
+
+bpm_inter_ig_approval_law_group = {
+	value = 1
+	save_temporary_scope_as = first_ig
+	scope:ig = {
+		save_temporary_scope_as = second_ig
+	}
+	owner = {
+		every_law = {
+			limit = {
+				type = { save_temporary_scope_as = law_type }
+				scope:law_type = {
+					is_same_law_group_as = scope:law_group_ref.type
+				}
+				owner = {
+					NOT = { has_law = prev.type }
+				}
+			}
+			save_temporary_scope_as = law
+			subtract = {
+				value = scope:first_ig.bpm_ig_pos_law_stance
+				subtract = scope:second_ig.bpm_ig_pos_law_stance
+				divide = 2
+				max = 1
+				if = {
+					limit = {
+						scope:first_ig.bpm_ig_pos_law_stance < scope:second_ig.bpm_ig_pos_law_stance
+					}
+					multiply = -1
+				}
+				divide = {
+					value = "global_variable_map(bpm_lawgroup_size|scope:law.type)"
+					min = 1
+				}
+				multiply = bpm_aggregate_salience
+			}
+		}
+	}
+}
+
+bpm_ig_pos_law_stance = {
+	value = 0
+	if = {
+		limit = {
+			law_enactment_stance = {
+				law = scope:law.type
+				value = disapprove
+			}
+		}
+		add = 1
+	}
+	else_if = {
+		limit = {
+			law_enactment_stance = {
+				law = scope:law.type
+				value = strongly_disapprove
+			}
+		}
+		add = 2
+	}
+	else_if = {
+		limit = {
+			law_enactment_stance = {
+				law = scope:law.type
+				value = approve
+			}
+		}
+		add = 3
+	}
+	else_if = {
+		limit = {
+			law_enactment_stance = {
+				law = scope:law.type
+				value = strongly_approve
+			}
+		}
+		add = 4
+	}
+}

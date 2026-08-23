@@ -17,6 +17,10 @@
 @column_width_3 = 400				# @column_width*3 + @gutter*2
 @column_width_2_plus_gutter = 280
 
+@interest_group_grid_width = 108  # = @panel_width / @interest_group_grid_columns
+@interest_group_grid_height = 120
+@interest_group_grid_columns = 5
+
 types interest_group_panel_types
 {
     type interest_group_panel = default_block_window_two_lines {
@@ -182,6 +186,25 @@ types interest_group_panel_types
 				}
 				blockoverride "fourth_button_selected" {
 					text = "INTEREST_GROUP_PANEL_MODIFIERS_TAB_SELECTED"
+				}
+				# Relations
+				blockoverride "fifth_button" {
+					text = "INTEREST_GROUP_PANEL_RELATIONS_TAB"
+				}
+				blockoverride "fifth_button_tooltip" {
+					tooltip = "INTEREST_GROUP_PANEL_RELATIONS_TAB"
+				}
+				blockoverride "fifth_button_click" {
+					onclick = "[InformationPanel.SelectTab('relations')]"
+				}
+				blockoverride "fifth_button_visibility" {
+					visible = "[InformationPanel.IsTabSelected('relations')]"
+				}
+				blockoverride "fifth_button_visibility_checked" {
+					visible = "[Not( InformationPanel.IsTabSelected('relations') )]"
+				}
+				blockoverride "fifth_button_selected" {
+					text = "INTEREST_GROUP_PANEL_RELATIONS_TAB_SELECTED"
 				}
 			}
 		}
@@ -450,7 +473,7 @@ types interest_group_panel_types
 						flowcontainer = {
 							direction = horizontal
 									spacing = 5
-									visible = "[Or(Not(Country.IsEnactingLaw), InterestGroup.IsMarginal)]"
+									visible = "[Or(Not(InterestGroup.GetCountry.IsEnactingLaw), InterestGroup.IsMarginal)]"
 									name = "ideologies_box2"
 									datamodel = "[InterestGroup.AccessIntrinsicIdeologies]"
 									item = {
@@ -843,6 +866,68 @@ types interest_group_panel_types
 						visible = "[InformationPanel.IsTabSelected('modifiers')]"
 						using = default_content_fade
 					}
+				}
+
+				flowcontainer = {
+					direction = vertical
+					visible = "[InformationPanel.IsTabSelected('relations')]"
+
+					default_header = {
+						blockoverride "text" {
+							text = "RELATION_WITH_OTHER_INTEREST_GROUPS"
+						}
+					}
+
+					flowcontainer = {
+						visible = "[Not(IsDataModelEmpty(AccessPlayer.AccessAllInterestGroups))]"
+						ignoreinvisible = yes
+						wrap_count = @interest_group_grid_columns
+						datamodel = "[AccessPlayer.AccessAllInterestGroups]"
+
+						item = {
+							widget = {
+								size = { @interest_group_grid_width @interest_group_grid_height }
+								tooltip = "INTEREST_GROUP_IG_RELATIONS_TOOLTIP"
+								tooltipwidget = {
+									RegularTooltip_LawGroupDisapproval = {}
+								}
+								visible = "[And(GetScriptedGui('bpm_interest_group_visibility').IsShown(GuiScope.SetRoot(InterestGroup.MakeScope).End), Not(ObjectsEqual(InterestGroup.MakeScope, InterestGroupPanel.AccessInterestGroup.MakeScope)))]"
+								using = tooltip_se
+
+								flowcontainer = {
+									parentanchor = center
+									direction = vertical
+									spacing = 5
+									margin = { 10 5 }
+
+									background = {
+										using = entry_bg_simple_solid
+										color = "[InterestGroup.GetColor]"
+										alpha = 0.6
+
+										modify_texture = {
+											using = texture_velvet
+										}
+									}
+
+									ig_button = {
+										size = { 70 70 }
+										parentanchor = hcenter
+									}
+
+									textbox = {
+										name = "approval"
+										parentanchor = hcenter
+										align = nobaseline
+										autoresize = yes
+										raw_text = "#v [GuiScope.SetRoot(InterestGroupPanel.AccessInterestGroup.MakeScope).AddScope('ig', InterestGroup.MakeScope).ScriptValue('bpm_inter_ig_approval')|%0]#!"
+									}
+								}
+							}
+						}
+					}
+
+
 				}
 			}
 		}

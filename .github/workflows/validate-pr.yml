@@ -17,6 +17,20 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
 
     steps:
+      - name: Start Check Run
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: check } = await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'validate',
+              head_sha: context.payload.workflow_run.head_sha,
+              status: 'in_progress',
+            });
+            core.setOutput('check_id', check.id);
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -52,3 +66,16 @@ jobs:
           game: 'vic3'
           config-folder: 'better-politics-mod'
           update-tiger: true
+
+      - name: Finish Check Run
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.checks.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              check_run_id: ${{ steps.check.outputs.check_id }},
+              status: 'completed',
+              conclusion: '${{ job.status }}',
+            });

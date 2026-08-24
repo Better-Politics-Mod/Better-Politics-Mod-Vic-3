@@ -15,18 +15,42 @@ bpm_lawgroup_size = {
 }
 
 bpm_aggregate_salience = {
-	value = bpm_salience_weight
+	value = bpm_salience_weight_of_igs
 	divide = {
 		owner = { 
 			every_active_law = {
-				add = bpm_salience_weight
+				add = bpm_salience_weight_of_igs
 			}
 		}
 	}
 }
 
+bpm_salience_weight_of_ig = {
+	value = "variable_map(bpm_ig_salience_weights|scope:law.type)"
+}
+
+bpm_salience_weight_of_igs = {
+	save_temporary_scope_as = law
+	scope:first_ig = {
+		add = bpm_salience_weight_of_ig
+	}
+	scope:second_ig = {
+		add = bpm_salience_weight_of_ig
+	}
+	if = {
+		limit = {
+			OR = {
+				scope:first_ig.bpm_salience_weight_of_ig = 0
+				scope:second_ig.bpm_salience_weight_of_ig = 0
+			}
+		}
+		multiply = 0
+	}
+}
+
 bpm_salience_weight = {
 	value = 1
+	save_temporary_scope_as = law
 	if = {
 		limit = {
 			type = { save_temporary_scope_as = law_type }
@@ -63,6 +87,60 @@ bpm_salience_weight = {
 	else = { 
 		multiply = 1
 	}
+
+	if = {
+		limit = {
+			scope:ig.owner = {
+				# doesnt have opinion on any law in the group
+				NOT = { any_law = {
+					# law in the group
+					type = { save_temporary_scope_as = law_type }
+					scope:law_type = {
+						is_same_law_group_as = scope:law.type
+					} 
+					# has opinion
+					NOT = { 
+						scope:ig = {
+							law_enactment_stance = {
+								law = scope:law_type
+								value = neutral
+							}
+						} 
+					}
+				} }
+			}
+		}
+		multiply = 0
+	}
+	if = {
+		limit = {
+			scope:ig.owner = {
+				# doesnt have a strong opinion on any law in the group
+				NOT = { any_law = {
+					# law in the group
+					type = { save_temporary_scope_as = law_type }
+					scope:law_type = {
+						is_same_law_group_as = scope:law.type
+					} 
+					# has strong opinion
+					scope:ig = {
+						OR = {
+							law_enactment_stance = {
+								law = scope:law_type
+								value = strongly_approve
+							}
+							law_enactment_stance = {
+								law = scope:law_type
+								value = strongly_disapprove
+							}
+						}
+					} 
+				} }
+			}
+		}
+		multiply = 0.5
+	}
+	multiply = bpm_consensus_on_law
 }
 
 #
@@ -183,5 +261,66 @@ bpm_ig_pos_law_stance = {
 			}
 		}
 		add = 4
+	}
+}
+
+bpm_consensus_on_lawgroup = {
+	save_temporary_scope_as = lawgroup
+	owner = {
+		every_law = {
+			limit = {
+				scope:lawgroup.type = {
+					is_same_law_group_as = prev.type
+				}
+			}
+			save_temporary_scope_as = law
+			add = owner.bpm_consensus_on_law
+		}
+		divide = {
+			value = 0
+			every_law = {
+				limit = {
+					scope:lawgroup.type = {
+						is_same_law_group_as = prev.type
+					}
+				}
+				add = 1
+			}
+			min = 1
+		}
+	}
+}
+
+bpm_consensus_on_law = {
+	value = bpm_consensus_on_law_raw
+	if = {
+		limit = {
+			bpm_consensus_on_law_raw < 0
+		}
+		multiply = -1
+	}
+}
+
+bpm_consensus_on_law_raw = {
+	value = 0
+	every_activated_interest_group = {
+		if = {
+			limit = {
+				law_enactment_stance = {
+					law = scope:law.type
+					value > neutral
+				}
+			}
+			add = ig_clout
+		}
+		else_if = {
+			limit = {
+				law_enactment_stance = {
+					law = scope:law.type
+					value < neutral
+				}
+			}
+			subtract = ig_clout
+		}
 	}
 }

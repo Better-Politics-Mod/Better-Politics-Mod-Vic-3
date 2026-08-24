@@ -1,24 +1,27 @@
-﻿name: Validation
+name: Validation (Pull Request)
+
+on:
+  workflow_run:
+    workflows: ["PR Validation Trigger"]
+    types:
+      - completed
+
 permissions:
   contents: read
   packages: write
   checks: write
 
-on:
-  push:
-    branches:
-      - main
-      - dev
-
 jobs:
   validate:
     runs-on: ubuntu-latest
-    
+    if: github.event.workflow_run.conclusion == 'success'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        # If your repository uses lfs include this property
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          # If your repository uses lfs include this property
           lfs: 'true'
 
       - name: Checkout Validation
@@ -44,7 +47,7 @@ jobs:
           mod-directory: 'better-politics-mod'
           # Relative path to the validation action repository root (defaults to repository root directory)
           action-directory: 'validation'
-          # Which game files should be used for validation (ck3 or vic3 but defaults to vic3) 
+          # Which game files should be used for validation (ck3 or vic3 but defaults to vic3)
           workshop-directory: 'workshop'
           game: 'vic3'
           config-folder: 'better-politics-mod'

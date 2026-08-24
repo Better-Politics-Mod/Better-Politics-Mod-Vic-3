@@ -1,0 +1,81 @@
+name: Validation (Pull Request)
+
+on:
+  workflow_run:
+    workflows: ["PR Validation Trigger"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  packages: write
+  checks: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Start Check Run
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: check } = await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'validate',
+              head_sha: context.payload.workflow_run.head_sha,
+              status: 'in_progress',
+            });
+            core.setOutput('check_id', check.id);
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          # If your repository uses lfs include this property
+          lfs: 'true'
+
+      - name: Checkout Validation
+        uses: actions/checkout@v4
+        with:
+          repository: xxxAnn/tiger-action-repository
+          ref: 'main'
+          path: 'validation'
+          # Validation token defined in the usage instructions
+          token: ${{ secrets.VALIDATION_TOKEN }}
+
+      - name: Checkout Community Mod Framework
+        uses: actions/checkout@v4.2.2
+        with:
+          repository: Victoria-3-Modding-Co-op/Community-Mod-Framework
+          ref: 'main'
+          path: 'workshop/3385002128'
+
+      - name: Validate
+        uses: ./validation/
+        with:
+          # Relative path to the mod directory from repository root (defaults to repository root directory)
+          mod-directory: 'better-politics-mod'
+          # Relative path to the validation action repository root (defaults to repository root directory)
+          action-directory: 'validation'
+          # Which game files should be used for validation (ck3 or vic3 but defaults to vic3)
+          workshop-directory: 'workshop'
+          game: 'vic3'
+          config-folder: 'better-politics-mod'
+          update-tiger: true
+
+      - name: Finish Check Run
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.checks.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              check_run_id: ${{ steps.check.outputs.check_id }},
+              status: 'completed',
+              conclusion: '${{ job.status }}',
+            });

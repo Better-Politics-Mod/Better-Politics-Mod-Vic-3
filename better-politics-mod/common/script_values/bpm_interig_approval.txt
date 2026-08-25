@@ -21,6 +21,7 @@ bpm_aggregate_salience = {
 			every_active_law = {
 				add = bpm_salience_weight_of_igs
 			}
+			min = 1
 		}
 	}
 }
@@ -55,16 +56,10 @@ bpm_salience_weight = {
 		limit = {
 			type = { save_temporary_scope_as = law_type }
 			scope:law_type = {
-				is_same_law_group_as = law_type:law_monarchy
-			} 
-		}
-		multiply = 3
-	}
-	else_if = {
-		limit = {
-			type = { save_temporary_scope_as = law_type }
-			scope:law_type = {
-				is_same_law_group_as = law_type:law_autocracy
+				OR = {
+					is_same_law_group_as = law_type:law_monarchy
+					is_same_law_group_as = law_type:law_autocracy
+				}
 			} 
 		}
 		multiply = 3
@@ -79,6 +74,12 @@ bpm_salience_weight = {
 					is_same_law_group_as = law_type:law_repeatable_economy_none
 					is_same_law_group_as = law_type:law_repeatable_military_none
 					is_same_law_group_as = law_type:law_repeatable_religion_none
+					is_same_law_group_as = law_type:law_no_separate_hog
+					is_same_law_group_as = law_type:law_professional_navy
+					AND = { 
+						prev.owner = { has_law = law_type:law_slavery_banned }
+						is_same_law_group_as = law_type:law_slavery_banned
+					}
 				} 
 			}
 		}
@@ -90,57 +91,41 @@ bpm_salience_weight = {
 
 	if = {
 		limit = {
-			scope:ig.owner = {
-				# doesnt have opinion on any law in the group
-				NOT = { any_law = {
-					# law in the group
-					type = { save_temporary_scope_as = law_type }
+			AND = {
+				scope:ig = { is_interest_group_type = ig_trade_unions }
+				scope:law_type = { is_same_law_group_as = law_type:law_combination_acts }
+			}
+		}
+		multiply = 5
+	}
+
+	if = {
+		limit = {
+			OR = {
+				scope:ig = {
+					has_ideology = "global_variable_map(bpm_law_ideology_group|scope:law.type)"
+				}
+				AND = {
 					scope:law_type = {
-						is_same_law_group_as = scope:law.type
-					} 
-					# has opinion
-					NOT = { 
-						scope:ig = {
-							law_enactment_stance = {
-								law = scope:law_type
-								value = neutral
-							}
-						} 
+						is_same_law_group_as = law_type:law_autocracy
 					}
-				} }
+					scope:ig = {
+						OR = {
+							has_ideology = ideology:ideology_dop_unionist
+							has_ideology = ideology:ideology_dop_state_unionist
+						}
+					}
+				}
 			}
 		}
 		multiply = 0
 	}
-	if = {
-		limit = {
-			scope:ig.owner = {
-				# doesnt have a strong opinion on any law in the group
-				NOT = { any_law = {
-					# law in the group
-					type = { save_temporary_scope_as = law_type }
-					scope:law_type = {
-						is_same_law_group_as = scope:law.type
-					} 
-					# has strong opinion
-					scope:ig = {
-						OR = {
-							law_enactment_stance = {
-								law = scope:law_type
-								value = strongly_approve
-							}
-							law_enactment_stance = {
-								law = scope:law_type
-								value = strongly_disapprove
-							}
-						}
-					} 
-				} }
-			}
-		}
-		multiply = 0.5
-	}
-	multiply = bpm_consensus_on_law
+	# if = {
+	# 	limit = {
+	# 		owner = { is_player = yes country_rank >= rank_value:major_power }
+	# 	}
+	# 	multiply = owner.bpm_consensus_on_lawgroup
+	# }
 }
 
 #
@@ -276,18 +261,6 @@ bpm_consensus_on_lawgroup = {
 			save_temporary_scope_as = law
 			add = owner.bpm_consensus_on_law
 		}
-		divide = {
-			value = 0
-			every_law = {
-				limit = {
-					scope:lawgroup.type = {
-						is_same_law_group_as = prev.type
-					}
-				}
-				add = 1
-			}
-			min = 1
-		}
 	}
 }
 
@@ -299,14 +272,19 @@ bpm_consensus_on_law = {
 		}
 		multiply = -1
 	}
+	min = 0
+	max = 1
 }
 
 bpm_consensus_on_law_raw = {
 	value = 0
-	every_activated_interest_group = {
+	every_interest_group = {
+		limit = {
+			bpm_interest_group_is_activated = yes
+		}
 		if = {
 			limit = {
-				law_enactment_stance = {
+				law_stance = {
 					law = scope:law.type
 					value > neutral
 				}
@@ -315,7 +293,7 @@ bpm_consensus_on_law_raw = {
 		}
 		else_if = {
 			limit = {
-				law_enactment_stance = {
+				law_stance = {
 					law = scope:law.type
 					value < neutral
 				}
@@ -323,4 +301,6 @@ bpm_consensus_on_law_raw = {
 			subtract = ig_clout
 		}
 	}
+	max = 1
+	min = -1
 }

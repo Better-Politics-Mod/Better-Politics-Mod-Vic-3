@@ -217,12 +217,10 @@ on_bpm_half_yearly_pulse_country = {
 			update_party_support = yes
 			bpm_setup_country_stubbornness = yes
 			bpm_half_yearly_decrement_party_loyalty = yes
-			bpm_setup_basic_igs = yes
-			bpm_ig_update_ig_ban_support = yes
 		}
 	}
 }
-
+ 
 on_bpm_monthly_pulse_country = {
 	events = {
 		bpm_ig_attraction_utils.1
@@ -232,12 +230,9 @@ on_bpm_monthly_pulse_country = {
 		bpm_1st_commie_rev.1
 		bpm_1st_commie_rev.3
 		#bpm_1st_commie_rev.4
-		bpm_revsoc_utils.3
 		bpm_socdem_utils.1
 		bpm_radlib_utils.1
 		bpm_radlib_utils.2
-		bpm_socialist_utils.3
-		bpm_socialist_utils.4
 		bpm_socialist_utils.7
 		#peoples_springtime.13
 		#italian_springtime.3
@@ -298,18 +293,18 @@ on_bpm_law_activated = {
 			limit = {
 				owner = { is_player = yes }
 				OR = {
-					type = owner.law_type:law_tenant_farmers
-					type = owner.law_type:law_commercialized_agriculture
-					type = owner.law_type:law_homesteading
-					type = owner.law_type:law_collectivized_agriculture
+					type = law_type:law_tenant_farmers
+					type = law_type:law_commercialized_agriculture
+					type = law_type:law_homesteading
+					type = law_type:law_collectivized_agriculture
 				}
 			}
 			type = { save_scope_as = lawtype }
 			if = {
 				limit = {
 					OR = {
-						type = owner.law_type:law_tenant_farmers
-						type = owner.law_type:law_commercialized_agriculture
+						type = law_type:law_tenant_farmers
+						type = law_type:law_commercialized_agriculture
 					}
 					owner = {
 						has_variable = bpm_country_has_serfdom
@@ -325,8 +320,8 @@ on_bpm_law_activated = {
 			if = {
 				limit = {
 					OR = {
-						type = owner.law_type:law_homesteading
-						type = owner.law_type:law_collectivized_agriculture
+						type = law_type:law_homesteading
+						type = law_type:law_collectivized_agriculture
 					}
 				}
 				owner = {
@@ -553,7 +548,6 @@ on_bpm_new_ruler = {
 	# 	bpm_election_events.1
 	# }
 	effect = {
-		owner = { trigger_event = { id = bpm_scandinavia.1 days = 0 } }
 		owner = {
 			if = {
 				limit = {
@@ -863,8 +857,6 @@ on_bpm_revolution_start = {
 
 on_bpm_acquired_technology = {
 	effect = {
-		bpm_setup_basic_igs = yes
-
 		# First intl stuff
 		if = {
 			limit = {
@@ -1149,14 +1141,28 @@ on_bpm_election_campaign_start = {
 				has_variable = bpm_electoral_mandate_progress
 				var:bpm_electoral_mandate_progress = 0
 			}
-			add_momentum = -0.35
+			every_active_party = {
+				limit = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+				add_momentum = -0.35
+			}
 		}
 		else_if = {
 			limit = {
 				has_variable = bpm_electoral_mandate_progress
 				var:bpm_electoral_mandate_progress <= 2
 			}
-			add_momentum = -0.15
+			every_active_party = {
+				limit = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+				add_momentum = -0.15
+			}
 		}
 		bpm_remove_political_stability_small = yes
 		trigger_event = {
@@ -1181,7 +1187,6 @@ on_bpm_country_formed = {
 			limit = { NOT = { has_law = law_type:law_confederated }}
 			activate_law = law_type:law_federated
 		}
-		#bpm_setup_country = yes
 	}
 }
 
@@ -1236,14 +1241,24 @@ on_bpm_character_creation = {
 				}
 				owner = {
 					random_interest_group = {
-						weight = {
-							value = bpm_base_agitator_weight
+						limit = {
+							bpm_interest_group_is_activated = yes
+							bpm_ig_is_institutional = no
+							OR = {
+								bpm_ig_is_radical_opposition = yes
+								bpm_ig_is_very_radical_opposition = yes
+							}
 						}
 						save_scope_as = selected_ig
 					}
-					create_character = {
-						role = character_role_agitator
-						interest_group = scope:selected_ig
+					if = {
+						limit = {
+							exists = scope:selected_ig
+						}
+						create_character = {
+							role = character_role_agitator
+							interest_group = scope:selected_ig
+						}
 					}
 				}
 			}
@@ -1290,6 +1305,8 @@ on_bpm_game_started = {
 			bpm_update_consciousness = yes
 			bpm_update_government_and_opposition = yes
 			bpm_auto_cabinet_appoint = yes
+			bpm_update_name_all_igs = yes
+			bpm_update_political_stability = yes
 		}
 		every_character = {
 			bpm_character_remap_ideology_effect = yes

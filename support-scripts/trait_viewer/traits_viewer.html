@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>BPM Interest Group Trait Viewer</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161923;
+    --panel-2: #1d2130;
+    --border: #2a2f42;
+    --text: #e7e9f0;
+    --text-dim: #9aa0b4;
+    --text-faint: #666c82;
+    --accent: #7c9eff;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    --c-gov: #6366f1;
+    --c-exe: #8b5cf6;
+    --c-dop: #ec4899;
+    --c-sta: #f43f5e;
+    --c-eco: #f59e0b;
+    --c-wel: #10b981;
+    --c-cit: #14b8a6;
+    --c-rel: #0ea5e9;
+    --c-mil: #ef4444;
+    --c-fem: #d946ef;
+    --c-ban: #94a3b8;
+    --c-vanilla: #a3a3a3;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ---------- sidebar ---------- */
+
+  #sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #sidebar-header {
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  #sidebar-header h1 {
+    font-size: 14px;
+    margin: 0 0 2px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  #sidebar-header .sub {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  #page-nav {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  #page-nav a {
+    flex: 1;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 5px 8px;
+    border-radius: 5px;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  #page-nav a:hover { color: var(--text); border-color: var(--accent); }
+  #page-nav a.current { background: var(--panel-2); color: var(--accent); border-color: var(--accent); }
+
+  #search {
+    margin: 10px 14px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: var(--sans);
+  }
+  #search:focus { outline: 1px solid var(--accent); }
+
+  #trait-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0 8px 16px;
+  }
+
+  .cat-group { margin-bottom: 2px; }
+
+  .cat-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 6px;
+    cursor: pointer;
+    border-radius: 6px;
+    user-select: none;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-dim);
+  }
+  .cat-head:hover { background: var(--panel-2); }
+  .cat-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .cat-count { margin-left: auto; color: var(--text-faint); font-weight: 400; font-size: 11px; }
+  .cat-caret { width: 10px; color: var(--text-faint); transition: transform .12s; font-size: 10px; }
+  .cat-group.collapsed .cat-caret { transform: rotate(-90deg); }
+  .cat-group.collapsed .cat-traits { display: none; }
+
+  .cat-traits { padding: 2px 0 6px 6px; }
+
+  .trait-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 8px 5px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .trait-btn:hover { background: var(--panel-2); color: var(--text); }
+  .trait-btn.active {
+    background: rgba(124, 158, 255, 0.15);
+    color: var(--text);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .trait-btn.empty { opacity: 0.45; }
+
+  .no-match { padding: 10px 12px; color: var(--text-faint); font-size: 12px; }
+
+  /* ---------- main ---------- */
+
+  #main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 40px 80px;
+  }
+
+  #empty-state {
+    color: var(--text-faint);
+    font-size: 14px;
+    margin-top: 60px;
+    text-align: center;
+  }
+
+  #trait-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+
+  #trait-header h2 {
+    font-family: var(--mono);
+    font-size: 20px;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .cat-badge {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #0f1115;
+  }
+
+  #trait-sub {
+    color: var(--text-faint);
+    font-size: 12px;
+    margin-bottom: 26px;
+  }
+
+  #tree {
+    max-width: 900px;
+  }
+
+  .empty-body {
+    color: var(--text-faint);
+    font-size: 13px;
+    font-style: italic;
+    padding: 6px 0;
+  }
+
+  /* branch (if / else if / else) */
+  .branch {
+    border-left: 2px solid var(--border);
+    margin: 10px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+  .branch.type-if { border-left-color: #5b7fdb; }
+  .branch.type-else_if { border-left-color: #7a8ab8; }
+  .branch.type-else { border-left-color: #55597a; }
+
+  .branch-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .branch-tag {
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+  }
+  .branch-tag.if, .branch-tag.else_if { background: rgba(91,127,219,0.18); color: #9db3f0; }
+  .branch-tag.else { background: rgba(85,89,122,0.25); color: #b6bad8; }
+
+  .condition {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  .cond-list { list-style: none; margin: 0; padding-left: 16px; }
+  .cond-list.top { padding-left: 0; }
+  .cond-list li { position: relative; padding: 1px 0; }
+  .cond-leaf .k { color: #d6a8ff; }
+  .cond-leaf .op { color: var(--text-faint); }
+  .cond-leaf .v { color: #8fd3a8; }
+  .cond-op-label {
+    color: #ffb454;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+  }
+  .cond-key-label { color: #7aa2f7; }
+
+  .branch-body { margin-top: 4px; }
+
+  /* outcome rows */
+  .outcome-row { margin: 6px 0; }
+
+  .ideology-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 5px 11px;
+    border-radius: 7px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+  }
+  .ideology-pill .type-chip {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: #0f1115;
+  }
+  .ideology-pill .arrow { color: var(--text-faint); }
+  .ideology-pill .name { color: #fff; font-weight: 600; }
+
+  .default-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    color: var(--text-faint);
+    margin-right: 7px;
+    vertical-align: middle;
+  }
+
+  .traitref-row {
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+  .traitref-link {
+    background: none;
+    border: 1px dashed #4a5170;
+    color: #a9b6e6;
+    border-radius: 6px;
+    padding: 4px 9px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+  .traitref-link:hover { border-color: var(--accent); color: var(--text); }
+  .traitref-link.unknown { cursor: default; border-style: dotted; opacity: 0.7; }
+  .traitref-params { color: var(--text-faint); margin-left: 6px; }
+
+  .raw-row {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+  .raw-row .k { color: #c9ccd8; }
+
+  a.jump-hint { color: var(--text-faint); font-size: 11px; }
+
+  #footer-note {
+    margin-top: 50px;
+    color: var(--text-faint);
+    font-size: 11px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    max-width: 900px;
+  }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h1>BPM Trait Viewer</h1>
+    <div class="sub">bpm_aa_interest_group_traits.txt</div>
+    <nav id="page-nav">
+      <a href="traits_viewer.html" class="current">Traits</a>
+      <a href="ig_viewer.html">Interest Groups</a>
+    </nav>
+  </div>
+  <input id="search" type="text" placeholder="Filter traits…" autocomplete="off" />
+  <div id="trait-list"></div>
+</div>
+
+<div id="main">
+  <div id="empty-state">Select a trait on the left to see its condition → ideology breakdown.</div>
+  <div id="trait-header" style="display:none"></div>
+  <div id="trait-sub" style="display:none"></div>
+  <div id="tree"></div>
+</div>
+
+<script>
+const DATA = {"traits": {"bpm_trait_gov_none": {"name": "bpm_trait_gov_none", "category": "gov", "shortName": "none", "items": []}, "bpm_trait_exe_none": {"name": "bpm_trait_exe_none", "category": "exe", "shortName": "none", "items": []}, "bpm_trait_dop_none": {"name": "bpm_trait_dop_none", "category": "dop", "shortName": "none", "items": []}, "bpm_trait_sta_none": {"name": "bpm_trait_sta_none", "category": "sta", "shortName": "none", "items": []}, "bpm_trait_eco_none": {"name": "bpm_trait_eco_none", "category": "eco", "shortName": "none", "items": []}, "bpm_trait_wel_none": {"name": "bpm_trait_wel_none", "category": "wel", "shortName": "none", "items": []}, "bpm_trait_cit_none": {"name": "bpm_trait_cit_none", "category": "cit", "shortName": "none", "items": []}, "bpm_trait_rel_none": {"name": "bpm_trait_rel_none", "category": "rel", "shortName": "none", "items": []}, "bpm_trait_mil_none": {"name": "bpm_trait_mil_none", "category": "mil", "shortName": "none", "items": []}, "bpm_trait_fem_none": {"name": "bpm_trait_fem_none", "category": "fem", "shortName": "none", "items": []}, "bpm_trait_ban_none": {"name": "bpm_trait_ban_none", "category": "ban", "shortName": "none", "items": []}, "bpm_trait_vanilla_none": {"name": "bpm_trait_vanilla_none", "category": "vanilla", "shortName": "none", "items": []}, "bpm_trait_gov_none_in_republic": {"name": "bpm_trait_gov_none_in_republic", "category": "gov", "shortName": "none_in_republic", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_has_inertia_with_republic", "op": "=", "v": "yes"}]}], "items": [{"kind": "raw", "key": "bpm_remove_all_gov_ideologies", "op": "=", "value": "yes"}]}]}, "bpm_trait_gov_institutional_antiliberal": {"name": "bpm_trait_gov_institutional_antiliberal", "category": "gov", "shortName": "institutional_antiliberal", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_monarchy"}]}]}], "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "moderate_monarchist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_theocracy"}]}]}], "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "theocrat"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "anti_proletarian"}]}]}, "bpm_trait_gov_institutional": {"name": "bpm_trait_gov_institutional", "category": "gov", "shortName": "institutional", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "active_law:lawgroup_governance_principles", "op": "=", "v": [{"k": "has_amendment", "op": "=", "v": "amendment_type:bpm_amendment_republican_tradition"}]}, {"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_extraction_economy"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "liberal_republican"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "anti_proletarian"}]}]}, "bpm_trait_gov_devout": {"name": "bpm_trait_gov_devout", "category": "gov", "shortName": "devout", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_theocracy"}]}, {"k": "country_has_state_religion", "op": "=", "v": "rel:mahayana"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:gelugpa"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:theravada"}]}]}], "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "theocrat"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "country_has_state_religion", "op": "=", "v": "rel:confucian"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:orthodox"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:shinto"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:hindu"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:sikh"}]}]}], "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "radical_monarchist"}]}]}, "bpm_trait_gov_adaptable_radical_monarchist": {"name": "bpm_trait_gov_adaptable_radical_monarchist", "category": "gov", "shortName": "adaptable_radical_monarchist", "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "radical_monarchist"}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "owner", "op": "=", "v": [{"k": "bpm_has_inertia_with_republic", "op": "=", "v": "yes"}]}, {"k": "active_law:lawgroup_governance_principles", "op": "=", "v": [{"k": "has_amendment", "op": "=", "v": "amendment_type:bpm_amendment_republican_tradition"}]}]}], "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "liberal_republican"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_has_inertia_with_republic", "op": "=", "v": "yes"}]}], "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "anti_proletarian"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_theocracy"}]}]}], "items": [{"kind": "ideology", "ideologyType": "gov", "ideologyName": "theocrat"}]}]}, "bpm_trait_dop_democrat": {"name": "bpm_trait_dop_democrat", "category": "dop", "shortName": "democrat", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_supreme_legislature"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "$type$_parliamentarian"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "$type$_democrat"}]}]}, "bpm_trait_dop_landowners": {"name": "bpm_trait_dop_landowners", "category": "dop", "shortName": "landowners", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_colonial_administration"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "metropole_loyalist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "any_active_law", "op": "=", "v": [{"k": "has_amendment", "op": "=", "v": "amendment_type:bpm_amendment_republican_tradition"}]}]}], "items": [{"kind": "traitref", "trait": "bpm_trait_dop_democrat", "category": "dop", "params": [{"k": "type", "op": "=", "v": "moderate"}], "scalarValue": null}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_journal_entry", "op": "=", "v": "je_bpm_confucian_state"}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "meritocratic_autocrat"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "has_modifier", "op": "=", "v": "age_of_caudillos_modifier"}, {"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_supreme_legislature"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "oligarch"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_monarchy"}]}, {"k": "OR", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_autocracy"}]}, {"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_advisory_body"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "traditional_power"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_autocracy"}]}, {"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_oligarchy"}]}, {"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_military_junta"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "autocrat"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BEL", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "doctrinaire_democrat"}]}]}, "bpm_trait_dop_armed_forces": {"name": "bpm_trait_dop_armed_forces", "category": "dop", "shortName": "armed_forces", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_colonial_administration"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "metropole_loyalist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "has_variable", "op": "=", "v": "red_army_var"}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "party_socialist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_warrior_caste"}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "traditional_power"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "bpm_country_laws_are_moderately_liberal_democratic", "op": "=", "v": "yes"}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "state_power"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "oligarch"}]}]}, "bpm_trait_dop_petty_bourgeoisie": {"name": "bpm_trait_dop_petty_bourgeoisie", "category": "dop", "shortName": "petty_bourgeoisie", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_law", "op": "=", "v": "law_type:law_extraction_economy"}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "oligarch"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "c:ALK", "op": "?=", "v": "this"}, {"k": "has_journal_entry", "op": "=", "v": "je_bpm_confucian_state"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "meritocratic_autocrat"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "state_power"}]}]}, "bpm_trait_dop_devout": {"name": "bpm_trait_dop_devout", "category": "dop", "shortName": "devout", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "country_has_state_religion", "op": "=", "v": "rel:orthodox"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:shinto"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:hindu"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:sikh"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "autocrat"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "country_has_state_religion", "op": "=", "v": "rel:confuncian"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "meritocratic_autocrat"}]}]}, "bpm_trait_dop_industrialists": {"name": "bpm_trait_dop_industrialists", "category": "dop", "shortName": "industrialists", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_colonial_administration"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "metropole_loyalist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_extraction_economy"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "meritocratic_autocrat"}]}]}, "bpm_trait_dop_intelligentsia": {"name": "bpm_trait_dop_intelligentsia", "category": "dop", "shortName": "intelligentsia", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BEL", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "doctrinaire_democrat"}]}, {"kind": "traitref", "trait": "bpm_trait_dop_democrat", "category": "dop", "params": [{"k": "name", "op": "=", "v": "moderate"}], "scalarValue": null}]}, "bpm_trait_dop_trade_unions": {"name": "bpm_trait_dop_trade_unions", "category": "dop", "shortName": "trade_unions", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "OR", "op": "=", "v": [{"k": "owner", "op": "=", "v": [{"k": "has_law", "op": "=", "v": "law_type:law_corporatized_unions"}]}, {"k": "AND", "op": "=", "v": [{"k": "has_variable", "op": "=", "v": "bpm_largest_faction"}, {"k": "var:bpm_largest_faction", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "is_political_movement_type", "op": "=", "v": "movement_religious_majority"}, {"k": "is_political_movement_type", "op": "=", "v": "movement_cultural_majority"}, {"k": "is_political_movement_type", "op": "=", "v": "movement_national_liberal"}, {"k": "is_political_movement_type", "op": "=", "v": "movement_bonapartist"}]}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "state_unionist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "has_variable", "op": "=", "v": "bpm_syndicalist_takeover_var"}, {"k": "has_law", "op": "=", "v": "law_type:law_syndicalism"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "syndicalist"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "unionist"}]}]}, "bpm_trait_dop_maximally_authoritarian": {"name": "bpm_trait_dop_maximally_authoritarian", "category": "dop", "shortName": "maximally_authoritarian", "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "autocrat"}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "is_country_type", "op": "=", "v": "unrecognized"}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "traditional_power"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "OR", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_universal_suffrage"}]}, {"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_census_voting"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "authoritarian_democrat"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_supreme_legislature"}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "authoritarian_parliamentarian"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_confederated"}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "oligarch"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_appointed_bureaucrats"}]}, {"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_elected_bureaucrats"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "meritocratic_autocrat"}]}]}, "bpm_trait_dop_conservatives": {"name": "bpm_trait_dop_conservatives", "category": "dop", "shortName": "conservatives", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_colonial_administration"}]}]}], "items": [{"kind": "ideology", "ideologyType": "dop", "ideologyName": "metropole_loyalist"}]}]}, "bpm_trait_sta_minimal": {"name": "bpm_trait_sta_minimal", "category": "sta", "shortName": "minimal", "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "minimal_state"}]}, "bpm_trait_sta_landowners": {"name": "bpm_trait_sta_landowners", "category": "sta", "shortName": "landowners", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BEL", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "federated_state"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "decentralized_state"}]}]}, "bpm_trait_sta_armed_forces": {"name": "bpm_trait_sta_armed_forces", "category": "sta", "shortName": "armed_forces", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_warrior_caste"}]}]}], "items": [{"kind": "traitref", "trait": "bpm_trait_sta_landowners", "category": "sta", "params": null, "scalarValue": "yes"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_federated"}]}, {"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_national_militia"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "federated_state"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "institutional_state"}]}]}, "bpm_trait_sta_petty_bourgeoisie": {"name": "bpm_trait_sta_petty_bourgeoisie", "category": "sta", "shortName": "petty_bourgeoisie", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_journal_entry", "op": "=", "v": "je_bpm_confucian_state"}]}], "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "decentralized_state"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "institutional_state"}]}]}, "bpm_trait_sta_industrialists": {"name": "bpm_trait_sta_industrialists", "category": "sta", "shortName": "industrialists", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "c:UCA", "op": "?=", "v": "this"}, {"k": "c:MEX", "op": "?=", "v": "this"}, {"k": "c:BRZ", "op": "?=", "v": "this"}, {"k": "country_has_primary_culture", "op": "=", "v": "cu:north_andean"}]}]}], "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "federated_state"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "institutional_state"}]}]}, "bpm_trait_sta_intelligentsia": {"name": "bpm_trait_sta_intelligentsia", "category": "sta", "shortName": "intelligentsia", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "OR", "op": "=", "v": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_federated"}]}]}, {"k": "owner", "op": "=", "v": [{"k": "is_in_geographic_region", "op": "=", "v": "geographic_region_new_world"}, {"k": "NOT", "op": "=", "v": [{"k": "has_variable", "op": "=", "v": "guilty_land_fail_var"}]}]}, {"k": "owner", "op": "=", "v": [{"k": "c:BEL", "op": "?=", "v": "this"}]}]}], "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "federated_state"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "weak_state"}]}]}, "bpm_trait_sta_trade_unions": {"name": "bpm_trait_sta_trade_unions", "category": "sta", "shortName": "trade_unions", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "limit", "op": "=", "v": [{"k": "has_variable", "op": "=", "v": "bpm_largest_faction"}, {"k": "var:bpm_largest_faction", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "is_political_movement_type", "op": "=", "v": "movement_religious_majority"}, {"k": "is_political_movement_type", "op": "=", "v": "movement_cultural_majority"}, {"k": "is_political_movement_type", "op": "=", "v": "movement_national_liberal"}, {"k": "is_political_movement_type", "op": "=", "v": "movement_bonapartist"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "powerful_state"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_technology_researched", "op": "=", "v": "corporatism"}]}], "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "progressive_state"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:USA", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "minimal_state"}]}, {"kind": "ideology", "ideologyType": "sta", "ideologyName": "progressive_state"}]}, "bpm_trait_sta_right_wing_centralist": {"name": "bpm_trait_sta_right_wing_centralist", "category": "sta", "shortName": "right_wing_centralist", "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "security_state"}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_confederated"}]}, {"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_federated"}]}, {"k": "active_law:lawgroup_centralization", "op": "=", "v": [{"k": "has_amendment", "op": "=", "v": "amendment_type:bpm_amendment_memory_of_jacobinism"}]}, {"k": "has_journal_entry", "op": "=", "v": [{"k": "type", "op": "=", "v": "je_bpm_unions_des_oppositions"}]}, {"k": "has_variable", "op": "=", "v": "bpm_bel_conservative_catholic_party_created_var"}, {"k": "has_variable", "op": "=", "v": "bel_je_association_liberal_brussels"}]}]}], "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "decentralized_state"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "bpm_ig_is_pro_overlord", "op": "=", "v": "no"}], "items": [{"kind": "ideology", "ideologyType": "sta", "ideologyName": "powerful_state"}]}]}, "bpm_trait_eco_agrarian": {"name": "bpm_trait_eco_agrarian", "category": "eco", "shortName": "agrarian", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "NOT", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_serfdom"}]}]}, {"k": "NOT", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_traditionalism"}]}]}, {"k": "NOT", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_industry_banned"}]}]}, {"k": "NOT", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_extraction_economy"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "modern_agrarian"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "traditional_agrarian"}]}, {"kind": "traitref", "trait": "bpm_trait_eco_artisanal", "category": "eco", "params": null, "scalarValue": "yes"}]}, "bpm_trait_eco_pro_serfdom": {"name": "bpm_trait_eco_pro_serfdom", "category": "eco", "shortName": "pro_serfdom", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_isolationism"}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "trad_isolationist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_debt_slavery"}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "debt_serf_economy"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "serf_economy"}]}]}, "bpm_trait_eco_artisanal": {"name": "bpm_trait_eco_artisanal", "category": "eco", "shortName": "artisanal", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_has_inertia_with_artisan_eco", "op": "=", "v": "yes"}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "artisan"}]}]}, "bpm_trait_eco_landowners": {"name": "bpm_trait_eco_landowners", "category": "eco", "shortName": "landowners", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_law", "op": "=", "v": "law_type:law_colonial_administration"}, {"k": "NOT", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_slavery_banned"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "slave_colonialist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:USA", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "antebellum_economy"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_serfdom"}]}]}], "items": [{"kind": "traitref", "trait": "bpm_trait_eco_pro_serfdom", "category": "eco", "params": null, "scalarValue": "yes"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "traditional_agrarian"}]}]}, "bpm_trait_eco_petty_bourgeoisie": {"name": "bpm_trait_eco_petty_bourgeoisie", "category": "eco", "shortName": "petty_bourgeoisie", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_extraction_economy"}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "colonialist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_journal_entry", "op": "=", "v": "je_bpm_confucian_state"}]}], "items": [{"kind": "traitref", "trait": "bpm_trait_eco_pro_serfdom", "category": "eco", "params": null, "scalarValue": "yes"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "has_journal_entry", "op": "=", "v": "je_matter_of_slavery"}, {"k": "has_variable", "op": "=", "v": "je_matter_of_slavery_fail_var"}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "slave_economy"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "traitref", "trait": "bpm_trait_eco_artisanal", "category": "eco", "params": null, "scalarValue": "yes"}]}]}, "bpm_trait_eco_devout": {"name": "bpm_trait_eco_devout", "category": "eco", "shortName": "devout", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:RUS", "op": "?=", "v": "this"}]}], "items": []}, {"kind": "traitref", "trait": "bpm_trait_eco_pro_serfdom", "category": "eco", "params": null, "scalarValue": "yes"}]}, "bpm_trait_eco_industrialists": {"name": "bpm_trait_eco_industrialists", "category": "eco", "shortName": "industrialists", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BEL", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "interventionist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_extraction_economy"}]}]}], "items": []}, {"kind": "ideology", "ideologyType": "eco", "ideologyName": "colonialist"}]}, "bpm_trait_eco_intelligentsia": {"name": "bpm_trait_eco_intelligentsia", "category": "eco", "shortName": "intelligentsia", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:USA", "op": "?=", "v": "this"}, {"k": "NOT", "op": "=", "v": [{"k": "has_variable", "op": "=", "v": "guilty_land_fail_var"}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "american_system"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:USA", "op": "?=", "v": "this"}, {"k": "OR", "op": "=", "v": [{"k": "has_variable", "op": "=", "v": "guilty_land_fail_var"}, {"k": "has_variable", "op": "=", "v": "abolished_slavery_var"}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "interventionist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "c:BIC", "op": "?=", "v": "this"}, {"k": "any_primary_culture", "op": "=", "v": [{"k": "has_discrimination_trait_group", "op": "=", "v": "heritage_group_south_asian"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "modernizer"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BRZ", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "slave_economy"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "traitref", "trait": "bpm_trait_eco_artisanal", "category": "eco", "params": null, "scalarValue": "yes"}]}]}, "bpm_trait_eco_reactionaries": {"name": "bpm_trait_eco_reactionaries", "category": "eco", "shortName": "reactionaries", "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "conservative_agrarian"}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_is_new_world_republic", "op": "=", "v": "yes"}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "antebellum_economy"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "active_law:lawgroup_trade_policy", "op": "=", "v": [{"k": "has_amendment", "op": "=", "v": "amendment_type:bpm_amendment_trade_economy"}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "modernizer"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_journal_entry", "op": "=", "v": [{"k": "type", "op": "=", "v": "je_bpm_unions_des_oppositions"}]}]}], "items": [{"kind": "ideology", "ideologyType": "eco", "ideologyName": "laissez_faire"}]}, {"kind": "traitref", "trait": "bpm_trait_eco_pro_serfdom", "category": "eco", "params": null, "scalarValue": "yes"}]}, "bpm_trait_wel_petty_bourgeoisie": {"name": "bpm_trait_wel_petty_bourgeoisie", "category": "wel", "shortName": "petty_bourgeoisie", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_extraction_economy"}]}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "market_welfare"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_journal_entry", "op": "=", "v": "je_bpm_confucian_state"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}]}, "bpm_trait_wel_devout": {"name": "bpm_trait_wel_devout", "category": "wel", "shortName": "devout", "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}, "bpm_trait_wel_trade_unions": {"name": "bpm_trait_wel_trade_unions", "category": "wel", "shortName": "trade_unions", "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "expanded_public_welfare"}]}, "bpm_trait_wel_reactionaries": {"name": "bpm_trait_wel_reactionaries", "category": "wel", "shortName": "reactionaries", "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "no_welfare"}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "is_in_geographic_region", "op": "=", "v": "geographic_region_new_world"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:catholic"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:KRA", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:FRA", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "reactionary_paternalistic"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:GBR", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "reactionary_paternalistic"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:POR", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:SPA", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:SPC", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:SAR", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:AUS", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:SWI", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BIC", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "market_welfare"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "c:HUN", "op": "?=", "v": "this"}, {"k": "c:TRN", "op": "?=", "v": "this"}, {"k": "c:CRO", "op": "?=", "v": "this"}]}]}], "items": [{"kind": "ideology", "ideologyType": "wel", "ideologyName": "religious_welfare"}]}]}, "bpm_trait_cit_traditional": {"name": "bpm_trait_cit_traditional", "category": "cit", "shortName": "traditional", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_subjecthood"}]}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "traditional_culture"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "NOT", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_slavery_banned"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "segregationist"}]}]}, "bpm_trait_cit_samurai": {"name": "bpm_trait_cit_samurai", "category": "cit", "shortName": "samurai", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_warrior_caste"}]}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "samurai"}]}]}, "bpm_trait_cit_institutional": {"name": "bpm_trait_cit_institutional", "category": "cit", "shortName": "institutional", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_extraction_economy"}]}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "colonial_segregationist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "AND", "op": "=", "v": [{"k": "is_in_geographic_region", "op": "=", "v": "geographic_region_new_world"}, {"k": "NOT", "op": "=", "v": [{"k": "has_law", "op": "=", "v": "law_type:law_subjecthood"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "immigrant_nationalist"}]}, {"kind": "branch", "branchType": "else", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BIC", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "liberal_nationalist"}]}]}, "bpm_trait_cit_liberal": {"name": "bpm_trait_cit_liberal", "category": "cit", "shortName": "liberal", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "AND", "op": "=", "v": [{"k": "is_in_geographic_region", "op": "=", "v": "geographic_region_new_world"}, {"k": "NOT", "op": "=", "v": [{"k": "has_law", "op": "=", "v": "law_type:law_subjecthood"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "immigrant_nationalist"}]}, {"kind": "ideology", "ideologyType": "cit", "ideologyName": "liberal_nationalist"}]}, "bpm_trait_cit_devout": {"name": "bpm_trait_cit_devout", "category": "cit", "shortName": "devout", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "AND", "op": "=", "v": [{"k": "is_in_geographic_region", "op": "=", "v": "geographic_region_new_world"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:catholic"}]}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "immigrant_nationalist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "country_has_state_religion", "op": "=", "v": "rel:shinto"}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "ethnonationalist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:CHI", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "multiethnic_nationalist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "country_has_state_religion", "op": "=", "v": "rel:hindu"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:mahayana"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:gelugpa"}, {"k": "country_has_state_religion", "op": "=", "v": "rel:theravada"}]}]}], "items": [{"kind": "traitref", "trait": "bpm_trait_cit_traditional", "category": "cit", "params": null, "scalarValue": "yes"}]}]}, "bpm_trait_cit_reactionaries": {"name": "bpm_trait_cit_reactionaries", "category": "cit", "shortName": "reactionaries", "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "traditional_culture"}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_is_new_world_republic", "op": "=", "v": "yes"}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "nationalist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:CHI", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "multiethnic_nationalist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_variable", "op": "=", "v": "catholic_party_created_bel_variable"}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "nationalist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BIC", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "colonial_segregationist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "is_in_geographic_region", "op": "=", "v": "geographic_region_new_world"}, {"k": "NOT", "op": "=", "v": [{"k": "c:USA", "op": "?=", "v": "this"}]}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "nationalist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BRZ", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "cit", "ideologyName": "multiethnic_nationalist"}]}]}, "bpm_trait_rel_institutional_secularist": {"name": "bpm_trait_rel_institutional_secularist", "category": "rel", "shortName": "institutional_secularist", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_total_separation"}]}, {"k": "NOT", "op": "=", "v": [{"k": "c:KRA", "op": "?=", "v": "this"}]}]}], "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "radical_secularist"}]}]}, "bpm_trait_rel_devout": {"name": "bpm_trait_rel_devout", "category": "rel", "shortName": "devout", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "c:USA", "op": "?=", "v": "this"}, {"k": "c:BEL", "op": "?=", "v": "this"}, {"k": "AND", "op": "=", "v": [{"k": "country_has_state_religion", "op": "=", "v": "rel:protestant"}, {"k": "country_has_primary_culture", "op": "=", "v": "cu:hawaiian"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "moralist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BIC", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "pragmatic_moralist"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "radical_moralist"}]}]}, "bpm_trait_rel_reactionaries": {"name": "bpm_trait_rel_reactionaries", "category": "rel", "shortName": "reactionaries", "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "radical_moralist"}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_is_new_world_republic", "op": "=", "v": "yes"}]}], "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "secularist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:KRA", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "moralist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:NET", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "secularist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_variable", "op": "=", "v": "catholic_party_created_bel_variable"}]}], "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "moralist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:BEL", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "secularist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:SWI", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "moralist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:PRG", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "rel", "ideologyName": "moralist"}]}]}, "bpm_trait_mil_institutional": {"name": "bpm_trait_mil_institutional", "category": "mil", "shortName": "institutional", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_noble_officers"}]}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "aristocratic_militarist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_purchased_officers"}]}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "plutocratic_militarist"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_professional_officers"}]}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "institutional_militarist_professional"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_political_officers"}]}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "institutional_militarist_political"}]}, {"kind": "branch", "branchType": "else_if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_elected_officers"}]}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "popular_army"}]}]}, "bpm_trait_mil_armed_neutrality": {"name": "bpm_trait_mil_armed_neutrality", "category": "mil", "shortName": "armed_neutrality", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_armed_neutrality"}]}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "defensive_patriot"}]}]}, "bpm_trait_mil_plutocrat_wtih_modern_army_purchased_officers": {"name": "bpm_trait_mil_plutocrat_wtih_modern_army_purchased_officers", "category": "mil", "shortName": "plutocrat_wtih_modern_army_purchased_officers", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_purchased_officers"}]}, {"k": "NOT", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_peasant_levies"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "plutocratic_militarist"}]}]}, "bpm_trait_mil_armed_forces": {"name": "bpm_trait_mil_armed_forces", "category": "mil", "shortName": "armed_forces", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_variable", "op": "=", "v": "red_army_var"}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "mass_army"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "traitref", "trait": "bpm_trait_mil_institutional", "category": "mil", "params": null, "scalarValue": "yes"}]}]}, "bpm_trait_mil_devout": {"name": "bpm_trait_mil_devout", "category": "mil", "shortName": "devout", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "country_has_state_religion", "op": "=", "v": "rel:sikh"}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "mass_army"}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "traitref", "trait": "bpm_trait_mil_institutional", "category": "mil", "params": null, "scalarValue": "yes"}]}]}, "bpm_trait_mil_trade_unions": {"name": "bpm_trait_mil_trade_unions", "category": "mil", "shortName": "trade_unions", "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "antimilitarist"}]}, "bpm_trait_mil_rural_folk": {"name": "bpm_trait_mil_rural_folk", "category": "mil", "shortName": "rural_folk", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "OR", "op": "=", "v": [{"k": "AND", "op": "=", "v": [{"k": "is_in_geographic_region", "op": "=", "v": "geographic_region_new_world"}, {"k": "NOT", "op": "=", "v": [{"k": "has_law", "op": "=", "v": "law_type:law_subjecthood"}]}]}, {"k": "c:LIB", "op": "?=", "v": "this"}]}], "items": [{"kind": "raw", "key": "ig:ig_rural_folk", "op": "?=", "value": [{"k": "bpm_ig_set_ideology", "op": "=", "v": [{"k": "type", "op": "=", "v": "mil"}, {"k": "name", "op": "=", "v": "frontier_expansion"}]}]}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "antimilitarist"}]}]}, "bpm_trait_mil_reactionaries": {"name": "bpm_trait_mil_reactionaries", "category": "mil", "shortName": "reactionaries", "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "aristocratic_militarist"}, {"kind": "traitref", "trait": "bpm_trait_mil_plutocrat_wtih_modern_army_purchased_officers", "category": "mil", "params": null, "scalarValue": "yes"}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "is_in_geographic_region", "op": "=", "v": "geographic_region_new_world"}, {"k": "has_modifier", "op": "=", "v": "age_of_caudillos_modifier"}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "institutional_militarist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "has_law", "op": "=", "v": "law_type:law_professional_officers"}, {"k": "NOT", "op": "=", "v": [{"k": "c:FRA", "op": "?=", "v": "this"}]}]}, {"k": "has_ideology", "op": "=", "v": "ideology:ideology_mil_aristocratic_militarist"}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "jingoist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "OR", "op": "=", "v": [{"k": "country_has_primary_culture", "op": "=", "v": "cu:platinean"}, {"k": "country_has_primary_culture", "op": "=", "v": "cu:south_andean"}, {"k": "country_has_primary_culture", "op": "=", "v": "cu:north_andean"}, {"k": "country_has_primary_culture", "op": "=", "v": "cu:central_american"}, {"k": "country_has_primary_culture", "op": "=", "v": "cu:mexican"}]}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "institutional_militarist"}]}, {"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "c:ARG", "op": "?=", "v": "this"}]}], "items": [{"kind": "ideology", "ideologyType": "mil", "ideologyName": "frontier_expansion"}]}]}, "bpm_trait_fem_institutional_patriarchal": {"name": "bpm_trait_fem_institutional_patriarchal", "category": "fem", "shortName": "institutional_patriarchal", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "NOT", "op": "=", "v": [{"k": "bpm_country_has_inertia_with_law", "op": "=", "v": [{"k": "law", "op": "=", "v": "law_womens_suffrage"}]}]}]}], "items": [{"kind": "ideology", "ideologyType": "fem", "ideologyName": "patriarchal"}]}]}, "bpm_trait_fem_moderate_patriarchal": {"name": "bpm_trait_fem_moderate_patriarchal", "category": "fem", "shortName": "moderate_patriarchal", "items": [{"kind": "ideology", "ideologyType": "fem", "ideologyName": "moderate_patriarchal"}]}, "bpm_trait_fem_patriarchal": {"name": "bpm_trait_fem_patriarchal", "category": "fem", "shortName": "patriarchal", "items": [{"kind": "ideology", "ideologyType": "fem", "ideologyName": "patriarchal"}]}, "bpm_trait_vanilla_paternalistic": {"name": "bpm_trait_vanilla_paternalistic", "category": "vanilla", "shortName": "paternalistic", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "owner", "op": "=", "v": [{"k": "bpm_has_inertia_with_republic", "op": "=", "v": "yes"}]}], "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "has_ideology", "op": "=", "v": "ideology:ideology_paternalistic"}], "items": [{"kind": "raw", "key": "remove_ideology", "op": "=", "value": "ideology_paternalistic"}]}, {"kind": "raw", "key": "bpm_trait_has_vanilla_ideology", "op": "=", "value": [{"k": "ideology", "op": "=", "v": "ideology_republican_paternalistic"}]}]}, {"kind": "branch", "branchType": "else", "condition": null, "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "has_ideology", "op": "=", "v": "ideology:ideology_republican_paternalistic"}], "items": [{"kind": "raw", "key": "remove_ideology", "op": "=", "value": "ideology_republican_paternalistic"}]}, {"kind": "raw", "key": "bpm_trait_has_vanilla_ideology", "op": "=", "value": [{"k": "ideology", "op": "=", "v": "ideology_paternalistic"}]}]}]}, "bpm_trait_vanilla_agrarian_jeffersonian": {"name": "bpm_trait_vanilla_agrarian_jeffersonian", "category": "vanilla", "shortName": "agrarian_jeffersonian", "items": [{"kind": "branch", "branchType": "if", "condition": [{"k": "has_ideology", "op": "=", "v": "ideology:ideology_agrarian_jeffersonian"}], "items": [{"kind": "raw", "key": "remove_ideology", "op": "=", "value": "ideology_agrarian_jeffersonian"}]}]}}, "categoryOrder": ["gov", "exe", "dop", "sta", "eco", "wel", "cit", "rel", "mil", "fem", "ban", "vanilla"], "categories": {"gov": ["bpm_trait_gov_none", "bpm_trait_gov_none_in_republic", "bpm_trait_gov_institutional_antiliberal", "bpm_trait_gov_institutional", "bpm_trait_gov_devout", "bpm_trait_gov_adaptable_radical_monarchist"], "exe": ["bpm_trait_exe_none"], "dop": ["bpm_trait_dop_none", "bpm_trait_dop_democrat", "bpm_trait_dop_landowners", "bpm_trait_dop_armed_forces", "bpm_trait_dop_petty_bourgeoisie", "bpm_trait_dop_devout", "bpm_trait_dop_industrialists", "bpm_trait_dop_intelligentsia", "bpm_trait_dop_trade_unions", "bpm_trait_dop_maximally_authoritarian", "bpm_trait_dop_conservatives"], "sta": ["bpm_trait_sta_none", "bpm_trait_sta_minimal", "bpm_trait_sta_landowners", "bpm_trait_sta_armed_forces", "bpm_trait_sta_petty_bourgeoisie", "bpm_trait_sta_industrialists", "bpm_trait_sta_intelligentsia", "bpm_trait_sta_trade_unions", "bpm_trait_sta_right_wing_centralist"], "eco": ["bpm_trait_eco_none", "bpm_trait_eco_agrarian", "bpm_trait_eco_pro_serfdom", "bpm_trait_eco_artisanal", "bpm_trait_eco_landowners", "bpm_trait_eco_petty_bourgeoisie", "bpm_trait_eco_devout", "bpm_trait_eco_industrialists", "bpm_trait_eco_intelligentsia", "bpm_trait_eco_reactionaries"], "wel": ["bpm_trait_wel_none", "bpm_trait_wel_petty_bourgeoisie", "bpm_trait_wel_devout", "bpm_trait_wel_trade_unions", "bpm_trait_wel_reactionaries"], "cit": ["bpm_trait_cit_none", "bpm_trait_cit_traditional", "bpm_trait_cit_samurai", "bpm_trait_cit_institutional", "bpm_trait_cit_liberal", "bpm_trait_cit_devout", "bpm_trait_cit_reactionaries"], "rel": ["bpm_trait_rel_none", "bpm_trait_rel_institutional_secularist", "bpm_trait_rel_devout", "bpm_trait_rel_reactionaries"], "mil": ["bpm_trait_mil_none", "bpm_trait_mil_institutional", "bpm_trait_mil_armed_neutrality", "bpm_trait_mil_plutocrat_wtih_modern_army_purchased_officers", "bpm_trait_mil_armed_forces", "bpm_trait_mil_devout", "bpm_trait_mil_trade_unions", "bpm_trait_mil_rural_folk", "bpm_trait_mil_reactionaries"], "fem": ["bpm_trait_fem_none", "bpm_trait_fem_institutional_patriarchal", "bpm_trait_fem_moderate_patriarchal", "bpm_trait_fem_patriarchal"], "ban": ["bpm_trait_ban_none"], "vanilla": ["bpm_trait_vanilla_none", "bpm_trait_vanilla_paternalistic", "bpm_trait_vanilla_agrarian_jeffersonian"]}};
+
+const CAT_LABELS = {
+  gov: "Government", exe: "Executive", dop: "Distribution of Power", sta: "State",
+  eco: "Economy", wel: "Welfare", cit: "Citizenship", rel: "Religion",
+  mil: "Military", fem: "Feminism", ban: "Banned", vanilla: "Vanilla",
+};
+
+function catColor(cat) {
+  return `var(--c-${cat})`;
+}
+
+// ---------------------------------------------------------------- sidebar
+
+const listEl = document.getElementById('trait-list');
+const searchEl = document.getElementById('search');
+let activeTrait = null;
+
+function buildSidebar(filterText) {
+  listEl.innerHTML = '';
+  const q = (filterText || '').trim().toLowerCase();
+  let anyMatch = false;
+
+  DATA.categoryOrder.forEach(cat => {
+    const names = DATA.categories[cat] || [];
+    const filtered = q ? names.filter(n => n.toLowerCase().includes(q)) : names;
+    if (q && filtered.length === 0) return;
+    anyMatch = true;
+
+    const group = document.createElement('div');
+    group.className = 'cat-group';
+    if (!q && names.length === 0) group.classList.add('collapsed');
+
+    const head = document.createElement('div');
+    head.className = 'cat-head';
+    head.innerHTML = `
+      <span class="cat-caret">▾</span>
+      <span class="cat-dot" style="background:${catColor(cat)}"></span>
+      <span>${cat} · ${CAT_LABELS[cat] || ''}</span>
+      <span class="cat-count">${names.length}</span>
+    `;
+    head.addEventListener('click', () => group.classList.toggle('collapsed'));
+    group.appendChild(head);
+
+    const traitsWrap = document.createElement('div');
+    traitsWrap.className = 'cat-traits';
+    filtered.forEach(fullName => {
+      const t = DATA.traits[fullName];
+      const btn = document.createElement('button');
+      btn.className = 'trait-btn';
+      if (t.items.length === 0) btn.classList.add('empty');
+      if (fullName === activeTrait) btn.classList.add('active');
+      btn.textContent = t.shortName;
+      btn.title = fullName;
+      btn.addEventListener('click', () => selectTrait(fullName));
+      traitsWrap.appendChild(btn);
+    });
+    group.appendChild(traitsWrap);
+    listEl.appendChild(group);
+  });
+
+  if (!anyMatch) {
+    const div = document.createElement('div');
+    div.className = 'no-match';
+    div.textContent = 'No traits match.';
+    listEl.appendChild(div);
+  }
+}
+
+searchEl.addEventListener('input', () => buildSidebar(searchEl.value));
+
+// ---------------------------------------------------------------- condition tree
+
+function renderConditionList(entries, top) {
+  const ul = document.createElement('ul');
+  ul.className = 'cond-list' + (top ? ' top' : '');
+  entries.forEach(e => {
+    const li = document.createElement('li');
+    if (typeof e.v === 'string') {
+      li.className = 'cond-leaf';
+      const opText = e.op === '?=' ? ' ?= ' : ' = ';
+      li.innerHTML = `<span class="k">${escapeHtml(e.k)}</span><span class="op">${opText}</span><span class="v">${escapeHtml(e.v)}</span>`;
+    } else {
+      const isOp = e.k === 'AND' || e.k === 'OR' || e.k === 'NOT';
+      const label = document.createElement('div');
+      label.className = isOp ? 'cond-op-label' : 'cond-key-label';
+      label.textContent = isOp ? e.k : `${e.k}:`;
+      li.appendChild(label);
+      li.appendChild(renderConditionList(e.v, false));
+    }
+    ul.appendChild(li);
+  });
+  return ul;
+}
+
+function renderCondition(condition) {
+  const wrap = document.createElement('div');
+  wrap.className = 'condition';
+  if (!condition || condition.length === 0) {
+    wrap.innerHTML = '<em style="color:var(--text-faint)">— no explicit condition —</em>';
+    return wrap;
+  }
+  wrap.appendChild(renderConditionList(condition, true));
+  return wrap;
+}
+
+// ---------------------------------------------------------------- items tree
+
+function renderRawValue(value) {
+  if (typeof value === 'string') return escapeHtml(value);
+  return null; // block value handled separately
+}
+
+function renderItems(items, container, isRoot) {
+  if (items.length === 0) {
+    const div = document.createElement('div');
+    div.className = 'empty-body';
+    div.textContent = '(no effect / no ideology set)';
+    container.appendChild(div);
+    return;
+  }
+
+  items.forEach((item, index) => {
+    if (item.kind === 'branch') {
+      const branch = document.createElement('div');
+      branch.className = `branch type-${item.branchType}`;
+
+      const head = document.createElement('div');
+      head.className = 'branch-head';
+      const tag = document.createElement('span');
+      tag.className = `branch-tag ${item.branchType}`;
+      tag.textContent = item.branchType === 'if' ? 'IF' : item.branchType === 'else_if' ? 'ELSE IF' : 'ELSE';
+      head.appendChild(tag);
+      if (item.branchType !== 'else') {
+        head.appendChild(renderCondition(item.condition));
+      }
+      branch.appendChild(head);
+
+      const body = document.createElement('div');
+      body.className = 'branch-body';
+      renderItems(item.items, body);
+      branch.appendChild(body);
+
+      container.appendChild(branch);
+
+    } else if (item.kind === 'ideology') {
+      const row = document.createElement('div');
+      row.className = 'outcome-row';
+      if (isRoot && index === 0) {
+        const defaultTag = document.createElement('span');
+        defaultTag.className = 'default-tag';
+        defaultTag.textContent = 'DEFAULT:';
+        row.appendChild(defaultTag);
+      }
+      const pill = document.createElement('span');
+      pill.className = 'ideology-pill';
+      pill.innerHTML = `
+        <span class="type-chip" style="background:${catColor(item.ideologyType)}">${escapeHtml(item.ideologyType)}</span>
+        <span class="arrow">→</span>
+        <span class="name">${escapeHtml(item.ideologyName)}</span>
+      `;
+      row.appendChild(pill);
+      container.appendChild(row);
+
+    } else if (item.kind === 'traitref') {
+      const row = document.createElement('div');
+      row.className = 'outcome-row traitref-row';
+      const known = !!DATA.traits[item.trait];
+      const btn = document.createElement('button');
+      btn.className = 'traitref-link' + (known ? '' : ' unknown');
+      btn.textContent = `↳ ${item.trait}`;
+      if (known) {
+        btn.addEventListener('click', () => selectTrait(item.trait));
+      } else {
+        btn.disabled = true;
+        btn.title = 'referenced effect, not a category trait';
+      }
+      row.appendChild(btn);
+      if (item.params && item.params.length) {
+        const p = document.createElement('span');
+        p.className = 'traitref-params';
+        p.textContent = '(' + item.params.filter(pe => typeof pe.v === 'string').map(pe => `${pe.k}=${pe.v}`).join(', ') + ')';
+        row.appendChild(p);
+      } else if (item.scalarValue && item.scalarValue !== 'yes') {
+        const p = document.createElement('span');
+        p.className = 'traitref-params';
+        p.textContent = `= ${item.scalarValue}`;
+        row.appendChild(p);
+      }
+      container.appendChild(row);
+
+    } else if (item.kind === 'raw') {
+      const row = document.createElement('div');
+      row.className = 'outcome-row raw-row';
+      if (typeof item.value === 'string') {
+        row.innerHTML = `<span class="k">${escapeHtml(item.key)}</span> ${item.op === '?=' ? '?=' : '='} ${escapeHtml(item.value)}`;
+      } else {
+        const label = document.createElement('div');
+        label.innerHTML = `<span class="k">${escapeHtml(item.key)}</span>:`;
+        row.appendChild(label);
+        row.appendChild(renderConditionList(item.value, false));
+      }
+      container.appendChild(row);
+    }
+  });
+}
+
+// ---------------------------------------------------------------- selection
+
+function selectTrait(fullName) {
+  activeTrait = fullName;
+  buildSidebar(searchEl.value);
+  if (location.hash.slice(1) !== fullName) {
+    history.replaceState(null, '', '#' + fullName);
+  }
+
+  const t = DATA.traits[fullName];
+  document.getElementById('empty-state').style.display = 'none';
+
+  const header = document.getElementById('trait-header');
+  header.style.display = 'flex';
+  header.innerHTML = `
+    <h2>${escapeHtml(t.name)}</h2>
+    <span class="cat-badge" style="background:${catColor(t.category)}">${t.category}</span>
+  `;
+
+  const sub = document.getElementById('trait-sub');
+  sub.style.display = 'block';
+  sub.textContent = CAT_LABELS[t.category] || '';
+
+  const tree = document.getElementById('tree');
+  tree.innerHTML = '';
+  renderItems(t.items, tree, true);
+
+  const footer = document.createElement('div');
+  footer.id = 'footer-note';
+  footer.textContent = 'Branches are evaluated top to bottom exactly as in the source file. "↳ trait_name" rows delegate to another trait\'s own condition chain — click to jump there.';
+  tree.appendChild(footer);
+
+  window.scrollTo(0, 0);
+  document.getElementById('main').scrollTo(0, 0);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+buildSidebar('');
+const initialTrait = decodeURIComponent(location.hash.slice(1));
+if (initialTrait && DATA.traits[initialTrait]) {
+  selectTrait(initialTrait);
+}
+</script>
+
+</body>
+</html>

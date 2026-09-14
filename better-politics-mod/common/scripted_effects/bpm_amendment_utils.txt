@@ -3,6 +3,68 @@
         limit = {
             type = amendment_type:$type$
         }
-        remove_amendment = yes
+        bpm_remove_amendment = yes
     }
+}
+
+bpm_add_sticky_amendment = {
+    type = { save_scope_as = law }
+    $sponsor$ = {
+        save_scope_as = sponsor
+    }
+    owner = {
+        create_container = {
+            parent = this
+            save_scope_as = container
+        }
+
+        add_to_variable_list = {
+            name = bpm_sticky_amendments
+            target = scope:container
+        }
+    }
+
+    scope:container = {
+        set_variable = {
+            name = amendment_type
+            value = amendment_type:$type$
+        }
+        set_variable = {
+            name = sponsor
+            value = scope:sponsor
+        }
+        set_variable = {
+            name = original_parent_type
+            value = scope:law
+        }
+    }
+
+    add_amendment = {
+        type = $type$
+        sponsor = scope:sponsor
+    }
+}
+
+bpm_remove_amendment = {
+    type = { save_scope_as = at }
+    sponsor = { save_scope_as = sponsor }
+    attached_law.type = { save_scope_as = law }
+    attached_law.owner = {
+        random_in_list = {
+            variable = bpm_sticky_amendments
+            limit = {
+                var:amendment_type = scope:at
+                var:sponsor = scope:sponsor
+                var:original_parent_type = { is_same_law_group_as = scope:law }
+            }
+            prev = {
+                remove_list_variable = {
+                    name = bpm_sticky_amendments
+                    target = prev
+                }
+            }
+            destroy_container = yes
+        }
+    }
+    remove_amendment = yes
 }

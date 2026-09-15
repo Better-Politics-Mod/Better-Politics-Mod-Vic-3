@@ -1,33 +1,9 @@
-﻿bpm_clear_hog = {
-    remove_variable = bpm_headofgov
+﻿bpm_update_hog = {
     every_scope_character = {
-        limit = {
-            has_role = bpm_character_role_hog
-        }
+        limit = { has_role = bpm_character_role_hog }
         remove_character_role = bpm_character_role_hog
     }
-}
 
-bpm_set_headofgov_sticky = {
-    set_variable = bpm_headofgov_sticky
-    bpm_make_headofgov = yes
-}
-
-bpm_remove_headofgov_sticky = {
-    remove_variable = bpm_headofgov_sticky
-    owner = {
-        bpm_choose_hog = yes
-    }
-}
-
-bpm_choose_hog_parlelec = {
-    random_interest_group = {
-        limit = {
-            bpm_is_strongest_ig_in_government = yes
-            bpm_interest_group_is_activated = yes
-        }
-        save_scope_as = ranig
-    }
     if = {
         limit = { 
             NOR = {
@@ -50,308 +26,98 @@ bpm_choose_hog_parlelec = {
 
     if = {
         limit = {
-            scope:ranig.leader ?= ruler
+            ruler = var:bpm_headofgov.leader
+        }
+        ordered_scope_character = {
+            limit = {
+                interest_group ?= prev.var:bpm_headofgov
+                is_character_alive = yes
+                is_ruler_of_own_country = no
+            }
+            save_scope_as = selected_char
         }
         if = {
-            # If the current HoG already is the leader of the strongest IG in government & isn't the ruler, we don't need to do anything
-            limit = {
-                NOT = {
-                    AND = {
-                        var:bpm_headofgov ?= {
-                            interest_group = scope:ranig
-                        } 
-                        NOT = { var:bpm_headofgov ?= ruler }
-                    }
-                }
-            }
-            if = {
-                limit = {
-                    scope:ranig = {
-                        has_variable = bpm_attached_hog_non_ruler
-                    }
-                    NOT = { scope:ranig.var:bpm_attached_hog_non_ruler ?= scope:ranig.leader }
-                    NOT = { scope:ranig.var:bpm_attached_hog_non_ruler ?= ruler }
-                }
-                bpm_clear_hog = yes
-                scope:ranig.var:bpm_attached_hog_non_ruler = {
-                    bpm_make_headofgov = yes
-                }
-            }
-            else = {
-                create_character = {
-                    interest_group = scope:ranig
-                    save_scope_as = ranchar
-                }
-                bpm_clear_hog = yes
-                scope:ranchar = { bpm_make_headofgov = yes }
-                scope:ranig = {
-                    set_variable = {
-                        name = bpm_attached_hog_non_ruler
-                        value = scope:ranchar
-                    }
-                }
+            limit = { NOT = { exists = scope:selected_char } }
+            create_character = {
+                interest_group = var:bpm_headofgov
+                save_scope_as = selected_char
             }
         }
+        scope:selected_char = {
+            set_as_interest_group_leader = yes
+        }
     }
-    else = {
-        bpm_clear_hog = yes
-        scope:ranig.leader = {
-            bpm_make_headofgov = yes
+
+    if = {
+        limit = { modifier:country_bpm_unified_executive = no }
+        var:bpm_headofgov.leader ?= {
+            add_character_role = bpm_character_role_hog
+            add_career_length = {role = bpm_character_role_hog years = 100}
         }
     }
 }
 
-bpm_make_headofgov = {
+bpm_set_ig_as_hog = {
     owner = {
-        bpm_clear_hog = yes
         set_variable = {
             name = bpm_headofgov
             value = prev
         }
     }
-    add_character_role = bpm_character_role_hog
-    add_career_length = {role = bpm_character_role_hog years = 100}
 }
-bpm_choose_hog = {
+
+bpm_make_character_historical_hog = {
+    set_variable = bpm_historical_hog
     if = {
         limit = {
-            has_variable = bpm_hog_heir
-            has_law = law_type:law_advisory_body
-            has_law_or_variant = law_type:law_answers_to_legislature
-            OR = {
-                NOT = { exists = var:bpm_headofgov }
-                var:bpm_headofgov = {
-                    is_character_alive = no
-                }
-            }
+            NOT = { has_modifier = bpm_historical_hog }
         }
-        var:bpm_hog_heir ?= {
-            # handle scripted heirs
-            bpm_set_headofgov_sticky = yes
-            if = {
-                limit = {
-                    owner = {
-                        has_law = law_type:law_bakufu
-                    }
-                }
-                set_variable = shogun_var
-            }
-            remove_character_role = bpm_character_role_protege
+        add_modifier = {
+            name = bpm_historical_hog
+            days = normal_modifier_time
         }
-        post_notification = bpm_dictatorial_hog_top
-        remove_variable = bpm_hog_heir
-        bpm_update_hog_heir = yes
     }
-    else_if = {
+    if = {
+        limit = { NOT = { exists = interest_group } }
+        set_interest_group = owner.var:bpm_headofgov
+    }
+    if = {
         limit = {
-            bpm_is_hoshog = yes
+            NOT = { interest_group.leader = this }
         }
-        bpm_clear_hog = yes
-        set_variable = {
-            name = bpm_headofgov
-            value = ruler
+        set_as_interest_group_leader = yes
+    }
+}
+
+bpm_initialize_hog = {
+    if = {
+        limit = {
+            any_scope_character = { has_modifier = bpm_historical_hog }
+        }
+        random_scope_character = {
+            limit = { has_modifier = bpm_historical_hog }
+            interest_group = {
+                bpm_set_ig_as_hog = yes
+            }
         }
     }
     else = {
-        bpm_choose_hog_others = yes
-    }
-    if = {
-		limit = {
-            has_law_or_variant = law_type:law_answers_to_legislature
-            has_law = law_type:law_advisory_body
-			var:bpm_headofgov ?= {
-                is_adult = no
-                NOT = {has_template = JAP_iemochi_tokugawa} # has his own event
-            }
-		}
-		owner = {
-			trigger_event = {
-				id = hog_regency.1
-				popup = yes
-			}
-		}
-	}
-    if = {
-        limit = {
-            c:JAP ?= this
-        }
-        var:bpm_headofgov ?= {
-            character_japan_ruler_succession_chain_effect = yes
-        }
-    }
-}
-
-bpm_choose_hog_others = {
-    if = {
-        limit = {
-            NOT = {
-                var:bpm_headofgov ?= {
-                    has_variable = bpm_headofgov_sticky
-                }
-            }
-            NOT = {
-                owner = {
-                    var:bpm_headofgov ?= {
-                        has_variable = bpm_headofgov_sticky
-                    }
-                }
-            }
-        }
-        if = {
+        ordered_interest_group = {
             limit = {
-                modifier:country_bpm_hog_top_parlelec = yes
-                has_law = law_type:law_advisory_body
-                NOT = { has_variable = bpm_hog_heir }
+                is_in_government = yes
             }
-            var:bpm_headofgov ?= {
-                set_variable = bpm_headofgov_sticky
+            alternative_limit = {
+                always = yes
             }
-            bpm_update_hog_heir = yes
-        }
-        else_if = {
-            limit = {
-                modifier:country_bpm_hog_top_parlelec = yes
-            }
-            bpm_choose_hog_parlelec = yes
-        }
-        else_if = {
-            limit = {
-                NAND = {
-                    has_variable = bpm_headofgov
-		            exists = var:bpm_headofgov
-                }
-            }
-            bpm_clear_hog = yes
-            set_variable = {
-                name = bpm_headofgov
-                value = ruler
-            }
+            position = 0
+            order_by = ig_clout
+            bpm_set_ig_as_hog = yes
         }
     }
-
-    bpm_reload_interim_penalty = yes
+    bpm_update_hog = yes
 }
 
-bpm_update_hog_heir = {
-    if = {
-        limit = {
-            has_variable = bpm_hog_heir
-            OR = {
-                NOT = {exists = var:bpm_hog_heir}
-                var:bpm_hog_heir ?= {
-                    is_character_alive = no
-                }
-            }
-        }
-        remove_variable = bpm_hog_heir
-    }
-    
-    if = {
-        limit = {
-            NOT = {
-                has_variable = bpm_hog_heir
-            }
-            has_law_or_variant = law_type:law_answers_to_legislature
-            has_law = law_type:law_advisory_body
-        }
-        bpm_create_hog_heir_hook = yes
-    }
-    else_if = {
-        limit = {
-            has_variable = bpm_hog_heir
-            NAND = {
-                has_law_or_variant = law_type:law_answers_to_legislature
-                has_law = law_type:law_advisory_body
-            }
-        }
-        remove_variable = bpm_hog_heir
-        every_scope_character = {
-			limit = {has_role = bpm_character_role_protege}
-			remove_character_role = bpm_character_role_protege
-		}
-    }
-}
-
-bpm_appoint_as_hog = {
-    save_scope_as = char_in_question
-    custom_tooltip = {
-        text = appoint_as_hog_tt
-        bpm_set_headofgov_sticky = yes
-        set_variable = bpm_appointed_headofgov
-        owner = { bpm_reload_interim_penalty = yes }
-    }
-}
-
-bpm_unappoint_as_hog = {
-    remove_variable = bpm_headofgov_sticky
-    remove_variable = bpm_appointed_headofgov
-    owner = { 
-        set_variable = { name = bpm_headofgov value = ruler } 
-    }
-    owner = {
-        bpm_clear_hog = yes
-        bpm_choose_hog = yes 
-    }
-}
-
-bpm_appoint_as_hog_heir = {
-    save_scope_as = char_in_question
-    custom_tooltip = {
-        text = appoint_as_hog_heir_tt
-        owner = {
-            set_variable = {
-		    		name = bpm_hog_heir
-		    		value = prev
-		    }
-        }
-    }
-}
-
-bpm_reload_interim_penalty = {
-    if = {
-        limit = {
-            bpm_ruler_is_acting_as_interim_head_of_government = yes
-            NOT = {
-                has_modifier = bpm_interim_government_synergy_penalty
-            }
-        }
-        add_modifier = { name = bpm_interim_government_synergy_penalty }
-    }
-    else_if = {
-        limit = {
-            NOT = { bpm_ruler_is_acting_as_interim_head_of_government = yes }
-            has_modifier = bpm_interim_government_synergy_penalty
-        }
-        remove_modifier = bpm_interim_government_synergy_penalty
-    }
-}
-
-bpm_on_new_hog_dictatorship = {
-    if = {
-        limit = {
-            has_law = law_type:law_advisory_body
-            has_law_or_variant = law_type:law_answers_to_legislature
-            has_game_started = yes
-        }
-
-        bpm_create_hog_heir_hook = yes
-        var:bpm_hog_heir ?= {
-            bpm_set_headofgov_sticky = yes
-            if = {
-                limit = {
-                    owner = {
-                        has_law = law_type:law_bakufu
-                    }
-                }
-                set_variable = shogun_var
-            }
-            remove_character_role = bpm_character_role_protege
-        }
-        bpm_create_hog_heir_hook = yes
-    }
-}
-
-bpm_choose_regent = {
+bpm_update_regent = {
     if = {
         limit = {
             OR = {
@@ -567,14 +333,14 @@ bpm_set_character_as_regent = {
 
 bpm_start_regency = {
     set_variable = bpm_regency_init
-	bpm_choose_regent = yes
+	bpm_update_regent = yes
 	var:bpm_regent = {
 		save_scope_as = regent_scope
 	}
     remove_variable = bpm_regency_init
 }
 
-bpm_choose_acting_hog = {
+bpm_update_acting_hog = {
     if = {
         limit = {
             OR = {
@@ -596,21 +362,21 @@ bpm_choose_acting_hog = {
                     interest_group = {
                         is_in_government = yes
                     }
-                    bpm_char_can_be_hog = yes
+                    bpm_char_can_be_acting_hog = yes
                 }
             }
             ordered_interest_group = {
                 limit = {
                         is_in_government = yes
                         any_scope_character = {
-                            bpm_char_can_be_hog = yes
+                            bpm_char_can_be_acting_hog = yes
                         }
                     }
                 order_by = ig_clout
                 position = 0
                 ordered_scope_character = {
                     limit = {
-                        bpm_char_can_be_hog = yes
+                        bpm_char_can_be_acting_hog = yes
                     }
                     order_by = prominence
                     position = 0
@@ -658,7 +424,7 @@ bpm_set_character_as_acting_hog = {
 
 bpm_start_acting_hog = {
     set_variable = bpm_acting_hog_init
-	bpm_choose_acting_hog = yes
+	bpm_update_acting_hog = yes
 	var:bpm_acting_hog = {
 		save_scope_as = acting_hog_scope
 	}
@@ -792,19 +558,4 @@ bpm_end_acting_hog = {
         limit = {has_variable = bpm_acting_hog}
         remove_variable = bpm_acting_hog
     }
-}
-
-bpm_set_character_as_protege = {
-    owner = {
-        every_scope_character = {
-            limit = {has_role = bpm_character_role_protege}
-            remove_character_role = bpm_character_role_protege
-        }
-		set_variable = {
-			name = bpm_hog_heir
-			value = prev
-		}
-	}
-	add_character_role = bpm_character_role_protege
-    add_career_length = {role = bpm_character_role_protege years = 100}
 }

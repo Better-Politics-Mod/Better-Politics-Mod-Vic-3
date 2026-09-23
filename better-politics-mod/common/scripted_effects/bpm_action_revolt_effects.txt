@@ -8,8 +8,7 @@ bpm_action_revolt_do = {
 		bpm_revolt_progress = yes
 		if = {
 			limit = {
-				"variable_map(bpm_revolt_progress|scope:movement)" >= 100
-				scope:movement = { bpm_movement_is_revolting = no } # this should be moved to 'bloodless'
+				scope:action.var:bpm_revolt_progress >= 100
 			}
 			bpm_nation_at_crossroads = yes
 		}
@@ -17,121 +16,102 @@ bpm_action_revolt_do = {
 }
 
 bpm_revolt_progress = {
-	if = {
-		limit = {
-			NOT = {
-				is_key_in_variable_map = {
-					name = bpm_revolt_progress
-					target = scope:movement
+	scope:action = {
+		if = {
+			limit = {
+				NOT = {
+					has_variable = bpm_revolt_progress
 				}
 			}
-		}
-		update_variable_map_value = {
-			name = bpm_revolt_progress
-			key = scope:movement
-			value = bpm_revolt_progress_value
-		}
-	}
-	else = {
-		set_local_variable = {
-			name = temp
-			value = {
-				value = "variable_map(bpm_revolt_progress|scope:movement)"
-				add = bpm_revolt_progress_value
+			set_variable = {
+				name = bpm_revolt_progress
+				value = prev.bpm_revolt_progress_value
 			}
 		}
-		update_variable_map_value = {
-			name = bpm_revolt_progress
-			key = scope:movement
-			value = local_var:temp
+		else = {
+			change_variable = {
+				name = bpm_revolt_progress
+				add = prev.bpm_revolt_progress_value
+			}
 		}
-		remove_local_variable = temp
-	}
 
-	if = {
-		limit = {
-			"variable_map(bpm_revolt_progress|scope:movement)" > 100
-		}
-		update_variable_map_value = {
-			name = bpm_revolt_progress
-			key = scope:movement
-			value = 100
+		if = {
+			limit = {
+				var:bpm_revolt_progress > 100
+			}
+			set_variable = {
+				name = bpm_revolt_progress
+				value = 100
+			}
 		}
 	}
 }
 
 # revcell varmap -> determines the cell in the state
 # revcell_progress varmap -> progress to up or down
-# recently subsided varlist
 
 bpm_shrink_or_grow_in_states = {
 	if = {
 		limit = {
-			any_scope_state = {
-				is_key_in_variable_map = {
-					name = bpm_revcells
-					target = scope:movement
-				}
+			scope:action = {
+				has_variable_map = bpm_revcells
 			}
 		}
-		every_scope_state = {
-			limit = {
-				is_key_in_variable_map = {
-					name = bpm_revcells
-					target = scope:movement
-				}
+		scope:action = {
+			every_key_in_variable_map = {
+				variable = bpm_revcells
+				bpm_increase_or_shrink_cell_level = yes
 			}
-			bpm_increase_or_shrink_cell_level = yes
 		}
 	}
 	else = {
-		update_variable_map_value = {
-			name = bpm_revolt_progress
-			key = scope:movement
-			value = 0
+		scope:action = {
+			set_variable = {
+				name = bpm_revolt_progress
+				value = 0
+			}
 		}
 		random_scope_state = {
 			limit = {
 				turmoil >= 0.25
-				bpm_revcell_recently_subsided = no
 			}
-			bpm_increase_cell_level = yes
+			state_region = {
+				bpm_increase_cell_level = yes
+			}
 		}
 	}
 }
 
+# Expects that current scope is a state region
 bpm_increase_revcell = {
-	if = {
-		limit = {
-			NOT = {
-				is_key_in_variable_map = {
-					name = bpm_revcells
-					target = scope:movement
+	scope:action = {
+		if = {
+			limit = {
+				bpm_has_revcell = no
+			}
+			update_variable_map_value = {
+				name = bpm_revcells
+				key = prev
+				value = 1
+			}
+			post_notification = bpm_revolution_appears
+		}
+		else = {
+			set_local_variable = {
+				name = new_level
+				value = {
+					value = "variable_map(bpm_revcells|prev)"
+					add = 1
 				}
 			}
-		}
-		update_variable_map_value = {
-			name = bpm_revcells
-			key = scope:movement
-			value = 1
-		}
-		post_notification = bpm_revolution_appears
-	}
-	else = {
-		set_local_variable = {
-			name = new_level
-			value = {
-				value = "variable_map(bpm_revcells|scope:movement)"
-				add = 1
+			update_variable_map_value = {
+				name = bpm_revcells
+				key = prev
+				value = local_var:new_level
 			}
+			remove_local_variable = new_level
+			post_notification = bpm_revolution_grows
 		}
-		update_variable_map_value = {
-			name = bpm_revcells
-			key = scope:movement
-			value = local_var:new_level
-		}
-		remove_local_variable = new_level
-		post_notification = bpm_revolution_grows
 	}
 }
 
@@ -140,20 +120,10 @@ bpm_reduce_revcell = {
 		limit = {
 			bpm_has_revcell_level = { lvl = 1 }
 		}
-		remove_from_variable_map = {
-			name = bpm_revcells
-			key = scope:movement
-		}
-		add_to_variable_list = {
-			name = bpm_revcell_recently_subsided
-			target = scope:movement
-			months = 24
-		}
-		OWNER = {
-			add_to_variable_list = {
-				name = bpm_revcell_recently_subsided
-				target = scope:movement
-				months = 24
+		scope:action = {
+			remove_from_variable_map = {
+				name = bpm_revcells
+				key = prev
 			}
 		}
 	}
@@ -161,19 +131,21 @@ bpm_reduce_revcell = {
 		limit = {
 			bpm_has_revcell = yes
 		}
-		set_local_variable = {
-			name = new_level
-			value = {
-				value = "variable_map(bpm_revcells|scope:movement)"
-				add = -1
+		scope:action = {
+			set_local_variable = {
+				name = new_level
+				value = {
+					value = "variable_map(bpm_revcells|prev)"
+					add = -1
+				}
 			}
+			update_variable_map_value = {
+				name = bpm_revcells
+				key = prev
+				value = local_var:new_level
+			}
+			remove_local_variable = new_level
 		}
-		update_variable_map_value = {
-			name = bpm_revcells
-			key = scope:movement
-			value = local_var:new_level
-		}
-		remove_local_variable = new_level
 	}
 }
 
@@ -200,14 +172,20 @@ bpm_increase_cell_level = {
 		limit = {
 			bpm_has_revcell_level = { lvl = 3 }
 			any_neighbouring_state = {
-				bpm_revcell_can_be_spread_to = yes
+				state_region = {
+					bpm_revcell_can_be_spread_to = yes
+				}
 			}
 		}
 		random_neighbouring_state = {
 			limit = {
-				bpm_revcell_can_be_spread_to = yes
+				state_region = {
+					bpm_revcell_can_be_spread_to = yes
+				}
 			}
-			bpm_increase_cell_level_spillover = yes
+			state_region = {
+				bpm_increase_cell_level_spillover = yes
+			}
 		}
 	}
 	else_if = {
@@ -217,7 +195,9 @@ bpm_increase_cell_level = {
 			market = {
 				any_scope_country = {
 					any_scope_state = {
-						bpm_revcell_can_be_spread_to = yes
+						state_region = {
+							bpm_revcell_can_be_spread_to = yes
+						}
 					}
 				}
 			}
@@ -226,20 +206,16 @@ bpm_increase_cell_level = {
 			random_scope_country = {
 				random_scope_state = {
 					limit = {
-						bpm_revcell_can_be_spread_to = yes
+						state_region = {
+							bpm_revcell_can_be_spread_to = yes
+						}
 					}
-					bpm_increase_cell_level_spillover = yes
+					state_region = {
+						bpm_increase_cell_level_spillover = yes
+					}
 				}
 			}
 		}
-	}
-}
-
-
-bpm_destroy_all_cells = {
-	remove_from_variable_map = {
-		name = bpm_revcells
-		key = scope:movement
 	}
 }
 
@@ -250,7 +226,7 @@ bpm_increase_or_shrink_tt = {
 		0 = {
 			modifier = {
 				# static for now
-				add = bpm_cell_shrinking_chance 
+				add = bpm_cell_shrinking_chance
 			}
 			set_variable = bpm_shrinkmarker
 			custom_tooltip = "bpm_cell_shrinks"
@@ -272,53 +248,60 @@ bpm_increase_or_shrink_cell_level = {
 	if = {
 		limit = {
 			NOT = {
-				is_key_in_variable_map = {
-					name = bpm_revcell_progress
-					target = scope:movement
+				scope:action = {
+					is_key_in_variable_map = {
+						name = bpm_revcell_progress
+						target = prev
+					}
 				}
 			}
 		}
-		update_variable_map_value = {
-			name = bpm_revcell_progress
-			key = scope:movement
-			value = bpm_revcell_base_progress
+		scope:action = {
+			update_variable_map_value = {
+				name = bpm_revcell_progress
+				key = prev
+				value = bpm_revcell_base_progress
+			}
 		}
 	}
 	bpm_increase_or_shrink_tt = yes
 	set_local_variable = {
 		name = current_value_p1
 		value = {
-			value = "variable_map(bpm_revcell_progress|scope:movement)"
+			value = "variable_map(scope:action.bpm_revcell_progress|this)"
 			add = 1
 		}
 	}
 	set_local_variable = {
 		name = current_value_m1
 		value = {
-			value = "variable_map(bpm_revcell_progress|scope:movement)"
+			value = "variable_map(scope:action.bpm_revcell_progress|this)"
 			add = -1
 		}
 	}
-	#==
 	if = {
 		limit = {
-			"variable_map(bpm_revcell_progress|scope:movement)" <= bpm_revcell_progress_min
+			"variable_map(scope:action.bpm_revcell_progress|this)" <= bpm_revcell_progress_min
 		}
-		update_variable_map_value = {
-			name = bpm_revcell_progress
-			key = scope:movement
-			value = bpm_revcell_base_progress
+		scope:action = {
+			update_variable_map_value = {
+				name = bpm_revcell_progress
+				key = prev
+				value = bpm_revcell_base_progress
+			}
 		}
 		bpm_reduce_cell_level = yes
 	}
 	else_if = {
 		limit = {
-			"variable_map(bpm_revcell_progress|scope:movement)" >= bpm_revcell_progress_max
+			"variable_map(scope:action.bpm_revcell_progress|this)" >= bpm_revcell_progress_max
 		}
-		update_variable_map_value = {
-			name = bpm_revcell_progress
-			key = scope:movement
-			value = bpm_revcell_base_progress
+		scope:action = {
+			update_variable_map_value = {
+				name = bpm_revcell_progress
+				key = prev
+				value = bpm_revcell_base_progress
+			}
 		}
 		bpm_increase_cell_level = yes
 	}
@@ -330,20 +313,24 @@ bpm_increase_or_shrink_cell_level = {
 				turmoil < 0.25
 			}
 		}
-		update_variable_map_value = {
-			name = bpm_revcell_progress
-			key = scope:movement
-			value = local_var:current_value_m1
+		scope:action = {
+			update_variable_map_value = {
+				name = bpm_revcell_progress
+				key = scope:movement
+				value = local_var:current_value_m1
+			}
 		}
 	}
 	else_if = {
 		limit = {
 			has_variable = bpm_growmarker
 		}
-		update_variable_map_value = {
-			name = bpm_revcell_progress
-			key = scope:movement
-			value = local_var:current_value_p1
+		scope:action = {
+			update_variable_map_value = {
+				name = bpm_revcell_progress
+				key = scope:movement
+				value = local_var:current_value_p1
+			}
 		}
 	}
 
@@ -375,7 +362,7 @@ bpm_nation_at_crossroads = {
 	}
 	else = {
 		# 'Civil War'
-		set_variable = { name = bpm_cw_mv value = scope:movement }
+		set_variable = { name = bpm_cw_act value = scope:action }
 		trigger_event = { id = bpm_revolution_results.100 popup = yes }
 	}
 }
@@ -425,7 +412,9 @@ bpm_start_civil_war = {
 		limit = {
 			NOT = {
 				any_scope_state = {
-					NOT = { bpm_has_revcell = yes }
+					state_region = {
+						NOT = { bpm_has_revcell = yes }
+					}
 				}
 			}
 		}
@@ -440,7 +429,9 @@ bpm_start_civil_war = {
 
 	every_scope_state = {
 		limit = {
-			bpm_has_revcell = yes
+			state_region = {
+				bpm_has_revcell = yes
+			}
 			OR = {
 				NOT = { is_capital = yes }
 				NOT = { has_local_variable = bpm_civil_war_has_all }
@@ -478,12 +469,8 @@ bpm_start_civil_war = {
 		}
 		save_scope_as = new_country
 		set_variable = {
-			name = bpm_country_revolutionary_movement
-			value = scope:movement
-		}
-		set_variable = {
-			name = civil_war_type_var
-			value = scope:movement.type
+			name = bpm_country_revolutionary_action
+			value = scope:action
 		}
 		set_variable = {
 			name = bpm_civil_war_origin
@@ -514,10 +501,10 @@ bpm_start_civil_war = {
 		}
 		set_state_owner = scope:new_country
 	}
-	scope:new_country = { create_diplomatic_play = { 
+	scope:new_country = { create_diplomatic_play = {
 		target_country = scope:origin_country
 		type = bpm_dp_revolution
-		add_war_goal = { holder = scope:origin_country type = bpm_civil_war_preserve target_country = scope:new_country  }  
+		add_war_goal = { holder = scope:origin_country type = bpm_civil_war_preserve target_country = scope:new_country  }
 	} }
 	scope:new_country = {
 		if = {
@@ -534,12 +521,12 @@ bpm_start_civil_war = {
 				}
 				save_scope_as = target_country
 				prev = {
-					create_diplomatic_play = { 
+					create_diplomatic_play = {
 						target_country = scope:target_country
 						type = dp_revolution
 						escalation = 80
 						annex_as_civil_war = yes
-					}  
+					}
 				}
 			}
 		}
@@ -595,7 +582,7 @@ bpm_do_jank_civil_war_end = {
 # scope:creator_country
 # scope:movement
 bpm_on_civil_war_end = {
-	var:bpm_holder = { save_scope_as = creator_country } 
+	var:bpm_holder = { save_scope_as = creator_country }
 	var:bpm_target = { save_scope_as = target_country }
 	scope:creator_country = {
 		every_interest_group = {

@@ -1,55 +1,94 @@
 ﻿bpm_update_hog = {
-    every_scope_character = {
-        limit = { has_role = bpm_character_role_hog }
-        remove_character_role = bpm_character_role_hog
-    }
-
-    if = {
-        limit = { 
-            NOR = {
-                AND = {
-                    modifier:country_bpm_hog_selected_by_legislature = yes
-                    modifier:country_bpm_ruler_complete_veto_enabled = yes
-                }
-                bpm_country_has_parliamentary_electoral_system = yes
-            }
-        }
-        ordered_interest_group = {
-            limit = {
-                is_in_government = yes
-            }
-            position = 0
-            order_by = ig_clout # PLACEHOLDER
-            bpm_set_ig_as_hog = yes
-        }
-    }
-
     if = {
         limit = {
-            ruler = var:bpm_headofgov.leader
-        }
-        ordered_scope_character = {
-            limit = {
-                interest_group ?= prev.var:bpm_headofgov
-                is_character_alive = yes
-                is_ruler_of_own_country = no
+            OR = {
+                NOT = { exists = var:bpm_headofgov }
+                var:bpm_headofgov ?= {
+                    is_character_alive = no
+                }
             }
-            save_scope_as = selected_char
         }
         if = {
-            limit = { NOT = { exists = scope:selected_char } }
-            create_character = {
-                interest_group = var:bpm_headofgov
-                save_scope_as = selected_char
+            limit = { modifier:country_bpm_unified_executive = yes }
+            random_scope_character = {
+                limit = { bpm_character_is_hos = yes }
+                bpm_set_character_as_hog = yes
             }
         }
-        scope:selected_char = {
-            set_as_interest_group_leader = yes
+        else = {
+            if = {
+                limit = {
+                    any_scope_character = {
+                        interest_group = {
+                            is_in_government = yes
+                        }
+                        bpm_char_can_be_acting_hog = yes
+                    }
+                }
+                ordered_interest_group = {
+                    limit = {
+                            is_in_government = yes
+                            any_scope_character = {
+                                bpm_char_can_be_acting_hog = yes
+                            }
+                        }
+                    order_by = ig_clout
+                    position = 0
+                    ordered_scope_character = {
+                        limit = {
+                            bpm_char_can_be_acting_hog = yes
+                        }
+                        order_by = prominence
+                        position = 0
+                        bpm_set_character_as_acting_hog = yes
+                    }
+                }
+            }
+            else = {
+                ordered_interest_group = {
+                    limit = {
+                        is_in_government = yes
+                    }
+                    order_by = ig_clout
+                    position = 0
+                    save_temporary_scope_as = biggest_ig
+                }
+                create_character = {
+                    age = 23
+                    interest_group = scope:biggest_ig
+                    on_created = {
+                        bpm_set_character_as_acting_hog = yes
+                    }
+                }
+            }
         }
     }
 
     if = {
         limit = { modifier:country_bpm_unified_executive = no }
+        if = {
+            limit = {
+                ruler = var:bpm_headofgov.leader
+            }
+            ordered_scope_character = {
+                limit = {
+                    interest_group ?= prev.var:bpm_headofgov
+                    is_character_alive = yes
+                    is_ruler_of_own_country = no
+                }
+                save_scope_as = selected_char
+            }
+            if = {
+                limit = { NOT = { exists = scope:selected_char } }
+                create_character = {
+                    interest_group = var:bpm_headofgov
+                    save_scope_as = selected_char
+                }
+            }
+            scope:selected_char = {
+                set_as_interest_group_leader = yes
+            }
+        }
         var:bpm_headofgov.leader ?= {
             add_character_role = bpm_character_role_hog
             add_career_length = {role = bpm_character_role_hog years = 100}
@@ -57,7 +96,7 @@
     }
 }
 
-bpm_set_ig_as_hog = {
+bpm_set_character_as_hog = {
     owner = {
         set_variable = {
             name = bpm_headofgov
@@ -87,34 +126,6 @@ bpm_make_character_historical_hog = {
         }
         set_as_interest_group_leader = yes
     }
-}
-
-bpm_initialize_hog = {
-    if = {
-        limit = {
-            any_scope_character = { has_modifier = bpm_historical_hog }
-        }
-        random_scope_character = {
-            limit = { has_modifier = bpm_historical_hog }
-            interest_group = {
-                bpm_set_ig_as_hog = yes
-            }
-        }
-    }
-    else = {
-        ordered_interest_group = {
-            limit = {
-                is_in_government = yes
-            }
-            alternative_limit = {
-                always = yes
-            }
-            position = 0
-            order_by = ig_clout
-            bpm_set_ig_as_hog = yes
-        }
-    }
-    bpm_update_hog = yes
 }
 
 bpm_update_regent = {

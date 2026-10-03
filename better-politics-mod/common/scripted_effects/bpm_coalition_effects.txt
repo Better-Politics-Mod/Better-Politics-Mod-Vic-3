@@ -40,6 +40,11 @@ bpm_ig_decide_strategy = {
 	clear_saved_scope = selected_strategy
 }
 
+
+# If friendly action clout > 50%
+# or friendly action clout > 25% and hostile action clout = 0%
+# then the IG will join the action
+
 bpm_ig_select_action = {
 	# get what action type this IG is most attracted to
 	ordered_in_global_list = {
@@ -52,6 +57,26 @@ bpm_ig_select_action = {
 
 		save_scope_as = selected_action_type
 	}
+
+	if = {
+		limit = {
+			NOT = { exists = scope:selected_action_type }
+		}
+		every_in_list = {
+			variable = bpm_active_actions
+			limit = {
+				is_target_in_variable_list = {
+					name = bpm_actively_involved
+					target = scope:ig
+				}
+			}
+			remove_list_variable = {
+				name = bpm_actively_involved
+				target = scope:ig
+			}
+		}
+	}
+
 
 	# if the IG wants to do the same action as currently
 	# we just do nothing
@@ -79,46 +104,87 @@ bpm_ig_select_action = {
 			}
 		}
 
-		scope:country = {
-			create_container = {
-				parent = scope:country
-				tags = { bpm_action }
-				save_scope_as = created_action
+		every_in_list = {
+			variable = bpm_active_actions
+			limit = {
+				var:bpm_action_type ?= scope:selected_action_type
+				OR = {
+					bpm_friendly_action_clout > 0.5
+					AND = {
+						bpm_friendly_action_clout > 0.25
+						bpm_hostile_action_clout < 0.01
+					}
+				}
 			}
+			save_scope_as = chosen_action
 		}
 
-		scope:created_action = {
-			add_to_variable_list = {
-				name = bpm_actively_involved
-				target = scope:ig
+		if = {
+			limit = {
+				NOT = { exists = scope:chosen_action }
 			}
-			set_variable = {
-				name = bpm_action_type
-				value = scope:selected_action_type
+			scope:country = {
+				create_container = {
+					parent = scope:country
+					tags = { bpm_action }
+					save_scope_as = created_action
+				}
 			}
-		}
-		
-		scope:ig = {
-			set_variable = {
-				name = bpm_action
-				value = scope:created_action
-			}
-		}
 
-		scope:country = {
-			add_to_variable_list = {
-				name = bpm_active_actions
-				target = scope:created_action
+			scope:created_action = {
+				add_to_variable_list = {
+					name = bpm_actively_involved
+					target = scope:ig
+				}
+				set_variable = {
+					name = bpm_action_type
+					value = scope:selected_action_type
+				}
 			}
-		}
+			
+			scope:ig = {
+				set_variable = {
+					name = bpm_action
+					value = scope:created_action
+				}
+			}
 
-		scope:created_action = {
-			save_scope_as = current_action
-		}
+			scope:country = {
+				add_to_variable_list = {
+					name = bpm_active_actions
+					target = scope:created_action
+				}
+			}
 
-		clear_saved_scope = created_action
-		clear_saved_scope = selected_action_type
+			scope:created_action = {
+				save_scope_as = current_action
+			}
+
+			clear_saved_scope = created_action
+			clear_saved_scope = selected_action_type
+		}
+		else = {
+			scope:chosen_action = {
+				add_to_variable_list = {
+					name = bpm_actively_involved
+					target = scope:ig
+				}
+			}
+			scope:ig = {
+				set_variable = {
+					name = bpm_action
+					value = scope:chosen_action
+				}
+			}
+
+			scope:chosen_action = {
+				save_scope_as = current_action
+			}
+
+			clear_saved_scope = chosen_action
+		}
 	}
+
 
 	# An IG can only be actively involved in one action at a time
 	every_in_list = {

@@ -41,11 +41,27 @@ bpm_ig_decide_strategy = {
 }
 
 
+#=================== SELECT ACTION ===================
+
+
 # If friendly action clout > 50%
 # or friendly action clout > 25% and hostile action clout = 0%
 # then the IG will join the action
 
 bpm_ig_select_action = {
+	bpm_ig_find_preferred_action_type = yes
+	bpm_ig_leave_actions_if_no_preference = yes
+
+	bpm_ig_switch_to_selected_action = yes
+
+	bpm_ig_leave_other_actions = yes
+
+	clear_saved_scope = current_action
+}
+
+# scope:ig
+# saves scope:selected_action_type if any action has attraction > 0
+bpm_ig_find_preferred_action_type = {
 	# get what action type this IG is most attracted to
 	ordered_in_global_list = {
 		limit = {
@@ -57,7 +73,10 @@ bpm_ig_select_action = {
 
 		save_scope_as = selected_action_type
 	}
+}
 
+# scope:ig, scope:country
+bpm_ig_leave_actions_if_no_preference = {
 	if = {
 		limit = {
 			NOT = { exists = scope:selected_action_type }
@@ -76,8 +95,11 @@ bpm_ig_select_action = {
 			}
 		}
 	}
+}
 
-
+# scope:ig, scope:country
+# saves scope:current_action
+bpm_ig_switch_to_selected_action = {
 	# if the IG wants to do the same action as currently
 	# we just do nothing
 	# if the IG wants to do a different action as currently
@@ -104,88 +126,108 @@ bpm_ig_select_action = {
 			}
 		}
 
-		every_in_list = {
-			variable = bpm_active_actions
-			limit = {
-				var:bpm_action_type ?= scope:selected_action_type
-				OR = {
-					bpm_friendly_action_clout > 0.5
-					AND = {
-						bpm_friendly_action_clout > 0.25
-						bpm_hostile_action_clout < 0.01
-					}
-				}
-			}
-			save_scope_as = chosen_action
-		}
+		bpm_ig_find_joinable_action = yes
 
 		if = {
 			limit = {
 				NOT = { exists = scope:chosen_action }
 			}
-			scope:country = {
-				create_container = {
-					parent = scope:country
-					tags = { bpm_action }
-					save_scope_as = created_action
-				}
-			}
-
-			scope:created_action = {
-				add_to_variable_list = {
-					name = bpm_actively_involved
-					target = scope:ig
-				}
-				set_variable = {
-					name = bpm_action_type
-					value = scope:selected_action_type
-				}
-			}
-			
-			scope:ig = {
-				set_variable = {
-					name = bpm_action
-					value = scope:created_action
-				}
-			}
-
-			scope:country = {
-				add_to_variable_list = {
-					name = bpm_active_actions
-					target = scope:created_action
-				}
-			}
-
-			scope:created_action = {
-				save_scope_as = current_action
-			}
-
-			clear_saved_scope = created_action
-			clear_saved_scope = selected_action_type
+			bpm_ig_create_selected_action = yes
 		}
 		else = {
-			scope:chosen_action = {
-				add_to_variable_list = {
-					name = bpm_actively_involved
-					target = scope:ig
+			bpm_ig_join_chosen_action = yes
+		}
+	}
+}
+
+# scope:selected_action_type
+# saves scope:chosen_action if an existing action of that type is friendly enough to join
+bpm_ig_find_joinable_action = {
+	every_in_list = {
+		variable = bpm_active_actions
+		limit = {
+			var:bpm_action_type ?= scope:selected_action_type
+			OR = {
+				bpm_friendly_action_clout > 0.5
+				AND = {
+					bpm_friendly_action_clout > 0.25
+					bpm_hostile_action_clout < 0.01
 				}
 			}
-			scope:ig = {
-				set_variable = {
-					name = bpm_action
-					value = scope:chosen_action
-				}
-			}
+		}
+		save_scope_as = chosen_action
+	}
+}
 
-			scope:chosen_action = {
-				save_scope_as = current_action
-			}
-
-			clear_saved_scope = chosen_action
+# scope:ig, scope:country, scope:selected_action_type
+# saves scope:current_action
+bpm_ig_create_selected_action = {
+	scope:country = {
+		create_container = {
+			parent = scope:country
+			tags = { bpm_action }
+			save_scope_as = created_action
 		}
 	}
 
+	scope:created_action = {
+		add_to_variable_list = {
+			name = bpm_actively_involved
+			target = scope:ig
+		}
+		set_variable = {
+			name = bpm_action_type
+			value = scope:selected_action_type
+		}
+	}
+	
+	scope:ig = {
+		set_variable = {
+			name = bpm_action
+			value = scope:created_action
+		}
+	}
 
+	scope:country = {
+		add_to_variable_list = {
+			name = bpm_active_actions
+			target = scope:created_action
+		}
+	}
+
+	scope:created_action = {
+		save_scope_as = current_action
+	}
+
+	clear_saved_scope = created_action
+	clear_saved_scope = selected_action_type
+}
+
+# scope:ig, scope:chosen_action
+# saves scope:current_action
+bpm_ig_join_chosen_action = {
+	scope:chosen_action = {
+		add_to_variable_list = {
+			name = bpm_actively_involved
+			target = scope:ig
+		}
+	}
+	scope:ig = {
+		set_variable = {
+			name = bpm_action
+			value = scope:chosen_action
+		}
+	}
+
+	scope:chosen_action = {
+		save_scope_as = current_action
+	}
+
+	clear_saved_scope = chosen_action
+}
+
+# scope:ig, scope:current_action (optional)
+bpm_ig_leave_other_actions = {
 	# An IG can only be actively involved in one action at a time
 	every_in_list = {
 		variable = bpm_active_actions
@@ -203,11 +245,9 @@ bpm_ig_select_action = {
 			target = scope:ig
 		}
 	}
-
-	clear_saved_scope = current_action
 }
 
-
+#=================== DO ACTIONS ===================
 
 
 bpm_actions_weekly = {

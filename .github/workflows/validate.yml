@@ -1,10 +1,12 @@
 ﻿name: Validation
+
 permissions:
   contents: read
   packages: write
   checks: write
 
 on:
+  # pull_request_target (not pull_request) so PRs from forks can use VALIDATION_TOKEN
   pull_request_target:
     branches:
       - main
@@ -17,13 +19,16 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         # If your repository uses lfs include this property
         with:
-          allow-unsafe-pr-checkout: true
+          # pull_request_target checks out the base branch by default; validate the PR head instead
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
           lfs: 'true'
 
       - name: Checkout Validation
@@ -49,7 +54,7 @@ jobs:
           mod-directory: 'better-politics-mod'
           # Relative path to the validation action repository root (defaults to repository root directory)
           action-directory: 'validation'
-          # Which game files should be used for validation (ck3 or vic3 but defaults to vic3) 
+          # Which game files should be used for validation (ck3 or vic3 but defaults to vic3)
           workshop-directory: 'workshop'
           game: 'vic3'
           config-folder: 'better-politics-mod'

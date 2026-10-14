@@ -12,16 +12,14 @@ bpm_revcell_base_progress_p1 = {
 	add = 1
 }
 
-# scope:movement
+# scope:action
 # scope:country
 
 bpm_cell_growth_chance = {
 	value = {
-		owner = {
-			every_interest_group = {
-				limit = {
-					var:bpm_ig_coalition_mov ?= scope:movement
-				}
+		scope:action = {
+			every_in_list = {
+				variable = bpm_actively_involved
 				add = {
 					value = ig_clout
 					multiply = 100
@@ -35,13 +33,14 @@ bpm_cell_growth_chance = {
 
 bpm_cell_shrinking_chance = {
 	value = {
-		value = owner.bpm_state_capacity
+		every_scope_country = {
+			add = bpm_state_capacity
+		}
 		desc = "bpm_state_capacity_of_country"
 	}
 }
 
 bpm_revolt_progress_value_polmov = {
-	save_temporary_scope_as = movement
 	owner = {
 		value = bpm_revolt_progress_value
 		divide = 100
@@ -49,15 +48,10 @@ bpm_revolt_progress_value_polmov = {
 }
 
 bpm_number_of_states_with_cells = {
-	save_temporary_scope_as = movement
-	owner = {
-		value = 0
-		every_scope_state = {
-			limit = {
-				bpm_has_revcell = yes
-			}
-			add = 1
-		}
+	value = 0
+	every_key_in_variable_map = {
+		variable = bpm_revcells
+		add = 1
 	}
 }
 
@@ -65,9 +59,11 @@ bpm_revolt_progress_value = {
 	value = 0
 	every_scope_state = {
 		limit = {
-			bpm_has_revcell = yes
+			state_region = {
+				bpm_has_revcell = yes
+			}
 		}
-		add = bpm_revolt_progress_value_state
+		state_region = { add = bpm_revolt_progress_value_state }
 	}
 }
 
@@ -91,7 +87,15 @@ bpm_revolt_progress_value_state = {
 		}
 		add = 10
 	}
-	multiply = bpm_population_fraction
+	save_temporary_scope_as = state_region
+	scope:action.parent = {
+		every_scope_state = {
+			limit = {
+				state_region = scope:state_region
+			}
+			multiply = bpm_population_fraction
+		}
+	}
 }
 
 bpm_population_fraction = {
@@ -101,11 +105,13 @@ bpm_population_fraction = {
 
 # info
 bpm_revolt_action_info_num_barracks_polmov = {
-	save_temporary_scope_as = movement
+	save_temporary_scope_as = action
 	owner ?= {
 		every_scope_state = {
 			limit = {
-				bpm_has_revcell = yes
+				state_region = {
+					bpm_has_revcell = yes
+				}
 			}
 			every_scope_building = {
 				limit = {
@@ -119,11 +125,13 @@ bpm_revolt_action_info_num_barracks_polmov = {
 
 # info
 bpm_revolt_action_info_percent_population_polmov = {
-	save_temporary_scope_as = movement
+	save_temporary_scope_as = action
 	owner ?= {
 		every_scope_state = {
 			limit = {
-				bpm_has_revcell = yes
+				state_region = {
+					bpm_has_revcell = yes
+				}
 			}
 			add = state_population
 		}
@@ -133,11 +141,13 @@ bpm_revolt_action_info_percent_population_polmov = {
 
 # info
 bpm_revolt_action_info_percent_gdp_polmov = {
-	save_temporary_scope_as = movement
+	save_temporary_scope_as = action
 	owner ?= {
 		every_scope_state = {
 			limit = {
-				bpm_has_revcell = yes
+				state_region = {
+					bpm_has_revcell = yes
+				}
 			}
 			add = gdp
 		}

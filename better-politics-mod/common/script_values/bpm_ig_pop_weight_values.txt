@@ -1,0 +1,284 @@
+﻿bpm_pop_weight_full_ig_devout = {
+	save_temporary_scope_as = interest_group
+	ROOT = {
+		value = bpm_pop_weight_inner_ig_devout
+
+		divide = {
+			desc = "interest_group_ig_devout_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_ig_devout_pop_attraction_mult
+			min = 0.01
+		}
+		divide = {
+			desc = "interest_group_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_pop_attraction_mult
+			min = 0.01
+		}
+	}
+}
+
+bpm_pop_weight_inner_ig_devout = {
+	value = 0
+
+	if = {
+		limit = { is_pop_type = peasants }
+		add = {
+			desc = "POP_PEASANTS"
+			value = 15
+		}
+	}
+	else_if = {
+		limit = { is_pop_type = clergymen }
+		add = {
+			desc = "POP_CLERGYMEN"
+			value = 100
+		}
+	}
+
+	add = {
+		desc = "RELIGIOUS_INSTITUTIONS"
+		if = {
+			limit = {
+				strata < upper
+				NOT = { 
+					is_pop_type = clergymen
+				}
+			}
+			value = state.modifier:state_non_upper_ig_devout_attraction_add
+		}
+	}
+
+	add = {
+		desc = "DEVOUT_LITERACY"
+		if = {
+			limit = { 
+				NOT = { 
+					is_pop_type = clergymen
+				}
+			}
+			value = literacy_rate
+			multiply = -50
+			add = 25
+			max = 0
+		}
+	}
+
+	multiply = { value = ig_attraction_to_interests_from_stability desc = "BPM_POP_INTERESTS_FROM_STABILITY" }	
+	
+	multiply = { value = bpm_pop_weight_multiplier_ig_devout desc = "MULTIPLIER" }
+}
+
+bpm_pop_weight_multiplier_ig_devout = {
+	value = { value = 1 desc = "base_values" }
+
+	add = {
+		desc = "interest_group_ig_devout_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_ig_devout_pop_attraction_mult
+	}
+	add = {
+		desc = "interest_group_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_pop_attraction_mult
+	}
+	add = {
+		desc = "interest_group_in_government_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+	}
+	if = {
+		limit = {
+			is_pop_type = clergymen
+		}
+		add = {
+			desc = "interest_group_ig_devout_clergymen_pop_attraction_mult"
+			value = scope:interest_group.modifier:interest_group_ig_devout_clergymen_pop_attraction_mult
+		}
+	}
+}
+
+bpm_pop_weight_full_ig_armed_forces = {
+	save_temporary_scope_as = interest_group
+	ROOT = {
+		value = bpm_pop_weight_inner_ig_armed_forces
+
+		divide = {
+			desc = "interest_group_ig_armed_forces_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_ig_armed_forces_pop_attraction_mult
+			min = 0.01
+		}
+		divide = {
+			desc = "interest_group_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_pop_attraction_mult
+			min = 0.01
+		}
+	}
+}
+
+bpm_pop_weight_inner_ig_armed_forces = {
+	value = 0
+
+	if = {
+		limit = { is_pop_type = soldiers }
+		add = {
+			desc = "POP_SOLDIERS"
+			value = scope:interest_group.modifier:interest_group_soldiers_attraction_add
+		}
+	}
+	else_if = {
+		limit = { is_pop_type = aristocrats }
+		add = {
+			desc = "POP_ARISTOCRATS"
+			value = 5
+			add = state.modifier:state_aristocrats_ig_armed_forces_attraction_add
+		}
+	}
+	else_if = {
+		limit = { is_pop_type = officers }
+		add = {
+			desc = "POP_OFFICERS"
+			value = 50
+		}
+	}
+	else_if = {
+		limit = { is_pop_type = bureaucrats }
+		add = {
+			desc = "POP_BUREAUCRATS"
+			value = 5
+		}
+	}
+	
+	if = {
+		limit = { pop_acceptance >= acceptance_status_4 }
+		add = {
+			desc = "POP_NOT_DISCRIMINATED"
+			value = 25
+			if = { # Militarisation of colonial settlers
+				limit = {
+					state = {
+						is_incorporated = no
+					}
+				}
+				add = {
+					desc = "state_unincorporated_ig_armed_forces_attraction_add"
+					value = state.modifier:state_unincorporated_ig_armed_forces_attraction_add
+				}
+			}
+			if = { # Separation of the military and people
+				limit = {
+					NOR = {
+						is_pop_type = soldiers
+						is_pop_type = officers
+					}
+				}
+				multiply = {
+					desc = "state_non_discriminated_civilian_ig_armed_forces_attraction_mult"
+					value = 1
+					add = state.modifier:state_non_discriminated_civilian_ig_armed_forces_attraction_mult
+					min = 0
+				}
+			}
+		}
+	}	
+
+	multiply = { value = ig_attraction_to_interests_from_stability desc = "BPM_POP_INTERESTS_FROM_STABILITY" }
+	multiply = { value = bpm_pop_weight_multiplier_ig_armed_forces desc = "MULTIPLIER" }
+}
+
+bpm_pop_weight_multiplier_ig_armed_forces = {
+	value = { value = 1 desc = "base_values" }
+
+	add = {
+		desc = "interest_group_ig_armed_forces_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_ig_armed_forces_pop_attraction_mult
+	}
+	add = {
+		desc = "interest_group_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_pop_attraction_mult
+	}
+	if = {
+		limit = {
+			owner = {
+				is_at_war = yes
+			}
+		}
+		add = {
+			desc = "AT_WAR"
+			value = 1
+		}
+	}
+	add = {
+		desc = "LEADER_POPULARITY"
+		scope:interest_group = {
+			leader = {
+				value = popularity
+				multiply = 0.01
+				max = 0.25
+				min = -0.25
+			}
+		}
+	}
+	add = {
+		value = 0
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			add = {
+				desc = "TRIGGER_IS_IN_GOVERNMENT"
+				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+			}
+		}
+	}
+}
+
+# Pop scope wrappers for the pop attraction tooltip (POP_IG_ATTRACTION_TOOLTIP)
+bpm_pop_weight_tt_ig_devout = {
+	owner.ig:ig_devout = {
+		value = bpm_pop_weight_full_ig_devout
+	}
+}
+
+bpm_pop_weight_tt_ig_armed_forces = {
+	owner.ig:ig_armed_forces = {
+		value = bpm_pop_weight_full_ig_armed_forces
+	}
+}
+
+bpm_pop_weight_multiplier_tt_ig_devout = {
+	owner.ig:ig_devout = {
+		save_temporary_scope_as = interest_group
+		ROOT = {
+			value = bpm_pop_weight_multiplier_ig_devout
+		}
+	}
+}
+
+bpm_pop_weight_multiplier_tt_ig_armed_forces = {
+	owner.ig:ig_armed_forces = {
+		save_temporary_scope_as = interest_group
+		ROOT = {
+			value = bpm_pop_weight_multiplier_ig_armed_forces
+		}
+	}
+}
+
+bpm_pop_weight_stability_tt_ig_devout = {
+	owner.ig:ig_devout = {
+		save_temporary_scope_as = interest_group
+		ROOT = {
+			value = ig_attraction_to_interests_from_stability
+		}
+	}
+}
+
+bpm_pop_weight_stability_tt_ig_armed_forces = {
+	owner.ig:ig_armed_forces = {
+		save_temporary_scope_as = interest_group
+		ROOT = {
+			value = ig_attraction_to_interests_from_stability
+		}
+	}
+}

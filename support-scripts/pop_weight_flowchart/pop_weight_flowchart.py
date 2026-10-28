@@ -100,6 +100,20 @@ MODIFIER_OVERRIDES = {
     # "interest_group_in_government_attraction_mult": (-0.5, 0.5),
 }
 
+# Modifiers the game itself multiplies the pop_weight by. A `divide = { ... }` reading only these
+# undoes that multiplication in the script; it is skipped, so the range shown is the weight the game
+# ends up using.
+ENGINE_APPLIED_MODIFIER_RE = re.compile(r"^interest_group_(ig_\w+_)?pop_attraction_mult$")
+
+# A modifier read more than once by a pop_weight (e.g. divided out of the final value and added to
+# a multiplier) must take the same value everywhere. Such modifiers are pinned: the pop_weight is
+# evaluated once per piece of their range, so every read sees the same piece. Ranges with at most
+# CORRELATION_SPLITS achievable values are enumerated exactly, others are cut into that many pieces
+# (`*_mult` modifiers geometrically in 1 + x, finer close to -100%). The number of pieces shrinks
+# until the combinations of all pinned modifiers of a pop_weight fit CORRELATION_MAX_COMBINATIONS.
+CORRELATION_SPLITS = 24
+CORRELATION_MAX_COMBINATIONS = 600
+
 # Directories under common/ scanned for modifier sources, and how sources in them combine.
 #   "law_group": exclusive within a law group
 #   "static":    see STATIC_MODIFIER_* settings
@@ -421,6 +435,42 @@ class ModifierSources:
             total = total + hull_all(g["options"])
         return total
 
+    def achievable(self, mod, limit):
+        """Every value the modifier can take, or None if there are more than `limit` (or they
+        aren't exact)."""
+        if mod in MODIFIER_OVERRIDES:
+            return None
+        sums = {0.0}
+        for g in self.groups.get(mod, []):
+            if not all(o.is_exact() for o in g["options"]):
+                return None
+            sums = {round(s + o.lo, 9) for s in sums for o in g["options"]}
+            if len(sums) > limit:
+                return None
+        return sorted(sums)
+
+    def pieces(self, mod, n):
+        """Intervals covering the modifier's range, at most n of them."""
+        points = self.achievable(mod, n)
+        if points is not None:
+            return [Interval(p) for p in points]
+        r = self.range(mod)
+        if n <= 1 or not math.isfinite(r.lo) or not math.isfinite(r.hi) or r.is_exact():
+            return [r]
+        floor = 0.01  # 1 + x below this is a factor of (almost) zero
+        if mod.endswith("_mult") and 1 + r.hi > floor:
+            bounds = []
+            lo = r.lo
+            if 1 + r.lo < floor:
+                bounds.append(r.lo)
+                lo = floor - 1
+                n -= 1
+            a, b = 1 + lo, 1 + r.hi
+            bounds += [a * (b / a) ** (i / n) - 1 for i in range(n)] + [r.hi]
+        else:
+            bounds = [r.lo + (r.hi - r.lo) * i / n for i in range(n)] + [r.hi]
+        return [Interval(lo, hi) for lo, hi in zip(bounds, bounds[1:])]
+
 
 # --------------------------------------------------------------------------------------------
 # Evaluation
@@ -439,6 +489,16 @@ CMP = {
 
 def ref_key(ref):
     return ref.split(".")[-1]
+
+
+def is_engine_divide(e):
+    """True for a `divide = { ... }` that only divides out modifiers the game applies itself."""
+    if e.k != "divide" or not isinstance(e.v, list):
+        return False
+    refs = set()
+    collect_refs(e.v, refs)
+    mods = {ref_key(r)[len("modifier:"):] for r in refs if ref_key(r).startswith("modifier:")}
+    return bool(mods) and all(ENGINE_APPLIED_MODIFIER_RE.match(m) for m in mods)
 
 
 def iter_chains(entries):
@@ -545,7 +605,9 @@ class Evaluator:
                 acc = self.eval_chain(item, ctx, env, acc)
                 continue
             e = item
-            if e.k in ARITH_OPS:
+            if is_engine_divide(e):
+                self.record(e, acc)
+            elif e.k in ARITH_OPS:
                 acc = self.apply(acc, e, ctx, env)
                 self.record(e, acc)
             elif e.k in IGNORED_KEYS or e.k == "limit":
@@ -684,6 +746,16 @@ def mm_text(s, limit=110):
 # Runs of operations are split into several nodes past this many label lines.
 MAX_NODE_LINES = 12
 
+# Node classes of the .mmd files (light theme). The HTML page swaps in the set matching its theme.
+CLASS_DEFS = [
+    "classDef unreached fill:#eee,stroke:#bbb,color:#999,stroke-dasharray:4 3",
+    "classDef modifier fill:#e8f1ff,stroke:#5b8def,color:#1d1d1f",
+    "classDef unset fill:#fff1e0,stroke:#e08a1e,color:#1d1d1f",
+    "classDef terminal fill:#e9f7ec,stroke:#3a9a55,color:#1d1d1f",
+    "classDef inlined fill:#f6f3fb,stroke:#9b7fd1",
+    "classDef header fill:#ffffff,stroke:#9b7fd1,color:#1d1d1f",
+]
+
 OP_SYMBOLS = {"value": "=", "add": "+", "subtract": "−", "multiply": "×", "divide": "÷",
               "min": "≥", "max": "≤"}
 
@@ -716,9 +788,11 @@ class FlowchartBuilder:
     """Builds a chart template: node definitions are `%%node:<id>` placeholders (Mermaid comments),
     filled from `self.nodes` with either the shortened or the full label by expand_chart."""
 
-    def __init__(self, ev, modifiers):
+    def __init__(self, ev, modifiers, script_values, inline=()):
         self.ev = ev
         self.modifiers = modifiers
+        self.script_values = script_values
+        self.inline = set(inline)  # script values drawn inside the chart instead of as a reference
         self.lines = []
         self.nodes = {}
         self.full = False
@@ -766,11 +840,7 @@ class FlowchartBuilder:
         return str(r) if r is not None else "unreached"
 
     def build(self, title, entries):
-        self.lines = ["flowchart TD",
-                      "classDef unreached fill:#eee,stroke:#bbb,color:#999,stroke-dasharray:4 3",
-                      "classDef modifier fill:#e8f1ff,stroke:#5b8def",
-                      "classDef unset fill:#fff1e0,stroke:#e08a1e",
-                      "classDef terminal fill:#e9f7ec,stroke:#3a9a55"]
+        self.lines = ["flowchart TD"] + CLASS_DEFS
         start = self.node(lambda: self.text(title), "stadium", "terminal")
         last, _, _ = self.block(entries, start)
         return "\n".join(self.lines), self.nodes, last
@@ -802,7 +872,12 @@ class FlowchartBuilder:
         without branching, and an `if` without else/else_if around such a body."""
         if isinstance(item, list):
             return len(item) == 1 and isinstance(item[0].v, list) and self.is_simple(item[0].v)
-        return not isinstance(item.v, list) or self.is_simple(item.v)
+        if not isinstance(item.v, list):
+            return not self.is_inlined(item)
+        return self.is_simple(item.v)
+
+    def is_inlined(self, e):
+        return isinstance(e.v, str) and ref_key(e.v) in self.inline
 
     def is_simple(self, entries):
         return all(self.foldable(i) for i in self.items(entries))
@@ -836,6 +911,9 @@ class FlowchartBuilder:
             if not NUMBER_RE.match(e.v):
                 line += f" <i>∈ {self.operand_range(e)}</i>"
             return [line]
+        if is_engine_divide(e):
+            refs = sorted({short_ref(r) for r in self.refs(e, []) if r.startswith("modifier:")})
+            return [f"{indent}<s>÷ (1 + {self.text(' + '.join(refs))})</s> <i>skipped: applied by the game</i>"]
         desc = find(e.v, "desc")
         name = f" <i>{self.text(desc.v.strip(chr(34)), 40)}</i>" if desc else ""
         if e.k not in ARITH_OPS:
@@ -913,21 +991,51 @@ class FlowchartBuilder:
             flush()
             if isinstance(item, list):
                 prev, prev_label, dotted = self.chain(item, prev, prev_label, dotted)
+            elif self.is_inlined(item):
+                prev, prev_label, dotted = self.inlined(item, prev, prev_label, dotted)
             else:
                 prev, prev_label, dotted = self.subblock(item, prev, prev_label, dotted)
         flush()
         return prev, prev_label, dotted
 
     def subblock(self, e, prev, prev_label, dotted):
-        sid = self.node_id()
         desc = find(e.v, "desc")
         if e.k in ARITH_OPS:
-            title = OP_SYMBOLS[e.k] + (f" {desc.v.strip(chr(34))}" if desc else "") + f" → {self.rng(e)}"
+            title = OP_SYMBOLS[e.k] + (f" {desc.v.strip(chr(34))}" if desc else "")
         else:
             title = e.k
-        self.lines.append(f'subgraph {sid}["{mm_text(title)}"]')
+        inner = self.items(e.v)
+        if len(inner) == 1 and not isinstance(inner[0], list) and inner[0].k == "value" \
+                and self.is_inlined(inner[0]):
+            # `multiply = { value = <inlined script value> }`: one subgraph for both
+            return self.inlined(inner[0], prev, prev_label, dotted, title, e)
+        if e.k in ARITH_OPS:
+            title += f" → {self.rng(e)}"
+        return self.group(title, e.v, prev, prev_label, dotted)
+
+    def inlined(self, e, prev, prev_label, dotted, title=None, outer=None):
+        """A reference to a script value in `self.inline`, drawn as a subgraph holding its body.
+        `title`/`outer` describe an enclosing `op = { value = <script value> }` block."""
+        name = ref_key(e.v)
+        if title is None:
+            title = OP_SYMBOLS[e.k] if e.k in ARITH_OPS else e.k
+        title += f" {name} ∈ {self.operand_range(e)}"
+        step = outer if outer is not None else e
+        if step.k in ARITH_OPS and step.k != "value":
+            title += f" → {self.rng(step)}"
+        return self.group(title, self.script_values[name], prev, prev_label, dotted, "inlined")
+
+    def group(self, title, entries, prev, prev_label, dotted, cls=None):
+        """A subgraph around a block. Its title is a header node rather than the subgraph label,
+        whose position Mermaid doesn't keep clear of nested subgraphs."""
+        sid = self.node_id()
+        self.lines.append(f'subgraph {sid}[" "]')
         self.lines.append("direction TB")
-        last, label, dotted = self.block(e.v, prev, prev_label, dotted)
+        if cls:
+            self.lines.append(f"class {sid} {cls}")
+        head = self.node(lambda: f"<b>{self.text(title)}</b>", "round", "header")
+        self.edge(prev, head, prev_label, dotted)
+        last, label, dotted = self.block(entries, head)
         self.lines.append("end")
         return last, label, dotted
 
@@ -994,6 +1102,50 @@ def collect_refs(entries, out):
             out.add(e.k)
 
 
+def reachable_script_values(entries, script_values):
+    """Script values referenced by `entries`, directly or through other script values."""
+    refs = set()
+    collect_refs(entries, refs)
+    queue = [ref_key(r) for r in refs if ref_key(r) in script_values]
+    seen = set()
+    while queue:
+        name = queue.pop()
+        if name in seen:
+            continue
+        seen.add(name)
+        sv_refs = set()
+        collect_refs(script_values[name], sv_refs)
+        queue += [ref_key(r) for r in sv_refs if ref_key(r) in script_values]
+    return seen
+
+
+def count_modifier_reads(entries, script_values, counts, stack=()):
+    """Counts how often each modifier is read when evaluating `entries`, following script values
+    as many times as they are referenced."""
+    for e in entries:
+        if is_engine_divide(e):
+            continue
+        if isinstance(e.v, list):
+            count_modifier_reads(e.v, script_values, counts, stack)
+        elif isinstance(e.v, str):
+            key = ref_key(e.v)
+            if key.startswith("modifier:"):
+                counts[key[len("modifier:"):]] += 1
+            elif key in script_values and key not in stack:
+                count_modifier_reads(script_values[key], script_values, counts, stack + (key,))
+    return counts
+
+
+def correlated_pieces(mods, modifiers):
+    """{modifier: [Interval]} for the modifiers to pin, within CORRELATION_MAX_COMBINATIONS."""
+    n = CORRELATION_SPLITS
+    while True:
+        pieces = {m: modifiers.pieces(m, n) for m in mods}
+        if n <= 1 or math.prod(len(p) for p in pieces.values()) <= CORRELATION_MAX_COMBINATIONS:
+            return pieces
+        n -= 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("igs", nargs="*", help="interest groups to render (default: all)")
@@ -1017,28 +1169,30 @@ def main():
     if missing:
         sys.exit(f"unknown interest groups: {', '.join(missing)}")
 
-    # Every modifier referenced by the pop weights, including through script values
-    modifier_names = set()
-    refs = set()
+    # Script values reached by each pop weight. Those reached by a single interest group are drawn
+    # inside its flowchart, the others in their own section.
+    reached = {}
+    for ig, body in igs.items():
+        pw = find(body, "pop_weight")
+        if pw and isinstance(pw.v, list):
+            reached[ig] = reachable_script_values(pw.v, script_values)
+    users = defaultdict(set)
+    for ig, svs in reached.items():
+        for sv in svs:
+            users[sv].add(ig)
+
+    # Every modifier referenced by the selected pop weights, including through script values
+    modifiers_of = {}
     for ig in selected:
         pw = find(igs[ig], "pop_weight")
-        if pw and isinstance(pw.v, list):
-            collect_refs(pw.v, refs)
-    seen_sv = set()
-    queue = [ref_key(r) for r in refs if ref_key(r) in script_values]
-    while queue:
-        name = queue.pop()
-        if name in seen_sv:
+        if not pw or not isinstance(pw.v, list):
             continue
-        seen_sv.add(name)
-        sv_refs = set()
-        collect_refs(script_values[name], sv_refs)
-        refs |= sv_refs
-        queue += [ref_key(r) for r in sv_refs if ref_key(r) in script_values]
-    for r in refs:
-        key = ref_key(r)
-        if key.startswith("modifier:"):
-            modifier_names.add(key[len("modifier:"):])
+        refs = set()
+        collect_refs(pw.v, refs)
+        for sv in reached[ig]:
+            collect_refs(script_values[sv], refs)
+        modifiers_of[ig] = sorted({ref_key(r)[9:] for r in refs if ref_key(r).startswith("modifier:")})
+    modifier_names = {m for mods in modifiers_of.values() for m in mods}
 
     print(f"Scanning modifier sources for {len(modifier_names)} modifiers...", file=sys.stderr)
     modifiers = ModifierSources(modifier_names, vanilla)
@@ -1056,11 +1210,16 @@ def main():
         if not pw or not isinstance(pw.v, list):
             continue
         potential = find(body, "pop_potential")
-        refs = set()
-        collect_refs(pw.v, refs)
-        mods = sorted({ref_key(r)[9:] for r in refs if ref_key(r).startswith("modifier:")})
+        mods = modifiers_of[ig]
         used_modifiers.update(mods)
-        used_script_values.update(ref_key(r) for r in refs if ref_key(r) in script_values)
+        inline = {sv for sv in reached[ig] if users[sv] == {ig}}
+        used_script_values.update(reached[ig] - inline)
+
+        reads = count_modifier_reads(pw.v, script_values, defaultdict(int))
+        pinned = correlated_pieces(sorted(m for m, c in reads.items() if c > 1), modifiers)
+        pinned = {m: p for m, p in pinned.items() if len(p) > 1}  # a single value needs no pinning
+        pin_envs = [{f"modifier:{m}": p for m, p in zip(pinned, combo)}
+                    for combo in itertools.product(*pinned.values())]
 
         table = {}
         for pt in pop_types:
@@ -1070,30 +1229,19 @@ def main():
                     truth = ev.condition(potential.v, ctx, {})[0]
                     if truth is False:
                         continue
-                ev.stack = [ig]
+                weight = None
+                for env in pin_envs:
+                    ev.stack = [ig]
+                    weight = ev.eval_block(pw.v, ctx, env, None).hull(weight)
                 # The game treats negative weights as 0
-                weight = ev.eval_block(pw.v, ctx, {}, None)
                 table[(pt, tuple(flags.values()))] = weight.clamp_min(Interval(0))
-        results.append({"ig": ig, "pw": pw.v, "table": table, "modifiers": mods})
-
-    # Script values reached through pop weights (transitively)
-    sv_queue = list(used_script_values)
-    while sv_queue:
-        name = sv_queue.pop()
-        r = set()
-        collect_refs(script_values[name], r)
-        for x in r:
-            k = ref_key(x)
-            if k in script_values and k not in used_script_values:
-                used_script_values.add(k)
-                sv_queue.append(k)
-            if k.startswith("modifier:"):
-                used_modifiers.add(k[9:])
+        results.append({"ig": ig, "pw": pw.v, "table": table, "modifiers": mods, "inline": inline,
+                        "pinned": pinned})
 
     os.makedirs(os.path.join(args.out, "mmd"), exist_ok=True)
     sections = []
     for res in results:
-        fb = FlowchartBuilder(ev, modifiers)
+        fb = FlowchartBuilder(ev, modifiers, script_values, res["inline"])
         chart, nodes, last = fb.build(res["ig"], res["pw"])
         end = hull_all(res["table"].values())
         chart += f'\nfinal(["final pop_weight ∈ {end} (clamped to ≥ 0)"])\n{last} --> final\nclass final terminal\n'
@@ -1106,7 +1254,7 @@ def main():
 
     sv_charts = []
     for name in sorted(used_script_values):
-        fb = FlowchartBuilder(ev, modifiers)
+        fb = FlowchartBuilder(ev, modifiers, script_values)
         chart, nodes, _ = fb.build(name, script_values[name])
         with open(os.path.join(args.out, "mmd", f"script_value_{name}.mmd"), "w", encoding="utf-8") as f:
             f.write(expand_chart(chart, nodes))
@@ -1148,12 +1296,19 @@ def render_html(sections, sv_charts, modifiers, used_modifiers, ev, flag_names, 
             rows.append(f"<tr><th>{esc(pt)}</th>" + "".join(
                 f"<td>{esc(c) if c is not None else '—'}</td>" for c in cells) + "</tr>")
         mod_html = "".join(render_modifier(m, modifiers) for m in res["modifiers"])
+        pinned = "".join(
+            f"<li><code>{esc(m)}</code> — "
+            + (f"{len(p)} values" if all(i.is_exact() for i in p) else f"{len(p)} pieces of {esc(modifiers.range(m))}")
+            + "</li>" for m, p in res["pinned"].items())
+        pinned_html = (f"<p class='note'>Read more than once, so evaluated with one value shared by every "
+                       f"read:</p><ul class='note'>{pinned}</ul>") if pinned else ""
         parts.append(f"""
 <details class="ig" data-chart="{esc(json.dumps(res['chart']))}" data-nodes="{esc(json.dumps(res['nodes']))}">
   <summary><span class="name">{esc(res['ig'])}</span><span class="range">{esc(res['end'])}</span></summary>
   <div class="body">
     <h3>Final value by pop type</h3>
     <div class="scroll"><table><tr><th>pop type</th>{header}</tr>{''.join(rows)}</table></div>
+    {'<h3>Correlated modifiers</h3>' + pinned_html if pinned_html else ''}
     {'<h3>Modifier sources</h3>' + mod_html if mod_html else ''}
     <h3>Flowchart</h3>
     <div class="chart"></div>
@@ -1176,7 +1331,8 @@ def render_html(sections, sv_charts, modifiers, used_modifiers, ev, flag_names, 
 
     return HTML_TEMPLATE.format(
         sections="".join(parts), script_values=sv_parts, modifiers=all_mods,
-        unset=unset_html, manual=manual, flags=esc(", ".join(flag_names)))
+        unset=unset_html, manual=manual, flags=esc(", ".join(flag_names)),
+        class_defs=json.dumps(CLASS_DEFS))
 
 
 def render_modifier(mod, modifiers):
@@ -1194,10 +1350,10 @@ def render_modifier(mod, modifiers):
     override = " (overridden in MODIFIER_OVERRIDES)" if mod in MODIFIER_OVERRIDES else ""
     if not rows:
         rows.append("<tr><td colspan=4><i>no sources found</i></td></tr>")
-    return (f"<div class='mod'><div class='modname'><code>{html.escape(mod)}</code> ∈ "
-            f"<b>{modifiers.range(mod)}</b>{override}</div>"
+    return (f"<details class='mod'><summary class='modname'><code>{html.escape(mod)}</code> ∈ "
+            f"<b>{modifiers.range(mod)}</b>{override} <span class='note'>· {len(groups)} sources</span></summary>"
             f"<div class='scroll'><table><tr><th>kind</th><th>source</th><th>options (one active)</th>"
-            f"<th>contribution</th></tr>{''.join(rows)}</table></div></div>")
+            f"<th>contribution</th></tr>{''.join(rows)}</table></div></details>")
 
 
 HTML_TEMPLATE = """<!doctype html>
@@ -1207,10 +1363,14 @@ HTML_TEMPLATE = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IG Pop Weights</title>
 <style>
-:root {{ --bg:#fbfbfa; --fg:#1d1d1f; --muted:#6b6b70; --line:#dedede; --card:#fff; --accent:#3a6fd8; --warn:#fff4e5; }}
+:root {{ color-scheme:light; --bg:#fbfbfa; --fg:#1d1d1f; --muted:#6b6b70; --line:#dedede; --card:#fff;
+  --accent:#3a6fd8; --warn:#fff4e5; --warn-line:#f0c88a; --code:#f1f1f3; --hover:#f4f4f6; }}
 @media (prefers-color-scheme: dark) {{
-  :root {{ --bg:#17171a; --fg:#e8e8ea; --muted:#9a9aa0; --line:#33333a; --card:#1f1f23; --accent:#7aa2ff; --warn:#3a2c17; }}
+  :root:not([data-theme="light"]) {{ color-scheme:dark; --bg:#141417; --fg:#e6e6e9; --muted:#a0a0a8; --line:#34343b;
+    --card:#1c1c20; --accent:#86a8ff; --warn:#33270f; --warn-line:#6b5020; --code:#26262c; --hover:#24242a; }}
 }}
+:root[data-theme="dark"] {{ color-scheme:dark; --bg:#141417; --fg:#e6e6e9; --muted:#a0a0a8; --line:#34343b;
+  --card:#1c1c20; --accent:#86a8ff; --warn:#33270f; --warn-line:#6b5020; --code:#26262c; --hover:#24242a; }}
 body {{ background:var(--bg); color:var(--fg); font:14px/1.5 system-ui, sans-serif; margin:0; padding:24px 16px; }}
 main {{ max-width:1400px; margin:0 auto; }}
 h1 {{ font-size:22px; margin:0 0 4px; }}
@@ -1218,18 +1378,27 @@ h2 {{ font-size:17px; margin:32px 0 8px; }}
 h3 {{ font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:18px 0 6px; }}
 p.lead {{ color:var(--muted); margin:0 0 16px; max-width:80ch; }}
 details.ig {{ background:var(--card); border:1px solid var(--line); border-radius:8px; margin:8px 0; }}
-details.ig > summary {{ cursor:pointer; padding:10px 14px; display:flex; justify-content:space-between; gap:12px; }}
+details.ig > summary {{ cursor:pointer; padding:10px 14px; display:flex; justify-content:space-between; gap:12px;
+  border-radius:8px; }}
+details.ig > summary:hover {{ background:var(--hover); }}
 details.ig > summary .name {{ font-weight:600; }}
 details.ig > summary .range {{ font-variant-numeric:tabular-nums; color:var(--accent); }}
 .body {{ padding:0 14px 14px; }}
 .scroll {{ overflow-x:auto; }}
 table {{ border-collapse:collapse; font-variant-numeric:tabular-nums; font-size:13px; }}
 th, td {{ border-bottom:1px solid var(--line); padding:4px 10px; text-align:left; white-space:nowrap; }}
-.mod {{ margin:8px 0 14px; }}
-.modname {{ margin-bottom:4px; }}
-.warn {{ background:var(--warn); border-radius:8px; padding:10px 14px; margin:12px 0; }}
+.mod {{ margin:4px 0; }}
+.mod[open] {{ margin-bottom:14px; }}
+.modname {{ cursor:pointer; margin-bottom:4px; }}
+.warn {{ background:var(--warn); border:1px solid var(--warn-line); border-radius:8px; padding:10px 14px; margin:12px 0; }}
+.note {{ color:var(--muted); margin:4px 0; }}
+header {{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }}
+.themes {{ display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; font-size:12px; }}
+.themes button {{ font:inherit; color:var(--muted); background:var(--card); border:0; padding:3px 10px; cursor:pointer; }}
+.themes button + button {{ border-left:1px solid var(--line); }}
+.themes button[aria-pressed="true"] {{ color:var(--fg); background:var(--hover); font-weight:600; }}
 .chartwrap {{ position:relative; }}
-.chart {{ overflow:auto; max-height:85vh; border:1px solid var(--line); border-radius:6px; cursor:grab; }}
+.chart {{ overflow:auto; max-height:85vh; border:1px solid var(--line); border-radius:6px; cursor:grab; background:var(--card); }}
 .chart.dragging {{ cursor:grabbing; user-select:none; }}
 .chart svg {{ max-width:none !important; display:block; }}
 .chart .node foreignObject div, .chart .node .nodeLabel {{ text-align:left !important; }}
@@ -1239,16 +1408,21 @@ th, td {{ border-bottom:1px solid var(--line); padding:4px 10px; text-align:left
 .zoombar button {{ font:inherit; color:var(--fg); background:var(--card); border:1px solid var(--line);
   border-radius:4px; padding:2px 8px; cursor:pointer; }}
 .zoombar .pct {{ min-width:4ch; text-align:right; font-variant-numeric:tabular-nums; }}
-code {{ font-size:12px; }}
+code {{ font-size:12px; background:var(--code); border-radius:3px; padding:0 3px; }}
 </style>
 </head>
 <body>
 <main>
+<header>
 <h1>Interest group pop weights</h1>
+<div class="themes" role="group" aria-label="Theme"><button data-theme="auto">Auto</button><button data-theme="light">Light</button><button data-theme="dark">Dark</button></div>
+</header>
 <p class="lead">Each interest group's <code>pop_weight</code>, evaluated with interval arithmetic once per pop type
 allowed by <code>pop_potential</code> and per combination of <code>{flags}</code>. Node labels show the range of the
 running value after each step (over every evaluation that reached it). <code>modifier:</code> ranges sum every
-source, taking at most one law per law group.</p>
+source, taking at most one law per law group. A modifier read more than once by a pop weight takes the same value at
+every read. Divisions by <code>1 + interest_group_…pop_attraction_mult</code> are skipped: they undo the multiplication the
+game applies afterwards, so the result is the weight the game uses. Script values used by a single interest group are drawn inside its flowchart.</p>
 {unset}
 <h2>Interest groups</h2>
 {sections}
@@ -1261,15 +1435,57 @@ source, taking at most one law per law group.</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
 <script>
-const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-mermaid.initialize({{ startOnLoad:false, theme: dark ? 'dark' : 'default', maxTextSize: 1000000, maxEdges: 5000,
-  themeVariables: {{ fontSize: '11px' }},
-  flowchart: {{ htmlLabels:true, useMaxWidth:false, nodeSpacing:12, rankSpacing:16, padding:4, wrappingWidth:320,
-    diagramPadding:4, subGraphTitleMargin: {{ top:2, bottom:2 }} }}, securityLevel:'loose' }});
+// Theme: follows the system unless Light or Dark is picked (remembered in this browser).
+const THEMES = {{
+  light: {{
+    vars: {{ background:'#ffffff', primaryColor:'#ffffff', primaryBorderColor:'#a2a2aa', primaryTextColor:'#1d1d1f',
+      lineColor:'#8a8a92', clusterBkg:'#f5f5f7', clusterBorder:'#cfcfd5', edgeLabelBackground:'#ffffff',
+      titleColor:'#1d1d1f', textColor:'#1d1d1f' }},
+    classes: {class_defs},
+  }},
+  dark: {{
+    vars: {{ background:'#1c1c20', primaryColor:'#26262c', primaryBorderColor:'#5c5c66', primaryTextColor:'#e6e6e9',
+      lineColor:'#85858f', clusterBkg:'#202025', clusterBorder:'#3e3e47', edgeLabelBackground:'#1c1c20',
+      titleColor:'#e6e6e9', textColor:'#e6e6e9' }},
+    classes: [
+      'classDef unreached fill:#222227,stroke:#46464f,color:#7a7a84,stroke-dasharray:4 3',
+      'classDef modifier fill:#1a2843,stroke:#5b8def,color:#e6e6e9',
+      'classDef unset fill:#382812,stroke:#e08a1e,color:#e6e6e9',
+      'classDef terminal fill:#15301f,stroke:#3a9a55,color:#e6e6e9',
+      'classDef inlined fill:#231f2c,stroke:#7d66b3',
+      'classDef header fill:#2b2638,stroke:#7d66b3,color:#e6e6e9',
+    ],
+  }},
+}};
+const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+let themePref = 'auto';
+try {{ themePref = localStorage.getItem('theme') || 'auto'; }} catch (e) {{}}
+const theme = () => themePref === 'auto' ? (systemDark.matches ? 'dark' : 'light') : themePref;
+const renderers = [];
+
+function applyTheme() {{
+  if (themePref === 'auto') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = themePref;
+  document.querySelectorAll('.themes button').forEach(b => b.setAttribute('aria-pressed', b.dataset.theme === themePref));
+  mermaid.initialize({{ startOnLoad:false, theme:'base', maxTextSize: 1000000, maxEdges: 5000,
+    themeVariables: {{ ...THEMES[theme()].vars, fontSize: '11px' }},
+    flowchart: {{ htmlLabels:true, useMaxWidth:false, nodeSpacing:12, rankSpacing:16, padding:4, wrappingWidth:320,
+      diagramPadding:4, subGraphTitleMargin: {{ top:2, bottom:2 }} }}, securityLevel:'loose' }});
+  renderers.forEach(r => r());
+}}
+document.querySelector('.themes').addEventListener('click', ev => {{
+  if (!ev.target.dataset.theme) return;
+  themePref = ev.target.dataset.theme;
+  try {{ localStorage.setItem('theme', themePref); }} catch (e) {{}}
+  applyTheme();
+}});
+systemDark.addEventListener('change', () => {{ if (themePref === 'auto') applyTheme(); }});
+applyTheme();
 
 // Zoom: buttons, ctrl/cmd + wheel, and drag to pan. Starts fitted to the panel's width.
 // Clicking a node whose text was shortened re-renders the chart with that node's full text.
 const NODE_RE = /^%%node:(\\w+)$/gm;
+const CLASSDEF_RE = /^classDef .*$/gm;
 
 function setupChart(d) {{
   const box = d.querySelector('.chart');
@@ -1299,7 +1515,7 @@ function setupChart(d) {{
     const text = template.replace(NODE_RE, (m, id) => {{
       const n = nodes[id];
       return id + n.o + '"' + (expanded.has(id) ? n.f : n.s) + '"' + n.c;
-    }});
+    }}).replace(CLASSDEF_RE, '') + '\\n' + THEMES[theme()].classes.join('\\n');
     const {{ svg: markup }} = await mermaid.render('chart' + (n++), text);
     const left = box.scrollLeft, top = box.scrollTop;
     box.innerHTML = markup;
@@ -1366,6 +1582,7 @@ function setupChart(d) {{
     box.classList.remove('dragging');
   }});
 
+  renderers.push(render);
   return render();
 }}
 

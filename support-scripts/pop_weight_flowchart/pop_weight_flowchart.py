@@ -110,10 +110,13 @@ MODIFIER_OVERRIDES = {
     # "interest_group_in_government_attraction_mult": (-0.5, 0.5),
 }
 
-# Modifiers the game itself multiplies the pop_weight by. A `divide = { ... }` reading only these
-# undoes that multiplication in the script; it is skipped, so the range shown is the weight the game
-# ends up using.
-ENGINE_APPLIED_MODIFIER_RE = re.compile(r"^interest_group_(ig_\w+_)?pop_attraction_mult$")
+# Modifiers the game itself multiplies the pop_weight by. Any `add`, `subtract`, `multiply` or
+# `divide` reading only these (dividing them out of the final value, or adding them to a multiplier)
+# is skipped, so the range shown is the weight the game ends up using. The `ig` group must be an
+# interest group key (filled into ENGINE_APPLIED_IGS at startup), so mod modifiers such as
+# interest_group_ig_devout_clergymen_pop_attraction_mult still count.
+ENGINE_APPLIED_MODIFIER_RE = re.compile(r"^interest_group_(?:(?P<ig>ig_\w+)_)?pop_attraction_mult$")
+ENGINE_APPLIED_IGS = set()
 
 # A modifier read more than once by a pop_weight (e.g. divided out of the final value and added to
 # a multiplier) must take the same value everywhere. Such modifiers are pinned: the pop_weight is
@@ -502,14 +505,26 @@ def ref_key(ref):
     return ref.split(".")[-1]
 
 
-def is_engine_divide(e):
-    """True for a `divide = { ... }` that only divides out modifiers the game applies itself."""
-    if e.k != "divide" or not isinstance(e.v, list):
+ENGINE_SKIPPED_OPS = {"add", "subtract", "multiply", "divide"}
+
+
+def is_engine_op(e):
+    """True for an `add`/`subtract`/`multiply`/`divide` that only reads modifiers the game applies
+    itself."""
+    if e.k not in ENGINE_SKIPPED_OPS:
         return False
     refs = set()
-    collect_refs(e.v, refs)
+    if isinstance(e.v, list):
+        collect_refs(e.v, refs)
+    else:
+        refs.add(e.v)
     mods = {ref_key(r)[len("modifier:"):] for r in refs if ref_key(r).startswith("modifier:")}
-    return bool(mods) and all(ENGINE_APPLIED_MODIFIER_RE.match(m) for m in mods)
+    return bool(mods) and all(is_engine_modifier(m) for m in mods)
+
+
+def is_engine_modifier(name):
+    m = ENGINE_APPLIED_MODIFIER_RE.match(name)
+    return bool(m) and (m["ig"] is None or m["ig"] in ENGINE_APPLIED_IGS)
 
 
 def iter_chains(entries):
@@ -616,7 +631,7 @@ class Evaluator:
                 acc = self.eval_chain(item, ctx, env, acc)
                 continue
             e = item
-            if is_engine_divide(e):
+            if is_engine_op(e):
                 self.record(e, acc)
             elif e.k in ARITH_OPS:
                 acc = self.apply(acc, e, ctx, env)
@@ -917,14 +932,16 @@ class FlowchartBuilder:
             cond = render_condition(limit.v) if limit else "?"
             return [f"{indent}<i>{self.text(cond, 90)} ?</i>"] + self.lines_for(item[0].v, sub)
         e = item
+        if is_engine_op(e):
+            refs = sorted({short_ref(r) for r in self.refs(e, []) if r.startswith("modifier:")})
+            joined = self.text(' + '.join(refs))
+            shown = f"(1 + {joined})" if e.k in ("multiply", "divide") and isinstance(e.v, list) else joined
+            return [f"{indent}<s>{OP_SYMBOLS[e.k]} {shown}</s> <i>skipped: applied by the game</i>"]
         if not isinstance(e.v, list):
             line = f"{indent}<b>{OP_SYMBOLS.get(e.k, e.k)}</b> {self.ref(e.v)}"
             if not NUMBER_RE.match(e.v):
                 line += f" <i>∈ {self.operand_range(e)}</i>"
             return [line]
-        if is_engine_divide(e):
-            refs = sorted({short_ref(r) for r in self.refs(e, []) if r.startswith("modifier:")})
-            return [f"{indent}<s>÷ (1 + {self.text(' + '.join(refs))})</s> <i>skipped: applied by the game</i>"]
         desc = find(e.v, "desc")
         name = f" <i>{self.text(desc.v.strip(chr(34)), 40)}</i>" if desc else ""
         if e.k not in ARITH_OPS:
@@ -1134,7 +1151,7 @@ def count_modifier_reads(entries, script_values, counts, stack=()):
     """Counts how often each modifier is read when evaluating `entries`, following script values
     as many times as they are referenced."""
     for e in entries:
-        if is_engine_divide(e):
+        if is_engine_op(e):
             continue
         if isinstance(e.v, list):
             count_modifier_reads(e.v, script_values, counts, stack)
@@ -1171,6 +1188,7 @@ def main():
               f"are unknown, so injected laws can't be grouped", file=sys.stderr)
 
     igs = load_database("interest_groups", vanilla)
+    ENGINE_APPLIED_IGS.update(igs)
     script_values = load_database("script_values", vanilla)
     strata_of = load_strata(vanilla)
     pop_types = sorted(strata_of)
@@ -1432,8 +1450,9 @@ code {{ font-size:12px; background:var(--code); border-radius:3px; padding:0 3px
 allowed by <code>pop_potential</code> and per combination of <code>{flags}</code>. Node labels show the range of the
 running value after each step (over every evaluation that reached it). <code>modifier:</code> ranges sum every
 source, taking at most one law per law group. A modifier read more than once by a pop weight takes the same value at
-every read. Divisions by <code>1 + interest_group_…pop_attraction_mult</code> are skipped: they undo the multiplication the
-game applies afterwards, so the result is the weight the game uses. Script values used by a single interest group are drawn inside its flowchart.</p>
+every read. Steps reading only <code>interest_group_…pop_attraction_mult</code> (divisions by <code>1 + …</code> and
+additions to a multiplier) are skipped: the game applies these modifiers itself afterwards, so the result is the weight
+the game uses. Script values used by a single interest group are drawn inside its flowchart.</p>
 {unset}
 <h2>Interest groups</h2>
 {sections}

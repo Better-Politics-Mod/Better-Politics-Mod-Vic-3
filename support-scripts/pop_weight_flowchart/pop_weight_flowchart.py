@@ -37,7 +37,14 @@ from collections import defaultdict
 
 CWD = os.path.dirname(os.path.abspath(__file__))
 MOD_PATH = os.path.join(CWD, "..", "..", "better-politics-mod")
-DEFAULT_VANILLA_PATH = os.path.expanduser("~/.steam/steam/steamapps/common/Victoria 3/game")
+# Candidate Victoria 3 'game' directories; the first one that exists is the default for --vanilla.
+VANILLA_PATH_CANDIDATES = [
+    os.path.expanduser("~/.steam/steam/steamapps/common/Victoria 3/game"),
+    os.path.expanduser("~/.local/share/Steam/steamapps/common/Victoria 3/game"),
+    "/mnt/Steam/steamapps/common/Victoria 3/game",
+]
+DEFAULT_VANILLA_PATH = next((p for p in VANILLA_PATH_CANDIDATES if os.path.isdir(p)),
+                            VANILLA_PATH_CANDIDATES[0])
 OUTPUT_DIR = os.path.join(CWD, "output")
 
 INF = math.inf
@@ -87,6 +94,9 @@ STATIC_MODIFIER_EXCLUSIVE_GROUPS = [
 
 # Static modifiers that are always applied (contribute their exact value, never 0).
 STATIC_MODIFIER_ALWAYS_ON = {"base_values"}
+
+# Modifiers whose static modifier sources are ignored (other sources still count).
+STATIC_MODIFIER_IGNORED_FOR_RE = re.compile(r"^interest_group_(ig_\w+_)?pop_attraction_mult$")
 
 # (min, max) multiplier for static modifiers applied through `add_modifier = { multiplier = ... }`.
 # Static modifiers found being applied with a multiplier but not listed here are reported, and
@@ -367,7 +377,8 @@ class ModifierSources:
                 if kind == "law_group":
                     law_values[d][obj] = value
                 elif kind == "static":
-                    static_values[obj] = value
+                    if not STATIC_MODIFIER_IGNORED_FOR_RE.match(mod):
+                        static_values[obj] = value
                 else:
                     groups.append({"name": f"{d}/{obj}", "kind": d,
                                    "options": [Interval(0), Interval(value)], "laws": None})

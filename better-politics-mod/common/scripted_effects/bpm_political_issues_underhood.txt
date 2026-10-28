@@ -94,6 +94,8 @@ bpm_unsplat_issues = {
 	save_scope_as = country
 	every_interest_group = {
 		remove_variable = bpm_party_issue
+		# rm impact too otherwise py with no issue will keep prev week's momentum
+		remove_variable = bpm_party_issue_impact
 	}
 	every_active_party = {
 		save_scope_as = checking_party
@@ -102,29 +104,52 @@ bpm_unsplat_issues = {
 			position = 0
 			save_scope_as = leader_ig
 		}
+		# otherwise prev py's issue carries over
+		if = {
+			limit = { exists = scope:sel_issue }
+			clear_saved_scope = sel_issue
+		}
 		scope:country = {
 			bpm_unsplat_issue = yes
-			# calculate momentum impact
-			save_scope_value_as = {
-				name = bpm_momentum_impact
-				value = {
-					value = scope:sel_issue.bpm_issue_interest
-					subtract = 0.1
-					if = {
-						limit = {
-							scope:sel_issue.bpm_issue_interest <= 0.1
+		}
+		if = {
+			limit = {
+				exists = scope:sel_issue
+				exists = scope:leader_ig
+			}
+			scope:country = {
+				# calculate momentum impact
+				save_scope_value_as = {
+					name = bpm_momentum_impact
+					value = {
+						value = scope:sel_issue.bpm_issue_interest
+						subtract = 0.1
+						if = {
+							limit = {
+								scope:sel_issue.bpm_issue_interest <= 0.1
+							}
+							multiply = 0.25
 						}
-						multiply = 0.25
-					}
-					else = {
-						multiply = {
-							value = scope:sel_issue.bpm_issue_interest
-							subtract = 0.1
+						else = {
+							multiply = {
+								value = scope:sel_issue.bpm_issue_interest
+								subtract = 0.1
+							}
+							multiply = 0.1
 						}
-						multiply = 0.1
+						min = -0.02
+						max = 0.5
 					}
-					min = -0.02
-					max = 0.5
+				}
+			}
+			scope:leader_ig = {
+				set_variable = {
+					name = bpm_party_issue
+					value = scope:sel_issue
+				}
+				set_variable = {
+					name = bpm_party_issue_impact
+					value = scope:bpm_momentum_impact
 				}
 			}
 		}

@@ -1,4 +1,9 @@
-﻿ig_liberals = {
+﻿# APHORISM OF THE INTEREST GROUP:
+#+=============================================+
+#|   𝑮𝒐𝒗𝒆𝒓𝒏𝒎𝒆𝒏𝒕 𝒆𝒙𝒊𝒔𝒕𝒔 𝒕𝒐 𝒑𝒓𝒐𝒕𝒆𝒄𝒕 𝒘𝒉𝒂𝒕 𝒊𝒔 𝒚𝒐𝒖𝒓𝒔    | 
+#+=============================================+
+
+ig_liberals = {
 	color = hsv{ 0.16 1 1 }
 	texture = "gfx/interface/icons/ig_icons/liberals.dds"
 	layer = "revolution_dynamic_industrialists"
@@ -49,7 +54,6 @@
 		custom_tooltip = {
 			text = BPM_VALID_POP_FOR_IG
 			owner ?= {
-				has_technology_researched = rationalism
 				ig:ig_liberals ?= {
 					bpm_interest_group_is_activated = yes
 				}
@@ -58,211 +62,101 @@
 	}
 	
 	pop_weight = {
-		value = 40
+		value = 0
 
 		if = {
-			limit = { is_pop_type = peasants }
+			limit = {
+				strata = upper
+			}
+			add = { 
+				value = 35
+				desc = "UPPER_CLASS"
+			}
 			if = {
 				limit = {
-					owner = {
-						this = c:SWI
-					}
+					is_pop_type = capitalists
 				}
 				add = {
-					desc = "POP_INCLUSIONS"
-					value = 60
-				}	
-			}
-			else = {
-				add = {
-					desc = "POP_EXCLUSIONS"
-					value = -50
+					value = 15
+					desc = "POP_CAPITALISTS"
 				}
-			}
-		}
-		else_if = {
-			limit = { is_pop_type = aristocrats }
-			add = {
-				desc = "POP_ARISTOCRATS"
-				value = 60
-			}
-			if = {
-				limit = { 
-					owner = {
-						has_law_or_variant = law_type:law_monarchy
-						OR = {
-							has_law_or_variant = law_type:law_landed_voting
-							has_law_or_variant = law_type:law_autocracy
-						}
-					}
-				}
-				add = {
-					desc = "ARISTOCRAT_REFORMERS"
-					value = 30
-				}
-			}
-			else_if = {
-				limit = { 
-					owner = {
-						has_law_or_variant = law_type:law_monarchy
-						has_law_or_variant = law_type:law_wealth_voting
-					}
-				}
-				add = {
-					desc = "ARISTOCRAT_REFORMERS"
-					value = 20
-				}
-			}
-		}
-		else_if = {
-			limit = {
-				strata = middle
-				NOT = { is_pop_type = clergymen }
-			}
-			add = {
-				desc = "MIDDLE_CLASS"
-				value = 30
-			}
-		}
-
-		if = {
-			limit = { OR = {
-				is_pop_type = capitalists 
-				is_pop_type = shopkeepers
-			} }
-			add = {
-				desc = "POP_CAPITALISTS"
-				value = owner.bpm_consciousness_liberal_igs_capitalists_shopkeepers
-			}
-		}
-		else_if = {
-			limit = {
-				OR = {
-					is_pop_type = academics
-					is_pop_type = engineers
-				}
-			}
-			add = {
-				desc = "POP_ACADEMICS"
-				value = owner.bpm_consciousness_liberal_igs_academics_engineers
 			}
 		}
 		else = {
 			add = {
-				desc = "LABOR_CONSCIOUSNESS"
-				value = owner.bpm_consciousness_liberal_igs_others
+				desc = "SELF_OWNED_WORKPLACE"
+				if = { 
+					limit = {
+						exists = workplace
+					}
+					value = 20
+					multiply = { workplace ?= { value = self_ownership_fraction } }
+				}
+				if = {
+					limit = {
+						strata = middle
+					}
+					multiply = 1.5
+				}
 			}
 		}
 
-		# URBAN EMPLOYMENT
-		if = {
-			limit = {
-				bpm_pop_employment_is_rural = no
+		add = {
+			value = wealth 
+			subtract = 10
+			min = 0
+			max = 50
+		}
+
+		add = {
+			if = {
+				limit = {
+					OR = {
+						pop_employment_building_group = bg_trade
+						pop_employment_building = building_port
+					}
+					NOT = {
+						strata = upper
+					}
+				}
+				value = 15
 			}
-			add = {
-				value = 30
-				desc = "URBAN"
+			desc = "POP_INTERNATIONAL_TRADE"
+		}
+
+		multiply = {
+			desc = "MULTIPLIER"
+			value = 1
+			subtract = {
+				value = 0.5
+				subtract = literacy_rate
+				min = 0
+				divide = 5
+				desc = "LOW_LITERACY"
 			}
 			if = {
 				limit = {
-					strata = middle
-					NOT = { is_pop_type = clergymen }
+					has_pop_religion = atheist
 				}
 				add = {
-					value = 100
-					desc = "URBAN_MIDDLE_CLASS"
+					add = 0.1
+					desc = "ATHEIST"
 				}
 			}
 			else_if = {
-				limit = { strata = upper }
-				add = {
-					value = 50
-					desc = "URBAN_UPPER_CLASS"
-				}
-			}
-		}
-
-		if = {
-			limit = { 
-				AND = {
-					owner = { bpm_performance_significant_country = yes }
-					NOT = { owner = { has_variable = bpm_2nd_party_system } }
-				}
-			}
-
-			add = {
-				desc = "SLAVERY_DETRACTORS"
-				if = {
-					limit = {
-						owner = { NOT = { has_law_or_variant = law_type:law_slavery_banned } }
-						OR = {
-							pop_acceptance <= acceptance_status_3
-							state = { is_slave_state = no }
-							AND = {
-								state = { is_incorporated = no }
-								owner = { has_law = law_type:law_colonial_slavery }
-							}
-						}
-					}
-					value = 100
-				}
-			}
-
-			multiply = {
-				desc = "LEADER_POPULARITY"
-				scope:interest_group = {
-					leader = {
-						value = popularity
-						multiply = 0.005
-						add = 1
-						max = 1.5
-						min = 0.67
-					}
-				}
-			}
-			multiply = bpm_ig_agitators_popularity
-			multiply = bpm_ig_ruler_popularity
-			multiply = { desc = bpm_ig_attraction_from_radicals_and_loyalists_tt value = ig_attraction_from_radicals_and_loyalists }
-		}
-		multiply = {
-			desc = "UNEDUCATED"
-			value = literacy_rate
-			multiply = 1.5
-			max = 1.0
-		}
-		if = {
-			limit = { game_date < 1855.1.1 }
-			if = {
 				limit = {
-					owner = {
-						NOT = { has_variable = completed_peoples_springtime_je }
-						has_global_variable = bpm_je_march_to_radicalism_progress
-						is_in_geographic_region = geographic_region_europe
-						country_has_voting_franchise = no
+					NOT = {
+						has_state_religion = no
 					}
 				}
-				multiply = {
-					desc = "PEOPLES_SPRINGTIME_BUILDUP"
-					value = global_var:bpm_je_march_to_radicalism_progress
-					multiply = 0.033 # 0.05
+				add = {
+					value = 0.1
+					desc = "RELIGIOUS_MINORITY"
 				}
 			}
+
+
 		}
-		multiply = ig_attraction_to_ruler_ideology_from_stability
-		if = {
-			limit = {
-				scope:interest_group = {
-					is_in_government = yes
-				}
-			}
-			multiply = {
-				desc = "IN_GOVERNMENT_ATTRACTION"
-				value = 1
-				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
-				min = 0
-			}
-		}
-        scope:interest_group = { multiply = { value =  bpm_ig_revolutionary_government_attraction desc = "bpm_ig_revolutionary_government_attraction" } }
 	}
 	
 	monarch_weight = {

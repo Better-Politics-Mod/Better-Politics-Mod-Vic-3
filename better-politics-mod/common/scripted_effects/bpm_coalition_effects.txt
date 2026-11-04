@@ -12,36 +12,48 @@
 bpm_coalition_and_actions = {
 	save_scope_as = country
 	# == Coalition and Actions
-	# First each IG should decide on a strategy & what coalition (movement) to join
+	# First each IG should decide on a strategy & an action
 	every_activated_interest_group = {
 		save_scope_as = ig
-		bpm_ig_decide_strategy = yes #v
-		bpm_ig_decide_coalition = yes
+		bpm_ig_decide_strategy = yes
+		bpm_ig_select_action = yes
 		clear_saved_scope = ig
 	}
 
-	# Then, movements select which action they wanna do
-	every_political_movement = {
-		save_scope_as = movement
-		bpm_movement_select_action = yes
-		clear_saved_scope = movement
-	}
-
+	bpm_purge_actions = yes
 
 	clear_saved_scope = country
 }
 
-bpm_actions_weekly = {
-	save_scope_as = country
-
+# scope:country
+# deletes actions with no actively involved IG
+# and removes the action variable from IGs whose action no longer exists
+bpm_purge_actions = {
 	every_in_list = {
-		variable = bpm_active_coalition_actions
+		variable = bpm_active_actions
 		save_scope_as = action
-		bpm_action_on_monthly = yes
+		bpm_delete_action_if_needed = yes
 		clear_saved_scope = action
 	}
 
-	clear_saved_scope = country
+	every_interest_group = {
+		save_scope_as = purged_ig
+		if = {
+			limit = {
+				has_variable = bpm_action
+				NOT = {
+					scope:country = {
+						is_target_in_variable_list = {
+							name = bpm_active_actions
+							target = scope:purged_ig.var:bpm_action
+						}
+					}
+				}
+			}
+			remove_variable = bpm_action
+		}
+		clear_saved_scope = purged_ig
+	}
 }
 
 bpm_ig_decide_strategy = {
@@ -62,126 +74,355 @@ bpm_ig_decide_strategy = {
 }
 
 
-bpm_ig_decide_coalition = {
-	scope:ig = { remove_variable = bpm_ig_coalition_mov }
+#=================== SELECT ACTION ===================
 
-	owner = { 
-		if = {
-			limit = {
-				any_political_movement = {
-					bpm_ig_movement_attraction > 0
+
+# An IG is willing to join an action according to bpm_ig_willing_to_join_action
+
+bpm_ig_select_action = {
+	bpm_ig_find_preferred_action_type = yes
+	bpm_ig_leave_actions_if_no_preference = yes
+
+	bpm_ig_switch_to_selected_action = yes
+	bpm_ig_keep_or_upgrade_action = yes
+
+	bpm_ig_leave_other_actions = yes
+
+	clear_saved_scope = current_action
+	clear_saved_scope = selected_action_type
+}
+
+# scope:ig
+# saves scope:selected_action_type if any action has attraction > 0
+bpm_ig_find_preferred_action_type = {
+	# get what action type this IG is most attracted to
+	ordered_in_global_list = {
+		limit = {
+			bpm_ig_action_attraction > 0
+		}
+		variable = bpm_coalition_actions
+		position = 0
+		order_by = bpm_ig_action_attraction
+
+		save_scope_as = selected_action_type
+	}
+}
+
+# scope:ig, scope:country
+bpm_ig_leave_actions_if_no_preference = {
+	if = {
+		limit = {
+			NOT = { exists = scope:selected_action_type }
+		}
+		scope:country = {
+			every_in_list = {
+				variable = bpm_active_actions
+				limit = {
+					is_target_in_variable_list = {
+						name = bpm_actively_involved
+						target = scope:ig
+					}
+				}
+				remove_list_variable = {
+					name = bpm_actively_involved
+					target = scope:ig
 				}
 			}
-			ordered_political_movement = {
-				position = 0
-				order_by = bpm_ig_movement_attraction
-
-				scope:ig = { 
-					set_variable = {
-						name = bpm_ig_coalition_mov
-						value = prev
-					} 
-				}
-			} 
 		}
 	}
 }
 
-bpm_movement_select_action = {
+# scope:ig, scope:country
+# saves scope:current_action
+bpm_ig_switch_to_selected_action = {
+	# if the IG wants to do the same action as currently
+	# we just do nothing
+	# if the IG wants to do a different action as currently
+	# we do the process for the IG doing that action
+	# if the IG doesn't want to do any action, we do nothing
+
 	if = {
 		limit = {
-			scope:country = { NOT = { any_in_list = {
-				variable = bpm_active_coalition_actions
-				var:bpm_initiator ?= scope:movement
-			} } }
-		}
-		ordered_in_global_list = {
-			limit = {
-				bpm_movement_action_attraction > 0
+			# if the IG is involved it must be in an action of a different type than the one it wants to do
+			# because otherwise we should just do nothing
+			exists = scope:selected_action_type
+			scope:country = { 
+				any_in_list = {
+					variable = bpm_active_actions
+					count = all
+					OR = {
+						NOT = { is_target_in_variable_list = {
+							name = bpm_actively_involved
+							target = scope:ig
+						} }
+						NOT = { var:bpm_action_type ?= scope:selected_action_type }
+					}
+				} 
 			}
-			variable = bpm_coalition_actions
-			position = 0
-			order_by = bpm_movement_action_attraction
+		}
 
-			save_scope_as = selected_action_type
+		bpm_ig_find_joinable_action = yes
+
+		if = {
+			limit = {
+				NOT = { exists = scope:chosen_action }
+			}
+			bpm_ig_create_selected_action = yes
+		}
+		else = {
+			bpm_ig_join_chosen_action = yes
+		}
+	}
+}
+
+# scope:ig, scope:country, scope:selected_action_type
+# saves scope:chosen_action if an existing action of that type is friendly enough to join
+bpm_ig_find_joinable_action = {
+	scope:country = {
+		every_in_list = {
+			variable = bpm_active_actions
+			limit = {
+				var:bpm_action_type ?= scope:selected_action_type
+				bpm_ig_willing_to_join_action = yes
+			}
+			save_scope_as = chosen_action
+		}
+	}
+}
+
+# scope:ig, scope:country, scope:selected_action_type
+# If the IG is already doing an action of the type it wants (so bpm_ig_switch_to_selected_action did nothing)
+# that action is kept as scope:current_action, unless there is another action of the same type
+# with a higher total clout that the IG is willing to join.
+# In that case the current action is destroyed and the IG joins the other one.
+# saves scope:current_action
+bpm_ig_keep_or_upgrade_action = {
+	if = {
+		limit = {
+			exists = scope:selected_action_type
+			NOT = { exists = scope:current_action }
+		}
+		scope:country = {
+			random_in_list = {
+				variable = bpm_active_actions
+				limit = {
+					var:bpm_action_type ?= scope:selected_action_type
+					is_target_in_variable_list = {
+						name = bpm_actively_involved
+						target = scope:ig
+					}
+				}
+				save_scope_as = current_action
+			}
+		}
+
+		if = {
+			limit = {
+				exists = scope:current_action
+			}
+			bpm_ig_find_bigger_joinable_action = yes
+
+			if = {
+				limit = {
+					exists = scope:chosen_action
+				}
+				scope:current_action = {
+					save_scope_as = action
+				}
+				clear_saved_scope = current_action
+
+				bpm_destroy_action = yes
+				clear_saved_scope = action
+
+				bpm_ig_join_chosen_action = yes
+			}
+		}
+	}
+}
+
+# scope:ig, scope:country, scope:selected_action_type, scope:current_action
+# saves scope:chosen_action as the action of the selected type with the highest total clout,
+# if it has more total clout than scope:current_action and the IG is willing to join it
+bpm_ig_find_bigger_joinable_action = {
+	scope:current_action = {
+		save_temporary_scope_value_as = {
+			name = current_action_clout
+			value = bpm_total_action_clout
+		}
+	}
+
+	scope:country = {
+		ordered_in_list = {
+			variable = bpm_active_actions
+			limit = {
+				NOT = { this = scope:current_action }
+				var:bpm_action_type ?= scope:selected_action_type
+				bpm_total_action_clout > scope:current_action_clout
+				bpm_ig_willing_to_join_action = yes
+			}
+			position = 0
+			order_by = bpm_total_action_clout
+
+			save_scope_as = chosen_action
+		}
+	}
+}
+
+# scope:ig, scope:country, scope:selected_action_type
+# saves scope:current_action
+bpm_ig_create_selected_action = {
+	scope:country = {
+		create_container = {
+			parent = scope:country
+			tags = { bpm_action }
+			save_scope_as = created_action
+		}
+	}
+
+	scope:created_action = {
+		add_to_variable_list = {
+			name = bpm_actively_involved
+			target = scope:ig
+		}
+		set_variable = {
+			name = bpm_action_type
+			value = scope:selected_action_type
+		}
+	}
+	
+	scope:ig = {
+		set_variable = {
+			name = bpm_action
+			value = scope:created_action
+		}
+	}
+
+	scope:country = {
+		add_to_variable_list = {
+			name = bpm_active_actions
+			target = scope:created_action
+		}
+	}
+
+	scope:created_action = {
+		save_scope_as = current_action
+	}
+
+	clear_saved_scope = created_action
+}
+
+# scope:ig, scope:chosen_action
+# saves scope:current_action
+bpm_ig_join_chosen_action = {
+	scope:chosen_action = {
+		add_to_variable_list = {
+			name = bpm_actively_involved
+			target = scope:ig
+		}
+	}
+	scope:ig = {
+		set_variable = {
+			name = bpm_action
+			value = scope:chosen_action
+		}
+	}
+
+	scope:chosen_action = {
+		save_scope_as = current_action
+	}
+
+	clear_saved_scope = chosen_action
+}
+
+# scope:ig, scope:country, scope:current_action (optional)
+bpm_ig_leave_other_actions = {
+	# An IG can only be actively involved in one action at a time
+	scope:country = {
+		every_in_list = {
+			variable = bpm_active_actions
+			limit = {
+				NOT = {
+					scope:current_action ?= this
+				}
+				is_target_in_variable_list = {
+					name = bpm_actively_involved
+					target = scope:ig
+				}
+			}
+			remove_list_variable = {
+				name = bpm_actively_involved
+				target = scope:ig
+			}
+		}
+	}
+}
+
+#=================== DO ACTIONS ===================
+
+
+bpm_actions_weekly = {
+	save_scope_as = country
+
+	every_in_list = {
+		variable = bpm_active_actions
+		save_scope_as = action
+		bpm_do_action = yes
+		clear_saved_scope = action
+	}
+
+	clear_saved_scope = country
+}
+# scope:country
+# scope:action
+bpm_do_action = {
+	bpm_delete_action_if_needed = yes
+	if = {
+		limit = {
+			exists = scope:action
 		}
 		if = {
 			limit = {
-				exists = scope:selected_action_type
+				scope:action.var:bpm_action_type ?= flag:bpm_action_revolt
 			}
-			scope:country = {
-				create_struct = {
-					struct_scope = created_action
-					struct_type = bpm_coalition_action_num
-				}
-			}
-
-			scope:created_action = {
-				set_variable = {
-					name = bpm_initiator
-					value = scope:movement
-				}
-				set_variable = {
-					name = bpm_action_type
-					value = scope:selected_action_type
-				}
-			}
-
-			scope:country = {
-				add_to_variable_list = {
-					name = bpm_active_coalition_actions
-					target = scope:created_action
-				}
-			}
-
-			clear_saved_scope = created_action
-			clear_saved_scope = selected_action_type
+			bpm_action_revolt_do = yes
 		}
 	}
-	else = {
-		scope:country = {
-			random_in_list = {
-				variable = bpm_active_coalition_actions
-				limit = {var:bpm_initiator ?= scope:movement}
-				save_scope_as = selected_action
-			}
-			if = {
-				limit = {
-					NOT = {
-						scope:selected_action.var:bpm_action_type = {
-							bpm_movement_action_attraction > 0
-						}
-					}
-				}
-				remove_list_variable = {
-					name = bpm_active_coalition_actions
-					target = scope:selected_action
-				}
-				scope:selected_action = {
-					remove_variable = bpm_initiator
-				}
-				destroy_struct = {
-					struct = scope:selected_action
-				}
-			}
-			clear_saved_scope = selected_action
-		}
+}
 
-	}
-
-
-	# clear revolt stuff
+bpm_delete_action_if_needed = {
 	if = {
 		limit = {
-			scope:country = {
-				NOT = { any_in_list = {
-					variable = bpm_active_coalition_actions
-					var:bpm_initiator ?= scope:movement
-					var:bpm_action_type ?= flag:bpm_action_revolt
-				} } 
-			}  
+			scope:action = {
+				OR = {
+					variable_list_size = {
+						name = bpm_actively_involved
+						value = 0
+					}
+					NOT = { has_variable_list = bpm_actively_involved }
+				}
+			}
+		}
+		bpm_destroy_action = yes
+	}
+}
+
+# scope:country
+# scope:action
+bpm_destroy_action = {
+	if = {
+		limit = {
+			scope:action.var:bpm_action_type ?= flag:bpm_action_revolt
 		}
 		bpm_clear_revolt_stuff = yes
+	}
+	scope:country = {
+		remove_list_variable = {
+			name = bpm_active_actions
+			target = scope:action
+		}
+	}
+	scope:action = {
+		destroy_container = yes
 	}
 }
 
@@ -189,68 +430,17 @@ bpm_clear_revolt_stuff = {
 	scope:country = {
 		remove_from_variable_map = {
 			name = bpm_revolt_progress
-			key = scope:movement
-		}
-		if = {
-			limit = {
-				bpm_revcell_recently_subsided = yes
-			}
-			scope:movement = {
-				add_modifier = {
-					name = bpm_recently_failed_revolt
-					months = 60
-					is_decaying = yes
-				}
-			}
-		}
-		remove_list_variable = {
-			name = bpm_revcell_recently_subsided
-			target = scope:movement
+			key = scope:action
 		}
 		every_scope_state = {
 			remove_from_variable_map = {
 				name = bpm_revcells
-				key = scope:movement
+				key = scope:action
 			}
 			remove_from_variable_map = {
 				name = bpm_revcell_progress
-				key = scope:movement
-			}
-			remove_list_variable = {
-				name = bpm_revcell_recently_subsided
-				target = scope:movement
+				key = scope:action
 			}
 		}
 	}	
-
-}
-# scope:country
-# scope:action
-bpm_action_on_monthly = {
-	if = {
-		limit = {
-			NOT = {
-				exists = scope:action.var:bpm_initiator
-			}
-		}
-		remove_list_variable = {
-			name = bpm_active_coalition_actions
-			target = scope:action
-		}
-		scope:action = {
-			remove_variable = bpm_initiator
-		}
-		destroy_struct = {
-			struct = scope:action
-		}
-	}
-	else = {
-		scope:action.var:bpm_initiator = { save_scope_as = movement }
-		if = {
-			limit = {
-				scope:action.var:bpm_action_type ?= flag:bpm_action_revolt
-			}
-			bpm_action_revolt_on_monthly = yes
-		}
-	}
 }

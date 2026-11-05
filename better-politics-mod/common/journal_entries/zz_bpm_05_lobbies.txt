@@ -27,125 +27,140 @@ REPLACE:je_pro_lobby_demand = {
 		}
 	}
 
-	complete = {
-		trigger_if = {
-			limit = {
-				has_variable = pro_lobby_proposal_break_alliance
-			}
-			NOT = {
-				any_scope_treaty = {
-					binds = scope:third_party_country
-					any_scope_article = {
-						has_type = alliance
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		color = "gold_positive"
+		conclusion_desc = je_standard_completion_conclusion_desc
+		trigger = {
+			trigger_if = {
+				limit = {
+					has_variable = pro_lobby_proposal_break_alliance
+				}
+				NOT = {
+					any_scope_treaty = {
+						binds = scope:third_party_country
+						any_scope_article = {
+							has_type = alliance
+						}
 					}
 				}
 			}
-		}
-		trigger_if = {
-			limit = {
-				has_variable = pro_lobby_proposal_break_defensive_pact
-			}
-			NOT = {
-				any_scope_treaty = {
-					binds = scope:third_party_country
-					any_scope_article = {
-						has_type = defensive_pact
+			trigger_if = {
+				limit = {
+					has_variable = pro_lobby_proposal_break_defensive_pact
+				}
+				NOT = {
+					any_scope_treaty = {
+						binds = scope:third_party_country
+						any_scope_article = {
+							has_type = defensive_pact
+						}
 					}
 				}
 			}
-		}
-		trigger_if = {
-			limit = {
-				has_variable = pro_lobby_proposal_break_trade_agreement
-			}
-			NOT = {
-				any_scope_treaty = {
-					binds = scope:third_party_country
-					any_scope_article = {
-						has_type = trade_privilege
+			trigger_if = {
+				limit = {
+					has_variable = pro_lobby_proposal_break_trade_agreement
+				}
+				NOT = {
+					any_scope_treaty = {
+						binds = scope:third_party_country
+						any_scope_article = {
+							has_type = trade_privilege
+						}
 					}
 				}
 			}
-		}
-		trigger_if = {
-			limit = {
-				has_variable = pro_lobby_proposal_embargo
-			}
-			has_diplomatic_pact = {
-				who = scope:third_party_country
-				type = embargo
-				is_initiator = yes
-			}
-		}
-		trigger_else_if = {
-			limit = {
-				has_variable = pro_lobby_proposal_rivalry
-			}
-			has_diplomatic_pact = {
-				who = scope:third_party_country
-				type = rivalry
-				is_initiator = yes
-			}
-		}
-		trigger_else_if = {
-			limit = {
-				has_variable = pro_lobby_proposal_war
-			}
-			OR = {
-				has_war_with = scope:third_party_country
-				custom_tooltip = {
-					text = enforced_wargoal_on_rival_2_tt
-					has_variable = enforced_wargoal_on_enemy
+			trigger_if = {
+				limit = {
+					has_variable = pro_lobby_proposal_embargo
+				}
+				has_diplomatic_pact = {
+					who = scope:third_party_country
+					type = embargo
+					is_initiator = yes
 				}
 			}
-		}
-		trigger_else_if = {
-			limit = {
-				has_variable = pro_lobby_proposal_leave_power_bloc
+			trigger_else_if = {
+				limit = {
+					has_variable = pro_lobby_proposal_rivalry
+				}
+				has_diplomatic_pact = {
+					who = scope:third_party_country
+					type = rivalry
+					is_initiator = yes
+				}
 			}
-			NOT = {
-				is_in_same_power_bloc = scope:third_party_country
-			}
-		}
-	}
-
-	invalid = {
-		NOT = {
-			exists = scope:third_party_country
-		}
-	}
-
-	on_complete = {
-		scope:relevant_lobby = {
-			change_appeasement = {
-				amount = 3
-				factor = appeasement_lobby_request_accepted
-			}
-		}
-		clear_pro_lobby_vars = yes
-	}
-
-	on_timeout = {
-		if = {
-			limit = {
-				AND = {
+			trigger_else_if = {
+				limit = {
 					has_variable = pro_lobby_proposal_war
-					modifier:country_bpm_jingoist_lobby_force_demands_enabled = yes
+				}
+				OR = {
+					has_war_with = scope:third_party_country
+					custom_tooltip = {
+						text = enforced_wargoal_on_rival_2_tt
+						has_variable = enforced_wargoal_on_enemy
+					}
 				}
 			}
-			bpm_start_stupid_war = {
-				ATTACKER = root
-				DEFENDER = scope:third_party_country
+			trigger_else_if = {
+				limit = {
+					has_variable = pro_lobby_proposal_leave_power_bloc
+				}
+				NOT = {
+					is_in_same_power_bloc = scope:third_party_country
+				}
 			}
-		} else = {
+		}
+		effect = {
 			scope:relevant_lobby = {
 				change_appeasement = {
-					amount = -5
-					factor = appeasement_lobby_request_ignored
+					amount = 3
+					factor = appeasement_lobby_request_accepted
 				}
 			}
+			clear_pro_lobby_vars = yes
 		}
-		clear_pro_lobby_vars = yes
+	}
+
+	outcome = {
+		flags = { hidden invalid_outcome }
+		conclusion_desc = je_standard_failure_conclusion_desc
+		trigger = {
+			NOT = {
+				exists = scope:third_party_country
+			}
+		}
+	}
+
+	outcome = {
+		header = JOURNAL_ENTRY_TIMEOUT
+		effect_header = JOURNAL_ENTRY_ON_TIMEOUT
+		flags = { timeout }
+		conclusion_desc = JOURNAL_ENTRY_TIMEOUT_CONCLUSION_DESC
+		effect = {
+			if = {
+				limit = {
+					AND = {
+						has_variable = pro_lobby_proposal_war
+						modifier:country_bpm_jingoist_lobby_force_demands_enabled = yes
+					}
+				}
+				bpm_start_stupid_war = {
+					ATTACKER = root
+					DEFENDER = scope:third_party_country
+				}
+			} else = {
+				scope:relevant_lobby = {
+					change_appeasement = {
+						amount = -5
+						factor = appeasement_lobby_request_ignored
+					}
+				}
+			}
+			clear_pro_lobby_vars = yes
+		}
 	}
 
 	weight = 1000
@@ -175,126 +190,141 @@ REPLACE:je_anti_lobby_demand = {
 		}
 	}
 
-	complete = {
-		trigger_if = {
-			limit = {
-				has_variable = anti_lobby_proposal_break_alliance
-			}
-			NOT = {
-				any_scope_treaty = {
-					binds = scope:target
-					any_scope_article = {
-						has_type = alliance
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		color = "gold_positive"
+		conclusion_desc = je_standard_completion_conclusion_desc
+		trigger = {
+			trigger_if = {
+				limit = {
+					has_variable = anti_lobby_proposal_break_alliance
+				}
+				NOT = {
+					any_scope_treaty = {
+						binds = scope:target
+						any_scope_article = {
+							has_type = alliance
+						}
 					}
 				}
 			}
-		}
-		trigger_if = {
-			limit = {
-				has_variable = anti_lobby_proposal_break_defensive_pact
-			}
-			NOT = {
-				any_scope_treaty = {
-					binds = scope:target
-					any_scope_article = {
-						has_type = defensive_pact
+			trigger_if = {
+				limit = {
+					has_variable = anti_lobby_proposal_break_defensive_pact
+				}
+				NOT = {
+					any_scope_treaty = {
+						binds = scope:target
+						any_scope_article = {
+							has_type = defensive_pact
+						}
 					}
 				}
 			}
-		}
-		trigger_if = {
-			limit = {
-				has_variable = anti_lobby_proposal_break_trade_agreement
-			}
-			NOT = {
-				any_scope_treaty = {
-					binds = scope:target
-					any_scope_article = {
-						has_type = trade_privilege
+			trigger_if = {
+				limit = {
+					has_variable = anti_lobby_proposal_break_trade_agreement
+				}
+				NOT = {
+					any_scope_treaty = {
+						binds = scope:target
+						any_scope_article = {
+							has_type = trade_privilege
+						}
 					}
 				}
 			}
-		}
-		trigger_if = {
-			limit = {
-				has_variable = anti_lobby_proposal_embargo
+			trigger_if = {
+				limit = {
+					has_variable = anti_lobby_proposal_embargo
+				}
+				has_diplomatic_pact = {
+					who = scope:target
+					type = embargo
+					is_initiator = yes
+				}
 			}
-			has_diplomatic_pact = {
-				who = scope:target
-				type = embargo
-				is_initiator = yes
+			trigger_else_if = {
+				limit = {
+					has_variable = anti_lobby_proposal_rivalry
+				}
+				has_diplomatic_pact = {
+					who = scope:target
+					type = rivalry
+					is_initiator = yes
+				}
 			}
-		}
-		trigger_else_if = {
-			limit = {
-				has_variable = anti_lobby_proposal_rivalry
+			trigger_else_if = {
+				limit = {
+					has_variable = anti_lobby_proposal_war
+				}
+				OR = {
+					has_war_with = scope:target
+					custom_tooltip = {
+						text = enforced_wargoal_on_rival_tt
+						has_variable = enforced_wargoal_on_enemy
+					}
+				}
 			}
-			has_diplomatic_pact = {
-				who = scope:target
-				type = rivalry
-				is_initiator = yes
-			}
-		}
-		trigger_else_if = {
-			limit = {
-				has_variable = anti_lobby_proposal_war
-			}
-			OR = {
-				has_war_with = scope:target
-				custom_tooltip = {
-					text = enforced_wargoal_on_rival_tt
-					has_variable = enforced_wargoal_on_enemy
+			trigger_else_if = {
+				limit = {
+					has_variable = anti_lobby_proposal_leave_power_bloc
+				}
+				NOT = {
+					is_in_same_power_bloc = scope:target
 				}
 			}
 		}
-		trigger_else_if = {
-			limit = {
-				has_variable = anti_lobby_proposal_leave_power_bloc
+		effect = {
+			scope:relevant_lobby = {
+				change_appeasement = {
+					amount = 3
+					factor = appeasement_lobby_request_accepted
+				}
 			}
-			NOT = {
-				is_in_same_power_bloc = scope:target
-			}
+			clear_anti_lobby_vars = yes
 		}
 	}
 	
-	invalid = {
-		NAND = {
-			exists = scope:target
-			exists = scope:relevant_lobby
+	outcome = {
+		flags = { hidden invalid_outcome }
+		conclusion_desc = je_standard_failure_conclusion_desc
+		trigger = {
+			NAND = {
+				exists = scope:target
+				exists = scope:relevant_lobby
+			}
 		}
 	}
 
-	on_complete = {
-		scope:relevant_lobby = {
-			change_appeasement = {
-				amount = 3
-				factor = appeasement_lobby_request_accepted
-			}
-		}
-		clear_anti_lobby_vars = yes
-	}
-
-	on_timeout = {
-		if = {
-			limit = {
-				AND = {
-					has_variable = anti_lobby_proposal_war
-					modifier:country_bpm_jingoist_lobby_force_demands_enabled = yes
+	outcome = {
+		header = JOURNAL_ENTRY_TIMEOUT
+		effect_header = JOURNAL_ENTRY_ON_TIMEOUT
+		flags = { timeout }
+		conclusion_desc = JOURNAL_ENTRY_TIMEOUT_CONCLUSION_DESC
+		effect = {
+			if = {
+				limit = {
+					AND = {
+						has_variable = anti_lobby_proposal_war
+						modifier:country_bpm_jingoist_lobby_force_demands_enabled = yes
+					}
+				}
+				bpm_start_stupid_war = {
+					ATTACKER = root
+					DEFENDER = scope:target
+				}
+			} else = {
+				scope:relevant_lobby = {
+					change_appeasement = {
+						amount = -5
+						factor = appeasement_lobby_request_ignored
+					}
 				}
 			}
-			bpm_start_stupid_war = {
-				ATTACKER = root
-				DEFENDER = scope:target
-			}
-		} else = {
-			scope:relevant_lobby = {
-				change_appeasement = {
-					amount = -5
-					factor = appeasement_lobby_request_ignored
-				}
-			}
+			clear_anti_lobby_vars = yes
 		}
-		clear_anti_lobby_vars = yes
 	}
 
 	weight = 1000

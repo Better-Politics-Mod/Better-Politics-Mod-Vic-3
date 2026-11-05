@@ -25,141 +25,160 @@
 		}
 	}
 
-    complete = {
-        exists = scope:government_promise_law
-        OR = {
-            has_law = scope:government_promise_law.type
-            hidden_trigger = {
-                var:recently_enacted_repeatable ?= scope:government_promise_law.type
+    outcome = {
+        header = je_standard_completion_header
+        effect_header = je_standard_on_completion_header
+        color = "gold_positive"
+        conclusion_desc = je_standard_completion_conclusion_desc
+        trigger = {
+            exists = scope:government_promise_law
+            OR = {
+                has_law = scope:government_promise_law.type
+                hidden_trigger = {
+                    var:recently_enacted_repeatable ?= scope:government_promise_law.type
+                }
             }
         }
-    }
-
-    on_complete = {
-        scope:government_promise_ig = {
+        effect = {
+            scope:government_promise_ig = {
+                add_modifier = {
+                    name = bpm_followed_through_with_promised_content_ig
+                    days = short_modifier_time
+                }
+            }
             add_modifier = {
-                name = bpm_followed_through_with_promised_content_ig
+                name = bpm_followed_through_with_promise
                 days = short_modifier_time
             }
-        }
-        add_modifier = {
-            name = bpm_followed_through_with_promise
-            days = short_modifier_time
-        }
-        every_interest_group = {
-            limit = {
-                has_variable = bpm_law_sway_promise_proposed
+            every_interest_group = {
+                limit = {
+                    has_variable = bpm_law_sway_promise_proposed
+                }
+                remove_variable = bpm_law_sway_promise_proposed
             }
-            remove_variable = bpm_law_sway_promise_proposed
+            remove_variable = bpm_promise_desired_law
         }
-        remove_variable = bpm_promise_desired_law
     }
 
-    invalid = {
-        OR = {
-            scope:government_promise_ig ?= {
-                law_stance = {
-                    law = scope:government_promise_law.type
-                    value < approve
+    outcome = {
+        flags = { hidden invalid_outcome }
+        conclusion_desc = je_standard_failure_conclusion_desc
+        trigger = {
+            OR = {
+                scope:government_promise_ig ?= {
+                    law_stance = {
+                        law = scope:government_promise_law.type
+                        value < approve
+                    }
+                }
+                NOT = {
+                    exists = scope:government_promise_law
                 }
             }
-            NOT = {
-                exists = scope:government_promise_law
+        }
+        effect = {
+            every_interest_group = {
+                limit = {
+                    has_variable = bpm_law_sway_promise_proposed
+                }
+                remove_variable = bpm_law_sway_promise_proposed
             }
+            remove_variable = bpm_promise_desired_law
         }
     }
 
-    fail = {
+    outcome = {
+        header = je_standard_failure_header
+        effect_header = je_standard_on_failure_header
+        color = "blue_negative"
+        conclusion_desc = je_standard_failure_conclusion_desc
+        trigger = {
 
+        }
+        effect = { }
     }
 
-    on_timeout = {
-        # to replace with other modifiers
-        # this should be rather harsh
-        if = {
-            limit = {
-                is_enacting_law = scope:government_promise_law.type
-            }
-            scope:government_promise_ig = {
-                if = {
-                    limit = {
-                        is_powerful = yes
+    outcome = {
+        header = JOURNAL_ENTRY_TIMEOUT
+        effect_header = JOURNAL_ENTRY_ON_TIMEOUT
+        flags = { timeout }
+        conclusion_desc = JOURNAL_ENTRY_TIMEOUT_CONCLUSION_DESC
+        effect = {
+            # to replace with other modifiers
+            # this should be rather harsh
+            if = {
+                limit = {
+                    is_enacting_law = scope:government_promise_law.type
+                }
+                scope:government_promise_ig = {
+                    if = {
+                        limit = {
+                            is_powerful = yes
+                        }
+                        add_modifier = {
+                            name = bpm_went_back_on_promise_angry_ig
+                            months = 24
+                            is_decaying = yes
+                            multiplier = {
+                                add = 1.5
+                                divide = {
+                                    add = 1
+                                    add = ROOT.enactment_phase
+                                }
+                            }
+                        }
                     }
-                    add_modifier = {
-                        name = bpm_went_back_on_promise_angry_ig
-                        months = 24
-                        is_decaying = yes
-                        multiplier = {
-                            add = 1.5
-                            divide = {
+                    else = {
+                        add_modifier = {
+                            name = bpm_went_back_on_promise_angry_ig
+                            months = 24
+                            is_decaying = yes
+                            multiplier = {
                                 add = 1
-                                add = ROOT.enactment_phase
+                                divide = {
+                                    add = 1
+                                    add = ROOT.enactment_phase
+                                }
                             }
                         }
                     }
                 }
-                else = {
-                    add_modifier = {
-                        name = bpm_went_back_on_promise_angry_ig
-                        months = 24
-                        is_decaying = yes
-                        multiplier = {
-                            add = 1
-                            divide = {
-                                add = 1
-                                add = ROOT.enactment_phase
-                            }
+            }
+            else = {
+                scope:government_promise_ig = {
+                    if = {
+                        limit = {
+                            is_powerful = yes
+                        }
+                        add_modifier = {
+                            name = bpm_went_back_on_promise_angry_ig
+                            months = 24
+                            is_decaying = yes
+                            multiplier = 1.5
+                        }
+                    }
+                    else = {
+                        add_modifier = {
+                            name = bpm_went_back_on_promise_angry_ig
+                            months = 24
+                            is_decaying = yes
                         }
                     }
                 }
             }
-        }
-        else = {
-            scope:government_promise_ig = {
-                if = {
-                    limit = {
-                        is_powerful = yes
-                    }
-                    add_modifier = {
-                        name = bpm_went_back_on_promise_angry_ig
-                        months = 24
-                        is_decaying = yes
-                        multiplier = 1.5
-                    }
-                }
-                else = {
-                    add_modifier = {
-                        name = bpm_went_back_on_promise_angry_ig
-                        months = 24
-                        is_decaying = yes
-                    }
-                }
-            }
-        }
 
-        add_modifier = {
-            name = bpm_went_back_on_promise
-            months = 24
-            is_decaying = yes
-        }
+            add_modifier = {
+                name = bpm_went_back_on_promise
+                months = 24
+                is_decaying = yes
+            }
         
-        every_interest_group = {
-            remove_variable = bpm_law_sway_promise_proposed
-        }
-        remove_variable = bpm_promise_desired_law
-        # set_variable = bpm_cannot_promise_a_law # Handled by the 10 year modifier instead
-    }
-
-    on_fail = { }
-
-    on_invalid = {
-        every_interest_group = {
-            limit = {
-                has_variable = bpm_law_sway_promise_proposed
+            every_interest_group = {
+                remove_variable = bpm_law_sway_promise_proposed
             }
-            remove_variable = bpm_law_sway_promise_proposed
+            remove_variable = bpm_promise_desired_law
+            # set_variable = bpm_cannot_promise_a_law # Handled by the 10 year modifier instead
         }
-        remove_variable = bpm_promise_desired_law
     }
 
     timeout = 1825

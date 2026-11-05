@@ -1,0 +1,231 @@
+﻿# Country. Raw weight pulling the Political bar towards Confrontation.
+# Note it swaps which movement type it measures once a reformist socialism victory has happened.
+REPLACE:state_and_revolution_political_confrontation_pivot = {
+	if = {
+		limit = {
+			has_journal_entry = je_state_and_revolution
+		}
+		every_interest_group = {
+			limit = {
+				is_powerful = yes
+				law_stance = {
+					law = law_type:law_council_republic
+					value > neutral
+				}
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_TUS_POWERFUL_AND_PRO_COUNCIL_REPUBLIC_TT"
+				value = ig_clout
+				min = 0
+				max = 1
+			}
+		}
+		if = {
+			limit = {
+				has_variable = state_and_revolution_lower_strata_loyalist_fraction_var
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_LOWER_STRATA_LOYALISTS_TT"
+				value = var:state_and_revolution_lower_strata_loyalist_fraction_var
+				min = 0
+				max = 1
+			}
+		}
+		if = {
+			limit = {
+				had_reformist_socialism_victory = yes
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_COMMUNIST_MOVEMENT_SUPPORT_TT"
+				every_political_movement = {
+					limit = {
+						is_political_movement_type = movement_communist
+					}
+					add = this.political_movement_support
+				}
+				min = 0
+				max = 1
+			}
+		}
+		else = {
+			add = {
+				desc = "STATE_AND_REVOLUTION_SOCIALIST_MOVEMENT_SUPPORT_TT"
+				every_political_movement = {
+					limit = {
+						is_political_movement_type = movement_socialist
+					}
+					add = this.political_movement_support
+				}
+				min = 0
+				max = 1
+			}
+		}
+		if = {
+			limit = {
+				state_and_revolution_active_revolutionary_laws > 0
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_ACTIVE_REVOLUTIONARY_LAWS_TT"
+				value = state_and_revolution_active_revolutionary_laws
+				divide = 4
+				min = 0
+			}
+		}
+		if = {
+			limit = {
+				had_revolutionary_socialism_victory = yes
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_REVOLUTIONARY_VICTORY_TT"
+				value = state_and_revolution_revolutionary_victory_bonus
+			}
+		}
+		if = {
+			limit = {
+				state_and_revolution_neighbour_communist_revolution_bonus > 0
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_NEIGHBOUR_COMMUNIST_REVOLUTION_TT"
+				value = state_and_revolution_neighbour_communist_revolution_bonus
+			}
+		}
+		if = {
+			limit = {
+				state_and_revolution_liberation_war_bonus > 0
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_LIBERATION_WAR_TT"
+				value = state_and_revolution_liberation_war_bonus
+			}
+		}
+		if = {
+			limit = {
+				revolutionary_bloc_gdp_fraction > 0
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_REVOLUTIONARY_BLOC_GDP_TT"
+				value = revolutionary_bloc_gdp_fraction
+				multiply = 2
+			}
+		}
+	}
+	else = {
+		value = 0
+	}
+}
+
+# Country. Raw weight pulling the Political bar towards Consolidation. Paired with the value above.
+REPLACE:state_and_revolution_political_consolidation_pivot = {
+	if = {
+		limit = {
+			has_journal_entry = je_state_and_revolution
+		}
+		if = {
+			limit = {
+				ig:ig_revolutionist_socialists ?= {
+					ig_clout < 0.1
+				}
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_TUS_NOT_POWERFUL_TT"
+				value = 0.1
+				divide = {
+					if = {
+						limit = {
+							ig:ig_revolutionist_socialists.ig_clout >= 0.01
+						}
+						value = ig:ig_revolutionist_socialists.ig_clout
+					}
+					else = {
+						value = 0.01
+					}
+				}
+				min = 0
+				max = 1
+			}
+		}
+		if = {
+			limit = {
+				country_turmoil > 0
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_TURMOIL_TT"
+				value = country_turmoil
+				multiply = 2
+				min = 0
+				max = 2
+			}
+		}
+		if = {
+			limit = {
+				ig:ig_revolutionist_socialists ?= {
+					is_in_government = no
+				}
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_TUS_NOT_IN_GOVERNMENT_TT"
+				value = 1
+			}
+		}
+		if = {
+			limit = {
+				state_and_revolution_missing_revolutionary_laws > 0
+			}
+			add = {
+				desc = "STATE_AND_REVOLUTION_MISSING_REVOLUTIONARY_LAWS_TT"
+				value = state_and_revolution_missing_revolutionary_laws
+				divide = 3
+				min = 0
+				max = 1
+			}
+		}
+		add = {
+			desc = "STATE_AND_REVOLUTION_MOVEMENT_ACTIVISM_TT"
+			every_political_movement = {
+				limit = {
+					OR = {
+						political_movement_support >= 0.05
+						political_movement_identity_support >= 0.15
+					}
+					political_movement_radicalism > define:NPolitics|RADICALISM_PROTESTING_THRESHOLD
+				}
+				add = {
+					value = this.political_movement_radicalism
+					multiply = {
+						value = this.political_movement_support
+						multiply = 5
+					}
+				}
+			}
+			min = 0
+			max = 2
+		}
+		add = {
+			desc = "STATE_AND_REVOLUTION_NON_SOCIALIST_IG_CLOUT_TT"
+			every_interest_group = {
+				limit = {
+					is_marginal = no
+					ig_is_socialist = no
+				}
+				add = this.ig_clout
+			}
+			min = 0
+			max = 1
+		}
+		add = {
+			desc = "STATE_AND_REVOLUTION_DEFENSIST_IG_CLOUT_TT"
+			every_interest_group = {
+				limit = {
+					is_marginal = no
+					has_ideology = ideology:ideology_defensist
+				}
+				add = this.ig_clout
+			}
+			min = 0
+			max = 1
+		}
+	}
+	else = {
+		value = 0
+	}
+}

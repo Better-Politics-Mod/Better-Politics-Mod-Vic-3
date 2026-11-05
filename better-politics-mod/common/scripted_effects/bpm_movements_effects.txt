@@ -181,18 +181,6 @@ bpm_do_ai_splits = {
 	}
 	random_political_movement = {
 		limit = {
-			is_political_movement_type = movement_market_liberal
-		}
-		save_scope_as = movement_market_liberal
-	}
-	random_political_movement = {
-		limit = {
-			is_political_movement_type = movement_national_liberal
-		}
-		save_scope_as = movement_national_liberal
-	}
-	random_political_movement = {
-		limit = {
 			is_political_movement_type = movement_anarchist
 		}
 		save_scope_as = movement_anarchist
@@ -202,12 +190,6 @@ bpm_do_ai_splits = {
 			is_political_movement_type = movement_communist
 		}
 		save_scope_as = movement_communist
-	}
-	random_political_movement = {
-		limit = {
-			is_political_movement_type = movement_reformist_socialist
-		}
-		save_scope_as = movement_reformist_socialist
 	}
 	random_political_movement = {
 		limit = {
@@ -280,24 +262,6 @@ bpm_do_ai_splits = {
 	}
 	if = {
 		limit = {
-			exists = scope:movement_market_liberal
-		}
-		set_variable = {
-			name = bpm_market_liberal_movement
-			value = scope:movement_market_liberal
-		}
-	}
-	if = {
-		limit = {
-			exists = scope:movement_national_liberal
-		}
-		set_variable = {
-			name = bpm_national_liberal_movement
-			value = scope:movement_national_liberal
-		}
-	}
-	if = {
-		limit = {
 			exists = scope:movement_anarchist
 		}
 		set_variable = {
@@ -312,15 +276,6 @@ bpm_do_ai_splits = {
 		set_variable = {
 			name = bpm_communist_movement
 			value = scope:movement_communist
-		}
-	}
-	if = {
-		limit = {
-			exists = scope:movement_reformist_socialist
-		}
-		set_variable = {
-			name = bpm_reformist_socialist_movement
-			value = scope:movement_reformist_socialist
 		}
 	}
 	if = {
@@ -393,14 +348,11 @@ bpm_do_ai_splits = {
 	# Socialist Split
 	if = {
 		limit = {
-			OR = {
-				AND = {
-					has_variable = bpm_socialist_movement
-					OR = {
-						var:bpm_socialist_movement.political_movement_support > 0.1
-					}
+			AND = {
+				has_variable = bpm_socialist_movement
+				OR = {
+					var:bpm_socialist_movement.political_movement_support > 0.1
 				}
-				has_global_variable = first_intl_chain_complete_var
 			}
 			NOT = {
 				bpm_has_movement_interaction = { int = socialist_split }
@@ -515,13 +467,7 @@ bpm_do_ai_splits = {
 	# Revsoc Split
 	if = {
 		limit = {
-			OR = {
-				AND = {
-					has_variable = bpm_communist_movement
-					var:bpm_communist_movement.political_movement_support > 0.1
-				}
-				has_variable = local_revsocs_split_var
-			}
+			global_var:reform_or_revolution_conclusion ?= flag:reform
 			NOT = {
 				bpm_has_movement_interaction = { int = revsoc_split }
 			}
@@ -531,13 +477,7 @@ bpm_do_ai_splits = {
 	# Refsoc Split
 	if = {
 		limit = { 
-			OR = {
-				AND = {
-					has_variable = bpm_socialist_movement
-					var:bpm_reformist_socialist_movement.political_movement_support > 0.1
-				}
-				has_variable = local_revsocs_split_var
-			}
+			global_var:reform_or_revolution_conclusion ?= flag:reform
 			NOT = {
 				bpm_has_movement_interaction = { int = refsoc_split }
 			}
@@ -559,10 +499,7 @@ bpm_do_ai_splits = {
 	if = {
 		limit = { 
 			has_variable = bpm_labor_movement
-			OR = {
-				var:bpm_labor_movement.political_movement_support > 0.15
-				bpm_consciousness_labor_percent > 0.5
-			}
+			var:bpm_labor_movement.political_movement_support > 0.15
 			NOT = { 
 				bpm_has_movement_interaction = { int = conservative_paternalist_takeover }
 			}
@@ -572,229 +509,4 @@ bpm_do_ai_splits = {
 		}
 		bpm_do_conservative_paternalist_takeover = yes
 	}
-	if = {
-		limit = {
-			bpm_consciousness_liberal_percent > 0.55
-			NAND = {
-				bpm_has_movement_interaction = { int = national_liberal_split }
-				bpm_has_movement_interaction = { int = market_liberal_split }
-			}
-
-		}
-		bpm_do_national_liberal_split = yes
-		bpm_do_market_liberal_split = yes
-	}
-	if = {
-		limit = {
-			NAND = {
-				bpm_has_movement_interaction = { int = anarchist_split }
-				bpm_has_movement_interaction = { int = socialist_split }
-			}
-			bpm_consciousness_labor_percent > 0.55
-		}
-		bpm_do_socialist_split = yes
-		bpm_do_anarchist_split = yes
-	}
-	if = {
-		limit = {
-			NOT = {
-				bpm_has_movement_interaction = { int = fascist_split }
-			}
-			bpm_consciousness_labor_percent > 0.75
-			bpm_consciousness_liberal_percent > 0.95
-		}
-		bpm_do_fascist_split = yes
-	}
-	if = {
-		limit = {
-			NOT = {
-				bpm_has_movement_interaction = { int = revsoc_split }
-			}
-			bpm_consciousness_labor_percent > 0.75
-		}
-		bpm_do_revsoc_split = yes
-	}
-}
-
-bpm_create_necessary_movements = {
-	if = {
-		limit = { 
-			bpm_country_laws_are_moderately_liberal_democratic = yes
-			NOR = {
-				has_law = law_type:law_traditionalism
-				has_law = law_type:law_ad_hoc_centralization
-			}
-		}
-		create_political_movement = {
-			type = movement_liberal
-		}
-		if = {
-			limit = {
-				OR = {
-					c:FRA = this
-					civil_war_origin_country ?= c:FRA
-				}
-				NOR = {
-					has_variable = monarchy_stamped_out_var
-					AND = {
-						OR = {
-							has_variable = legitimist_restoration_var
-							has_variable = orleanist_restoration_var
-						}
-						has_variable = one_true_french_dynasty
-					}
-				}
-			}
-			create_political_movement = {
-				type = movement_national_liberal
-			}
-		
-		}
-		if = {
-			limit = {
-				OR = {
-					c:FRA = this
-					civil_war_origin_country ?= c:FRA
-				}
-				NOR = {
-					has_variable = monarchy_stamped_out_var
-					AND = {
-						OR = {
-							has_variable = legitimist_restoration_var
-							has_variable = bonapartist_restoration_var
-						}
-						has_variable = one_true_french_dynasty
-					}
-				}
-			}
-			create_political_movement = {
-				type = movement_market_liberal
-			}
-		}
-		if = {
-			limit = { 
-				trigger_if = {
-					limit = {
-						this ?= c:SPA
-						this ?= c:SPC
-						this ?= c:POR
-						civil_war_origin_country ?= c:SPA 
-						civil_war_origin_country ?= c:SPC 
-						civil_war_origin_country ?= c:POR 
-					}
-					has_variable = monarchy_stamped_out_var
-				}
-				trigger_else_if = {
-					limit = { 
-						OR = {
-							this ?= c:FRA
-							civil_war_origin_country ?= c:FRA 
-						}
-					}
-					OR = {
-						has_variable = monarchy_stamped_out_var
-						AND = {
-							OR = {
-								has_variable = bonapartist_restoration_var
-								has_variable = orleanist_restoration_var
-							}
-							has_variable = one_true_french_dynasty
-						}
-					}
-				}
-			}
-			create_political_movement = {
-				type = movement_reactionary
-			}
-		}
-		create_political_movement = {
-			type = movement_labor
-		}
-	}
-
-	if = {
-		limit = {
-			OR = { 
-				bpm_country_is_pre_modern = no
-				is_in_geographic_region = geographic_region_europe
-			}
-			bpm_country_is_republic = no
-		}
-		if = {
-			limit = { 
-				NOR = {
-					this ?= c:FRA
-					this ?= c:SPC
-					this ?= c:SPA
-					this ?= c:POR
-				}
-			}
-			create_political_movement = {
-				type = movement_royalist_constitutional
-			}
-		}
-		create_political_movement = {
-			type = movement_liberal
-		}
-		create_political_movement = {
-			type = movement_radical
-		}
-	}
-
-	if = {
-		limit = {
-			bpm_country_is_pre_modern = yes
-			NOT = {is_in_geographic_region = geographic_region_europe}
-		}
-		create_political_movement = {
-			type = movement_liberal
-		}
-		if = {
-			limit = { NOT = { c:JAP = this } }
-				create_political_movement = {
-				type = movement_modernizer
-			}
-		}
-	}
-
-	if = {
-		limit = {
-			OR = {
-				AND = {
-					has_global_variable = second_intl_chain_complete_var
-					bpm_consciousness_labor_percent > 0.25
-				}
-				bpm_consciousness_labor_percent > 0.75
-			}
-			
-		}
-		create_political_movement = {
-			type = movement_communist
-		}
-		create_political_movement = {
-			type = movement_reformist_socialist
-		}
-		create_political_movement = {
-			type = movement_anarchist
-		}
-	}
-
-	else_if = {
-		limit = {
-			OR = {
-				AND = {
-					has_global_variable = first_intl_chain_complete_var
-					bpm_consciousness_labor_percent > 0.10
-				}
-				bpm_consciousness_labor_percent > 0.25
-			}
-			NOT = {
-				any_political_movement = { is_political_movement_type = movement_communist } 
-			}
-		}
-		create_political_movement = {
-			type = movement_socialist
-		}
-	}
-
 }

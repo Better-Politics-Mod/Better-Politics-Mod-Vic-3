@@ -1,0 +1,457 @@
+﻿REPLACE:je_reform_or_revolution = {
+	icon = "gfx/interface/icons/event_icons/event_revolutionary_flag.dds"
+
+	group = je_group_socialism
+
+	is_shown_when_inactive = {
+		has_global_variable = marx_happened
+	}
+
+	activation_description = {
+		always = yes
+	}
+
+	context = none
+
+	status_desc = {
+		first_valid = {
+			triggered_desc = {
+				desc = socialist_party_loc_present
+				trigger = {
+					has_global_variable = paramount_socialist_party_var
+					has_global_variable = paramount_socialist_party_country_var
+				}
+			}
+			triggered_desc = {
+				desc = blank_tt
+				trigger = {
+					NOR = {
+						has_global_variable = paramount_socialist_party_var
+						has_global_variable = paramount_socialist_party_country_var
+					}
+				}
+			}
+		}
+	}
+
+	possible = {
+		custom_tooltip = {
+			text = reform_or_revolution_possible_tt
+			has_global_variable = reform_or_revolution_global_var
+		}
+	}
+
+	should_be_involved = {
+		has_technology_researched = socialism
+		OR = {
+			any_political_movement = {
+				is_political_movement_type = movement_socialist
+			}
+			any_active_party = {
+				party_counts_as_socialist_party = yes
+				party_has_members = yes
+			}
+		}
+	}
+
+	should_show_when_not_involved = {
+		has_technology_researched = socialism
+	}
+
+	should_be_pinned_by_default_involved = yes
+	should_be_pinned_by_default_uninvolved_or_context = no
+
+	can_revolution_inherit = yes
+
+	weight = 10000
+
+	scripted_progress_bar = reform_or_revolution_progress_bar
+
+	immediate_all_involved = {
+		trigger_event = { id = reform_or_revolution.1 }
+	}
+
+	on_become_involved_after_activation = {
+		trigger_event = { id = reform_or_revolution.1 }
+		set_variable = {
+			name = reform_or_revolution_contribution_cache
+			value = this.reform_or_revolution_map_country_contribution_value
+		}
+	}
+
+	immediate = {
+		scope:journal_entry ?= {
+			set_variable = { name = reform_or_revolution_revolution_var value = 250 }
+			set_variable = { name = reform_or_revolution_reform_var value = 250 }
+			journal_entry_update_reform_or_revolution_noninit_variables = yes
+		}
+	}
+
+	map_color = {
+		if = {
+			limit = {
+				owner = {
+					has_technology_researched = socialism
+					OR = {
+						any_political_movement = {
+							is_political_movement_type = movement_socialist
+						}
+						any_active_party = {
+							party_counts_as_socialist_party = yes
+							party_has_members = yes
+						}
+					}
+				}
+			}
+			lerp = {
+                min_color = "reform_or_revolution_socialist_pink" # color
+                max_color = "reform_or_revolution_socialist_red" # color
+				factor = owner.socialism_coefficient # Socialism is when the socialism coefficient is high. When it's really high, that's communism.
+            }
+		}
+		else_if = {
+			limit = {
+				owner = {
+					is_involved_in_journal_entry = je_reform_or_revolution
+					has_technology_researched = socialism
+				}
+			}
+			value = "reform_or_revolution_socialist_pink"
+		}
+		else_if = {
+			limit = {
+				owner = {
+					NOT = {
+						is_involved_in_journal_entry = je_reform_or_revolution
+					}
+					has_technology_researched = socialism
+				}
+			}
+			value = "white"
+		}
+	}
+
+	map_color_second = {
+		if = {
+			limit = {
+				owner = {
+					NOT = {
+						is_involved_in_journal_entry = je_reform_or_revolution
+					}
+					has_technology_researched = socialism
+				}
+			}
+			value = "reform_or_revolution_socialist_pink"
+		}
+		if = {
+			limit = {
+				is_in_revolt = yes
+				owner = {
+					is_involved_in_journal_entry = je_reform_or_revolution
+					any_civil_war = {
+						political_movement ?= {
+							movement_is_socialist = yes
+						}
+					}
+				}
+			}
+			value = "reform_or_revolution_socialist_red"
+		}
+	}
+
+	map_tooltip = {
+		owner ?= {
+			save_scope_as = relevant_country
+			#custom_tooltip_no_bullet = "reform_or_revolution_map_debug_tooltip"
+			if = {
+				limit = {
+					is_revolutionary = yes
+					var:civil_war_type_var ?= {
+						movement_type_is_socialist = yes
+					}
+				}
+				custom_tooltip_no_bullet = "reform_or_revolution_map_socialist_revolution"
+			}
+			else_if = {
+				limit = {
+					NOT = {
+						has_technology_researched = socialism
+					}
+				}
+				custom_tooltip_no_bullet = "reform_or_revolution_map_researched_socialism_no"
+			}
+			else_if = {
+				limit = {
+					has_technology_researched = socialism
+					NOR = {
+						is_involved_in_journal_entry = je_reform_or_revolution
+						any_political_movement = {
+							is_political_movement_type = movement_socialist
+						}
+						any_active_party = {
+							party_counts_as_socialist_party = yes
+							party_has_members = yes
+						}
+					}
+				}
+				custom_tooltip_no_bullet = "reform_or_revolution_map_researched_socialism"
+			}
+			else_if = {
+				limit = {
+					has_technology_researched = socialism
+					is_involved_in_journal_entry = je_reform_or_revolution
+					NOR = {
+						any_political_movement = {
+							is_political_movement_type = movement_socialist
+						}
+						any_active_party = {
+							party_counts_as_socialist_party = yes
+							party_has_members = yes
+						}
+					}
+				}
+				custom_tooltip_no_bullet = "reform_or_revolution_map_researched_socialism_2"
+			}
+
+			if = {
+				limit = {
+					any_political_movement = {
+						is_political_movement_type = movement_socialist
+					}
+				}
+				random_political_movement = {
+					limit = {
+						is_political_movement_type = movement_socialist
+					}
+					save_scope_as = relevant_socialist_movement
+				}
+				custom_tooltip_no_bullet = "reform_or_revolution_map_socialist_movement"
+			}
+			if = {
+				limit = {
+					any_active_party = {
+						party_counts_as_socialist_party = yes
+						party_has_members = yes
+					}
+				}
+				every_active_party = {
+					limit = {
+						party_counts_as_socialist_party = yes
+						party_has_members = yes
+					}
+					save_scope_as = relevant_socialist_party
+				}
+				custom_tooltip_no_bullet = "reform_or_revolution_map_socialist_party"
+			}
+			if = {
+				limit = {
+					is_involved_in_journal_entry = je_reform_or_revolution
+					je:je_reform_or_revolution ?= {
+						reform_or_revolution_variables_initialised = yes
+					}
+				}
+				custom_tooltip_no_bullet = "reform_or_revolution_map_contribution_breakdown"
+			}
+			if = {
+				limit = {
+					is_involved_in_journal_entry = je_reform_or_revolution
+					this.socialism_coefficient != 0
+				}
+				custom_tooltip_no_bullet = "reform_or_revolution_map_weight_tooltip"
+			}
+		}
+		if = {
+			limit = {
+        		is_in_revolt = yes
+				owner = {
+					is_involved_in_journal_entry = je_reform_or_revolution
+					any_civil_war = {
+						political_movement ?= {
+							movement_is_socialist = yes
+						}
+					}
+				}
+			}
+			custom_tooltip_no_bullet = "reform_or_revolution_map_rev_state"
+		}
+	}
+
+	on_weekly_pulse = {
+		effect = {
+			every_country = {
+				limit = {
+					has_technology_researched = socialism
+					NOT = {
+						is_involved_in_journal_entry = je_reform_or_revolution
+					}
+					OR = {
+						any_political_movement = {
+							is_political_movement_type = movement_socialist
+						}
+						any_active_party = {
+							party_counts_as_socialist_party = yes
+							party_has_members = yes
+						}
+					}
+				}
+				scope:journal_entry ?= {
+					add_involved_country = prev
+				}
+			}
+			scope:journal_entry ?= {
+				journal_entry_update_reform_or_revolution_variables = yes
+			}
+		}
+	}
+
+
+	on_monthly_pulse = {
+		effect = {
+			scope:journal_entry ?= {
+				journal_entry_update_reform_or_revolution_variables = yes
+			}
+		}
+	}
+
+	outcome = {
+		header = je_reform_or_revolution_fail_header
+		effect_header = je_reform_or_revolution_on_fail_header
+		color = "red_outcome"
+		conclusion_desc = je_reform_or_revolution_fail_conclusion_desc
+		trigger = {
+			custom_tooltip = {
+				text = je_reform_or_revolution_fail_tt
+				scope:journal_entry = {
+					"scripted_bar_progress(reform_or_revolution_progress_bar)" >= 500
+				}
+			}
+		}
+		effect = {
+			set_global_variable = { name = reform_or_revolution_conclusion value = flag:revolution }
+		}
+		effect_all_involved = {
+			trigger_event = { id = reform_or_revolution.2 }
+			je_reform_or_revolution_cleanup = yes
+		}
+		event_outcome_desc = {
+			first_valid = {
+				triggered_desc = {
+					trigger = {
+						always = yes
+					}
+					#desc =
+				}
+			}
+		}
+		event_outcome_effect_desc = {
+			effect = {
+				custom_tooltip = socialist_movements_gain_revolutionary_ideology_tt
+				custom_tooltip = socialist_movements_lose_state_socialist_tt
+				custom_tooltip = socialist_parties_radicalise_tt
+			}
+		}
+		event_outcome_effect_desc = {
+			header = reform_or_revolution.2.a
+			effect = {
+				if = {
+					limit = {
+						exists = this
+						has_law_or_variant = law_type:law_council_republic
+					}
+					add_loyalists = {
+						value = large_radicals
+						interest_group = ig:ig_trade_unions
+					}
+				}
+				else = {
+					add_radicals = {
+						value = large_radicals
+						interest_group = ig:ig_trade_unions
+					}
+				}
+				custom_tooltip = communist_agitator_scopeless_tt
+			}
+		}
+		event_outcome_effect_desc = {
+			header = reform_or_revolution.2.b
+			effect = {
+				add_loyalists = {
+					value = medium_radicals
+					interest_group = ig:ig_trade_unions
+				}
+			}
+		}
+	}
+
+	outcome = {
+		header = je_reform_or_revolution_complete_header
+		effect_header = je_reform_or_revolution_on_complete_header
+		color = "gold_positive"
+		conclusion_desc = je_reform_or_revolution_complete_conclusion_desc
+		trigger = {
+			custom_tooltip = {
+				text = je_reform_or_revolution_complete_tt
+				scope:journal_entry = {
+					"scripted_bar_progress(reform_or_revolution_progress_bar)" <= 0
+				}
+			}
+		}
+		effect = {
+			set_global_variable = { name = reform_or_revolution_conclusion value = flag:reform }
+		}
+		effect_all_involved = {
+			trigger_event = { id = reform_or_revolution.3 }
+			je_reform_or_revolution_cleanup = yes
+		}
+		event_outcome_desc = {
+			first_valid = {
+				triggered_desc = {
+					trigger = {
+						always = yes
+					}
+					#desc =
+				}
+			}
+		}
+		event_outcome_effect_desc = {
+			effect = {
+				custom_tooltip = socialist_movements_gain_new_ideology_tt
+				custom_tooltip = socialist_movements_lose_communist_tt
+				custom_tooltip = socialist_movements_gain_humanitarian_tt
+				custom_tooltip = communist_movement_may_appear_tt
+				custom_tooltip = communist_parties_formable_tt
+			}
+		}
+		event_outcome_effect_desc = {
+			header = reform_or_revolution.3.a
+			effect = {
+				add_loyalists = {
+					value = medium_radicals
+					interest_group = ig:ig_trade_unions
+				}
+			}
+		}
+		event_outcome_effect_desc = {
+			header = reform_or_revolution.3.b
+			effect = {
+				if = {
+					limit = {
+						exists = this
+						has_law_or_variant = law_type:law_council_republic
+					}
+					add_loyalists = {
+						value = large_radicals
+						interest_group = ig:ig_trade_unions
+					}
+				}
+				else = {
+					add_radicals = {
+						value = large_radicals
+						interest_group = ig:ig_trade_unions
+					}
+				}
+				custom_tooltip = communist_agitator_scopeless_tt
+			}
+		}
+	}
+}

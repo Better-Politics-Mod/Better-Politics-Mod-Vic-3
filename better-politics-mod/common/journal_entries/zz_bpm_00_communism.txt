@@ -3,80 +3,30 @@
 
 	group = je_group_internal_affairs
 
-	complete = {
-		has_law = law_type:law_anarchy
-		average_sol >= 15 # if you change this, also change event option in communism.2
-	}
-
-	on_complete = {
-		trigger_event = {
-			id = communism.4
-			popup = yes
+	outcome = {
+		header = je_standard_completion_header
+		effect_header = je_standard_on_completion_header
+		color = "gold_positive"
+		conclusion_desc = je_standard_completion_conclusion_desc
+		trigger = {
+			has_law = law_type:law_anarchy
+			average_sol >= 15 # if you change this, also change event option in communism.2
 		}
-	}
-
-	fail = {
-		NOT = { has_law = law_type:law_council_republic }
-	}
-}
-
-REPLACE:je_vanguard = {
-	icon = "gfx/interface/icons/event_icons/event_protest.dds"
-
-	group = je_group_internal_affairs
-
-	complete = {
-		# id you change this, also change options in communism.2
-		any_interest_group = {
-			leader = {
-				OR = {
-					has_ideology = ideology:ideology_vanguardist
-					has_ideology = ideology:ideology_communist
-					has_ideology = ideology:ideology_anarchist
-				}
-			}
-			count >= 3
-		}
-		custom_tooltip = {
-			text = vanguard_custom_tooltip
-			NOT = {
-				any_interest_group = {
-					is_powerful = yes
-					leader = {
-						NOR = {
-							has_ideology = ideology:ideology_vanguardist
-							has_ideology = ideology:ideology_communist
-							has_ideology = ideology:ideology_anarchist
-						}
-					}
-				}
+		effect = {
+			trigger_event = {
+				id = communism.4
+				popup = yes
 			}
 		}
-		has_law = law_type:law_party_single
 	}
 
-	on_complete = {
-		trigger_event = { id = communism.5 popup = yes }
-	}
-
-	fail = {
-		NOT = { has_law = law_type:law_council_republic }
-	}
-
-	on_weekly_pulse = {
-		events = {
-			communism.3
-		}
-	}
-
-	status_desc = {
-		first_valid = {
-			triggered_desc = {
-				desc = vanguard_instruction_status
-				trigger = {
-					always = yes
-				}
-			}
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		color = "blue_negative"
+		conclusion_desc = je_standard_failure_conclusion_desc
+		trigger = {
+			NOT = { has_law = law_type:law_council_republic }
 		}
 	}
 }
@@ -130,63 +80,74 @@ REPLACE:je_communism_1 = {
 		}
 	}
 
-	fail = {
-		OR = {
-			custom_tooltip = {
-				text = communism_progress_bar_at_full_tt
-				scope:journal_entry = {
-					"scripted_bar_progress(communism_1_progress_bar)" >= 100
+	outcome = {
+		header = je_standard_failure_header
+		effect_header = je_standard_on_failure_header
+		color = "blue_negative"
+		conclusion_desc = je_standard_failure_conclusion_desc
+		trigger = {
+			OR = {
+				custom_tooltip = {
+					text = communism_progress_bar_at_full_tt
+					scope:journal_entry = {
+						"scripted_bar_progress(communism_1_progress_bar)" >= 100
+					}
 				}
+				has_law_or_variant = law_type:law_council_republic
 			}
-			has_law_or_variant = law_type:law_council_republic
 		}
-	}
-
-	on_fail = {
-		set_variable = communism_1_done
-		if = {
-			limit = {
-				NOT = {
-					has_law_or_variant = law_type:law_council_republic
-				}
-			}
-			trigger_event = { id = communism.1 popup = yes }
-		}
-		else = { # Mirrors effects of communism.1, skips je_communism_2
+		effect = {
+			set_variable = communism_1_done
 			if = {
 				limit = {
-					any_interest_group = {
-						law_stance = {
-							law = law_type:law_council_republic
-							value > neutral
-						}
+					NOT = {
+						has_law_or_variant = law_type:law_council_republic
 					}
 				}
-				random_interest_group = {
+				trigger_event = { id = communism.1 popup = yes }
+			}
+			else = { # Mirrors effects of communism.1, skips je_communism_2
+				if = {
 					limit = {
-						law_stance = {
-							law = law_type:law_council_republic
-							value > neutral
+						any_interest_group = {
+							law_stance = {
+								law = law_type:law_council_republic
+								value > neutral
+							}
 						}
 					}
-					set_variable = communist_ig_var
+					random_interest_group = {
+						limit = {
+							law_stance = {
+								law = law_type:law_council_republic
+								value > neutral
+							}
+						}
+						set_variable = communist_ig_var
+					}
 				}
-			}
-			else = {
-				ig:ig_trade_unions ?= {
-					set_variable = communist_ig_var
+				else = {
+					ig:ig_trade_unions ?= {
+						set_variable = communist_ig_var
+					}
 				}
+				trigger_event = { id = communism.2 popup = yes }
 			}
-			trigger_event = { id = communism.2 popup = yes }
+			custom_tooltip = communism_je_1_fail_tt
 		}
-		custom_tooltip = communism_je_1_fail_tt
 	}
 
 	timeout = 1095
 
-	on_timeout = {
-		trigger_event = { id = communism.11 popup = yes }
-		custom_tooltip = communism_je_1_complete_tt
+	outcome = {
+		header = JOURNAL_ENTRY_TIMEOUT
+		effect_header = JOURNAL_ENTRY_ON_TIMEOUT
+		flags = { timeout }
+		conclusion_desc = JOURNAL_ENTRY_TIMEOUT_CONCLUSION_DESC
+		effect = {
+			trigger_event = { id = communism.11 popup = yes }
+			custom_tooltip = communism_je_1_complete_tt
+		}
 	}
 
 	should_be_pinned_by_default_uninvolved_or_context = yes

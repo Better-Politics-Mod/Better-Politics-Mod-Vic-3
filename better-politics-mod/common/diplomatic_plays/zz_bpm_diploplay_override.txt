@@ -279,12 +279,13 @@ REPLACE:dp_transfer_subject = {
 
 REPLACE:dp_annex_subject = {
 	war_goal = annex_country
-	
+
 	texture = "gfx/interface/icons/war_goals/annex_country.dds"
 	confirmation_sound = "event:/SFX/UI/SubjectInteractions/subject_button_small_annex"
 	possible = {
 		trigger_if = {
 			limit = {
+				c:BIC ?= this
 				is_at_war = no
 				NOT = { has_variable = doctrine_of_lapse_cooldown }
 				NOT = { has_variable = doctrine_of_lapse_ended }
@@ -300,6 +301,13 @@ REPLACE:dp_annex_subject = {
 				always = no
 			}
 		}
+		trigger_if = {
+			limit = {
+				c:RUS ?= this
+				c:POL ?= scope:target_country
+			}
+			NOT = { has_journal_entry = je_congress_poland }
+		}
 
 		NOT = { is_country_type = decentralized }
 		aggressive_diplomatic_plays_permitted = yes
@@ -311,23 +319,34 @@ REPLACE:dp_annex_subject = {
 				has_diplomatic_pact = { who = root type = colony }
 				has_diplomatic_pact = { who = root type = puppet }
 				has_diplomatic_pact = { who = root type = vassal }
+				has_diplomatic_pact = { who = root type = crown_land }
 			}
 		}
 		NAND = {
-			has_journal_entry = je_peru_bolivia
+			is_involved_in_journal_entry = je_peru_bolivia
 			scope:target_country = {
 				OR = {
 					country_has_primary_culture = cu:quechua
 					country_has_primary_culture = cu:south_andean
 				}
 			}
-		}			
+		}
+		NAND = {
+			is_involved_in_journal_entry = je_ryukyu_rivalry
+			scope:target_country = {
+				c:RYU ?= this
+			}
+		}
+		NAND = {
+			c:JAP ?= this
+			has_law_or_variant = law_type:law_serfdom # Proxy for feudalism
+		}
 	}
-	
+
 	ai_acceptance_max = 75
 
 	on_weekly_pulse = {}
-	
+
 	on_war_begins = {
 		scope:initiator = {
 			save_temporary_scope_as = annexing_overlord
@@ -338,8 +357,9 @@ REPLACE:dp_annex_subject = {
 				add_liberty_desire = annex_subject_base_liberty_desire_change
 				add_modifier = {
 					name = modifier_has_annexed_another_subject
-					months = 60
+					months = annex_subject_liberty_desire_modifier_months
 					is_decaying = no
+					multiplier = annex_subject_liberty_desire_weekly_change
 				}
 			}
 		}
@@ -348,15 +368,17 @@ REPLACE:dp_annex_subject = {
 	on_war_end = {}
 
 	on_demand_accepted = {
+		save_temporary_scope_as = annexing_overlord
 		every_direct_subject = {
 			limit = {
 				NOT = { this = scope:target_country }
 			}
-			add_liberty_desire = 25
+			add_liberty_desire = annex_subject_base_liberty_desire_change
 			add_modifier = {
 				name = modifier_has_annexed_another_subject
-				months = 60
+				months = annex_subject_liberty_desire_modifier_months
 				is_decaying = no
+				multiplier = annex_subject_liberty_desire_weekly_change
 			}
 		}
 	}

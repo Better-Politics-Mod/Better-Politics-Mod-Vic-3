@@ -1,4 +1,4 @@
-# COPY-PASTED FOR NOW
+﻿# COPY-PASTED FOR NOW
 @panel_width_minus_30 = 510
 @panel_width_minus_20 = 520			
 @panel_width_minus_10 = 530			# used to be 450
@@ -162,5 +162,222 @@ types bpm_journal_entry_widget_types {
                 raw_text = "#v @bpm_heart! [InterestGroup.GetApprovalValue|=+]#!"
             }
         }
+	}
+
+	type bpm_je_grasp_card = widget {
+		size = { 172 196 }
+
+		widget = {
+			size = { 168 192 }
+			parentanchor = center
+
+			background = {
+				using = entry_bg_fancy_dark
+
+				modify_texture = {
+					spriteType = Corneredstretched
+					spriteborder = { 0 0 }
+					blend_mode = add
+					alpha = 0.3
+					texture = "gfx/interface/backgrounds/paper_texture.dds"
+				}
+			}
+
+			vbox = {
+				size = { 100% 100% }
+				margin = { 6 6 }
+
+				default_header_clean = {
+					block "header_tooltip" {}
+					blockoverride "header_background" {
+						# card equal to the grasp threshold: default look
+						background = {
+							block "equal_visible" {}
+							using = entry_bg_mask_top
+						}
+
+						# card below the grasp threshold: red
+						background = {
+							block "below_visible" {
+								visible = no
+							}
+							texture = "gfx/interface/backgrounds/white.dds"
+							color = { 0.88 0.34 0.34 1.0 }
+							alpha = 0.5
+							using = entry_bg_mask_top
+						}
+
+						# card above the grasp threshold: green
+						background = {
+							block "above_visible" {
+								visible = no
+							}
+							texture = "gfx/interface/backgrounds/white.dds"
+							color = { 0.39 0.67 0.33 1.0 }
+							alpha = 0.5
+							using = entry_bg_mask_top
+						}
+
+						background = {
+							using = entry_bg_mask_top
+							color = { 0.0 0.0 0.0 1.0 }
+							alpha = 0.3
+							texture = "gfx/interface/backgrounds/white.dds"
+
+							modify_texture = {
+								spriteType = Corneredstretched
+								spriteborder = { 0 0 }
+								blend_mode = alphamultiply
+								texture = "gfx/interface/masks/fade_vertical_top.dds"
+							}
+						}
+					}
+
+					blockoverride "size" {
+						layoutpolicy_horizontal = expanding
+						size = { 0 30 }
+					}
+
+					blockoverride "text_size" {
+						using = fontsize_large
+					}
+
+					blockoverride "text_mod" {
+						max_width = 150
+					}
+
+					blockoverride "text" {
+						block "header_text" {
+							text = "BPM_GRASP_BOX_1"
+						}
+					}
+				}
+
+				empty_state = {
+					layoutpolicy_horizontal = expanding
+					blockoverride "visible" {
+						block "empty_visible" {}
+					}
+					blockoverride "margin" {
+						margin_top = 20
+					}
+					blockoverride "fontsize" {
+						using = fontsize_large
+					}
+					# card inner width: 168 - 2*6 margin
+					blockoverride "size" {
+						minimumsize = { 156 -1 }
+						maximumsize = { 156 -1 }
+						max_width = 156
+					}
+					blockoverride "text" {
+						text = "BPM_GRASP_BOX_EMPTY"
+					}
+				}
+
+				scrollarea = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					scrollbarpolicy_horizontal = always_off
+
+					scrollbar_vertical = {
+						using = vertical_scrollbar
+					}
+
+					scrollwidget = {
+						flowcontainer = {
+							direction = vertical
+
+							block "states_datamodel" {
+								datamodel = "[JournalEntry.GetCountry.MakeScope.GetList('bpm_grasp_states_1')]"
+							}
+
+							item = {
+								bpm_je_grasp_state_entry = {
+									datacontext = "[Scope.GetState]"
+								}
+							}
+						}
+					}
+				}
+			}
+
+			# selection frame on the card equal to the grasp threshold (as on vanilla selected scripted buttons)
+			icon = {
+				block "selected_visible" {
+					visible = no
+				}
+				using = highlighted_square_selection
+				size = { 160 184 } # card is 168x192, inset 4px on each side so the frame sits inside the card border
+				alwaystransparent = yes
+			}
+		}
+	}
+
+	type bpm_je_grasp_state_entry = widget {
+		size = { 152 30 }
+		onmousehierarchyenter = "[AccessHighlightManager.HighlightState(State.Self)]"
+		onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+		alwaystransparent = no
+
+		divider_clean = {
+			size = { 100% 1 }
+		}
+
+		hbox = {
+			button = {
+				using = default_button
+				layoutpolicy_horizontal = expanding
+				size = { 0 26 }
+				onclick = "[InformationPanelBar.OpenStatePanel(State.AccessSelf)]"
+				onrightclick = "[RightClickMenuManager.ShowForState(State.AccessSelf)]"
+
+				tooltipwidget = {
+					FancyTooltip_State = {}
+				}
+
+				textbox = {
+					size = { 100% 100% }
+					text = "[State.GetName]"
+					align = left|nobaseline
+					margin = { 8 0 }
+					elide = right
+				}
+			}
+
+			# existing revolutionary cells: count + highest level
+			flowcontainer = {
+				visible = "[GreaterThan_CFixedPoint(State.MakeScope.ScriptValue('bpm_revolt_map_cells_in_state'), '(CFixedPoint)0')]"
+				tooltip = "BPM_GRASP_STATE_CELLS_TT"
+				spacing = 1
+				margin_left = 2
+
+				textbox = {
+					parentanchor = vcenter
+					autoresize = yes
+					align = nobaseline
+					raw_text = "#v [State.MakeScope.ScriptValue('bpm_revolt_map_cells_in_state')|0]#!"
+				}
+
+				icon = {
+					visible = "[EqualTo_CFixedPoint(State.MakeScope.ScriptValue('bpm_revolt_map_max_cell_level'), '(CFixedPoint)1')]"
+					parentanchor = vcenter
+					size = { 24 24 }
+					texture = "gfx/interface/icons/tiered_interests/interest_levels_icons/interest_level_1_observant_small.dds"
+				}
+				icon = {
+					visible = "[EqualTo_CFixedPoint(State.MakeScope.ScriptValue('bpm_revolt_map_max_cell_level'), '(CFixedPoint)2')]"
+					parentanchor = vcenter
+					size = { 24 24 }
+					texture = "gfx/interface/icons/tiered_interests/interest_levels_icons/interest_level_2_engaged_small.dds"
+				}
+				icon = {
+					visible = "[EqualTo_CFixedPoint(State.MakeScope.ScriptValue('bpm_revolt_map_max_cell_level'), '(CFixedPoint)3')]"
+					parentanchor = vcenter
+					size = { 24 24 }
+					texture = "gfx/interface/icons/tiered_interests/interest_levels_icons/interest_level_3_influential_small.dds"
+				}
+			}
+		}
 	}
 }

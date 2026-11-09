@@ -507,3 +507,328 @@ REPLACE:law_state_atheism = {
 		}
 	}
 }
+
+REPLACE:law_caesaropapism = {
+	group = lawgroup_church_and_state
+	parent = law_state_religion # Inherits ideological stances from parent
+
+	icon = "gfx/interface/icons/law_icons/caesaropapism.dds"
+
+	progressiveness = -50
+
+	is_visible = {
+		OR = {
+			c:RUS ?= this
+			AND = {
+				exists = c:RUS
+				is_subject_of = c:RUS
+				country_is_subject_type_valid_for_caesaropapism = yes
+			}
+		}
+		NOT = {
+			has_law_or_variant = law_type:law_theocracy
+		}
+	}
+
+	on_activate = {
+		if = {
+			limit = {
+				has_modifier = antireligious_policies
+			}
+			remove_modifier = antireligious_policies
+		}
+		recalculate_pop_ig_support = yes
+	}
+
+	modifier = {
+		country_clergymen_pol_str_mult = 0.25
+		country_bureaucrats_pol_str_mult = 0.5
+		country_authority_add = 200
+		country_state_religion_wages_mult = 0.1
+		country_non_state_religion_wages_mult = -0.1
+
+		country_acceptance_state_religion_add = 25
+		country_acceptance_shared_religious_trait_add = 0
+		country_acceptance_shared_religious_trait_group_add = -10
+		country_acceptance_no_shared_religious_trait_add = -25
+
+		country_allow_conversion_violent_hostility_bool = yes
+		country_allow_conversion_cultural_erasure_bool = yes
+		country_allow_conversion_open_prejudice_bool = yes
+		country_allow_conversion_second_rate_citizen_bool = yes
+		country_allow_conversion_full_acceptance_bool = yes
+	}
+
+	can_impose = {
+		OR = {
+			AND = {
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_church_and_state_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			can_impose_law_default = yes
+		}
+	}
+
+	ai_will_do = {
+		exists = ruler
+		ruler = {
+			OR = {
+				has_ideology = ideology:ideology_theocrat
+				has_ideology = ideology:ideology_traditionalist
+			}
+		}
+	}
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+
+		if = {
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
+			add = 750
+		}
+	}
+
+	ai_impose_chance = {
+		value = 0
+
+		if = {
+			limit = {
+				has_law = law_type:law_caesaropapism
+				power_bloc ?= { has_identity = identity:identity_religious }
+				religion = scope:target_country.religion
+			}
+
+			add = base_impose_law_weight
+
+			# Very important for religious blocs
+			if = {
+				limit = { scope:target_country = { has_law_or_variant = law_type:law_freedom_of_conscience } }
+				multiply = 2
+			}
+			else = {
+				multiply = 5
+			}
+		}
+	}
+}
+
+REPLACE:law_millet_system = { # Ottoman Empire
+	group = lawgroup_church_and_state
+	parent = law_state_religion # Inherits ideological stances from parent
+
+	icon = "gfx/interface/icons/law_icons/people_of_the_book.dds"
+
+	progressiveness = -50
+
+	requires_law_or = {
+		law_theocracy
+		law_monarchy
+		law_chiefdom
+	}
+
+	is_visible = {
+		c:TUR ?= this # For the Ottoman Empire and its subjects
+	}
+
+	on_activate = {
+		if = {
+			limit = {
+				country_has_state_religion = rel:atheist
+			}
+			set_state_religion = root.country_definition.religion
+		}
+		if = {
+			limit = {
+				has_modifier = antireligious_policies
+			}
+			remove_modifier = antireligious_policies
+		}
+		if = {
+			limit = {
+				NOR = {
+					c:TUR ?= this
+					country_has_state_religion = rel:sunni
+				}
+			}
+			deactivate_law = law_type:law_millet_system
+			activate_law = law_type:law_state_religion
+		}
+		recalculate_pop_ig_support = yes
+	}
+
+	modifier = {
+		country_clergymen_pol_str_mult = 0.5
+		country_authority_add = 200
+		state_conversion_mult = -0.50
+
+		state_conscription_rate_mult = -0.4
+
+		country_acceptance_state_religion_add = 25
+		country_acceptance_shared_religious_trait_add = 10
+		country_acceptance_shared_religious_trait_group_add = 10
+		country_acceptance_no_shared_religious_trait_add = -25
+
+		country_allow_conversion_violent_hostility_bool = yes
+		country_allow_conversion_cultural_erasure_bool = yes
+		country_allow_conversion_open_prejudice_bool = yes
+		country_allow_conversion_second_rate_citizen_bool = yes
+		country_allow_conversion_full_acceptance_bool = yes
+	}
+
+	tax_modifier_very_low = {
+		tax_heathen_add = 0.4
+	}
+
+	tax_modifier_low = {
+		tax_heathen_add = 0.45
+	}
+
+	tax_modifier_medium = {
+		tax_heathen_add = 0.5
+	}
+
+	tax_modifier_high = {
+		tax_heathen_add = 0.55
+	}
+
+	tax_modifier_very_high = {
+		tax_heathen_add = 0.6
+	}
+
+	can_impose = {
+		always = no
+	}
+
+	ai_will_do = {
+		exists = ruler
+		ruler = {
+			has_ideology = ideology:ideology_theocrat
+		}
+	}
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+
+		if = {
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
+			add = 750
+		}
+	}
+
+	ai_impose_chance = {
+		value = 0 # Will not happen
+	}
+}
+
+REPLACE:law_people_of_the_book = { # Other Muslim states
+	group = lawgroup_church_and_state
+	parent = law_state_religion # Inherits ideological stances from parent
+
+	icon = "gfx/interface/icons/law_icons/people_of_the_book.dds"
+
+	progressiveness = -50
+
+	requires_law_or = {
+		law_theocracy
+		law_monarchy
+		law_chiefdom
+	}
+
+	is_visible = {
+		country_is_islamic = yes
+		NOT = {
+			c:TUR ?= this # For the Ottoman Empire and its subjects
+		}
+	}
+
+	on_activate = {
+		if = {
+			limit = {
+				country_has_state_religion = rel:atheist
+			}
+			set_state_religion = root.country_definition.religion
+		}
+		if = {
+			limit = {
+				has_modifier = antireligious_policies
+			}
+			remove_modifier = antireligious_policies
+		}
+		recalculate_pop_ig_support = yes
+	}
+
+	modifier = {
+		country_clergymen_pol_str_mult = 0.5
+		country_authority_add = 200
+		state_conversion_mult = -0.50
+
+		state_conscription_rate_mult = -0.4
+
+		country_acceptance_state_religion_add = 25
+		country_acceptance_shared_religious_trait_add = 5
+		country_acceptance_shared_religious_trait_group_add = 5
+		country_acceptance_no_shared_religious_trait_add = -25
+
+		country_allow_conversion_violent_hostility_bool = yes
+		country_allow_conversion_cultural_erasure_bool = yes
+		country_allow_conversion_open_prejudice_bool = yes
+		country_allow_conversion_second_rate_citizen_bool = yes
+		country_allow_conversion_full_acceptance_bool = yes
+	}
+
+	tax_modifier_very_low = {
+		tax_heathen_add = 0.4
+	}
+
+	tax_modifier_low = {
+		tax_heathen_add = 0.45
+	}
+
+	tax_modifier_medium = {
+		tax_heathen_add = 0.5
+	}
+
+	tax_modifier_high = {
+		tax_heathen_add = 0.55
+	}
+
+	tax_modifier_very_high = {
+		tax_heathen_add = 0.6
+	}
+
+	can_impose = {
+		OR = {
+			AND = {
+				is_in_same_power_bloc = scope:target_country
+				AND = {
+					modifier:country_can_impose_same_lawgroup_church_and_state_in_power_bloc_bool = yes
+					has_law = scope:law
+				}
+			}
+			can_impose_law_default = yes
+		}
+	}
+
+	ai_will_do = {
+		exists = ruler
+		ruler = {
+			has_ideology = ideology:ideology_theocrat
+		}
+	}
+
+	ai_enact_weight_modifier = { #Petitions
+		value = 0
+
+		if = {
+			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
+			add = 750
+		}
+	}
+
+	ai_impose_chance = {
+		value = 0 # Will not happen
+	}
+}

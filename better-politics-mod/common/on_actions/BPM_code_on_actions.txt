@@ -905,7 +905,6 @@ on_bpm_civil_war_won = {
 
 on_bpm_government_reformed = {
 	effect = {
-		bpm_update_single_party_ideology_support = yes
 		bpm_cache_country_igs_radical_opposition_effect = yes
 		if = {
 			limit = {
@@ -934,11 +933,47 @@ on_bpm_election_campaign_start = {
 		bpm_japan.1
 	}
 	effect = {
-		every_active_party = {
+		if = {
 			limit = {
-				is_party_type = one_party_independents
+				has_variable = bpm_electoral_mandate_progress
+				var:bpm_electoral_mandate_progress = 4
 			}
-			add_momentum = -200
+			every_active_party = {
+				limit = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+				add_momentum = 0.25
+			}
+		}
+		else_if = {
+			limit = {
+				has_variable = bpm_electoral_mandate_progress
+				var:bpm_electoral_mandate_progress = 0
+			}
+			every_active_party = {
+				limit = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+				add_momentum = -0.35
+			}
+		}
+		else_if = {
+			limit = {
+				has_variable = bpm_electoral_mandate_progress
+				var:bpm_electoral_mandate_progress <= 2
+			}
+			every_active_party = {
+				limit = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+				add_momentum = -0.15
+			}
 		}
 		bpm_remove_political_stability_small = yes
 	}
@@ -1064,9 +1099,96 @@ on_bpm_game_started = {
 			bpm_update_political_stability = yes
 			bpm_initialize_hog = yes
 			bpm_setup_lawgroup_size = yes
+			bpm_the_docket_effect = yes
+			bpm_update_law_enactment_docket = yes
 		}
 		every_character = {
 			bpm_character_remap_ideology_effect = yes
+ 			bpm_auto_cabinet_appoint = yes
+ 		}
+ 	}
+ }
+ 
+ on_battle_won = {
+ 	on_actions = {
+ 		italian_war_of_independence_score_count
+ 		croatia_hungary_war_score_count
+ 	}
+ }
+ 
+ croatia_hungary_war_score_count = {
+ 	trigger = {
+ 		has_journal_entry = je_springtime_of_the_peoples
+ 	}
+ 
+ 	effect = {
+ 		if = {
+ 			limit = {
+ 				OR = {
+ 					this ?= {
+ 						country_has_primary_culture = cu:hungarian
+ 					}
+ 					this ?= c:HUN
+ 				}
+ 			}
+ 			change_global_variable = {
+ 				name = bpm_springtime_jelacic_battles_lost_count
+ 				add = 1
+ 			}
+ 		}
+ 	}
+ }
+ 
+ italian_war_of_independence_score_count = {
+ 	trigger = {
+ 		#is_involved_in_journal_entry = je_bpm_italian_war_of_independence
+ 		#scope:enemy_country ?= {
+ 		#	is_involved_in_journal_entry = je_bpm_italian_war_of_independence
+ 		#}
+ 		has_journal_entry = je_bpm_italian_war_of_independence
+ 		#scope:enemy_country ?= {
+ 		#	has_journal_entry = je_bpm_italian_war_of_independence
+ 		#}
+ 	}
+ 
+ 	effect = {
+ 		if = {
+ 			limit = {
+ 				OR = {
+ 					this ?= {
+ 						country_has_primary_culture = cu:north_italian
+ 					}
+ 					this ?= {
+ 						country_has_primary_culture = cu:south_italian
+ 					}
+ 					this ?= c:SAR
+ 				}
+ 			}
+ 			change_global_variable = {
+ 				name = bpm_italian_independence_revolutionaries_score
+ 				add = 1
+ 			}
+ 			#je:je_bpm_italian_war_of_independence ?= {
+ 			#	add_progress = { value = -1 name = je_bpm_italian_war_of_independence_progress_bar }
+ 			#}
+ 		}
+ 		else_if = {
+ 			limit = {
+ 				OR = {
+ 					this ?= {
+ 						country_has_primary_culture = cu:south_german
+ 					}
+ 					this ?= c:AUS
+ 				}
+ 			}
+ 			change_global_variable = {
+ 				name = bpm_italian_independence_austrians_score
+ 				add = 1
+ 			}
+ 			#je:je_bpm_italian_war_of_independence ?= {
+ 			#	add_progress = { value = 1 name = je_bpm_italian_war_of_independence_progress_bar }
+ 			#}
+>>>>>>> conflict 1 of 1 ends
 		}
 	}
 }

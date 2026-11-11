@@ -2,84 +2,39 @@
 	bpm_add_ig_to_their_desired_party = yes
 	if = {
 		limit = {
-			OR = {
-				bpm_country_has_executive_dictatorial_system = yes
-				bpm_country_has_executive_electoral_system = yes
-			}
+			modifier:country_government_formation_type_popular = yes
 		}
-		bpm_form_government_exef_systems = yes
+		bpm_form_government_all_systems = yes
 	}
 	else_if = {
 		limit = {
-			bpm_country_has_organic_electoral_system = yes
+			modifier:country_government_formation_type_traditional = yes
 		}
-		bpm_form_government_organic_systems = yes
+		bpm_form_government_all_systems = yes
 	}
 	else_if = {
 		limit = {
-			bpm_country_has_parliamentary_oligarchic_system = yes
+			modifier:country_government_formation_type_institutional = yes
 		}
-		bpm_form_government_oligarchic_systems = yes
-	}
-	else_if = {
-        limit = {
-			bpm_country_has_provisional_government_system = yes
-		}
-		bpm_form_government_provgov_systems = yes
-	}
-	else = {
-		bpm_form_government_parliamentary_electoral_systems = yes
-	}
-	every_interest_group = {
-		limit = {
-			bpm_ig_is_actively_revolting = yes
-		}
-		remove_ruling_interest_group = yes
+		bpm_form_government_all_systems = yes
 	}
 }
 
-bpm_form_government_provgov_systems = {
+bpm_form_government_all_systems = {
 	every_interest_group = {
 		add_ruling_interest_group = yes
 	}
 	every_interest_group = {
 		limit = {
-			NOT = {
-				has_ideology = ideology:ideology_provgov_member
+			NOR = {
+				AND = {
+					exists = party
+					owner.var:bpm_headofgov.party ?= party
+				}
+				owner.var:bpm_headofgov ?= this
 			}
 		}
 		remove_ruling_interest_group = yes
-	}
-}
-
-bpm_form_government_parliamentary_electoral_systems = {
-	if = {
-		limit = {
-			has_variable_list = bpm_in_gov_party_sel
-		}
-		every_active_party = {
-			every_member = {
-				remove_ruling_interest_group = yes
-			}
-		}
-		every_interest_group = {
-			limit = {
-				NOT = {
-					exists = party
-				}
-				is_in_government = yes
-			}
-			remove_ruling_interest_group = yes
-		}
-		every_in_list = {
-			variable = bpm_in_gov_party_sel
-			every_member = {
-				add_ruling_interest_group = yes
-			}
-		}
-	}
-	else = {
-		bpm_form_government_exef_systems = yes
 	}
 }
 
@@ -105,163 +60,6 @@ bpm_add_ig_to_their_desired_party = {
 		remove_ruling_interest_group = yes
 	}
 	update_party_support = yes
-}
-
-bpm_form_government_exef_systems = {
-	every_interest_group = {
-		add_ruling_interest_group = yes
-	}
-	ordered_interest_group = {
-		limit = {
-			ig_clout > 0
-			trigger_if = {
-				limit = {
-					owner = {bpm_has_gov_regency = yes}
-				}
-				owner.var:bpm_regent.interest_group.type ?= type
-			}
-			trigger_else = {
-				owner.ruler.interest_group.type ?= type
-			}
-		}
-		alternative_limit = {
-			always = yes
-		}
-		order_by = ig_clout
-		position = 0
-		check_range_bounds = no
-		save_scope_as = ruler_ig
-	}
-	if = {
-		limit = {
-			any_active_party = {
-				count > 0
-			}
-		}
-
-		if = {
-			limit = {
-				exists = scope:ruler_ig.party
-			}
-			scope:ruler_ig.party = {
-				set_ruling_party = yes
-			}
-			every_interest_group = {
-				limit = {
-					OR = {
-						has_party = no
-						NOT = {
-							party = scope:ruler_ig.party
-						}
-					}
-				}
-				remove_ruling_interest_group = yes
-			}
-		}
-		else = {
-			every_interest_group = {
-				limit = {
-					NOR = {
-						THIS = scope:ruler_ig
-					}
-				}
-				remove_ruling_interest_group = yes
-			}
-		}
-	}
-	else = {
-		every_interest_group = {
-			limit = {
-				NOR = {
-					THIS = scope:ruler_ig
-					bpm_ig_is_state_institutional = yes
-				}
-			}
-			remove_ruling_interest_group = yes
-		}
-	}
-
-	update_party_support = yes
-}
-
-bpm_form_government_organic_systems = {
-	every_interest_group = {
-		add_ruling_interest_group = yes
-	}
-
-	every_interest_group = {
-		limit = {
-			NOT = {
-				exists = party
-			}
-			is_in_government = yes
-		}
-		remove_ruling_interest_group = yes
-	}
-
-	every_interest_group = {
-		limit = {
-			has_party = yes
-			party = {
-				is_party_type = one_party_independents
-			}
-		}
-		remove_ruling_interest_group = yes
-	}
-
-	update_party_support = yes
-}
-
-bpm_form_government_oligarchic_systems = {
-	ordered_interest_group = {
-		limit = {
-			bpm_ig_is_marginal = no
-			trigger_if = {
-				limit = {
-					owner = {has_law_or_variant = law_type:law_executive_institutional}
-				}
-				trigger_if = {
-					limit = {
-						owner = {bpm_has_acting_hog = yes}
-					}
-					type = owner.var:bpm_acting_hog.interest_group.type
-				}
-				trigger_else = {
-					type = owner.var:bpm_headofgov.type
-				}
-			}
-			trigger_else = {
-				trigger_if = {
-					limit = {
-						owner = {bpm_has_gov_regency = yes}
-					}
-					type = owner.var:bpm_regent.interest_group.type
-				}
-				trigger_else = {
-					type = owner.ruler.interest_group.type
-				}
-			}
-		}
-		alternative_limit = {
-			always = yes
-		}
-		order_by = ig_clout
-		position = 0
-		check_range_bounds = no
-		save_scope_as = ruler_ig
-	}
-	every_interest_group = {
-		add_ruling_interest_group = yes
-	}
-	every_interest_group = {
-		limit = {
-			NOR = {
-				bpm_ig_is_state_institutional = yes
-				this = scope:ruler_ig
-			}
-		}
-		remove_ruling_interest_group = yes
-	}
 }
 
 

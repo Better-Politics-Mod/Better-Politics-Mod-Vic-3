@@ -1,32 +1,148 @@
 ﻿bpm_update_hog = {
+    clear_saved_scope = ruling_ig
+
     every_scope_character = {
         limit = { has_role = bpm_character_role_hog }
         remove_character_role = bpm_character_role_hog
     }
 
-    if = {
-        limit = { 
-            NOR = {
-                AND = {
-                    modifier:country_bpm_hog_selected_by_legislature = yes
-                    modifier:country_bpm_ruler_complete_veto_enabled = yes
+    every_interest_group = {
+        limit = {
+            OR = {
+                NOT = {
+                    owner.var:bpm_headofgov ?= this
                 }
-                bpm_country_has_parliamentary_electoral_system = yes
+                owner = { modifier:country_government_formation_type_institutional = no }
             }
         }
+        remove_variable = bpm_institutional_ruling_ig
+    }
+
+    ## In popular systems, the elected ruling IG remains the ruling IG until a next election
+    ## Any way to dethrone this ruling IG involves new elections 
+    ## or switching to an institutional system
+    if = {
+        limit = { 
+            modifier:country_government_formation_type_popular = yes
+        }
+        if = {
+            limit = {
+                country_has_voting_franchise = yes
+                bpm_country_is_republic = yes
+                exists = ruler.interest_group
+                NOT = {
+                    get_ruler_for:presidential_elective ?= ruler
+                }
+            }
+            random_interest_group = {
+                limit = {
+                    owner.ruler.interest_group.type ?= type
+                }
+                save_scope_as = ruling_ig
+            }
+        }
+        else = {
+            get_ruler_for:presidential_elective.interest_group ?= {
+                save_scope_as = ruling_ig
+            }
+        }
+    }
+    ## In a traditional system, the monarch's IG is always the ruling IG until their death
+    ## Any way to dethrone this ruling IG involves the death or abdication of this monarch
+    ## or switching to an institutional system.
+    else_if = {
+        limit = {
+            modifier:country_government_formation_type_traditional = yes
+        }
+        if = {
+            limit = {
+                exists = ruler.interest_group
+            }
+            random_interest_group = {
+                limit = {
+                    owner.ruler.interest_group.type ?= type
+                }
+                bpm_set_ig_as_hog = yes
+            }
+        }
+    }
+    ## In the institutional system things are more complicated, the ruling_ig has an bpm_institutional_ruling_ig variable
+    ## As long as they have that variable, they are the ruling IG. They can be dethroned by a variety of institutional
+    ## actions as well as by more violent means. The ruling IG can also be changed by switching to a popular system.
+    else_if = {
+        limit = {
+            modifier:country_government_formation_type_institutional = yes
+        }
+        if = {
+            limit = {
+                var:bpm_headofgov ?= {
+                    has_variable = bpm_institutional_ruling_ig
+                }
+            }
+            var:bpm_headofgov ?= {
+                save_scope_as = ruling_ig
+                set_variable = bpm_institutional_ruling_ig
+            }
+        }
+        # If for some reason no IG is the current ruling IG, and whatever means
+        # the previous ruling IG was removed by didn't select a new ruling IG
+        # We simply default to the highest clout IG in the country that is not extremist
+        else = {
+            ordered_interest_group = {
+                limit = {
+                    bpm_ig_is_very_radical_opposition = no
+                }
+                alternative_limit = {
+                    always = yes
+                }
+                order_by = ig_clout
+                position = 0
+                save_scope_as = ruling_ig
+            }
+        }
+    }
+
+    ## Use the selected IG, fallback to ruler
+    if = {
+        limit = {
+            exists = scope:ruling_ig
+        }
+        scope:ruling_ig = {
+            bpm_set_ig_as_hog = yes
+        }
+    }
+    else_if = {
+        limit = {
+            exists = ruler.interest_group
+        }
+        random_interest_group = {
+            limit = {
+                owner.ruler.interest_group.type ?= type
+            }
+            bpm_set_ig_as_hog = yes
+        }
+    }
+    else = {
         ordered_interest_group = {
             limit = {
                 is_in_government = yes
             }
+            alternative_limit = {
+                always = yes
+            }
+            order_by = ig_clout
             position = 0
-            order_by = ig_clout # PLACEHOLDER
             bpm_set_ig_as_hog = yes
         }
     }
 
+    # In institutional systems, the ruler should be kept separate from 
+    # being the head of government, as the ruler represents something 
+    # outside and above the institutional government.
     if = {
         limit = {
             ruler = var:bpm_headofgov.leader
+            modifier:country_government_formation_type_institutional = yes
         }
         ordered_scope_character = {
             limit = {
@@ -47,9 +163,7 @@
             set_as_interest_group_leader = yes
         }
     }
-
-    if = {
-        limit = { modifier:country_bpm_unified_executive = no }
+    else = {
         var:bpm_headofgov.leader ?= {
             add_character_role = bpm_character_role_hog
         }
@@ -97,6 +211,12 @@ bpm_initialize_hog = {
             limit = { has_modifier = bpm_historical_hog }
             interest_group = {
                 bpm_set_ig_as_hog = yes
+                if = {
+                    limit = {
+                        owner.modifier:country_government_formation_type_institutional = yes
+                    }
+                    set_variable = bpm_institutional_ruling_ig
+                }
             }
         }
     }

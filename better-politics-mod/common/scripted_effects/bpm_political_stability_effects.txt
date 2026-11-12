@@ -1,4 +1,8 @@
 ﻿bpm_update_political_stability = {
+	if = {
+		limit = { NOT = { has_global_variable_list = bpm_rigidity_levels } }
+		bpm_setup_rigidity_levels = yes
+	}
 
 	if = {
 		limit = { NOT = { has_variable = bpm_political_stability } }
@@ -19,79 +23,57 @@
 	# HANDLING STATIC MODIFIERS ---------------------------------
 	remove_modifier = bpm_stability_stagnant
 	remove_modifier = bpm_stability_stagnant_ai
+	remove_modifier = bpm_stability_entrenched
+	remove_modifier = bpm_stability_entrenched_ai
+	remove_modifier = bpm_stability_dynamic
 	remove_modifier = bpm_stability_unstable
 	remove_modifier = bpm_stability_unstable_buffed
-	remove_modifier = bpm_stability_dynamic
+	remove_modifier = bpm_stability_chaotic
+	remove_modifier = bpm_stability_chaotic_buffed
 
 	if = {
-		limit = { var:bpm_political_stability > 66 }
+		limit = { bpm_rigidity_is_stagnant = yes }
 		if = {
-			limit = { 
+			limit = {
 				OR = {
 					has_game_started = no
 					is_player = yes
 				}
 			}
-			add_modifier = {
-				name = bpm_stability_stagnant
-				multiplier = {
-					add = var:bpm_political_stability
-					divide = 100
-					subtract = 0.66
-					multiply = 3
-					min = 0.0
-					max = 1.0 # (1-0.66)*3 will be 1.02, so we clamp it for nice numbers
-				}
-			}
-		}
-		else = {
-			add_modifier = {
-				name = bpm_stability_stagnant_ai
-				multiplier = {
-					add = var:bpm_political_stability
-					divide = 100
-					subtract = 0.66
-					multiply = 3
-					min = 0.0
-					max = 1.0 # (1-0.66)*3 will be 1.02, so we clamp it for nice numbers
-				}
-			}
+			add_modifier = { name = bpm_stability_stagnant }
+		} else = {
+			add_modifier = { name = bpm_stability_stagnant_ai }
 		}
 	} else_if = {
-		limit = { var:bpm_political_stability > 33 }
-		add_modifier = {
-			name = bpm_stability_dynamic
+		limit = { bpm_rigidity_is_entrenched = yes }
+		if = {
+			limit = {
+				OR = {
+					has_game_started = no
+					is_player = yes
+				}
+			}
+			add_modifier = { name = bpm_stability_entrenched }
+		} else = {
+			add_modifier = { name = bpm_stability_entrenched_ai }
 		}
 	} else_if = {
-		limit = { var:bpm_political_stability >= 0 }
-		add_modifier = {
-			name = bpm_stability_dynamic
-		}
+		limit = { bpm_rigidity_is_dynamic = yes }
+		add_modifier = { name = bpm_stability_dynamic }
+	} else_if = {
+		limit = { bpm_rigidity_is_unstable = yes }
 		if = {
 			limit = { modifier:country_bpm_low_rigidity_no_econ_debuff = no }
-			add_modifier = {
-				name = bpm_stability_unstable
-				multiplier = {
-					add = 33
-					subtract = var:bpm_political_stability
-					divide = 100
-					multiply = 3
-					min = 0.0
-					max = 1.0 # (1-0.66)*3 will be 1.02, so we clamp it for nice numbers
-				}
-			}
+			add_modifier = { name = bpm_stability_unstable }
 		} else = {
-			add_modifier = {
-				name = bpm_stability_unstable_buffed
-				multiplier = {
-					add = 33
-					subtract = var:bpm_political_stability
-					divide = 100
-					multiply = 3
-					min = 0.0
-					max = 1.0 # (1-0.66)*3 will be 1.02, so we clamp it for nice numbers
-				}
-			}
+			add_modifier = { name = bpm_stability_unstable_buffed }
+		}
+	} else = {
+		if = {
+			limit = { modifier:country_bpm_low_rigidity_no_econ_debuff = no }
+			add_modifier = { name = bpm_stability_chaotic }
+		} else = {
+			add_modifier = { name = bpm_stability_chaotic_buffed }
 		}
 	}
 }
@@ -101,6 +83,10 @@ bpm_add_political_stability_huge = {
 		text = "bpm_add_political_stability_huge"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		post_notification = bpm_add_political_stability_huge
 		change_variable = {	name = bpm_political_stability add = 50 }
 	}
@@ -111,6 +97,10 @@ bpm_add_political_stability_big = {
 		text = "bpm_add_political_stability_big"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		post_notification = bpm_add_political_stability_big
 		change_variable = {	name = bpm_political_stability add = 20 }
 	}
@@ -121,6 +111,10 @@ bpm_add_political_stability_normal = {
 		text = "bpm_add_political_stability_normal"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		post_notification = bpm_add_political_stability_normal
 		change_variable = {	name = bpm_political_stability add = 10 }
 	}
@@ -131,6 +125,10 @@ bpm_add_political_stability_small = {
 		text = "bpm_add_political_stability_small"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		post_notification = bpm_add_political_stability_small
 		change_variable = {	name = bpm_political_stability add = 5 }
 		clamp_variable = {
@@ -145,6 +143,10 @@ bpm_add_political_stability_tiny = {
 		text = "bpm_add_political_stability_tiny"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		post_notification = bpm_add_political_stability_tiny
 		change_variable = {	name = bpm_political_stability add = 1 }
 		clamp_variable = {
@@ -159,6 +161,10 @@ bpm_remove_political_stability_huge = {
 		text = "bpm_remove_political_stability_huge"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		post_notification = bpm_remove_political_stability_huge
 		change_variable = {	name = bpm_political_stability subtract = 50 }
 		clamp_variable = {
@@ -173,6 +179,10 @@ bpm_remove_political_stability_big = {
 		text = "bpm_remove_political_stability_big"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		post_notification = bpm_remove_political_stability_big
 		change_variable = {	name = bpm_political_stability subtract = 20 }
 		clamp_variable = {
@@ -187,6 +197,10 @@ bpm_remove_political_stability_normal = {
 		text = "bpm_remove_political_stability_normal"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		post_notification = bpm_remove_political_stability_normal
 		change_variable = {	name = bpm_political_stability subtract = 10 }
 		clamp_variable = {
@@ -201,6 +215,10 @@ bpm_remove_political_stability_small = {
 		text = "bpm_remove_political_stability_small"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		post_notification = bpm_remove_political_stability_small
 		change_variable = {	name = bpm_political_stability subtract = 5	}
 		clamp_variable = {
@@ -215,6 +233,10 @@ bpm_remove_political_stability_tiny = {
 		text = "bpm_remove_political_stability_tiny"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		post_notification = bpm_remove_political_stability_tiny
 		change_variable = {	name = bpm_political_stability subtract = 1 }
 		clamp_variable = {
@@ -229,6 +251,10 @@ bpm_normalize_political_stability_small = {
 		text = "bpm_normalize_political_stability_small"
 	}
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		if = {
 			limit = { bpm_political_stability < 45 }
 			change_variable = {	name = bpm_political_stability add = 5 }
@@ -247,6 +273,10 @@ bpm_normalize_political_stability_normal = {
 	}
 	hidden_effect = {
 		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
+		if = {
 			limit = { bpm_political_stability < 40 }
 			change_variable = {	name = bpm_political_stability add = 10 }
 		} else_if = {
@@ -264,6 +294,10 @@ bpm_normalize_political_stability_big = {
 	}
 	hidden_effect = {
 		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
+		if = {
 			limit = { bpm_political_stability < 30 }
 			change_variable = {	name = bpm_political_stability add = 20 }
 		} else_if = {
@@ -277,6 +311,10 @@ bpm_normalize_political_stability_big = {
 
 bpm_normalize_political_stability_massive = {
 	hidden_effect = {
+		if = {
+			limit = { NOT = { has_variable = bpm_political_stability } }
+			set_variable = { name = bpm_political_stability value = bpm_political_stability_baseline_target }
+		}
 		if = {
 			limit = { bpm_political_stability < 30 }
 			change_variable = {	name = bpm_political_stability add = 5 }

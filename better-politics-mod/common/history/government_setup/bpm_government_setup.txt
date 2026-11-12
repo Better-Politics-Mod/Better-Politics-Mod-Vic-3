@@ -13,4 +13,56 @@
 			bpm_set_character_as_regent = yes
 		}
 	}
+    every_country = { # Junta init
+        limit = {
+            is_in_geographic_region = geographic_region_latin_america
+            has_law = law_type:law_autocracy
+            bpm_country_is_bourgeois_republic = yes
+        }
+        ig:ig_armed_forces.leader ?= {
+            bpm_make_character_historical_hog = yes
+        }
+        activate_law = law_type:law_single_party_state
+    }
+    every_country = { # Colony init depends on the ruling IG already being initialized in the overlord
+        bpm_initialize_hog = yes
+    }
+	every_country = { # Colony init
+        limit = {
+			OR = {
+				has_variable = colonial_overlord
+				has_variable = dominion_overlord
+			}
+		}
+		set_variable = { name = hide_ruler_change_notification days = 1 }
+        save_scope_as = subject_country
+        ruler ?= {
+            save_scope_as = prev_ruler
+        }
+        if = {
+            limit = {has_variable = colonial_overlord}
+            var:colonial_overlord = {
+                create_diplomatic_pact = {
+		        	country = prev
+		        	type = colony
+		        }
+            }
+            remove_variable = colonial_overlord
+        }
+        else_if = {
+            limit = {has_variable = dominion_overlord}
+            var:dominion_overlord = {
+                create_diplomatic_pact = {
+                    country = prev
+                    type = dominion
+                }
+            }
+            remove_variable = dominion_overlord
+        }
+        scope:prev_ruler ?= {
+            remove_character_role = ruler
+			bpm_make_character_historical_hog = yes
+        }
+        bpm_update_hog = yes
+    }
 }

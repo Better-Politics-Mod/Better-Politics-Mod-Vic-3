@@ -130,6 +130,39 @@ bpm_update_hog_when_initialized = {
             }
         }
     }
+    ## In the colonial system, the ruling IG is the ruling IG type of their overlord. Theoretically a country with this system
+    ## should always have an overlord and this overlord should always have a ruling IG, but if this fails for some reason
+    ## it falls back to largest non-extremist IG by clout.
+    else_if = {
+        limit = {
+            modifier:country_government_formation_type_colonial = yes
+        }
+        if = {
+            limit = {
+                exists = top_overlord.var:bpm_ruling_ig
+            }
+            random_interest_group = {
+                limit = { type = owner.top_overlord.var:bpm_ruling_ig.type }
+                save_scope_as = ruling_ig
+            }
+        }
+        else = {
+            ordered_interest_group = {
+                limit = {
+                    bpm_ig_is_establishment = yes
+                }
+                alternative_limit = {
+                    always = yes
+                }
+                order_by = ig_clout
+                position = 0
+                save_scope_as = ruling_ig
+            }
+            scope:ruling_ig ?= {
+                set_variable = bpm_institutional_ruling_ig
+            }
+        }
+    }
 
     ## Use the selected IG, fallback to ruler
     if = {
@@ -208,6 +241,7 @@ bpm_handle_ruling_ig_change = {
         limit = {
             has_variable = bpm_ruling_ig 
             exists = var:bpm_ruling_ig
+            has_game_started = yes
         }
         if = {
             limit = {
@@ -255,7 +289,7 @@ bpm_make_character_historical_hog = {
         }
         add_modifier = {
             name = bpm_historical_hog
-            days = normal_modifier_time
+            days = very_short_modifier_time
         }
     }
     if = {

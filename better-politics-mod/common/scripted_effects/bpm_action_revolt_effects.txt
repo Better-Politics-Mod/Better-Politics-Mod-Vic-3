@@ -5,45 +5,6 @@
 bpm_action_revolt_do = {
 	scope:country = {
 		bpm_shrink_or_grow_in_states = yes
-		bpm_revolt_progress = yes
-		if = {
-			limit = {
-				scope:action.var:bpm_revolt_progress >= 100
-			}
-			bpm_nation_at_crossroads = yes
-		}
-	}
-}
-
-bpm_revolt_progress = {
-	scope:action = {
-		if = {
-			limit = {
-				NOT = {
-					has_variable = bpm_revolt_progress
-				}
-			}
-			set_variable = {
-				name = bpm_revolt_progress
-				value = prev.bpm_revolt_progress_value
-			}
-		}
-		else = {
-			change_variable = {
-				name = bpm_revolt_progress
-				add = 10 # prev.bpm_revolt_progress_value
-			}
-		}
-
-		if = {
-			limit = {
-				var:bpm_revolt_progress > 100
-			}
-			set_variable = {
-				name = bpm_revolt_progress
-				value = 100
-			}
-		}
 	}
 }
 
@@ -81,12 +42,6 @@ bpm_shrink_or_grow_in_states = {
 		}
 	}
 	else = {
-		scope:action = {
-			set_variable = {
-				name = bpm_revolt_progress
-				value = 0
-			}
-		}
 		random_scope_state = {
 			limit = {
 				turmoil >= 0.25
@@ -110,7 +65,6 @@ bpm_increase_revcell = {
 				key = prev
 				value = 1
 			}
-			post_notification = bpm_revolution_appears
 		}
 		else = {
 			set_local_variable = {
@@ -126,8 +80,14 @@ bpm_increase_revcell = {
 				value = local_var:new_level
 			}
 			remove_local_variable = new_level
-			post_notification = bpm_revolution_grows
 		}
+	}
+	if = {
+		limit = { bpm_has_revcell_level = { lvl = 1 } }
+		post_notification = bpm_revolution_appears
+	}
+	else = {
+		post_notification = bpm_revolution_grows
 	}
 }
 
@@ -684,3 +644,53 @@ bpm_coalition_revolution_victorious = {
 	bpm_remove_political_stability_huge = yes
 }
 
+
+#========================
+# grasp widget
+
+# this = country
+# Sorts the country's states into 5 lists by bpm_state_grasp, for the je_bpm_revolt_ember widget
+# 1: 0-20, 2: 21-40, 3: 41-60, 4: 61-80, 5: 81-100
+bpm_update_grasp_lists = {
+	clear_variable_list = bpm_grasp_states_1
+	clear_variable_list = bpm_grasp_states_2
+	clear_variable_list = bpm_grasp_states_3
+	clear_variable_list = bpm_grasp_states_4
+	clear_variable_list = bpm_grasp_states_5
+	ordered_scope_state = {
+		order_by = bpm_state_grasp
+		max = 10000
+		check_range_bounds = no
+		if = {
+			limit = { bpm_state_grasp <= 20 }
+			owner = { add_to_variable_list = { name = bpm_grasp_states_1 target = prev } }
+		}
+		else_if = {
+			limit = { bpm_state_grasp <= 40 }
+			owner = { add_to_variable_list = { name = bpm_grasp_states_2 target = prev } }
+		}
+		else_if = {
+			limit = { bpm_state_grasp <= 60 }
+			owner = { add_to_variable_list = { name = bpm_grasp_states_3 target = prev } }
+		}
+		else_if = {
+			limit = { bpm_state_grasp <= 80 }
+			owner = { add_to_variable_list = { name = bpm_grasp_states_4 target = prev } }
+		}
+		else = {
+			owner = { add_to_variable_list = { name = bpm_grasp_states_5 target = prev } }
+		}
+	}
+}
+
+bpm_update_grasp_threshold = {
+	random_list = {
+		1 = { set_variable = { name = bpm_grasp_threshold value = 0 } }
+		1 = { set_variable = { name = bpm_grasp_threshold value = 1 } }
+		1 = { set_variable = { name = bpm_grasp_threshold value = 2 } }
+		1 = { set_variable = { name = bpm_grasp_threshold value = 3 } }
+		1 = { set_variable = { name = bpm_grasp_threshold value = 4 } }
+		1 = { set_variable = { name = bpm_grasp_threshold value = 5 } }
+		1 = { set_variable = { name = bpm_grasp_threshold value = 6 } }
+	}
+}

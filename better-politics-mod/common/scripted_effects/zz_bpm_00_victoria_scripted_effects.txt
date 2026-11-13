@@ -680,14 +680,6 @@ REPLACE:add_regency_modifier = {
 	else_if = {
 		limit = {
 			scope:regent_scope ?= {
-				is_interest_group_type = ig_christian_democrats
-			}
-		}
-		add_modifier = { name = modifier_regency_christian_democrats }
-	}
-	else_if = {
-		limit = {
-			scope:regent_scope ?= {
 				is_interest_group_type = ig_agrarian_populists
 			}
 		}
@@ -838,14 +830,6 @@ add_acting_hog_modifier = {
 	else_if = {
 		limit = {
 			scope:acting_hog_scope ?= {
-				is_interest_group_type = ig_christian_democrats
-			}
-		}
-		add_modifier = { name = modifier_acting_hog_christian_democrats }
-	}
-	else_if = {
-		limit = {
-			scope:acting_hog_scope ?= {
 				is_interest_group_type = ig_agrarian_populists
 			}
 		}
@@ -886,4 +870,62 @@ REPLACE:remove_regency_modifier = { # Applied in country scope
 
 REPLACE:designate_character_as_regent = {
 	set_variable = { name = regency_years value = $YEARS$ }
+}
+
+REPLACE:state_religion_switch_effect = {
+	if = {
+		limit = {
+			NOT = {
+				has_law_or_variant = law_type:law_state_atheism
+			}
+		}
+		every_scope_character = {
+			limit = {
+				NOT = {
+					religion = owner.religion
+				}
+				has_ideology = ideology:ideology_traditionalist
+			}
+			set_ideology = ideology:ideology_traditionalist_minoritarian
+		}
+		every_scope_character = {
+			limit = {
+				religion = owner.religion
+				has_ideology = ideology:ideology_traditionalist_minoritarian
+			}
+			set_ideology = ideology:ideology_traditionalist
+		}
+	}
+	bpm_update_name_devout = yes
+}
+
+REPLACE:adopt_random_antigovernment_ideology = {} #we don't use this and vanilla has bugs in their own code so this makes tiger stop complaining about it
+
+REPLACE:inherit_free_elections_effect = {}
+
+REPLACE:remove_electoral_fraud_effect = {
+	remove_variable = caciquismo_var
+	remove_variable = electoral_fraud_abolish_var
+	if = {
+		limit ={
+			active_law:lawgroup_distribution_of_power ?= {
+				has_amendment = amendment_type:amendment_electoral_clientelism
+			}
+		}
+		active_law:lawgroup_distribution_of_power ?= {
+			random_scope_amendment = {
+				limit = {
+					type = amendment_type:amendment_electoral_clientelism
+				}
+				bpm_remove_amendment = yes
+			}
+		}
+	}
+	set_variable = free_elections_var
+	active_law:lawgroup_distribution_of_power ?= {
+		bpm_add_sticky_amendment = {
+			type = amendment_tradition_of_free_elections
+			sponsor = PREV.ig:ig_petty_bourgeoisie
+		}
+	}
 }

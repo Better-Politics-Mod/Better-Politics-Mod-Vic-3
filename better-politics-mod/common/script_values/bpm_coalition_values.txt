@@ -1,0 +1,138 @@
+﻿bpm_coalition_action_num = 68 # mai 68 never forget - we can win !
+
+# this = flag
+# scope:ig
+bpm_strategy_attraction = {
+	value = 0
+	if = {
+		limit = {
+			this ?= flag:bpm_strategy_default
+		}
+		add = 100
+	}
+}
+
+bpm_friendly_action_clout = {
+	every_in_list = {
+		variable = bpm_actively_involved
+		if = {
+			limit = {
+				NOT = { scope:ig = this }
+				bpm_ig_is_friendly = yes
+			}
+			add = ig_clout
+		}
+	}
+	if = {
+		limit = { bpm_total_action_clout > 0 }
+		divide = bpm_total_action_clout
+	}
+}
+
+bpm_hostile_action_clout = {
+	every_in_list = {
+		variable = bpm_actively_involved
+		if = {
+			limit = {
+				NOT = { scope:ig = this }
+				bpm_ig_is_hostile = yes
+			}
+			add = ig_clout
+		}
+	}
+	if = {
+		limit = { bpm_total_action_clout > 0 }
+		divide = bpm_total_action_clout
+	}
+}
+
+bpm_total_action_clout = {
+	every_in_list = {
+		variable = bpm_actively_involved
+		if = {
+			limit = {
+				NOT = { scope:ig = this }
+			}
+			add = ig_clout
+		}
+	}
+}
+
+
+# this = flag
+# scope:ig
+bpm_ig_movement_attraction = {
+	value = 0
+
+	if = {
+		limit = {
+			scope:ig.var:bpm_ig_strategy ?= flag:bpm_strategy_default
+		}
+		# for now just highest pressure movement is the one that gets the IG
+		value = "movement_pressure(scope:ig)"
+		if = {
+			limit = {
+				NOT = { any_influenced_interest_group = {
+					this ?= scope:ig
+				} }
+			}
+			multiply = 0
+		}
+	}
+}
+
+# this = flag
+# scope:movement
+bpm_ig_action_attraction = {
+	value = 0
+
+	if = {
+		limit = {
+			this ?= flag:bpm_action_revolt
+		}
+		value = 0
+		if = {
+			limit = {
+				OR = { 
+					scope:ig.owner = { 
+						bpm_can_revolt_country = no
+					} 
+					scope:ig = {
+						bpm_can_revolt_ig = no
+					}
+				}
+			}
+			add = 0
+		}
+		else_if = {
+			limit = {
+				scope:ig = {
+					ig_approval <= angry
+				}
+			}
+			add = 2
+		}
+
+		# stickyness
+		if = {
+			limit = {
+				scope:ig.owner = {
+					any_in_list = {
+						variable = bpm_active_actions
+						is_target_in_variable_list = {
+							name = bpm_actively_involved
+							target = scope:ig
+						}
+						var:bpm_action_type = flag:bpm_action_revolt
+					}
+				}
+			}
+			# stickyness factor x3
+			# this ig will only abandon revolution
+			# if something is thrice as attractive
+			multiply = 3
+		}
+
+
+	}
+}

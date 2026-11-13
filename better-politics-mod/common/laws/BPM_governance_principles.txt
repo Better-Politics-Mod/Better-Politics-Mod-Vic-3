@@ -27,12 +27,10 @@ REPLACE:law_monarchy = {
 	}
 
 	modifier = {
+		country_legitimacy_headofstate_add = 20
+		country_legitimacy_ideological_incoherence_mult = 0.1
 		country_aristocrats_pol_str_mult = 0.25
 		country_rigidity_baseline_add = 10
-		#country_legitimacy_ideological_incoherence_mult = 0.5
-		country_labor_consciousness_change_add = -0.05
-		country_bpm_labor_consciousness_target_mult = -0.25
-		#country_legitimacy_govt_total_clout_add = 100
 	}
 	
 #	pop_support = {
@@ -53,7 +51,7 @@ REPLACE:law_monarchy = {
 		ruler = {
 			has_monarchist_ideology = yes
 		}
-		bpm_country_is_in_new_world = no
+		NOT = {is_in_geographic_region = geographic_region_new_world}
 	}
 
 	on_activate = {
@@ -146,10 +144,16 @@ REPLACE:law_monarchy = {
 				limit = {
 					any_interest_group = {
 						is_in_government = yes
-						any_preferred_law = {
-							is_citizenship_law = yes
-							NOT = {
-								type ?= law_type:law_subjecthood
+						save_temporary_scope_as = ig_to_check
+						owner = {
+							any_law = {
+								type = { save_temporary_scope_as = lawtype }
+								scope:lawtype = { is_same_law_group_as = law_type:law_subjecthood }
+								law_is_available = yes
+								bpm_interest_group_law_enactment_stance_as_number > 0
+								NOT = {
+									type ?= law_type:law_subjecthood
+								}
 							}
 						}
 					}
@@ -157,27 +161,39 @@ REPLACE:law_monarchy = {
 				ordered_interest_group = {
 					limit = {
 						is_in_government = yes
-						any_preferred_law = {
-							is_citizenship_law = yes
-							NOT = {
-								type ?= law_type:law_subjecthood
+						save_temporary_scope_as = ig_to_check
+						owner = {
+							any_law = {
+								type = { save_temporary_scope_as = lawtype }
+								scope:lawtype = { is_same_law_group_as = law_type:law_subjecthood }
+								law_is_available = yes
+								bpm_interest_group_law_enactment_stance_as_number > 0
+								NOT = {
+									type ?= law_type:law_subjecthood
+								}
 							}
 						}
 					}
 					order_by = ig_clout
 					position = 0
 					check_range_bounds = no
-					ordered_preferred_law = {
-						limit = {
-							is_citizenship_law = yes
-							NOT = {
-								type ?= law_type:law_subjecthood
+					save_scope_as = ig_to_check
+					owner = {
+						ordered_law = {
+							limit = {
+								type = { save_temporary_scope_as = lawtype }
+								scope:lawtype = { is_same_law_group_as = law_type:law_subjecthood }
+								law_is_available = yes
+								NOT = {
+									type ?= law_type:law_subjecthood
+								}
 							}
-						}
-						position = 0
-						check_range_bounds = no
-						prev.owner = {
-							activate_law = prev.type
+							position = 0
+							order_by = bpm_interest_group_law_enactment_stance_as_number
+							check_range_bounds = no
+							prev.owner = {
+								activate_law = prev.type
+							}
 						}
 					}
 				}
@@ -190,7 +206,7 @@ REPLACE:law_monarchy = {
 		if = {
 			limit = {has_law = law_type:law_bakufu}
 			deactivate_law = law_type:law_bakufu
-			activate_law = law_type:law_answers_to_legislature
+			activate_law = law_type:law_executive_institutional
 		}
 	}
 
@@ -270,36 +286,21 @@ REPLACE:law_presidential_republic = {
 				add = 1
 			}
 		}
-		if = {
-			limit = {
-				has_law_or_variant = law_type:law_answers_to_legislature
-			}
-			activate_law = law_type:law_parliamentary_republic
-		}
 		scripted_effect_parties_emergence = yes
 		bpm_deactivate_syndicalism = yes
 	}
 	
 	modifier = {
+		country_legitimacy_headofstate_add = 10
+		country_legitimacy_govt_total_votes_add = 10
+		country_legitimacy_ideological_incoherence_mult = 0.2
 		country_bureaucrats_voting_power_add = 5
-		# country_authority_add = 100
-		#country_legitimacy_ideological_incoherence_mult = 0.75
 		state_pop_pol_str_add = 0.1
-		country_liberal_consciousness_change_add = 0.05
-		country_bpm_labor_consciousness_target_mult = -0.35
-		#country_legitimacy_govt_total_clout_add = 100
 
 	}
 	
 	ai_will_do = {
-		exists = ruler
-		ruler = {
-			OR = {
-				bpm_leader_is_republican_liberal = yes
-				interest_group = { bpm_ig_is_republican = yes }
-				has_law = law_type:law_council_republic
-			}
-		}
+		always = yes
 	}
 
 	ai_enact_weight_modifier = { #Petitions
@@ -393,13 +394,10 @@ REPLACE:law_parliamentary_republic = {
 	}
 
 	modifier = {
+		country_legitimacy_govt_total_votes_add = 20
+		country_legitimacy_govt_size_add = 1
 		country_bureaucrats_voting_power_add = 5
-		#country_legitimacy_govt_total_votes_add = 10
-		#country_legitimacy_ideological_incoherence_mult = 0.3
 		state_pop_pol_str_add = 0.1
-		country_liberal_consciousness_change_add = 0.05
-		country_bpm_labor_consciousness_target_mult = -0.35
-		#country_legitimacy_govt_total_clout_add = 100
 	}
 
 	ai_will_do = {
@@ -484,28 +482,88 @@ REPLACE:law_theocracy = {
 		bpm_deactivate_syndicalism = yes
 	}
 
-	modifier = {
-		# country_authority_add = 200
-		#country_legitimacy_ideological_incoherence_mult = 0.3
-		country_clergymen_pol_str_mult = 0.5
-		country_bpm_labor_consciousness_target_mult = -0.25
-		#country_legitimacy_govt_total_clout_add = 100
-
+	on_deactivate = {
+		if = {
+			limit = {
+				AND = {
+					has_law = law_type:law_subjecthood
+					NOR = {
+						has_law = law_type:law_monarchy
+						is_enacting_law = law_type:law_monarchy
+					}
+				}
+			}
+			custom_tooltip = because_subjecthood_is_active_tt
+			if = {
+				limit = {
+					any_interest_group = {
+						is_in_government = yes
+						save_temporary_scope_as = ig_to_check
+						owner = {
+							any_law = {
+								type = { save_temporary_scope_as = lawtype }
+								scope:lawtype = { is_same_law_group_as = law_type:law_subjecthood }
+								law_is_available = yes
+								bpm_interest_group_law_enactment_stance_as_number > 0
+								NOT = {
+									type ?= law_type:law_subjecthood
+								}
+							}
+						}
+					}
+				}
+				ordered_interest_group = {
+					limit = {
+						is_in_government = yes
+						save_temporary_scope_as = ig_to_check
+						owner = {
+							any_law = {
+								type = { save_temporary_scope_as = lawtype }
+								scope:lawtype = { is_same_law_group_as = law_type:law_subjecthood }
+								law_is_available = yes
+								bpm_interest_group_law_enactment_stance_as_number > 0
+								NOT = {
+									type ?= law_type:law_subjecthood
+								}
+							}
+						}
+					}
+					order_by = ig_clout
+					position = 0
+					check_range_bounds = no
+					save_scope_as = ig_to_check
+					owner = {
+						ordered_law = {
+							limit = {
+								type = { save_temporary_scope_as = lawtype }
+								scope:lawtype = { is_same_law_group_as = law_type:law_subjecthood }
+								law_is_available = yes
+								NOT = {
+									type ?= law_type:law_subjecthood
+								}
+							}
+							position = 0
+							order_by = bpm_interest_group_law_enactment_stance_as_number
+							check_range_bounds = no
+							prev.owner = {
+								activate_law = prev.type
+							}
+						}
+					}
+				}
+			}
+			else = {
+				activate_law = law_type:law_national_supremacy
+			}
+		}
 	}
 
-#	pop_support = {
-#		value = 0
-#		
-#		add = {
-#			desc = "POP_CLERGYMEN"
-#			if = {
-#				limit = { 
-#					is_pop_type = clergymen
-#				}
-#				value = 0.33
-#			}
-#		}
-#	}
+	modifier = {
+		country_legitimacy_headofstate_add = 20
+		country_legitimacy_ideological_incoherence_mult = 0.1
+		country_clergymen_pol_str_mult = 0.5
+
+	}
 	
 	ai_will_do = {
 		always = no
@@ -552,17 +610,17 @@ REPLACE:law_council_republic = {
 	}
 
 	can_enact = {
-		has_technology_researched = socialism
 		custom_tooltip = {
-			text = "bpm_first_intl_happened"
-			has_global_variable = first_intl_chain_complete_var
+			text = has_factory_councils_law_or_amendment_tt
+			has_factory_councils_law_or_amendment = yes
+		}
+		custom_tooltip = {
+			text = had_proletarian_revolution_tt
+			has_global_variable_map = first_proletarian_revolution
 		}
 	}
 
 	on_activate = {
-		custom_tooltip = {
-			text = enact_law_radical_leftist_government_warning_desc
-		}
 		scripted_effect_parties_emergence = yes
 		if = {
 			limit = {
@@ -572,11 +630,61 @@ REPLACE:law_council_republic = {
 		}
 		if = {
 			limit = {
-				NOT = {
-                    bpm_has_movement_interaction = { int = agrarian_socialist_takeover }
-                }
+				is_template_used = rus_lenin_character_template
+				country_has_primary_culture = cu:russian
+				any_scope_state = {
+					state_region = s:STATE_INGRIA
+				}
 			}
-			bpm_do_agrarian_socialist_takeover = yes
+			random_scope_state = {
+				limit = {
+					state_region = s:STATE_INGRIA
+				}
+				reset_state_name = yes
+				set_hub_name = {
+					type = city
+					name = HUB_NAME_STATE_INGRIA_city_russian_sov # St. Petersburg only becomes Leningrad if Lenin has been around to be a namesake
+				}
+			}
+		}
+		if = {
+			limit = {
+				active_law:lawgroup_labour_associations ?= {
+					has_amendment = amendment_type:amendment_factory_councils
+				}
+			}
+			activate_law = law_type:law_factory_councils
+		}
+		custom_tooltip = {
+			text = enact_law_radical_leftist_government_warning_desc
+			every_country = {
+				limit = {
+					has_overlapping_interests = ROOT
+				}
+				create_diplomatic_catalyst = {
+					type = catalyst_socialist_government
+					target = root
+				}
+			}
+		}
+		if = {
+			limit = {
+				NOR = {
+					has_journal_entry = je_communism_1
+					has_journal_entry = je_communism_2
+					has_journal_entry = je_state_and_revolution
+					has_variable = rcw_russian_faction
+				}
+			}
+			trigger_event = { id = communism.2 popup = yes }
+			if = {
+				limit = {
+					NOT = {
+						has_global_variable = socialist_world_republic
+					}
+				}
+				custom_tooltip = enact_law_interest_rates_and_trade_advantage_warning_desc
+			}
 		}
 	}
 
@@ -594,12 +702,11 @@ REPLACE:law_council_republic = {
 	}
 
 	modifier = {
-		#country_legitimacy_govt_total_votes_add = 10
+		country_legitimacy_govt_total_votes_add = 10
+		country_legitimacy_govt_size_add = 1
+		country_legitimacy_ideological_incoherence_mult = -0.1
 		country_bureaucrats_voting_power_add = 10
-		#country_legitimacy_ideological_incoherence_mult = 0.25
 		state_pop_pol_str_add = 0.2
-		country_bpm_labor_consciousness_target_mult = 0.35
-		#country_legitimacy_govt_total_clout_add = 100
 		
 		country_institution_economy_max_investment_add = 2 
 	}
@@ -793,7 +900,8 @@ REPLACE:law_corporate_state = {
 	}
 	
 	modifier = {
-		country_legitimacy_ideological_incoherence_mult = 0.1
+		country_legitimacy_govt_size_add = 2
+		country_legitimacy_ideological_incoherence_mult = -0.25
 		country_authority_add = 100
 		interest_group_ig_petty_bourgeoisie_pol_str_mult = 0.25
 	}
@@ -852,6 +960,12 @@ REPLACE:law_social_monarchy = {
 	icon = "gfx/interface/icons/law_icons/social_monarchy.dds"
 
 	progressiveness = 25
+
+	modifier = {
+		country_legitimacy_headofstate_add = 10
+		country_legitimacy_govt_size_add = 1
+		country_legitimacy_ideological_incoherence_mult = -0.10
+	}
 
 	unlocking_technologies = {
 		corporatism

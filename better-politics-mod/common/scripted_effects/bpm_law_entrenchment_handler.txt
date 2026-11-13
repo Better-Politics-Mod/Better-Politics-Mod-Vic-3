@@ -1,0 +1,87 @@
+﻿bpm_make_newly_enacted = {
+    save_scope_as = law
+    owner = {
+        if = {
+            limit = {
+                has_law_or_variant = law_type:law_hereditary_bureaucrats
+            }
+            ig:ig_landowners ?= { save_scope_as = selected_ig }
+        }
+        else = {
+            ig:ig_petty_bourgeoisie ?= { save_scope_as = selected_ig }
+        }
+        if = {
+            limit = {
+                scope:law.type = { bpm_is_repeatable_law = no }
+            }
+            if = {
+                limit = {
+                    scope:law.type = {
+                        is_same_law_group_as = law_type:law_monarchy
+                    }
+                }
+                scope:law = {
+                    add_amendment = {
+                        type = bpm_amendment_newly_enacted
+                        sponsor = scope:selected_ig
+                        timeout = 60
+                    }
+                }
+            }
+            else = {
+                scope:law = {
+                    add_amendment = {
+                        type = bpm_amendment_newly_enacted
+                        sponsor = scope:selected_ig
+                        timeout = 30
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+bpm_update_entrenched_laws = {
+    if = {
+        limit = {
+            has_variable_list = bpm_country_entrenched_laws
+        }
+        every_in_list = {
+            variable = bpm_country_entrenched_laws
+            limit = {
+                currently_active_law_in_group = {
+                    has_amendment = amendment_type:bpm_amendment_newly_enacted
+                }
+            }
+            owner = {
+                add_to_variable_list = {
+                    name = bpm_old_laws_still_entrenched
+                    target = prev
+                }
+            }
+        }
+    }
+    clear_variable_list = bpm_country_entrenched_laws
+    every_active_law = {
+        limit = {
+            NOT = { has_amendment = amendment_type:bpm_amendment_newly_enacted }
+        }
+        owner = {
+            add_to_variable_list = {
+                name = bpm_country_entrenched_laws
+                target = prev
+            }
+        }
+    }
+    every_in_list = {
+        variable = bpm_old_laws_still_entrenched
+        owner = {
+            add_to_variable_list = {
+                name = bpm_country_entrenched_laws
+                target = prev
+            }
+        }
+    }
+    clear_variable_list = bpm_old_laws_still_entrenched
+}

@@ -129,9 +129,31 @@ bpm_salience_weight = {
 	# }
 }
 
-#
+bpm_inter_ig_disagreement_on_law = {
+	value = scope:first_ig.bpm_ig_pos_law_stance
+	subtract = scope:second_ig.bpm_ig_pos_law_stance
+	abs = yes
+	divide = 2
+	max = 1
+	owner = {
+		divide = {
+			value = "variable_map(bpm_lawgroup_size|scope:law.type)"
+			min = 1
+		}
+	}
+	multiply = bpm_salience_weight_of_igs
+}
+
+bpm_total_salience_of_igs = {
+	value = 0
+	every_active_law = {
+		add = bpm_salience_weight_of_igs
+	}
+	min = 1
+}
+
 bpm_inter_ig_approval = {
-	value = 1
+	value = 0
 	save_temporary_scope_as = first_ig
 	scope:ig = {
 		save_temporary_scope_as = second_ig
@@ -142,30 +164,15 @@ bpm_inter_ig_approval = {
 				owner = {
 					NOT = { has_law = prev.type }
 				}
+				bpm_salience_weight_of_igs > 0
 			}
 			save_temporary_scope_as = law
-			subtract = {
-				value = scope:first_ig.bpm_ig_pos_law_stance
-				subtract = scope:second_ig.bpm_ig_pos_law_stance
-				divide = 2
-				max = 1
-				min = -1
-				if = {
-					limit = {
-						scope:first_ig.bpm_ig_pos_law_stance < scope:second_ig.bpm_ig_pos_law_stance
-					}
-					multiply = -1
-				}
-				owner = {
-					divide = {
-						value = "variable_map(bpm_lawgroup_size|scope:law.type)"
-						min = 1
-					}
-				}
-				multiply = bpm_aggregate_salience
-			}
+			add = bpm_inter_ig_disagreement_on_law
 		}
+		divide = bpm_total_salience_of_igs
 	}
+	multiply = -1
+	add = 1
 }
 
 bpm_inter_ig_approval_law_group = {
@@ -184,34 +191,19 @@ bpm_inter_ig_approval_law_group = {
 				owner = {
 					NOT = { has_law = prev.type }
 				}
+				bpm_salience_weight_of_igs > 0
 			}
 			save_temporary_scope_as = law
-			subtract = {
-				value = scope:first_ig.bpm_ig_pos_law_stance
-				subtract = scope:second_ig.bpm_ig_pos_law_stance
-				divide = 2
-				max = 1
-				min = -1
-				if = {
-					limit = {
-						scope:first_ig.bpm_ig_pos_law_stance < scope:second_ig.bpm_ig_pos_law_stance
-					}
-					multiply = -1
-				}
-				owner = {
-					divide = {
-						value = "variable_map(bpm_lawgroup_size|scope:law.type)"
-						min = 1
-					}
-				}
-				multiply = bpm_aggregate_salience
-			}
+			add = bpm_inter_ig_disagreement_on_law
 		}
+		divide = bpm_total_salience_of_igs
 	}
+	multiply = -1
 }
 
+# 0 = strongly disapprove, 1 = disapprove, 2 = neutral, 3 = approve, 4 = strongly approve
 bpm_ig_pos_law_stance = {
-	value = 0
+	value = 2
 	if = {
 		limit = {
 			law_enactment_stance = {
@@ -219,7 +211,7 @@ bpm_ig_pos_law_stance = {
 				value = disapprove
 			}
 		}
-		add = 1
+		subtract = 1
 	}
 	else_if = {
 		limit = {
@@ -228,7 +220,7 @@ bpm_ig_pos_law_stance = {
 				value = strongly_disapprove
 			}
 		}
-		add = 2
+		subtract = 2
 	}
 	else_if = {
 		limit = {
@@ -237,7 +229,7 @@ bpm_ig_pos_law_stance = {
 				value = approve
 			}
 		}
-		add = 3
+		add = 1
 	}
 	else_if = {
 		limit = {
@@ -246,7 +238,7 @@ bpm_ig_pos_law_stance = {
 				value = strongly_approve
 			}
 		}
-		add = 4
+		add = 2
 	}
 }
 

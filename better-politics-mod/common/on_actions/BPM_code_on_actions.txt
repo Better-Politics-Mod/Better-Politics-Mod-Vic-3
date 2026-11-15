@@ -13,7 +13,6 @@ on_half_yearly_pulse_country = {
 on_monthly_pulse_country = {
 	on_actions = {
 		on_bpm_monthly_pulse_country
-		bpm_update_enactment_success_on_action
 	}
 }
 
@@ -368,9 +367,6 @@ bpm_on_law_enactment_pass = {
 
 on_bpm_seccession_start = {
 	effect = {
-		scope:target = {
-			set_variable = bpm_can_new_constitution
-		}
 		# Add 1st intl progress
 		if = { 
 			limit = { 
@@ -564,9 +560,6 @@ on_bpm_wargoal_enforced = {
 on_bpm_revolution_start = {
 	effect = {
 		bpm_add_political_stability_big = yes # Crackdowns, most disloyal people left for revolution
-		scope:target = {
-			set_variable = bpm_can_new_constitution
-		}
 
 		if = {
 			limit = {
@@ -591,41 +584,6 @@ on_bpm_revolution_start = {
 			}
 		}
 
-		# Set target as a potential legitimator of syndicalism if they win
-		if = {
-			limit = {
-				country_rank >= rank_value:unrecognized_regional_power
-				has_journal_entry = je_bpm_syndicalism
-				var:bpm_je_syndicalism >= 0.66
-			}
-			scope:target = { 
-				set_variable = bpm_can_legitimize_syndicalism
-			}
-		}
-
-		# Enact Council Republic if revoluition is obviously communist
-		#if = {
-		#	limit = {
-		#		scope:target = {
-		#			is_secessionist = no
-		#			any_interest_group = {
-		#				is_in_government = yes
-		#				bmp_ig_is_socialist = yes
-		#				is_strongest_ig_in_government = yes
-		#			}
-		#		}
-		#	}
-		#	scope:target = { activate_law = law_type:law_council_republic }
-
-		#	# Also activate syndicalism if this is a syndicalist revolution
-		#	if = {
-		#		limit = {
-		#			has_journal_entry = je_bpm_syndicalism
-		#			var:bpm_je_syndicalism >= 0.66
-		#		}
-		#		scope:target = { activate_law = law_type:law_syndicalism }
-		#	}
-		#}
 
 		# Pass along agrarian socialism progress to rebels
 		if = {
@@ -870,18 +828,6 @@ on_bpm_civil_war_won = {
 	effect = {
 		if = {
 			limit = {
-				has_variable = bpm_can_new_constitution
-			}
-			trigger_event = { id = bpm_provisional_government_events.1 days = 7 popup = yes }
-		}
-
-		if = {
-			limit = { has_variable = bpm_can_legitimize_syndicalism }
-			trigger_event = { id = bpm_syndicalism.1 days = 2 popup = yes }
-		}
-
-		if = {
-			limit = {
 				bpm_country_is_bourgeois_republic = yes
 				has_variable = bpm_active_anti_monarchist_revolution
 				NOT = {
@@ -915,7 +861,6 @@ on_bpm_civil_war_won = {
 
 on_bpm_government_reformed = {
 	effect = {
-		bpm_update_single_party_ideology_support = yes
 		bpm_cache_country_igs_radical_opposition_effect = yes
 		if = {
 			limit = {
@@ -944,11 +889,47 @@ on_bpm_election_campaign_start = {
 		bpm_japan.1
 	}
 	effect = {
-		every_active_party = {
+		if = {
 			limit = {
-				is_party_type = one_party_independents
+				has_variable = bpm_electoral_mandate_progress
+				var:bpm_electoral_mandate_progress = 4
 			}
-			add_momentum = -200
+			every_active_party = {
+				limit = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+				add_momentum = 0.25
+			}
+		}
+		else_if = {
+			limit = {
+				has_variable = bpm_electoral_mandate_progress
+				var:bpm_electoral_mandate_progress = 0
+			}
+			every_active_party = {
+				limit = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+				add_momentum = -0.35
+			}
+		}
+		else_if = {
+			limit = {
+				has_variable = bpm_electoral_mandate_progress
+				var:bpm_electoral_mandate_progress <= 2
+			}
+			every_active_party = {
+				limit = {
+					any_member = {
+						is_in_government = yes
+					}
+				}
+				add_momentum = -0.15
+			}
 		}
 		bpm_remove_political_stability_small = yes
 	}
@@ -1069,10 +1050,11 @@ on_bpm_game_started = {
 	effect = {
 		every_country = {
 			bpm_auth_update_state_capacity = yes
-			bpm_update_name_all_igs = yes
 			bpm_update_political_stability = yes
 			bpm_initialize_hog = yes
 			bpm_setup_lawgroup_size = yes
+			bpm_the_docket_effect = yes
+			bpm_update_law_enactment_docket = yes
 			bpm_update_government_and_opposition = yes
 		}
 		every_character = {

@@ -1288,125 +1288,47 @@ REPLACE:law_anarchy = {
 	}
 }
 
-law_organic_democracy = {
+REPLACE:law_single_party_state = {
 	group = lawgroup_distribution_of_power
-	
-	icon = "gfx/interface/icons/law_icons/corporate_state.dds"
-	
-	progressiveness = 200
 
-	unlocking_technologies = {
-		corporatism 
-	}
-	
+	icon = "gfx/interface/icons/law_icons/single_party_state.dds"
+
+	progressiveness = 50
+
 	can_enact = {
-		#custom_tooltip = {
-		#	text = root_has_enacted_no_parties_allowed
-		#	has_law = law_type:law_no_parties_allowed
-		#}
 		OR = {
-			has_law = law_type:law_no_parties_allowed
-			has_law = law_type:law_autocracy
+			custom_tooltip = {
+				text = bpm_hog_is_already_state_institutional
+				var:bpm_headofgov ?= {
+					bpm_ig_is_state_institutional = yes
+				}
+			}
+			has_technology_researched = political_agitation
+		}
+		custom_tooltip = {
+			text = bpm_hog_approves_of_institutional_state
+			var:bpm_headofgov ?= {
+				law_stance = {
+					law = law_type:law_single_party_state
+					value >= approve
+				}
+			}
 		}
 	}
-	
-	unlocking_laws = {
-		law_universal_suffrage
-		law_autocracy
-	}
 
-	disallowing_laws = {
-		law_council_republic
-	}
-	
 	modifier = {
-		country_rigidity_baseline_add = 25
-
-		#country_voting_power_wealth_threshold_add = 10
-
-		state_radicals_from_political_movements_mult = -0.1	
-
-		interest_group_ig_rural_folk_pop_attraction_mult = 0.25
-		interest_group_ig_trade_unions_pop_attraction_mult = 0.25
-		interest_group_ig_intelligentsia_pop_attraction_mult = 0.25
-
-		country_voting_power_base_add = 20
-		country_bpm_auth_authority_per_bureaucracy_add = 0.02
-		interest_group_in_government_approval_add = -5
+		country_ruling_ig_state_institutional = yes
 	}
 
 	on_activate = {
-		scripted_effect_parties_emergence = yes
-		if = {
-			limit = { has_modifier = bpm_republic_gov_size }
-			remove_modifier = bpm_republic_gov_size
-		}
 		if = {
 			limit = {
-				game_date > 1836.1.1
+				NOT = { has_law = law_type:law_executive_institutional }
 			}
-			initialize_electoral_confidence = yes
-		}
-		random_law = {
-			limit = {
-				type = law_type:law_organic_democracy
-			}
-			save_scope_as = relevant_voting_law
-		}
-		handle_possible_absent_caciquismo_variables = yes
-		inherit_caciquismo_effect = yes
-		if = {
-			limit = {
-				has_law = law_type:law_monarchy
-				has_variable = king_in_parliament_possible
-				NOT = {
-					has_journal_entry = je_king_in_parliament
-				}
-			}
-			custom_tooltip = {
-				text = king_in_parliament_tt
-				add_journal_entry = { type = je_king_in_parliament }
-			}
-		}
-
-		hidden_effect = {
-			if = {
-				limit = {
-					NOT = {
-						has_law = law_type:law_no_parties_allowed
-					}
-				}
-				trigger_event = { id = bpm_single_party.2 }
-			}
-		}
-		activate_law = law_type:law_advisory_body
-
-		if = {
-			limit = { 
-				game_date > 1836.1.2 
-				#is_at_war = no
-			}
-			call_election = {
-				months = 3
-			}
+			activate_law = law_type:law_executive_institutional
 		}
 	}
-	
-	ai_will_do = {
-		exists = ruler
-		OR = {
-			ruler = {
-				#has_ideology = ideology:ideology_anarchist
-			}
-			any_interest_group = {
-				is_interest_group_type = ig_reactionaries
-				has_ideology = ideology_dop_organic_democrat
-				is_powerful = yes
-				is_in_government = yes
-			}
-		}
-	}
-	
+
 	can_impose = {
 		OR = {
 			AND = {
@@ -1416,74 +1338,40 @@ law_organic_democracy = {
 					has_law = scope:law
 				}
 			}
-			AND = { # modification of the standard trigger, only other anarchic countries can impose anarchy on their subjects
+			AND = { # modification of the standard trigger, only other single-party states countries can impose single-party states on their subjects
 				has_law = scope:law
 				can_impose_law_default = yes
 			}
 		}
 	}
 
-	ai_enact_weight_modifier = { #Petitions
-		value = 0
-		
-		if = {
-			limit = { ai_has_enact_weight_modifier_journal_entries = yes }
-			add = 750
-		}
-	}
-
 	ai_impose_chance = {
 		value = 0
-		
+
 		if = {
 			limit = {
-				has_law = law_type:law_organic_democracy
-				has_strategy = ai_strategy_egalitarian_agenda	
+				has_law = law_type:law_single_party_state
+				"ai_ideological_opinion(scope:target_country)" >= 25 # Only want to do this on ideologically similar countries
 				scope:target_country = { # Is their law different enough from what we want to impose?
-					NOT = { has_law = law_type:law_universal_suffrage }
+					NOT = { has_law_or_variant = law_type:law_technocracy }
 				}
 			}
-			
+
 			add = base_impose_law_weight
 		}
-	}
-}
 
-REPLACE:law_single_party_state = {
-	group = lawgroup_distribution_of_power
-	
-	icon = "gfx/interface/icons/law_icons/single_party_state.dds"
-	
-	progressiveness = 0
-
-	can_enact = {
-		always = no
-	}
-	
-	is_visible = {
-		always = no # Disabled and replaced by BPM's bespoke system
-	}
-
-	unlocking_technologies = {
-	}
-	
-	modifier = {
-	country_legitimacy_govt_total_votes_add = 100
-	country_legitimacy_ideological_incoherence_mult = -0.25
-	}
-
-	on_activate = {
-	}
-	
-	ai_will_do = {
-		always = no
-	}
-
-	can_impose = { 
-		always = no
-	} 
-
-	ai_enact_weight_modifier = { 
-		value = 0
+		if = {
+			limit = {
+				scope:target_country = {
+					c:BIC ?= ROOT
+					OR = {
+						has_journal_entry = je_british_dictate_plantations
+						has_journal_entry = je_british_dictate_military
+						has_journal_entry = je_british_dictate_universities
+					}
+				}
+			}
+			multiply = 0
+		}
 	}
 }

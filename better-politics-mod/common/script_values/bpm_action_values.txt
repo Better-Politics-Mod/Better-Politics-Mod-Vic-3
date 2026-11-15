@@ -1,6 +1,10 @@
 ﻿bpm_revcell_base_progress = 0
 bpm_revcell_progress_max = 3
 bpm_revcell_progress_min = -3
+bpm_revcell_front_line_chance = 2
+bpm_grasp_neighbour_cell_penalty = 6
+bpm_grasp_calm_neighbour_bonus = 10
+bpm_grasp_clout_mult = 200
 
 bpm_revcell_base_progress_m1 = {
 	value = bpm_revcell_base_progress
@@ -33,10 +37,8 @@ bpm_cell_growth_chance = {
 
 bpm_cell_shrinking_chance = {
 	value = {
-		every_scope_country = {
-			add = bpm_state_capacity
-		}
-		desc = "bpm_state_capacity_of_country"
+		value = scope:country.legitimacy
+		desc = "bpm_legitimacy_of_country"
 	}
 }
 
@@ -138,6 +140,10 @@ bpm_revolt_map_cells_in_state = {
 bpm_revolt_map_max_cell_level = {
 	value = 0
 	if = {
+		limit = { bpm_revolt_map_cell_level = { lvl = 4 } }
+		value = 4
+	}
+	else_if = {
 		limit = { bpm_revolt_map_cell_level = { lvl = 3 } }
 		value = 3
 	}
@@ -152,11 +158,197 @@ bpm_revolt_map_max_cell_level = {
 }
 
 # this = state
-# How firmly the government holds this state, 0-100
-# TODO: placeholder, currently just turmoil
-bpm_state_grasp = {
+# scope:action
+bpm_action_cell_level = {
+	value = 0
+	state_region = {
+		save_temporary_scope_as = cell_level_sr
+	}
+	if = {
+		limit = {
+			scope:action = {
+				is_key_in_variable_map = {
+					name = bpm_revcells
+					target = scope:cell_level_sr
+				}
+			}
+		}
+		value = "scope:action.variable_map(bpm_revcells|scope:cell_level_sr)"
+	}
+}
+
+# this = action
+bpm_revolt_action_clout = {
+	value = 0
+	every_in_list = {
+		variable = bpm_actively_involved
+		add = {
+			value = ig_clout
+			multiply = 100
+		}
+	}
+}
+
+# this = state
+# scope:action
+bpm_grasp_part_legitimacy = {
+	value = owner.legitimacy
+}
+
+# this = state
+bpm_grasp_part_turmoil = {
 	value = turmoil
-	multiply = 100
+	multiply = -25
+}
+
+# this = state
+# scope:action
+bpm_grasp_part_clout = {
+	value = 0
+	scope:action = {
+		every_in_list = {
+			variable = bpm_actively_involved
+			add = {
+				value = ig_clout
+				multiply = bpm_grasp_clout_mult
+			}
+		}
+	}
+	multiply = -1
+}
+
+# this = state
+# scope:action
+bpm_grasp_part_neighbour_cells = {
+	value = 0
+	every_neighbouring_state = {
+		limit = {
+			owner = root.owner
+			bpm_action_cell_level > 0
+		}
+		add = {
+			value = bpm_action_cell_level
+			multiply = bpm_grasp_neighbour_cell_penalty
+			multiply = -1
+		}
+	}
+}
+
+# this = state
+# scope:action
+bpm_grasp_part_calm_neighbours = {
+	value = 0
+	every_neighbouring_state = {
+		limit = {
+			owner = root.owner
+			bpm_action_cell_level = 0
+		}
+		add = bpm_grasp_calm_neighbour_bonus
+	}
+}
+
+# this = state
+bpm_grasp_part_capital = {
+	value = 0
+	if = {
+		limit = { is_capital = yes }
+		value = 10
+	}
+}
+
+# this = state
+bpm_grasp_part_unincorporated = {
+	value = 0
+	if = {
+		limit = { is_incorporated = no }
+		value = -20
+	}
+}
+
+# this = state
+bpm_grasp_part_repression = {
+	value = 0
+	if = {
+		limit = { modifier:state_bpm_auth_repression_mult > 0 }
+		value = modifier:state_bpm_auth_repression_mult
+		multiply = 15
+	}
+}
+
+# this = state
+# scope:action
+bpm_grasp_part_cells = {
+	value = bpm_action_cell_level
+	multiply = -5
+}
+
+# this = state
+# scope:action
+bpm_state_grasp = {
+	value = bpm_grasp_part_legitimacy
+	add = bpm_grasp_part_turmoil
+	add = bpm_grasp_part_clout
+	add = bpm_grasp_part_neighbour_cells
+	add = bpm_grasp_part_calm_neighbours
+	add = bpm_grasp_part_capital
+	add = bpm_grasp_part_unincorporated
+	add = bpm_grasp_part_repression
+	add = bpm_grasp_part_cells
+	min = 0
+	max = 100
+}
+
+# this = state
+# scope:action
+# 1: 0-20, 2: 21-40, 3: 41-60, 4: 61-80, 5: 81-100
+bpm_state_grasp_category = {
+	value = 5
+	if = {
+		limit = { bpm_state_grasp <= 20 }
+		value = 1
+	}
+	else_if = {
+		limit = { bpm_state_grasp <= 40 }
+		value = 2
+	}
+	else_if = {
+		limit = { bpm_state_grasp <= 60 }
+		value = 3
+	}
+	else_if = {
+		limit = { bpm_state_grasp <= 80 }
+		value = 4
+	}
+}
+
+# this = country
+bpm_revolt_total_clout = {
+	value = 0
+	every_in_list = {
+		variable = bpm_active_actions
+		limit = { var:bpm_action_type ?= flag:bpm_action_revolt }
+		add = bpm_revolt_action_clout
+	}
+}
+
+# this = country
+# 0-6, the grasp category the shared front line settles on: higher with the clout of all revolutions, lower with legitimacy
+bpm_revolt_front_line_centre = {
+	value = 3
+	if = {
+		limit = {
+			bpm_revolt_total_clout > 0
+		}
+		value = bpm_revolt_total_clout
+		divide = {
+			value = bpm_revolt_total_clout
+			add = legitimacy
+		}
+		multiply = 6
+		round = yes
+	}
+	min = 0
+	max = 6
 }
 
 # this = country
@@ -165,6 +357,15 @@ bpm_revolt_states_with_cells = {
 	value = 0
 	every_scope_state = {
 		limit = { bpm_revolt_map_cells_in_state > 0 }
+		add = 1
+	}
+}
+
+# this = country
+bpm_revolt_selected_cell_count = {
+	value = 0
+	every_in_list = {
+		variable = bpm_revolt_cell_states
 		add = 1
 	}
 }

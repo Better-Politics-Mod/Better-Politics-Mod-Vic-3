@@ -82,57 +82,377 @@ bpm_ig_movement_attraction = {
 }
 
 # this = flag
-# scope:movement
+# scope:ig
 bpm_ig_action_attraction = {
 	value = 0
+	if = {
+		limit = { this ?= flag:bpm_action_revolt }
+		add = scope:ig.bpm_ig_attraction_to_revolt
+	}
+	if = {
+		limit = { this ?= flag:bpm_action_take_down_coalition }
+		add = scope:ig.bpm_ig_attraction_to_take_down_coalition
+	}
+	if = {
+		limit = { this ?= flag:bpm_action_take_over_rig }
+		add = scope:ig.bpm_ig_attraction_to_take_over_rig
+	}
+}
 
+# this = ig
+bpm_ig_current_action_attraction = {
+	value = 0
+	if = {
+		limit = { bpm_ig_is_in_action_of_type = { TYPE = bpm_action_revolt } }
+		add = bpm_ig_attraction_to_revolt
+	}
+	else_if = {
+		limit = { bpm_ig_is_in_action_of_type = { TYPE = bpm_action_take_down_coalition } }
+		add = bpm_ig_attraction_to_take_down_coalition
+	}
+	else_if = {
+		limit = { bpm_ig_is_in_action_of_type = { TYPE = bpm_action_take_over_rig } }
+		add = bpm_ig_attraction_to_take_over_rig
+	}
+}
+
+# this = ig
+bpm_ig_attraction_to_revolt = {
+	value = 0
+	save_temporary_scope_as = ig
+	add = {
+		value = 2
+		desc = "bpm_attraction_revolt_base"
+	}
+	if = {
+		limit = { ig_approval > angry }
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_not_angry"
+		}
+	}
+	if = {
+		limit = { owner = { bpm_can_revolt_country = no } }
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_no_turmoil"
+		}
+	}
+	if = {
+		limit = { bpm_can_revolt_ig = no }
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_recent_regime_change"
+		}
+	}
+	if = {
+		limit = { bpm_ig_is_in_action_of_type = { TYPE = bpm_action_revolt } }
+		multiply = {
+			value = 3
+			desc = "bpm_attraction_reason_already_revolting"
+		}
+	}
+}
+
+# this = ig
+bpm_ig_attraction_to_take_down_coalition = {
+	value = 0
+	save_temporary_scope_as = ig
+	add = {
+		value = 1
+		desc = "bpm_attraction_take_down_base"
+	}
+	if = {
+		limit = { NOT = { exists = owner.var:bpm_ruling_ig } }
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_no_rig"
+		}
+	}
+	else = {
+		if = {
+			limit = { owner.var:bpm_ruling_ig = this }
+			multiply = {
+				value = 0
+				desc = "bpm_attraction_reason_is_rig"
+			}
+		}
+		if = {
+			limit = {
+				ig_clout > owner.var:bpm_ruling_ig.ig_clout
+				bpm_ig_attraction_to_take_over_rig > 0
+			}
+			multiply = {
+				value = 0
+				desc = "bpm_attraction_reason_more_clout_than_rig"
+			}
+		}
+	}
+	if = {
+		limit = { owner = { has_variable = bpm_take_down_coalition_cooldown } }
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_cooldown"
+		}
+	}
+	if = {
+		limit = { ig_approval > unhappy }
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_not_unhappy"
+		}
+	}
 	if = {
 		limit = {
-			this ?= flag:bpm_action_revolt
+			is_powerful = yes
+			bpm_ig_attraction_to_take_over_rig > 0
 		}
-		value = 0
-		if = {
-			limit = {
-				OR = { 
-					scope:ig.owner = { 
-						bpm_can_revolt_country = no
-					} 
-					scope:ig = {
-						bpm_can_revolt_ig = no
-					}
-				}
-			}
-			add = 0
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_powerful"
 		}
-		else_if = {
-			limit = {
-				scope:ig = {
-					ig_approval <= angry
-				}
-			}
-			add = 2
-		}
+	}
+}
 
-		# stickyness
+# this = ig
+bpm_ig_attraction_to_take_over_rig = {
+	value = 0
+	save_temporary_scope_as = ig
+	add = {
+		value = 1.5
+		desc = "bpm_attraction_take_over_base"
+	}
+	if = {
+		limit = { owner = { modifier:country_government_formation_type_institutional = no } }
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_not_institutional"
+		}
+	}
+	if = {
+		limit = { NOT = { exists = owner.var:bpm_ruling_ig } }
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_no_rig"
+		}
+	}
+	else_if = {
+		limit = { owner.var:bpm_ruling_ig = this }
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_is_rig"
+		}
+	}
+	else_if = {
+		limit = { bpm_ig_faces_other_take_over_rig = yes }
 		if = {
 			limit = {
-				scope:ig.owner = {
+				owner = {
 					any_in_list = {
 						variable = bpm_active_actions
-						is_target_in_variable_list = {
-							name = bpm_actively_involved
-							target = scope:ig
-						}
-						var:bpm_action_type = flag:bpm_action_revolt
+						var:bpm_action_type ?= flag:bpm_action_take_over_rig
+						bpm_ig_would_join_take_over_rig = no
 					}
 				}
 			}
-			# stickyness factor x3
-			# this ig will only abandon revolution
-			# if something is thrice as attractive
-			multiply = 3
+			multiply = {
+				value = 0
+				desc = "bpm_attraction_reason_not_aligned_with_challenger"
+			}
 		}
+	}
+	else = {
+		if = {
+			limit = { owner = { has_variable = bpm_take_over_rig_cooldown } }
+			multiply = {
+				value = 0
+				desc = "bpm_attraction_reason_cooldown"
+			}
+		}
+		if = {
+			limit = { ig_approval > unhappy }
+			multiply = {
+				value = 0
+				desc = "bpm_attraction_reason_not_unhappy"
+			}
+		}
+		if = {
+			limit = { ig_clout < 0.1 }
+			multiply = {
+				value = 0
+				desc = "bpm_attraction_reason_initiator_low_clout"
+			}
+		}
+		if = {
+			limit = { bpm_ig_is_very_radical_opposition = yes }
+			multiply = {
+				value = 0
+				desc = "bpm_attraction_reason_initiator_extremist"
+			}
+		}
+		if = {
+			limit = {
+				is_powerful = no
+				ig_clout <= owner.var:bpm_ruling_ig.ig_clout
+			}
+			multiply = {
+				value = 0
+				desc = "bpm_attraction_reason_initiator_too_weak"
+			}
+		}
+	}
+}
 
+bpm_take_down_coalition_desire_per_clout = 40
+bpm_take_over_rig_desire_per_clout = 40
 
+# this = country
+bpm_take_over_rig_action_clout = {
+	value = 0
+	every_in_list = {
+		variable = bpm_active_actions
+		limit = {
+			var:bpm_action_type ?= flag:bpm_action_take_over_rig
+		}
+		add = bpm_action_total_clout_gui
+	}
+}
+
+# this = ig
+bpm_ig_take_over_rig_support = {
+	value = 0
+	save_temporary_scope_as = bpm_support_ig
+	if = {
+		limit = { owner.var:bpm_ruling_ig ?= this }
+		add = {
+			value = -2
+			desc = "bpm_ig_coalition_support_ruling_ig"
+		}
+	}
+	else_if = {
+		limit = { owner.var:bpm_proposed_ruling_ig ?= this }
+		add = {
+			value = 2
+			desc = "bpm_ig_take_over_support_proposed_rig"
+		}
+	}
+	else = {
+		if = {
+			limit = {
+				owner = {
+					has_variable_map = bpm_proposed_rig_approval_cache
+					is_key_in_variable_map = {
+						name = bpm_proposed_rig_approval_cache
+						target = scope:bpm_support_ig
+					}
+				}
+			}
+			if = {
+				limit = {
+					owner = { "variable_map(bpm_proposed_rig_approval_cache|scope:bpm_support_ig)" >= 0.75 }
+				}
+				add = {
+					value = 1
+					desc = "bpm_ig_take_over_support_proposed_friendly"
+				}
+			}
+			else_if = {
+				limit = {
+					owner = { "variable_map(bpm_proposed_rig_approval_cache|scope:bpm_support_ig)" < 0.5 }
+				}
+				add = {
+					value = -1
+					desc = "bpm_ig_take_over_support_proposed_hostile"
+				}
+			}
+		}
+		if = {
+			limit = {
+				owner = {
+					has_variable_map = bpm_coalition_rig_approval_cache
+					is_key_in_variable_map = {
+						name = bpm_coalition_rig_approval_cache
+						target = scope:bpm_support_ig
+					}
+				}
+			}
+			if = {
+				limit = {
+					owner = { "variable_map(bpm_coalition_rig_approval_cache|scope:bpm_support_ig)" >= 0.75 }
+				}
+				add = {
+					value = -1
+					desc = "bpm_ig_coalition_support_friendly"
+				}
+			}
+			else_if = {
+				limit = {
+					owner = { "variable_map(bpm_coalition_rig_approval_cache|scope:bpm_support_ig)" < 0.5 }
+				}
+				add = {
+					value = 1
+					desc = "bpm_ig_coalition_support_hostile"
+				}
+			}
+		}
+		if = {
+			limit = { ig_approval <= unhappy }
+			add = {
+				value = 1
+				desc = "bpm_ig_take_down_support_unhappy"
+			}
+		}
+		else_if = {
+			limit = { ig_approval >= happy }
+			add = {
+				value = -1
+				desc = "bpm_ig_take_over_support_happy"
+			}
+		}
+	}
+}
+
+# this = country
+bpm_take_down_coalition_action_clout = {
+	value = 0
+	every_in_list = {
+		variable = bpm_active_actions
+		limit = {
+			var:bpm_action_type ?= flag:bpm_action_take_down_coalition
+		}
+		add = bpm_action_total_clout_gui
+	}
+}
+
+# this = ig
+bpm_ig_take_down_coalition_support = {
+	value = 0
+	if = {
+		limit = { owner.var:bpm_ruling_ig ?= this }
+		add = {
+			value = -2
+			desc = "bpm_ig_coalition_support_ruling_ig"
+		}
+	}
+	else_if = {
+		limit = { bpm_ig_is_taking_down_coalition = yes }
+		add = {
+			value = 2
+			desc = "bpm_ig_take_down_support_in_action"
+		}
+	}
+	else_if = {
+		limit = { is_in_government = yes }
+		add = {
+			value = -1
+			desc = "bpm_ig_take_down_support_in_coalition"
+		}
+	}
+	else_if = {
+		limit = { ig_approval <= unhappy }
+		add = {
+			value = 1
+			desc = "bpm_ig_take_down_support_unhappy"
+		}
 	}
 }

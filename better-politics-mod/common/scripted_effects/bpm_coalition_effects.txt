@@ -7,6 +7,14 @@
 		name = bpm_coalition_actions
 		target = flag:bpm_action_revolt
 	}
+	add_to_global_variable_list = {
+		name = bpm_coalition_actions
+		target = flag:bpm_action_take_down_coalition
+	}
+	add_to_global_variable_list = {
+		name = bpm_coalition_actions
+		target = flag:bpm_action_take_over_rig
+	}
 }
 
 bpm_coalition_and_actions = {
@@ -41,14 +49,7 @@ bpm_purge_actions = {
 		if = {
 			limit = {
 				has_variable = bpm_action
-				NOT = {
-					scope:country = {
-						is_target_in_variable_list = {
-							name = bpm_active_actions
-							target = scope:purged_ig.var:bpm_action
-						}
-					}
-				}
+				bpm_ig_is_in_any_action = no
 			}
 			remove_variable = bpm_action
 		}
@@ -187,7 +188,10 @@ bpm_ig_find_joinable_action = {
 			if = {
 				limit = {
 					NOT = { exists = scope:chosen_action }
-					bpm_ig_willing_to_join_action = yes
+					OR = {
+						bpm_action_is_single_instance = yes
+						bpm_ig_willing_to_join_action = yes
+					}
 				}
 				save_scope_as = chosen_action
 			}
@@ -293,6 +297,10 @@ bpm_ig_create_selected_action = {
 			name = bpm_action_type
 			value = scope:selected_action_type
 		}
+		set_variable = {
+			name = bpm_action_initiator
+			value = scope:ig
+		}
 	}
 	
 	scope:ig = {
@@ -306,6 +314,21 @@ bpm_ig_create_selected_action = {
 		add_to_variable_list = {
 			name = bpm_active_actions
 			target = scope:created_action
+		}
+	}
+
+	if = {
+		limit = {
+			scope:selected_action_type = flag:bpm_action_take_over_rig
+			scope:country = {
+				NOT = { has_variable = bpm_take_over_rig_enacting }
+			}
+		}
+		scope:country = {
+			set_variable = {
+				name = bpm_proposed_ruling_ig
+				value = scope:ig
+			}
 		}
 	}
 
@@ -407,6 +430,7 @@ bpm_delete_action_if_needed = {
 							value = 0
 						}
 					}
+					bpm_action_lost_its_initiator = yes
 				}
 			}
 		}
@@ -504,4 +528,155 @@ bpm_clear_rig_approval_cache = {
 		limit = { has_variable_map = bpm_coalition_rig_approval_cache }
 		clear_variable_map = bpm_coalition_rig_approval_cache
 	}
+}
+
+# this = country
+bpm_take_down_ruling_coalition = {
+	save_scope_as = country
+	clear_variable_list = bpm_ruling_coalition
+	bpm_update_government_and_opposition = yes
+	clear_saved_scope = country
+	bpm_take_down_coalition_enactment_ended = yes
+	trigger_event = { id = bpm_misc.4 days = 1 }
+}
+
+# this = country
+bpm_take_down_coalition_enactment_ended = {
+	save_scope_as = country
+	if = {
+		limit = { has_variable = bpm_take_down_coalition_enacting }
+		remove_variable = bpm_take_down_coalition_enacting
+	}
+	set_variable = {
+		name = bpm_take_down_coalition_cooldown
+		years = 1
+	}
+	bpm_destroy_actions_of_type = { TYPE = bpm_action_take_down_coalition }
+	bpm_purge_actions = yes
+	clear_saved_scope = country
+}
+
+# this = country
+# scope:country
+bpm_destroy_actions_of_type = {
+	every_in_list = {
+		variable = bpm_active_actions
+		limit = {
+			var:bpm_action_type ?= flag:$TYPE$
+		}
+		save_scope_as = action
+		bpm_destroy_action = yes
+		clear_saved_scope = action
+	}
+}
+
+# this = country
+bpm_take_over_rig_enactment_started = {
+	set_variable = bpm_take_over_rig_enacting
+	if = {
+		limit = { has_variable = bpm_proposed_ruling_ig }
+		remove_variable = bpm_proposed_ruling_ig
+	}
+	random_in_list = {
+		variable = bpm_active_actions
+		limit = {
+			var:bpm_action_type ?= flag:bpm_action_take_over_rig
+			exists = var:bpm_action_initiator
+		}
+		save_scope_as = take_over_action
+	}
+	if = {
+		limit = { exists = scope:take_over_action }
+		set_variable = {
+			name = bpm_proposed_ruling_ig
+			value = scope:take_over_action.var:bpm_action_initiator
+		}
+	}
+	clear_saved_scope = take_over_action
+}
+
+# this = country
+bpm_take_over_rig_enactment_ended = {
+	save_scope_as = country
+	if = {
+		limit = { has_variable = bpm_take_over_rig_enacting }
+		remove_variable = bpm_take_over_rig_enacting
+	}
+	set_variable = {
+		name = bpm_take_over_rig_cooldown
+		years = 1
+	}
+	bpm_destroy_actions_of_type = { TYPE = bpm_action_take_over_rig }
+	bpm_purge_actions = yes
+	clear_saved_scope = country
+}
+
+# this = country
+bpm_cache_proposed_rig_approval = {
+	bpm_clear_proposed_rig_approval_cache = yes
+	if = {
+		limit = { exists = var:bpm_proposed_ruling_ig }
+		var:bpm_proposed_ruling_ig = { save_temporary_scope_as = ig }
+		every_interest_group = {
+			limit = {
+				NOT = { this = scope:ig }
+			}
+			save_temporary_scope_as = bpm_cached_ig
+			owner = {
+				add_to_variable_map = {
+					name = bpm_proposed_rig_approval_cache
+					key = scope:bpm_cached_ig
+					value = scope:bpm_cached_ig.bpm_inter_ig_approval
+				}
+			}
+		}
+	}
+}
+
+# this = country
+bpm_clear_proposed_rig_approval_cache = {
+	if = {
+		limit = { has_variable_map = bpm_proposed_rig_approval_cache }
+		clear_variable_map = bpm_proposed_rig_approval_cache
+	}
+}
+
+# this = country
+bpm_update_enactment_approval_caches = {
+	if = {
+		limit = {
+			currently_enacting_law.type ?= law_type:law_repeatable_special_form_coalition
+		}
+		bpm_cache_rig_approval = yes
+		bpm_clear_proposed_rig_approval_cache = yes
+	}
+	else_if = {
+		limit = {
+			currently_enacting_law.type ?= law_type:law_repeatable_special_take_over_rig
+		}
+		bpm_cache_rig_approval = yes
+		bpm_cache_proposed_rig_approval = yes
+	}
+	else = {
+		bpm_clear_rig_approval_cache = yes
+		bpm_clear_proposed_rig_approval_cache = yes
+	}
+}
+
+# this = country
+bpm_take_over_ruling_ig = {
+	save_scope_as = country
+	if = {
+		limit = { exists = var:bpm_proposed_ruling_ig }
+		var:bpm_proposed_ruling_ig = {
+			bpm_set_ig_as_institutional_hog = yes
+		}
+		remove_variable = bpm_proposed_ruling_ig
+		bpm_update_hog = yes
+		clear_variable_list = bpm_ruling_coalition
+		bpm_update_government_and_opposition = yes
+		trigger_event = { id = bpm_misc.4 days = 1 }
+	}
+	clear_saved_scope = country
+	bpm_take_over_rig_enactment_ended = yes
 }

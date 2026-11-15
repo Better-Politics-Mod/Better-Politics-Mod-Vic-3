@@ -46,3 +46,103 @@ bpm_ig_always_opposes_coalition = {
 	ig_approval <= angry
 	NOT = { owner.var:bpm_ruling_ig ?= this }
 }
+
+# this = action
+bpm_action_is_single_instance = {
+	OR = {
+		var:bpm_action_type ?= flag:bpm_action_take_down_coalition
+		var:bpm_action_type ?= flag:bpm_action_take_over_rig
+	}
+}
+
+# this = action
+bpm_action_lost_its_initiator = {
+	var:bpm_action_type ?= flag:bpm_action_take_over_rig
+	OR = {
+		NOT = { exists = var:bpm_action_initiator }
+		NOT = {
+			is_target_in_variable_list = {
+				name = bpm_actively_involved
+				target = var:bpm_action_initiator
+			}
+		}
+	}
+}
+
+# this = country
+bpm_has_take_over_rig_action = {
+	any_in_list = {
+		variable = bpm_active_actions
+		var:bpm_action_type ?= flag:bpm_action_take_over_rig
+	}
+}
+
+# this = action
+# scope:ig
+bpm_ig_would_join_take_over_rig = {
+	OR = {
+		AND = {
+			var:bpm_action_initiator = { bpm_ig_is_friendly = yes }
+			scope:ig.owner.var:bpm_ruling_ig = { bpm_ig_is_friendly = no }
+		}
+		AND = {
+			scope:ig.owner.var:bpm_ruling_ig = { bpm_ig_is_hostile = yes }
+			var:bpm_action_initiator = { bpm_ig_is_hostile = no }
+		}
+	}
+}
+
+# this = ig
+# scope:ig
+bpm_ig_faces_other_take_over_rig = {
+	owner = {
+		any_in_list = {
+			variable = bpm_active_actions
+			var:bpm_action_type ?= flag:bpm_action_take_over_rig
+			exists = var:bpm_action_initiator
+			NOT = { var:bpm_action_initiator = scope:ig }
+		}
+	}
+}
+
+# this = ig
+bpm_ig_is_in_action_of_type = {
+	save_temporary_scope_as = bpm_action_member_ig
+	owner = {
+		any_in_list = {
+			variable = bpm_active_actions
+			var:bpm_action_type ?= flag:$TYPE$
+			is_target_in_variable_list = {
+				name = bpm_actively_involved
+				target = scope:bpm_action_member_ig
+			}
+		}
+	}
+}
+
+# this = ig
+bpm_ig_is_in_any_action = {
+	save_temporary_scope_as = bpm_action_member_ig
+	owner = {
+		any_in_list = {
+			variable = bpm_active_actions
+			is_target_in_variable_list = {
+				name = bpm_actively_involved
+				target = scope:bpm_action_member_ig
+			}
+		}
+	}
+}
+
+# this = country
+bpm_has_take_down_coalition_action = {
+	any_in_list = {
+		variable = bpm_active_actions
+		var:bpm_action_type ?= flag:bpm_action_take_down_coalition
+	}
+}
+
+# this = ig
+bpm_ig_is_taking_down_coalition = {
+	bpm_ig_is_in_action_of_type = { TYPE = bpm_action_take_down_coalition }
+}

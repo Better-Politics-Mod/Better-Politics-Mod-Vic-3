@@ -1,5 +1,31 @@
 ﻿bpm_update_hog = {
+    if = {
+        limit = {
+            has_variable = bpm_hog_initialized
+        }
+        bpm_update_hog_when_initialized = yes
+    }
+}
+
+bpm_set_ig_as_hog_or_institutional = {
+    if = {
+        limit = {
+            owner.modifier:country_government_formation_type_institutional = yes
+        }
+        bpm_set_ig_as_institutional_hog = yes
+    }
+    else = {
+        bpm_set_ig_as_hog = yes
+    }
+}
+
+bpm_update_hog_when_initialized = {
     clear_saved_scope = ruling_ig
+
+    clear_saved_scope = bpm_previous_ruling_ig
+    var:bpm_ruling_ig ?= {
+        save_scope_as = bpm_previous_ruling_ig
+    }
 
     every_scope_character = {
         limit = { has_role = bpm_character_role_hog }
@@ -99,6 +125,9 @@
                 position = 0
                 save_scope_as = ruling_ig
             }
+            scope:ruling_ig ?= {
+                set_variable = bpm_institutional_ruling_ig
+            }
         }
     }
 
@@ -108,7 +137,7 @@
             exists = scope:ruling_ig
         }
         scope:ruling_ig = {
-            bpm_set_ig_as_hog = yes
+            bpm_set_ig_as_hog_or_institutional = yes
         }
     }
     else_if = {
@@ -119,7 +148,7 @@
             limit = {
                 owner.ruler.interest_group.type ?= type
             }
-            bpm_set_ig_as_hog = yes
+            bpm_set_ig_as_hog_or_institutional = yes
         }
     }
     else = {
@@ -132,7 +161,7 @@
             }
             order_by = ig_clout
             position = 0
-            bpm_set_ig_as_hog = yes
+            bpm_set_ig_as_hog_or_institutional = yes
         }
     }
 
@@ -166,6 +195,40 @@
     else = {
         var:bpm_ruling_ig.leader ?= {
             add_character_role = bpm_character_role_hog
+        }
+    }
+
+    bpm_handle_ruling_ig_change = yes
+}
+
+# this = country
+# scope:bpm_previous_ruling_ig = the previous rig
+bpm_handle_ruling_ig_change = {
+    if = {
+        limit = {
+            has_variable = bpm_ruling_ig 
+            exists = var:bpm_ruling_ig
+        }
+        if = {
+            limit = {
+                NOT = { has_variable = bpm_ruling_coalition_initialized }
+            }
+            set_variable = bpm_ruling_coalition_initialized
+        }
+        else_if = {
+            limit = {
+                exists = scope:bpm_previous_ruling_ig
+                NOT = { scope:bpm_previous_ruling_ig ?= var:bpm_ruling_ig }
+            }
+            if = {
+                limit = {
+                    currently_enacting_law.type ?= law_type:law_repeatable_special_form_coalition
+                }
+                bpm_cache_rig_approval = yes
+            }
+            else = {
+                bpm_form_ruling_coalition_enactment = yes
+            }
         }
     }
 }
@@ -208,10 +271,12 @@ bpm_make_character_historical_hog = {
 }
 
 bpm_initialize_hog = {
+    set_variable = bpm_hog_initialized
     if = {
         limit = {
             NOT = { has_variable = bpm_ruling_ig }
         }
+        set_variable = BPM_INITIALIZING_HISTORIHOG
         if = {
             limit = {
                 any_scope_character = { has_modifier = bpm_historical_hog }
@@ -219,16 +284,7 @@ bpm_initialize_hog = {
             random_scope_character = {
                 limit = { has_modifier = bpm_historical_hog }
                 interest_group = {
-                    
-                    if = {
-                        limit = {
-                            owner.modifier:country_government_formation_type_institutional = yes
-                        }
-                        bpm_set_ig_as_institutional_hog = yes
-                    }
-                    else = {
-                        bpm_set_ig_as_hog = yes
-                    }
+                    bpm_set_ig_as_hog_or_institutional = yes
                 }
             }
         }
@@ -242,7 +298,9 @@ bpm_initialize_hog = {
                 }
                 position = 0
                 order_by = ig_clout
-                bpm_set_ig_as_hog = yes
+                # Must also get the institutional marker, or bpm_update_hog
+                # immediately replaces it with the highest clout IG
+                bpm_set_ig_as_hog_or_institutional = yes
             }
         }
     }

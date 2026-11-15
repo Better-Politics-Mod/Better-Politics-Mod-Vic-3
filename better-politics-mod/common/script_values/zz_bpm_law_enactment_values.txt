@@ -341,6 +341,31 @@ bpm_vetoer_support_from_vote = {
 }
 
 # this = ig
+# 0 = establishment, 1 = anti-establishment (radical opposition), 2 = radical (very radical opposition)
+bpm_ig_radicalism_level = {
+	value = 0
+	if = {
+		limit = { bpm_ig_is_very_radical_opposition = yes }
+		add = 2
+	}
+	else_if = {
+		limit = { bpm_ig_is_radical_opposition = yes }
+		add = 1
+	}
+}
+
+# this = ig
+bpm_ig_radicalism_distance_to_ruling_ig = {
+	value = 0
+	if = {
+		limit = { exists = owner.var:bpm_ruling_ig }
+		add = bpm_ig_radicalism_level
+		subtract = owner.var:bpm_ruling_ig.bpm_ig_radicalism_level
+		abs = yes
+	}
+}
+
+# this = ig
 bpm_ig_coalition_formation_support = {
 	value = 0
 	save_temporary_scope_as = bpm_support_ig
@@ -351,6 +376,28 @@ bpm_ig_coalition_formation_support = {
 			desc = "bpm_ig_coalition_support_ruling_ig"
 		}
 	}
+	else_if = {
+		limit = { bpm_ig_always_opposes_coalition = yes }
+		add = {
+			value = -2
+			desc = "bpm_ig_coalition_support_angry"
+		}
+	}
+	else_if = {
+		limit = { bpm_ig_radicalism_distance_to_ruling_ig >= 2 }
+		add = {
+			value = -2
+			desc = "bpm_ig_coalition_support_radicalism_far"
+		}
+	}
+	else_if = {
+		limit = { bpm_ig_radicalism_distance_to_ruling_ig >= 1 }
+		add = {
+			value = -1
+			desc = "bpm_ig_coalition_support_radicalism_near"
+		}
+	}
+
 	else_if = {
 		limit = {
 			owner = {
@@ -379,6 +426,25 @@ bpm_ig_coalition_formation_support = {
 				desc = "bpm_ig_coalition_support_hostile"
 			}
 		}
+		# Neutral with the ruling IG from here on
+		else_if = {
+			limit = { ig_approval >= loyal }
+			add = {
+				value = 1
+				desc = "bpm_ig_coalition_support_neutral_loyal"
+			}
+		}
+		else_if = {
+			limit = {
+				bpm_ig_is_state_institutional = yes
+				ig_approval >= happy
+			}
+			add = {
+				value = 1
+				desc = "bpm_ig_coalition_support_neutral_institutional"
+			}
+		}
+
 		else = {
 			add = {
 				value = -1
@@ -386,21 +452,6 @@ bpm_ig_coalition_formation_support = {
 			}
 		}
 	}
-}
-
-# this = ig
-# What bpm_ig_law_support_total_value gives for law_repeatable_special_form_coalition, without needing scope:law
-# Keep in sync with bpm_ig_law_support_total_value
-bpm_ig_coalition_formation_total_support = {
-	value = bpm_ig_coalition_formation_support
-
-	if = {
-		limit = { has_variable = bpm_support_from_sways }
-		add = var:bpm_support_from_sways
-	}
-
-	min = -2
-	max = 2
 }
 
 bpm_ig_law_support_total_value = {
@@ -467,6 +518,14 @@ bpm_ig_law_support_total_value = {
 	if = {
 		limit = { has_variable = bpm_support_from_sways }
 		add = var:bpm_support_from_sways
+	}
+
+	if = {
+		limit = {
+			scope:law.type = law_type:law_repeatable_special_form_coalition
+			bpm_ig_always_opposes_coalition = yes
+		}
+		max = -1
 	}
 
 	min = -2

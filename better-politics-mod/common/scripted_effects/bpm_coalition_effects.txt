@@ -642,6 +642,28 @@ bpm_clear_proposed_rig_approval_cache = {
 }
 
 # this = country
+bpm_snapshot_take_over_rig_supporters = {
+	if = {
+		limit = {
+			currently_enacting_law.type ?= law_type:law_repeatable_special_take_over_rig
+		}
+		clear_variable_list = bpm_take_over_rig_supporters
+		currently_enacting_law = { save_temporary_scope_as = law }
+		every_activated_interest_group = {
+			limit = {
+				bpm_ig_law_support_total_value > 0
+			}
+			owner = {
+				add_to_variable_list = {
+					name = bpm_take_over_rig_supporters
+					target = prev
+				}
+			}
+		}
+	}
+}
+
+# this = country
 bpm_update_enactment_approval_caches = {
 	if = {
 		limit = {
@@ -674,9 +696,66 @@ bpm_take_over_ruling_ig = {
 		remove_variable = bpm_proposed_ruling_ig
 		bpm_update_hog = yes
 		clear_variable_list = bpm_ruling_coalition
+		add_to_variable_list = {
+			name = bpm_ruling_coalition
+			target = var:bpm_ruling_ig
+		}
+		every_in_list = {
+			variable = bpm_take_over_rig_supporters
+			limit = {
+				NOT = { this = scope:country.var:bpm_ruling_ig }
+			}
+			scope:country = {
+				add_to_variable_list = {
+					name = bpm_ruling_coalition
+					target = prev
+				}
+			}
+		}
 		bpm_update_government_and_opposition = yes
-		trigger_event = { id = bpm_misc.4 days = 1 }
 	}
+	clear_variable_list = bpm_take_over_rig_supporters
 	clear_saved_scope = country
 	bpm_take_over_rig_enactment_ended = yes
+}
+
+# this = country
+bpm_angry_coalition_members_countdown = {
+	every_interest_group = {
+		if = {
+			limit = { bpm_ig_is_angry_coalition_member = yes }
+			if = {
+				limit = { has_variable = bpm_months_angry_in_coalition }
+				change_variable = {
+					name = bpm_months_angry_in_coalition
+					add = 1
+				}
+			}
+			else = {
+				set_variable = {
+					name = bpm_months_angry_in_coalition
+					value = 1
+				}
+			}
+			if = {
+				limit = { var:bpm_months_angry_in_coalition >= bpm_angry_coalition_member_months }
+				remove_variable = bpm_months_angry_in_coalition
+				owner = {
+					remove_list_variable = {
+						name = bpm_ruling_coalition
+						target = prev
+					}
+					bpm_update_government_and_opposition = yes
+				}
+				if = {
+					limit = { owner = { is_player = yes } }
+					post_notification = bpm_ig_left_coalition
+				}
+			}
+		}
+		else_if = {
+			limit = { has_variable = bpm_months_angry_in_coalition }
+			remove_variable = bpm_months_angry_in_coalition
+		}
+	}
 }

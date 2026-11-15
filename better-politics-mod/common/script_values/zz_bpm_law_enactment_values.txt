@@ -20,6 +20,15 @@ bpm_law_enactment_vote_threshold = {
 			value = bpm_constitutional_vote_threshold_add
 		}
 	}
+	if = {
+		limit = {
+			currently_enacting_law.type = law_type:law_repeatable_special_form_coalition
+		}
+		add = {
+			desc = "BPM_VALUE_FROM_COALITION_FORMATION"
+			value = -0.2
+		}
+	}
 }
 
 bpm_country_neutral_clout = {
@@ -331,6 +340,69 @@ bpm_vetoer_support_from_vote = {
 	}
 }
 
+# this = ig
+bpm_ig_coalition_formation_support = {
+	value = 0
+	save_temporary_scope_as = bpm_support_ig
+	if = {
+		limit = { owner.var:bpm_ruling_ig ?= this }
+		add = {
+			value = 2
+			desc = "bpm_ig_coalition_support_ruling_ig"
+		}
+	}
+	else_if = {
+		limit = {
+			owner = {
+				has_variable_map = bpm_coalition_rig_approval_cache
+				is_key_in_variable_map = {
+					name = bpm_coalition_rig_approval_cache
+					target = scope:bpm_support_ig
+				}
+			}
+		}
+		if = {
+			limit = {
+				owner = { "variable_map(bpm_coalition_rig_approval_cache|scope:bpm_support_ig)" >= 0.75 }
+			}
+			add = {
+				value = 1
+				desc = "bpm_ig_coalition_support_friendly"
+			}
+		}
+		else_if = {
+			limit = {
+				owner = { "variable_map(bpm_coalition_rig_approval_cache|scope:bpm_support_ig)" < 0.5 }
+			}
+			add = {
+				value = -2
+				desc = "bpm_ig_coalition_support_hostile"
+			}
+		}
+		else = {
+			add = {
+				value = -1
+				desc = "bpm_ig_coalition_support_neutral"
+			}
+		}
+	}
+}
+
+# this = ig
+# What bpm_ig_law_support_total_value gives for law_repeatable_special_form_coalition, without needing scope:law
+# Keep in sync with bpm_ig_law_support_total_value
+bpm_ig_coalition_formation_total_support = {
+	value = bpm_ig_coalition_formation_support
+
+	if = {
+		limit = { has_variable = bpm_support_from_sways }
+		add = var:bpm_support_from_sways
+	}
+
+	min = -2
+	max = 2
+}
+
 bpm_ig_law_support_total_value = {
 	value = 0
 
@@ -381,6 +453,12 @@ bpm_ig_law_support_total_value = {
 				desc = "bpm_ig_is_sponsor"
 			}
 		}
+	}
+	else_if = {
+		limit = {
+			scope:law.type = law_type:law_repeatable_special_form_coalition
+		}
+		add = bpm_ig_coalition_formation_support
 	}
 	else = {
 		add = bpm_ig_law_support_value

@@ -3,47 +3,82 @@
 # scope:country
 # scope:action
 bpm_action_revolt_do = {
+	scope:action = {
+		ordered_in_list = {
+			variable = bpm_actively_involved
+			order_by = ig_clout
+			save_scope_as = revolt_leader
+		}
+	}
 	scope:country = {
 		bpm_shrink_or_grow_in_states = yes
-		bpm_revolt_progress = yes
-		if = {
-			limit = {
-				scope:action.var:bpm_revolt_progress >= 100
-			}
-			bpm_nation_at_crossroads = yes
+		bpm_revolt_post_toast = { list = bpm_revolt_toast_grows msg = bpm_revolution_grows }
+		bpm_revolt_post_toast = { list = bpm_revolt_toast_spillover msg = bpm_revolution_spillover }
+		bpm_revolt_post_toast = { list = bpm_revolt_toast_shrinks msg = bpm_revolution_shrinks }
+		bpm_revolt_post_toast = { list = bpm_revolt_toast_subsides msg = bpm_revolution_subsides }
+	}
+	clear_saved_scope = revolt_leader
+}
+
+# this = state_region
+# scope:country
+bpm_revolt_queue_toast = {
+	scope:country = {
+		add_to_variable_list = {
+			name = $list$
+			target = prev
 		}
 	}
 }
 
-bpm_revolt_progress = {
-	scope:action = {
-		if = {
-			limit = {
-				NOT = {
-					has_variable = bpm_revolt_progress
-				}
+# this = country
+bpm_revolt_post_toast = {
+	if = {
+		limit = { has_variable_list = $list$ }
+		set_local_variable = {
+			name = bpm_revolt_toast_n
+			value = 0
+		}
+		every_in_list = {
+			variable = $list$
+			change_local_variable = {
+				name = bpm_revolt_toast_n
+				add = 1
 			}
-			set_variable = {
-				name = bpm_revolt_progress
-				value = prev.bpm_revolt_progress_value
+			if = {
+				limit = { local_var:bpm_revolt_toast_n = 1 }
+				save_scope_as = revolt_toast_1
+			}
+			else_if = {
+				limit = { local_var:bpm_revolt_toast_n = 2 }
+				save_scope_as = revolt_toast_2
+			}
+			else_if = {
+				limit = { local_var:bpm_revolt_toast_n = 3 }
+				save_scope_as = revolt_toast_3
 			}
 		}
-		else = {
-			change_variable = {
-				name = bpm_revolt_progress
-				add = 10 # prev.bpm_revolt_progress_value
+		save_scope_value_as = {
+			name = revolt_toast_count
+			value = local_var:bpm_revolt_toast_n
+		}
+		save_scope_value_as = {
+			name = revolt_toast_others
+			value = {
+				value = local_var:bpm_revolt_toast_n
+				add = -3
 			}
 		}
-
-		if = {
-			limit = {
-				var:bpm_revolt_progress > 100
-			}
-			set_variable = {
-				name = bpm_revolt_progress
-				value = 100
-			}
+		scope:revolt_toast_1 = {
+			post_notification = $msg$
 		}
+		clear_variable_list = $list$
+		remove_local_variable = bpm_revolt_toast_n
+		clear_saved_scope = revolt_toast_1
+		clear_saved_scope = revolt_toast_2
+		clear_saved_scope = revolt_toast_3
+		clear_saved_scope = revolt_toast_count
+		clear_saved_scope = revolt_toast_others
 	}
 }
 
@@ -79,14 +114,9 @@ bpm_shrink_or_grow_in_states = {
 				bpm_increase_or_shrink_cell_level = yes
 			}
 		}
+		bpm_revolt_spawn_cells_below_front_line = yes
 	}
 	else = {
-		scope:action = {
-			set_variable = {
-				name = bpm_revolt_progress
-				value = 0
-			}
-		}
 		random_scope_state = {
 			limit = {
 				turmoil >= 0.25
@@ -98,21 +128,45 @@ bpm_shrink_or_grow_in_states = {
 	}
 }
 
+# this = country
+# scope:action
+bpm_revolt_spawn_cells_below_front_line = {
+	if = {
+		limit = {
+			scope:action = { has_variable = bpm_grasp_threshold }
+		}
+		every_scope_state = {
+			limit = {
+				turmoil >= 0.25
+				bpm_action_cell_level = 0
+				bpm_state_grasp_category < scope:action.var:bpm_grasp_threshold
+			}
+			random = {
+				chance = bpm_revcell_front_line_chance
+				state_region = {
+					bpm_increase_revcell = yes
+				}
+			}
+		}
+	}
+}
+
 # Expects that current scope is a state region
 bpm_increase_revcell = {
-	scope:action = {
-		if = {
-			limit = {
-				bpm_has_revcell = no
-			}
+	if = {
+		limit = {
+			bpm_has_revcell = no
+		}
+		scope:action = {
 			update_variable_map_value = {
 				name = bpm_revcells
 				key = prev
 				value = 1
 			}
-			post_notification = bpm_revolution_appears
 		}
-		else = {
+	}
+	else = {
+		scope:action = {
 			set_local_variable = {
 				name = new_level
 				value = {
@@ -126,8 +180,17 @@ bpm_increase_revcell = {
 				value = local_var:new_level
 			}
 			remove_local_variable = new_level
-			post_notification = bpm_revolution_grows
 		}
+	}
+	if = {
+		limit = { has_local_variable = bpm_revolt_is_spillover }
+		bpm_revolt_queue_toast = { list = bpm_revolt_toast_spillover }
+	}
+	else_if = {
+		limit = {
+			NOT = { bpm_has_revcell_level = { lvl = 1 } }
+		}
+		bpm_revolt_queue_toast = { list = bpm_revolt_toast_grows }
 	}
 }
 
@@ -142,11 +205,13 @@ bpm_reduce_revcell = {
 				key = prev
 			}
 		}
+		bpm_revolt_queue_toast = { list = bpm_revolt_toast_subsides }
 	}
 	else_if = {
 		limit = {
 			bpm_has_revcell = yes
 		}
+		bpm_revolt_queue_toast = { list = bpm_revolt_toast_shrinks }
 		scope:action = {
 			set_local_variable = {
 				name = new_level
@@ -166,27 +231,25 @@ bpm_reduce_revcell = {
 }
 
 bpm_reduce_cell_level = {
-	save_scope_as = starting_state
 	bpm_reduce_revcell = yes
 }
 
 bpm_increase_cell_level_spillover = {
+	set_local_variable = bpm_revolt_is_spillover
 	bpm_increase_revcell = yes
-	save_scope_as = spillover_state
-	post_notification = bpm_revolution_spillover
+	remove_local_variable = bpm_revolt_is_spillover
 }
 
 bpm_increase_cell_level = {
-	save_scope_as = starting_state
 	if = {
 		limit = {
-			NOT = { bpm_has_revcell_level = { lvl = 3 } }
+			NOT = { bpm_has_revcell_level = { lvl = 4 } }
 		}
 		bpm_increase_revcell = yes
 	}
 	else_if = {
 		limit = {
-			bpm_has_revcell_level = { lvl = 3 }
+			bpm_has_revcell_level = { lvl = 4 }
 			any_scope_state = {
 				any_neighbouring_state = {
 					state_region = {
@@ -218,19 +281,28 @@ bpm_increase_cell_level = {
 }
 
 bpm_increase_or_shrink_tt = {
-	random_list = {
-		0 = {
-			modifier = {
-				# static for now
-				add = bpm_cell_shrinking_chance
+	if = {
+		limit = { bpm_revcell_below_front_line = yes }
+		custom_tooltip = "bpm_cell_grows_below_front_line"
+	}
+	else_if = {
+		limit = { bpm_revcell_above_front_line = yes }
+		custom_tooltip = "bpm_cell_shrinks_above_front_line"
+	}
+	else = {
+		random_list = {
+			0 = {
+				modifier = {
+					add = bpm_cell_shrinking_chance
+				}
+				custom_tooltip = "bpm_cell_shrinks"
 			}
-			custom_tooltip = "bpm_cell_shrinks"
-		}
-		0 = {
-			modifier = {
-				add = bpm_cell_growth_chance
+			0 = {
+				modifier = {
+					add = bpm_cell_growth_chance
+				}
+				custom_tooltip = "bpm_cell_grows"
 			}
-			custom_tooltip = "bpm_cell_grows"
 		}
 	}
 }
@@ -298,29 +370,58 @@ bpm_increase_or_shrink_cell_level = {
 		}
 		bpm_increase_cell_level = yes
 	}
-	else = {
-		random_list = {
-			0 = {
-				modifier = {
-					add = bpm_cell_shrinking_chance
-				}
-				scope:action = {
-					update_variable_map_value = {
-						name = bpm_revcell_progress
-						key = prev
-						value = local_var:current_value_m1
-					}
+	else_if = {
+		limit = { bpm_revcell_below_front_line = yes }
+		random = {
+			chance = bpm_revcell_front_line_chance
+			scope:action = {
+				update_variable_map_value = {
+					name = bpm_revcell_progress
+					key = prev
+					value = local_var:current_value_p1
 				}
 			}
-			0 = {
-				modifier = {
-					add = bpm_cell_growth_chance
+		}
+	}
+	else_if = {
+		limit = { bpm_revcell_above_front_line = yes }
+		random = {
+			chance = bpm_revcell_front_line_chance
+			scope:action = {
+				update_variable_map_value = {
+					name = bpm_revcell_progress
+					key = prev
+					value = local_var:current_value_m1
 				}
-				scope:action = {
-					update_variable_map_value = {
-						name = bpm_revcell_progress
-						key = prev
-						value = local_var:current_value_p1
+			}
+		}
+	}
+	else = {
+		random = {
+			chance = bpm_revcell_front_line_chance
+			random_list = {
+				0 = {
+					modifier = {
+						add = bpm_cell_shrinking_chance
+					}
+					scope:action = {
+						update_variable_map_value = {
+							name = bpm_revcell_progress
+							key = prev
+							value = local_var:current_value_m1
+						}
+					}
+				}
+				0 = {
+					modifier = {
+						add = bpm_cell_growth_chance
+					}
+					scope:action = {
+						update_variable_map_value = {
+							name = bpm_revcell_progress
+							key = prev
+							value = local_var:current_value_p1
+						}
 					}
 				}
 			}
@@ -684,3 +785,225 @@ bpm_coalition_revolution_victorious = {
 	bpm_remove_political_stability_huge = yes
 }
 
+
+#========================
+# grasp widget
+
+# this = country
+bpm_update_grasp_threshold = {
+	random_list = {
+		1 = {
+			set_variable = {
+				name = bpm_grasp_front_line
+				value = {
+					value = bpm_revolt_front_line_centre
+					add = -1
+					min = 0
+				}
+			}
+		}
+		2 = {
+			set_variable = {
+				name = bpm_grasp_front_line
+				value = bpm_revolt_front_line_centre
+			}
+		}
+		1 = {
+			set_variable = {
+				name = bpm_grasp_front_line
+				value = {
+					value = bpm_revolt_front_line_centre
+					add = 1
+					max = 6
+				}
+			}
+		}
+	}
+	every_in_list = {
+		variable = bpm_active_actions
+		limit = { var:bpm_action_type ?= flag:bpm_action_revolt }
+		set_variable = {
+			name = bpm_grasp_threshold
+			value = root.var:bpm_grasp_front_line
+		}
+	}
+	bpm_update_grasp_lists = yes
+}
+
+# this = country
+bpm_init_missing_front_lines = {
+	if = {
+		limit = { has_variable = bpm_grasp_front_line }
+		every_in_list = {
+			variable = bpm_active_actions
+			limit = {
+				var:bpm_action_type ?= flag:bpm_action_revolt
+				NOT = { has_variable = bpm_grasp_threshold }
+			}
+			set_variable = {
+				name = bpm_grasp_threshold
+				value = root.var:bpm_grasp_front_line
+			}
+		}
+	}
+}
+
+# this = country
+bpm_update_grasp_lists = {
+	clear_variable_list = bpm_revolt_actions_gui
+	every_in_list = {
+		variable = bpm_active_actions
+		limit = { var:bpm_action_type ?= flag:bpm_action_revolt }
+		root = { add_to_variable_list = { name = bpm_revolt_actions_gui target = prev } }
+	}
+	if = {
+		limit = {
+			has_variable = bpm_revolt_selected_action
+			NOT = {
+				any_in_list = {
+					variable = bpm_revolt_actions_gui
+					this = root.var:bpm_revolt_selected_action
+				}
+			}
+		}
+		remove_variable = bpm_revolt_selected_action
+	}
+	if = {
+		limit = {
+			NOT = { has_variable = bpm_revolt_selected_action }
+			has_variable_list = bpm_revolt_actions_gui
+		}
+		random_in_list = {
+			variable = bpm_revolt_actions_gui
+			save_temporary_scope_as = first_revolt
+		}
+		set_variable = {
+			name = bpm_revolt_selected_action
+			value = scope:first_revolt
+		}
+	}
+
+	clear_variable_list = bpm_grasp_states_1
+	clear_variable_list = bpm_grasp_states_2
+	clear_variable_list = bpm_grasp_states_3
+	clear_variable_list = bpm_grasp_states_4
+	clear_variable_list = bpm_grasp_states_5
+	clear_variable_list = bpm_revolt_cell_states
+	every_scope_state = {
+		remove_variable = bpm_grasp_sel
+		remove_variable = bpm_grasp_sel_category
+		remove_variable = bpm_grasp_sel_level
+		remove_variable = bpm_gp_legitimacy
+		remove_variable = bpm_gp_turmoil
+		remove_variable = bpm_gp_clout
+		remove_variable = bpm_gp_neighbour_cells
+		remove_variable = bpm_gp_calm_neighbours
+		remove_variable = bpm_gp_capital
+		remove_variable = bpm_gp_unincorporated
+		remove_variable = bpm_gp_repression
+		remove_variable = bpm_gp_cells
+	}
+
+	if = {
+		limit = { has_variable = bpm_revolt_selected_action }
+		var:bpm_revolt_selected_action = { save_scope_as = action }
+		if = {
+			limit = {
+				scope:action = { has_variable = bpm_grasp_threshold }
+			}
+			set_variable = {
+				name = bpm_grasp_threshold
+				value = scope:action.var:bpm_grasp_threshold
+			}
+		}
+		else = {
+			remove_variable = bpm_grasp_threshold
+		}
+		every_scope_state = {
+			set_variable = {
+				name = bpm_grasp_sel
+				value = bpm_state_grasp
+			}
+			set_variable = {
+				name = bpm_grasp_sel_category
+				value = bpm_state_grasp_category
+			}
+			set_variable = {
+				name = bpm_grasp_sel_level
+				value = bpm_action_cell_level
+			}
+			set_variable = {
+				name = bpm_gp_legitimacy
+				value = bpm_grasp_part_legitimacy
+			}
+			set_variable = {
+				name = bpm_gp_turmoil
+				value = bpm_grasp_part_turmoil
+			}
+			set_variable = {
+				name = bpm_gp_clout
+				value = bpm_grasp_part_clout
+			}
+			set_variable = {
+				name = bpm_gp_neighbour_cells
+				value = bpm_grasp_part_neighbour_cells
+			}
+			set_variable = {
+				name = bpm_gp_calm_neighbours
+				value = bpm_grasp_part_calm_neighbours
+			}
+			set_variable = {
+				name = bpm_gp_capital
+				value = bpm_grasp_part_capital
+			}
+			set_variable = {
+				name = bpm_gp_unincorporated
+				value = bpm_grasp_part_unincorporated
+			}
+			set_variable = {
+				name = bpm_gp_repression
+				value = bpm_grasp_part_repression
+			}
+			set_variable = {
+				name = bpm_gp_cells
+				value = bpm_grasp_part_cells
+			}
+		}
+		ordered_scope_state = {
+			limit = { bpm_state_in_revolt_reach = yes }
+			order_by = var:bpm_grasp_sel
+			max = 10000
+			check_range_bounds = no
+			if = {
+				limit = { var:bpm_grasp_sel_category = 1 }
+				owner = { add_to_variable_list = { name = bpm_grasp_states_1 target = prev } }
+			}
+			else_if = {
+				limit = { var:bpm_grasp_sel_category = 2 }
+				owner = { add_to_variable_list = { name = bpm_grasp_states_2 target = prev } }
+			}
+			else_if = {
+				limit = { var:bpm_grasp_sel_category = 3 }
+				owner = { add_to_variable_list = { name = bpm_grasp_states_3 target = prev } }
+			}
+			else_if = {
+				limit = { var:bpm_grasp_sel_category = 4 }
+				owner = { add_to_variable_list = { name = bpm_grasp_states_4 target = prev } }
+			}
+			else = {
+				owner = { add_to_variable_list = { name = bpm_grasp_states_5 target = prev } }
+			}
+		}
+		ordered_scope_state = {
+			limit = { var:bpm_grasp_sel_level > 0 }
+			order_by = var:bpm_grasp_sel_level
+			max = 10000
+			check_range_bounds = no
+			owner = { add_to_variable_list = { name = bpm_revolt_cell_states target = prev } }
+		}
+		clear_saved_scope = action
+	}
+	else = {
+		remove_variable = bpm_grasp_threshold
+	}
+}

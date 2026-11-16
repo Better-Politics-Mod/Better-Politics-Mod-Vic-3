@@ -1,12 +1,5 @@
-﻿on_law_enactment_started = {
+﻿on_law_checkpoint_advance = {
 	on_actions = {
-		on_bpm_law_enactment_started
-	}
-}
-
-on_law_checkpoint_advance = {
-	on_actions = {
-		bpm_update_enactment_success_on_action
 		bpm_update_guarantee_success_on_action
 	}
 
@@ -14,47 +7,49 @@ on_law_checkpoint_advance = {
 
 on_law_checkpoint_stall = {
 	on_actions = {
-		bpm_update_enactment_success_on_action
 		bpm_update_guarantee_success_on_action
 	}
 }
 
 on_law_checkpoint_debate = {
 	on_actions = {
-		bpm_update_enactment_success_on_action
 		bpm_update_guarantee_success_on_action
 	}
 }
 
-on_bpm_law_enactment_started = {
- 	effect = {
-		if = {
-			limit = {
-				is_player = yes
-				enacting_any_law = yes
-			}
-			bpm_clear_law_sway_vars = yes
-			bpm_set_all_igs_law_support_cached_vars = yes
-			bpm_set_country_law_support_fixed_vars = yes
-			set_variable = {
-				name = bpm_law_sway_maneuvers
-				value = bpm_law_sways_per_phase_value
-			}
-			bpm_update_law_enactment_variables_modifiers = yes
-		}
+on_law_enactment_ended = {
+	on_actions = {
+		on_bpm_law_enactment_ended
 	}
 }
 
-bpm_update_enactment_success_on_action = {
+on_law_activated = {
+	on_actions = {
+		on_bpm_law_enactment_completed
+	}
+}
+
+on_law_enactment_fail = {
+	on_actions = {
+		on_bpm_law_enacted_fail
+	}
+}
+
+on_bpm_law_enactment_ended = {
 	effect = {
-		if = {
-			limit = {
-				is_player = yes
-				enacting_any_law = yes
-			}
-			bpm_set_all_igs_law_support_cached_vars = yes
-			bpm_update_law_enactment_variables_modifiers = yes
-		}
+		bpm_the_docket_cooldown = yes
+	}
+}
+
+on_bpm_law_enactment_completed = {
+	effect = {		
+		owner = { bpm_update_law_enactment_docket = yes }
+	}
+}
+
+on_bpm_law_enacted_fail = {
+	effect = {
+		trigger_event = { id = bpm_misc.99 days = 1 }
 	}
 }
 
@@ -82,18 +77,20 @@ on_law_checkpoint_success = {
 			}
 			if = {
 				limit = { is_player = yes }
-				bpm_update_law_enactment_variables_modifiers = yes
-				change_variable = {
-					name = bpm_law_sway_maneuvers
-					add = bpm_law_sways_per_phase_value
-				}
 				if = {
 					limit = { enactment_phase = 2 }
 					if = {
-						limit = { var:bpm_law_enactment_yea_votes_cached > var:bpm_law_enactment_nay_votes_cached }
+						limit = { bpm_country_yea_votes > bpm_law_enactment_vote_threshold }
 						if = {
-							limit = { bpm_law_enactment_ruler_must_accept = yes }
+							limit = { bpm_law_enactment_executive_must_accept = yes }
 							save_scope_as = associated_country
+							bpm_snapshot_take_over_rig_supporters = yes
+							if = {
+								limit = {
+									currently_enacting_law.type ?= law_type:law_repeatable_special_form_coalition
+								}
+								bpm_form_ruling_coalition = yes
+							}
 							if = {
 								limit = {
 									currently_enacting_law = {bpm_codification_is_constitutional_law = yes}
@@ -109,6 +106,7 @@ on_law_checkpoint_success = {
 							}
 							set_variable = bpm_codification_law_passed_by_enactment_consumable
 							add_enactment_phase = 1
+							
 						}
 						else = {
 							trigger_event = { id = bpm_law_veto.1 popup = yes }
@@ -139,6 +137,13 @@ on_law_checkpoint_success = {
 				}
 			}
 			else = {
+				bpm_snapshot_take_over_rig_supporters = yes
+				if = {
+					limit = {
+						currently_enacting_law.type ?= law_type:law_repeatable_special_form_coalition
+					}
+					bpm_form_ruling_coalition = yes
+				}
 				add_enactment_phase = 1
 				if = {
 					limit = {

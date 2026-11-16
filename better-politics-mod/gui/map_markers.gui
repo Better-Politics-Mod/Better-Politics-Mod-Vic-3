@@ -332,7 +332,7 @@ widget = {
 			onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.AddSeaRegionToSelectedFleetMissions )]"
 			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
 			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
-			rightclicksound = "event:/SFX/UI/Military/naval_mission_settings_confirm"
+			rightclicksound = "event:/SFX/UI/NavalBattle/Missions/naval_mission_settings_confirm"
 			parentanchor = center
 			position = { 0 0 }
 			texture ="gfx/interface/map_markers/round_highlight_green.dds"
@@ -523,7 +523,7 @@ container = {
 		}
 
 		icon = {
-			visible = "[And(State.IsTargetOfHoveredSeaRegion, Not(State.IsSelectedBombardmentTarget))]"
+			visible = "[And(State.IsTargetOfHoveredSeaRegion, Not(State.IsSelectedCoastalMissionTarget))]"
 			parentanchor = center
 			size = { 130% 130% }
 			texture = "gfx/interface/map_markers/round_highlight_blue.dds"
@@ -531,7 +531,7 @@ container = {
 		}
 
 		icon = {
-			visible = "[And(State.IsBeingBombarded, Not(State.IsSelectedBombardmentTarget))]"
+			visible = "[And(State.IsBeingBombarded, Not(State.IsSelectedCoastalMissionTarget))]"
 			parentanchor = center
 			size = { 120% 120% }
 			texture = "gfx/interface/map_markers/round_highlight.dds"
@@ -540,7 +540,7 @@ container = {
 		}
 
 		icon = {
-			visible = "[State.IsSelectedBombardmentTarget]"
+			visible = "[State.IsSelectedCoastalMissionTarget]"
 			parentanchor = center
 			size = { 130% 130% }
 			texture = "gfx/interface/map_markers/round_highlight_orange.dds"
@@ -569,6 +569,80 @@ container = {
 	}
 }
 
+### SUPPLY ORIGIN
+container = {
+	name = "supply_origin_marker"
+	layer = layer_map_markers
+	max_update_rate = 8
+	datacontext = "[BuildingMarker.GetBuilding]"
+	datacontext = "[BuildingMarker.GetBuilding.GetState]"
+	datacontext = "[State.GetCountry]"
+	onmousehierarchyenter = "[AccessHighlightManager.HighlightState(State.Self)]"
+	onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
+	parentanchor = bottom|hcenter
+	using = clickthrough_blocker
+
+	tooltipwidget = {
+		RegularTooltip_SupplyOriginMarker = {}
+	}
+
+	widget = {
+		size = { 40 40 }
+		parentanchor = hcenter
+
+		icon = {
+			visible = "[State.IsBeingHighlighted]"
+			size = { 95% 95% }
+			parentanchor = center
+			alwaystransparent = yes
+			texture = "gfx/interface/map_markers/round_highlight.dds"
+		}
+
+		icon = {
+			size = { 85% 85% }
+			parentanchor = center
+			color = "[Country.GetMilitaryInterfaceColor]"
+			alpha = 0.9
+			texture = "gfx/interface/backgrounds/round_button_bg.dds"
+
+			modify_texture = {
+				blend_mode = add
+				alpha = 0.35
+				texture = "gfx/interface/backgrounds/white.dds"
+			}
+		}
+
+		icon = {
+			size = { 70% 70% }
+			parentanchor = center
+			texture = "gfx/interface/icons/military_icons/navy_icons/supplies_navy.dds"
+
+			icon = {
+				visible = "[Not(Building.IsNavalLogisticsCenter)]"
+				size = { 64% 64% }
+				parentanchor = bottom|right
+				position = { 3 0 }
+				alwaystransparent = yes
+				texture = "gfx/interface/icons/law_icons/law_icon_parts/soldier.dds"
+			}
+
+			icon = {
+				visible = "[Building.IsNavalLogisticsCenter]"
+				size = { 42% 42% }
+				parentanchor = bottom|right
+				alwaystransparent = yes
+				texture = "gfx/interface/icons/production_method_icons/anchorage.dds"
+			}
+		}
+
+		button = {
+			size = { 100% 100% }
+			parentanchor = center
+			onclick = "[InformationPanelBar.OpenBuildingDetailsPanel(Building.AccessSelf)]"
+		}
+	}
+}
+
 ### WORLD MARKET HUB
 container = {
 	name = "world_market_hub_marker"
@@ -585,8 +659,8 @@ container = {
 	alwaystransparent = no
 
 	icon = {
+		visible = "[Not(Or(ObjectsEqual(Market.GetOwner, GetPlayer.Self), Market.IsBeingHighlighted))]"
 		texture = "gfx/interface/backgrounds/round_button_bg.dds"
-		visible = "[And(Not(Or(ObjectsEqual(Market.GetOwner, GetPlayer.Self), Market.IsBeingHighlighted)), NotZero(State.GetTradeCapacity))]"
 		size = { 30 30 }
 
 		icon = {
@@ -597,8 +671,8 @@ container = {
 	}
 
 	icon = {
+		visible = "[Or(ObjectsEqual(Market.GetOwner, GetPlayer.Self), Market.IsBeingHighlighted)]"
 		texture = "gfx/interface/backgrounds/round_button_bg.dds"
-		visible = "[And(Or(ObjectsEqual(Market.GetOwner, GetPlayer.Self), Market.IsBeingHighlighted), NotZero(State.GetTradeCapacity))]"
 		size = { 45 45 }
 
 		icon = {
@@ -617,6 +691,8 @@ container = {
 	datacontext = "[BuildingMarker.GetBuilding.GetState.GetCountry]"
 	datacontext = "[BuildingMarker.GetBuilding.GetState.GetMarket]"
 	parentanchor = bottom|hcenter
+	onmousehierarchyenter = "[AccessHighlightManager.HighlightMarketArea(State.Self)]"
+	onmousehierarchyleave = "[AccessHighlightManager.RemoveHighlight]"
 	tooltip = "STATE_MILITARY_WORLD_MARKET_ACCESS_DESC"
 	alwaystransparent = no
 
@@ -1005,11 +1081,9 @@ container = {
 			size = { 100% 100% }
 
 			icon = {
-				visible = no
-				#todo add the below visible state instead when PRCAL-17690 is done:
-	 			#visible = "[WarGoal.IsBeingHighlighted]"
-	  			using = highlighted_square_selection
-	  		}
+				visible = "[WarGoal.IsBeingHighlighted]"
+				using = highlighted_square_selection
+			}
 		}
 
 		icon = {
@@ -3093,6 +3167,7 @@ button = {
 					align = hcenter|nobaseline
 					using = fontsize_small
 					text = "[MilitaryFormation.GetTravelTimeLeftLabel]"
+					tooltip = "MILITARY_FORMATION_TRAVEL_TIME_LEFT_TOOLTIP"
 				}
 			}
 
@@ -3341,6 +3416,7 @@ button = {
 					align = hcenter|nobaseline
 					using = fontsize_small
 					text = "[MilitaryFormation.GetTravelTimeLeftLabel]"
+					tooltip = "MILITARY_FORMATION_TRAVEL_TIME_LEFT_TOOLTIP"
 				}
 			}
 
@@ -3377,6 +3453,15 @@ button = {
 						parentanchor = vcenter
 						size = { 18 18 }
 						texture = "gfx/interface/icons/generic_icons/repairing.dds"
+					}
+
+					icon = {
+						visible = "[MilitaryFormation.IsDefeated]"
+						name = "defeat_indicator"
+						parentanchor = vcenter
+						size = { 18 18 }
+						texture = "gfx/interface/icons/commander_order_icons/admiral_repairing.dds"
+						tooltip = "FORMATION_FULLY_DEFEATED"
 					}
 
 					flowcontainer = {
@@ -3466,6 +3551,15 @@ button = {
 				parentanchor = vcenter
 				size = { 16 16 }
 				texture = "gfx/interface/icons/generic_icons/repairing.dds"
+			}
+
+			icon = {
+				visible = "[MilitaryFormation.IsDefeated]"
+				name = "defeat_indicator"
+				parentanchor = vcenter
+				size = { 16 16 }
+				texture = "gfx/interface/icons/commander_order_icons/admiral_repairing.dds"
+				tooltip = "FORMATION_FULLY_DEFEATED"
 			}
 		}
 	}
@@ -5612,6 +5706,7 @@ widget = {
 	allow_outside = yes
 
 	flowcontainer = {
+		visible = "[StateMarker.GetGoods.IsValid]"
 		parentanchor = center
 		margin = { 7 7 }
 		direction = vertical
@@ -5643,6 +5738,7 @@ widget = {
 	allow_outside = yes
 
 	flowcontainer = {
+		visible = "[StateMarker.GetGoods.IsValid]"
 		parentanchor = center
 		margin = { 7 7 }
 		direction = vertical
@@ -5673,6 +5769,7 @@ widget = {
 	allow_outside = yes
 
 	flowcontainer = {
+		visible = "[StateMarker.GetGoods.IsValid]"
 		parentanchor = center
 		margin = { 7 7 }
 		direction = vertical
@@ -5704,6 +5801,7 @@ widget = {
 	allow_outside = yes
 
 	flowcontainer = {
+		visible = "[StateMarker.GetGoods.IsValid]"
 		parentanchor = center
 		margin = { 7 7 }
 		direction = vertical
@@ -5947,7 +6045,7 @@ types map_marker_types
 			onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.AddSeaRegionToSelectedFleetMissions )]"
 			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
 			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
-			rightclicksound = "event:/SFX/UI/Military/naval_mission_settings_confirm"
+			rightclicksound = "event:/SFX/UI/NavalBattle/Missions/naval_mission_settings_confirm"
 			texture = "gfx/interface/map_markers/sea_node.dds"
 			alpha = 0.5
 		}
@@ -5963,7 +6061,7 @@ types map_marker_types
 			onrightclick = "[Execute( SeaNodeMovementMarker.GetSeaNode.AddSeaRegionToSelectedFleetMissions )]"
 			onrightclick = "[PdxGuiWidget.AccessParent.AccessParent.FindChild('onrightclick_vfx').TriggerAnimation('show')]"
 			onrightclick = "[GetVariableSystem.Clear(Concatenate('sea_node_movement_marker_highlight', SeaNodeMovementMarker.GetSeaNode.GetID))]"
-			rightclicksound = "event:/SFX/UI/Military/naval_mission_settings_confirm"
+			rightclicksound = "event:/SFX/UI/NavalBattle/Missions/naval_mission_settings_confirm"
 			texture = "gfx/interface/map_markers/sea_node_have_supply.dds"
 		}
 

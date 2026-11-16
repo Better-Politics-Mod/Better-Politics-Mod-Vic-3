@@ -143,7 +143,7 @@ bpm_pop_weight_inner_ig_armed_forces = {
 		limit = { is_pop_type = soldiers }
 		add = {
 			desc = "POP_SOLDIERS"
-			value = scope:interest_group.modifier:interest_group_soldiers_attraction_add
+			value = state.modifier:state_ig_armed_forces_soldiers_attraction_add
 		}
 	}
 	else_if = {
@@ -151,7 +151,7 @@ bpm_pop_weight_inner_ig_armed_forces = {
 		add = {
 			desc = "POP_ARISTOCRATS"
 			value = 5
-			add = state.modifier:state_aristocrats_ig_armed_forces_attraction_add
+			add = state.modifier:state_ig_armed_forces_aristocrats_attraction_add
 		}
 	}
 	else_if = {
@@ -301,7 +301,7 @@ bpm_pop_weight_inner_ig_industrialists = {
 		add = {
 			desc = "POP_ARISTOCRATS"
 			value = 20
-			add = state.modifier:state_aristocrats_ig_industrialists_attraction_add
+			add = state.modifier:state_ig_industrialists_aristocrats_attraction_add
 		}
 	}
 	else_if = {
@@ -931,6 +931,163 @@ bpm_pop_weight_multiplier_ig_trade_unions = {
 	}
 }
 
+bpm_pop_weight_full_ig_liberals = {
+	save_temporary_scope_as = interest_group
+	ROOT = {
+		value = bpm_pop_weight_inner_ig_liberals
+
+		divide = {
+			desc = "interest_group_ig_liberals_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_ig_liberals_pop_attraction_mult
+			min = 0.01
+		}
+		divide = {
+			desc = "interest_group_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_pop_attraction_mult
+			min = 0.01
+		}
+	}
+}
+
+bpm_pop_weight_inner_ig_liberals = {
+	value = 0
+
+	if = {
+		limit = {
+			strata = upper
+		}
+		add = { 
+			value = 35
+			desc = "UPPER_CLASS"
+		}
+		if = {
+			limit = {
+				is_pop_type = capitalists
+			}
+			add = {
+				value = 15
+				desc = "POP_CAPITALISTS"
+			}
+		}
+	}
+	else = {
+		add = {
+			desc = "SELF_OWNED_WORKPLACE"
+			if = { 
+				limit = {
+					exists = workplace
+				}
+				value = 20
+				multiply = { workplace ?= { value = self_ownership_fraction } }
+			}
+			if = {
+				limit = {
+					strata = middle
+				}
+				multiply = 1.5
+			}
+		}
+	}
+
+	add = {
+		value = wealth 
+		subtract = 10
+		min = 0
+		max = 50
+	}
+
+	add = {
+		if = {
+			limit = {
+				OR = {
+					pop_employment_building_group = bg_trade
+					pop_employment_building = building_port
+				}
+				NOT = {
+					strata = upper
+				}
+			}
+			value = 15
+		}
+		desc = "POP_INTERNATIONAL_TRADE"
+	}
+}
+
+bpm_pop_weight_multiplier_ig_liberals = {
+	value = { value = 1 desc = "base_values" }
+
+	add = {
+		desc = "interest_group_ig_liberals_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_ig_liberals_pop_attraction_mult
+	}
+	add = {
+		desc = "interest_group_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_pop_attraction_mult
+	}
+	add = {
+		desc = "LEADER_POPULARITY"
+		scope:interest_group = {
+			leader = {
+				value = popularity
+				multiply = 0.01
+				max = 0.25
+				min = -0.25
+			}
+		}
+	}
+	add = {
+		value = 0
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			add = {
+				desc = "TRIGGER_IS_IN_GOVERNMENT"
+				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+			}
+		}
+	}
+
+	if = {
+		limit = {
+			has_pop_religion = atheist
+		}
+		add = {
+			add = 0.1
+			desc = "ATHEIST"
+		}
+	}
+	else_if = {
+		limit = {
+			NOT = {
+				has_state_religion = no
+			}
+		}
+		add = {
+			value = 0.1
+			desc = "RELIGIOUS_MINORITY"
+		}
+	}
+
+	subtract = {
+		value = 0.5
+		subtract = literacy_rate
+		min = 0
+		divide = 5
+		desc = "LOW_LITERACY"
+	}
+	
+	add = {
+		desc = "bpm_ig_attraction_from_radicals_and_loyalists_tt"
+		value = ig_attraction_from_radicals_and_loyalists
+		subtract = 1
+	}
+}
+
 bpm_pop_weight_tt_ig_devout = {
 	owner.ig:ig_devout = {
 		value = bpm_pop_weight_full_ig_devout
@@ -976,6 +1133,12 @@ bpm_pop_weight_tt_ig_intelligentsia = {
 bpm_pop_weight_tt_ig_trade_unions = {
 	owner.ig:ig_trade_unions = {
 		value = bpm_pop_weight_full_ig_trade_unions
+	}
+}
+
+bpm_pop_weight_tt_ig_liberals = {
+	owner.ig:ig_liberals = {
+		value = bpm_pop_weight_full_ig_liberals
 	}
 }
 
@@ -1051,6 +1214,15 @@ bpm_pop_weight_multiplier_tt_ig_trade_unions = {
 	}
 }
 
+bpm_pop_weight_multiplier_tt_ig_liberals = {
+	owner.ig:ig_liberals = {
+		save_temporary_scope_as = interest_group
+		ROOT = {
+			value = bpm_pop_weight_multiplier_ig_liberals
+		}
+	}
+}
+
 bpm_pop_weight_stability_tt_ig_devout = {
 	owner.ig:ig_devout = {
 		save_temporary_scope_as = interest_group
@@ -1116,6 +1288,15 @@ bpm_pop_weight_stability_tt_ig_intelligentsia = {
 
 bpm_pop_weight_stability_tt_ig_trade_unions = {
 	owner.ig:ig_trade_unions = {
+		save_temporary_scope_as = interest_group
+		ROOT = {
+			value = ig_attraction_to_interests_from_stability
+		}
+	}
+}
+
+bpm_pop_weight_stability_tt_ig_liberals = {
+	owner.ig:ig_liberals = {
 		save_temporary_scope_as = interest_group
 		ROOT = {
 			value = ig_attraction_to_interests_from_stability

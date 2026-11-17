@@ -449,7 +449,7 @@ types information_panels_types
 						icon = {
 							texture = "gfx/interface/icons/generic_icons/leading_interest_group_icon.dds"
 							size = { 32 32 }
-							visible = "[InterestGroup.IsLeadingGovernment]"
+							visible = "[GetScriptedGui('bpm_is_ruling_ig').IsShown(GuiScope.SetRoot(InterestGroup.MakeScope).End)]"
 							tooltip = "LEADING_IG"
 							parentanchor = top|left
 						}
@@ -465,6 +465,20 @@ types information_panels_types
 							texture = "gfx/interface/icons/extremist_icons/extremist.dds"
 							size = { 32 32 }
 							visible = "[GetScriptedGui('bpm_radical_ig_icon_gui').IsShown(GuiScope.SetRoot(InterestGroup.MakeScope).End)]"
+							tooltip = "bpm_extremist"
+							parentanchor = bottom|right
+						}
+						icon = {
+							texture = "gfx/interface/icons/extremist_icons/state_institutional.dds"
+							size = { 32 32 }
+							visible = "[GetScriptedGui('bpm_is_normal_state_institutional').IsShown(GuiScope.SetRoot(InterestGroup.MakeScope).End)]"
+							tooltip = "bpm_super_extremist"
+							parentanchor = bottom|right
+						}
+						icon = {
+							texture = "gfx/interface/icons/extremist_icons/ruling_state_institution.dds"
+							size = { 32 32 }
+							visible = "[GetScriptedGui('bpm_is_super_state_institutional').IsShown(GuiScope.SetRoot(InterestGroup.MakeScope).End)]"
 							tooltip = "bpm_extremist"
 							parentanchor = bottom|right
 						}
@@ -1836,6 +1850,311 @@ types information_panels_types
 		widget = {
 			layoutpolicy_horizontal = preferred
 			layoutpolicy_vertical = expanding
+		}
+	}
+
+	type enacting_law = hbox {
+		layoutpolicy_horizontal = preferred
+		minimumsize = { 0 80 }
+		margin = { 5 0 }
+		margin_bottom = 5
+
+		background = {
+			using = dark_area
+			margin = { -2 10 }
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = preferred
+			spacing = 5
+
+			### ENACTING LAW HEADER
+			default_header_clean_faded = {
+				blockoverride "text" {
+					text = "ENACTING_LAW_HEADER"
+				}
+
+				blockoverride "size" {
+					size = { 0 38 }
+					layoutpolicy_horizontal = expanding
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = preferred
+
+				vbox = {
+					margin_left = 20
+					margin_bottom = 10
+
+					law_enactment_progress = {
+   						 size = { 80 80 }
+					}
+				}
+
+				### INFO
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = preferred
+					spacing = 5
+					margin = { 20 10 }
+
+					textbox = {
+						layoutpolicy_horizontal = expanding
+						size = { 0 20 }
+						text = "NEXT_CHECKPOINT_SHORT_WITH_LABEL"
+						align = nobaseline
+						elide = right
+						fontsize_min = 14
+					}
+
+					hbox = {
+						layoutpolicy_horizontal = expanding
+
+						textbox = {
+							layoutpolicy_horizontal = expanding
+							size = { 0 25 }
+							text = "OUTCOME_SUCCESS"
+							align = nobaseline
+							elide = right
+							alpha = "[TransparentIfFalse(GreaterThan_CFixedPoint(Law.GetCheckpointSuccessChance, '(CFixedPoint)0'))]"
+						}
+						textbox = {
+							layoutpolicy_horizontal = expanding
+							size = { 0 25 }
+							text = "OUTCOME_ADVANCE"
+							align = nobaseline
+							elide = right
+							alpha = "[TransparentIfFalse(GreaterThan_CFixedPoint(Law.GetCheckpointAdvanceChance, '(CFixedPoint)0'))]"
+						}
+					}
+
+					hbox = {
+						layoutpolicy_horizontal = expanding
+
+						textbox = {
+							layoutpolicy_horizontal = expanding
+							size = { 0 25 }
+							text = "OUTCOME_DEBATE"
+							align = left|nobaseline
+							elide = right
+							alpha = "[TransparentIfFalse(GreaterThan_CFixedPoint(Law.GetCheckpointDebateChance, '(CFixedPoint)0'))]"
+						}
+						textbox = {
+							layoutpolicy_horizontal = expanding
+							size = { 0 25 }
+							text = "OUTCOME_STALL"
+							align = left|nobaseline
+							elide = right
+							alpha = "[TransparentIfFalse(GreaterThan_CFixedPoint(Law.GetCheckpointStallChance, '(CFixedPoint)0'))]"
+						}
+					}
+				}
+			}
+
+			law_negotiation_events_vbox = {}
+
+			divider_clean = {
+				layoutpolicy_horizontal = expanding
+
+				blockoverride "size" {
+					size =  { 0 2 }
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				margin = { 10 0 }
+
+				# Successes
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					spacing = 3
+					tooltip = "[GetPlayer.GetLawEnactmentProgressDesc]"
+
+					#Phase 0
+					enactment_phase = {
+						blockoverride "active_size" {
+							layoutpolicy_horizontal = expanding
+							size = { 0 35 }
+						}
+
+						blockoverride "past_size" {
+							layoutpolicy_horizontal = expanding
+							size = { 0 25 }
+						}
+
+						blockoverride "not_reached_size" {
+							layoutpolicy_horizontal = expanding
+							size = { 0 25 }
+						}
+
+						blockoverride "past_phase_text_max_width" {
+							max_width = 85
+						}
+
+						blockoverride "past_phase_parentanchor" {
+							parentanchor = vcenter
+						}
+
+						blockoverride "past_phase_position" {
+							position = { 23 0 }
+						}
+					}
+
+					#Phase 1
+					enactment_phase = {
+						blockoverride "max_width" {}
+
+						blockoverride "current_phase_visibility" {
+							visible = "[EqualTo_int32(Law.GetEnactmentPhase, '(int32)1')]"
+						}
+
+						blockoverride "past_phase_visibility" {
+							visible = "[GreaterThan_int32(Law.GetEnactmentPhase, '(int32)1')]"
+						}
+
+						blockoverride "not_reached_phase_visibility" {
+							visible = "[LessThan_int32(Law.GetEnactmentPhase, '(int32)1')]"
+						}
+
+						blockoverride "phase_name" {
+							text = "[Law.GetCountry.GetCustom('enactment_phase_1')]"
+						}
+
+						blockoverride "active_size" {
+							layoutpolicy_horizontal = expanding
+							size = { 0 35 }
+						}
+
+						blockoverride "past_size" {
+							layoutpolicy_horizontal = expanding
+							size = { 0 25 }
+						}
+
+						blockoverride "not_reached_size" {
+							layoutpolicy_horizontal = expanding
+							size = { 0 25 }
+						}
+
+						blockoverride "past_phase_text_max_width" {
+							max_width = 85
+						}
+
+						blockoverride "past_phase_parentanchor" {
+							parentanchor = vcenter
+						}
+
+						blockoverride "past_phase_position" {
+							position = { 23 0 }
+						}
+					}
+
+					#Phase 2
+					enactment_phase = {
+						blockoverride "max_width" {}
+
+						blockoverride "current_phase_visibility" {
+							visible = "[EqualTo_int32(Law.GetEnactmentPhase, '(int32)2')]"
+						}
+
+						blockoverride "past_phase_visibility" {
+							visible = "[GreaterThan_int32(Law.GetEnactmentPhase, '(int32)2')]"
+						}
+
+						blockoverride "not_reached_phase_visibility" {
+							visible = "[LessThan_int32(Law.GetEnactmentPhase, '(int32)2')]"
+						}
+
+						blockoverride "phase_name" {
+							text = "[Law.GetCountry.GetCustom('enactment_phase_2')]"
+						}
+
+						blockoverride "active_size" {
+							layoutpolicy_horizontal = expanding
+							size = { 0 35 }
+						}
+
+						blockoverride "past_size" {
+							layoutpolicy_horizontal = expanding
+							size = { 0 25 }
+						}
+
+						blockoverride "not_reached_size" {
+							layoutpolicy_horizontal = expanding
+							size = { 0 25 }
+						}
+
+						blockoverride "past_phase_text_max_width" {
+							max_width = 85
+						}
+
+						blockoverride "past_phase_parentanchor" {
+							parentanchor = vcenter
+						}
+
+						blockoverride "past_phase_position" {
+							position = { 23 0 }
+						}
+					}
+				}
+
+				vbox = {
+					# Setbacks
+					vbox = {
+						visible = "[GreaterThan_int32(GetPlayer.GetMaxLawEnactmentSetbacks, '(int32)0')]"
+						layoutpolicy_horizontal = preferred
+						spacing = 2
+						margin_left = 10
+						#margin_bottom = 20
+						tooltip = "[GetPlayer.GetLawEnactmentProgressDesc]"
+
+						textbox = {
+							autoresize = yes
+							align = hcenter|nobaseline
+							text = "LAW_ENACTMENT_SETBACKS_LABEL"
+							fontsize_min = 14
+							elide = right
+						}
+
+						hbox = {
+							layoutpolicy_horizontal = preferred
+
+							#Setback 1
+							enactment_setback = {
+								visible = "[GreaterThanOrEqualTo_int32(GetPlayer.GetMaxLawEnactmentSetbacks, '(int32)1')]"
+
+								blockoverride "has_setback_visibility" {
+									visible = "[GreaterThanOrEqualTo_int32(Law.GetEnactmentSetbackCount, '(int32)1')]"
+								}
+							}
+
+							#Setback 2
+							enactment_setback = {
+								visible = "[GreaterThanOrEqualTo_int32(GetPlayer.GetMaxLawEnactmentSetbacks, '(int32)2')]"
+
+								blockoverride "has_setback_visibility" {
+									visible = "[GreaterThanOrEqualTo_int32(Law.GetEnactmentSetbackCount, '(int32)2')]"
+								}
+							}
+
+							#Setback 3
+							enactment_setback = {
+								visible = "[GreaterThanOrEqualTo_int32(GetPlayer.GetMaxLawEnactmentSetbacks, '(int32)3')]"
+
+								blockoverride "has_setback_visibility" {
+									visible = "[GreaterThanOrEqualTo_int32(Law.GetEnactmentSetbackCount, '(int32)3')]"
+								}
+							}
+						}
+					}
+				}
+			}
+
+			# Amendments
+			amendment_list = {}
+
+			law_enactment_events_vbox = {}
 		}
 	}
 

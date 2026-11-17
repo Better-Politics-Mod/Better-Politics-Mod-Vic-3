@@ -1,50 +1,126 @@
-﻿bpm_update_ig_current_party = {
+﻿# this = country
+bpm_update_ig_parties = {
+	every_interest_group = {
+		bpm_update_ig_party = yes
+	}
+}
+
+
+# this = ig
+bpm_update_ig_party = {
+	set_local_variable = {
+		name = bpm_party_best
+		value = flag:none
+	}
+	set_local_variable = {
+		name = bpm_party_best_score
+		value = 0
+	}
 	if = {
 		limit = {
-			has_party = yes
-			OR = {
-				NOT = { has_variable = bpm_current_party }
-				NOT = { is_member_of_party = var:bpm_current_party }
+			owner = { country_has_voting_franchise = yes }
+		}
+		bpm_consider_ig_party = { PARTY = agrarian_party }
+		bpm_consider_ig_party = { PARTY = anarchist_party }
+		bpm_consider_ig_party = { PARTY = communist_party }
+		bpm_consider_ig_party = { PARTY = conservative_party }
+		bpm_consider_ig_party = { PARTY = fascist_party }
+		bpm_consider_ig_party = { PARTY = liberal_party }
+		bpm_consider_ig_party = { PARTY = radical_party }
+		bpm_consider_ig_party = { PARTY = reactionary_party }
+		bpm_consider_ig_party = { PARTY = socialist_party }
+		bpm_consider_ig_party = { PARTY = revolutionary_party }
+	}
+	if = {
+		limit = {
+			NOT = { local_var:bpm_party_best ?= flag:none }
+		}
+		bpm_join_ig_party = { PARTY = agrarian_party }
+		bpm_join_ig_party = { PARTY = anarchist_party }
+		bpm_join_ig_party = { PARTY = communist_party }
+		bpm_join_ig_party = { PARTY = conservative_party }
+		bpm_join_ig_party = { PARTY = fascist_party }
+		bpm_join_ig_party = { PARTY = liberal_party }
+		bpm_join_ig_party = { PARTY = radical_party }
+		bpm_join_ig_party = { PARTY = reactionary_party }
+		bpm_join_ig_party = { PARTY = socialist_party }
+		bpm_join_ig_party = { PARTY = revolutionary_party }
+	}
+	else_if = {
+		limit = { has_variable = bpm_party }
+		remove_variable = bpm_party
+		remove_variable = bpm_new_party_loyalty
+		remove_variable = bpm_recent_party_switch_loyalty
+		remove_variable = bpm_poll_share
+		remove_variable = bpm_poll_voters
+	}
+}
+
+# this = ig
+bpm_consider_ig_party = {
+	if = {
+		limit = { bpm_ig_party_available_$PARTY$ = yes }
+		set_local_variable = {
+			name = bpm_party_score
+			value = bpm_ig_party_weight_$PARTY$
+		}
+		if = {
+			limit = { var:bpm_party ?= flag:$PARTY$ }
+			change_local_variable = {
+				name = bpm_party_score
+				add = 0.5
 			}
 		}
+		if = {
+			limit = {
+				local_var:bpm_party_score >= 1
+				local_var:bpm_party_score > local_var:bpm_party_best_score
+			}
+			set_local_variable = {
+				name = bpm_party_best_score
+				value = local_var:bpm_party_score
+			}
+			set_local_variable = {
+				name = bpm_party_best
+				value = flag:$PARTY$
+			}
+		}
+	}
+}
+
+# this = ig
+bpm_join_ig_party = {
+	if = {
+		limit = {
+			local_var:bpm_party_best ?= flag:$PARTY$
+			NOT = { var:bpm_party ?= flag:$PARTY$ }
+		}
 		remove_variable = bpm_new_party_loyalty
+		if = {
+			limit = {
+				game_date > 1836.1.1
+				OR = {
+					has_local_variable = bpm_party_founded_$PARTY$
+					owner = {
+						NOT = {
+							any_interest_group = { var:bpm_party ?= flag:$PARTY$ }
+						}
+					}
+				}
+			}
+			set_local_variable = bpm_party_founded_$PARTY$
+			set_variable = {
+				name = bpm_new_party_loyalty
+				value = 10
+			}
+		}
 		set_variable = {
-			name = bpm_current_party
-			value = party
+			name = bpm_party
+			value = flag:$PARTY$
 		}
 		set_variable = {
 			name = bpm_recent_party_switch_loyalty
 			value = 5
-		}
-	}
-	else_if = {
-		limit = {
-			has_party = no
-			has_variable = bpm_current_party
-		}
-		remove_variable = bpm_current_party
-		remove_variable = bpm_new_party_loyalty
-		remove_variable = bpm_recent_party_switch_loyalty
-	}
-}
-
-bpm_update_igs_current_party = {
-	every_interest_group = {
-		bpm_update_ig_current_party = yes
-	}
-}
-
-# ROOT = country
-# scope:target = new party
-bpm_set_new_party_loyalty = {
-	every_interest_group = {
-		limit = {
-			is_member_of_party = scope:target
-		}
-		bpm_update_ig_current_party = yes
-		set_variable = {
-			name = bpm_new_party_loyalty
-			value = 10
 		}
 	}
 }

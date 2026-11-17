@@ -77,6 +77,11 @@ MANUAL_RANGES = {
     # Global variables
     "global_var:bpm_je_march_to_radicalism_progress": (0, 120),
     "global_var:bpm_agrarian_socialism_power_global": (0, 100),
+    "turmoil": (0.0, 1.0),
+    "state_urbanization_rate": (0.0, 1.0),
+    "state_unemployment_rate": (0.0, 1.0),
+    "num_building_assets_of_group(bg_military_industry)\"": (0.0, 1.0),
+    "level": (1.0, 1.0),
 }
 
 # Conditions that are enumerated rather than left ambiguous. Every combination is evaluated

@@ -1,104 +1,195 @@
 ﻿bpm_update_hog = {
+    if = {
+        limit = {
+            has_variable = bpm_hog_initialized
+        }
+        bpm_update_hog_when_initialized = yes
+    }
+}
+
+bpm_set_ig_as_hog_or_institutional = {
+    if = {
+        limit = {
+            owner.modifier:country_government_formation_type_institutional = yes
+        }
+        bpm_set_ig_as_institutional_hog = yes
+    }
+    else = {
+        bpm_set_ig_as_hog = yes
+    }
+}
+
+bpm_update_hog_when_initialized = {
+    clear_saved_scope = ruling_ig
+
+    clear_saved_scope = bpm_previous_ruling_ig
+    var:bpm_ruling_ig ?= {
+        save_scope_as = bpm_previous_ruling_ig
+    }
+
     every_scope_character = {
         limit = { has_role = bpm_character_role_hog }
         remove_character_role = bpm_character_role_hog
     }
 
+    every_interest_group = {
+        limit = {
+            OR = {
+                NOT = {
+                    owner.var:bpm_ruling_ig ?= this
+                }
+                owner = { modifier:country_government_formation_type_institutional = no }
+            }
+        }
+        remove_variable = bpm_institutional_ruling_ig
+    }
+
+    ## In popular systems, the elected ruling IG remains the ruling IG until a next election
+    ## Any way to dethrone this ruling IG involves new elections 
+    ## or switching to an institutional system
     if = {
         limit = { 
-            NOR = {
-                AND = {
-                    modifier:country_bpm_hog_selected_by_legislature = yes
-                    modifier:country_bpm_ruler_complete_veto_enabled = yes
-                }
-                bpm_country_has_parliamentary_electoral_system = yes
-            }
-        }
-        ordered_interest_group = {
-            limit = {
-                is_in_government = yes
-            }
-            position = 0
-            order_by = ig_clout # PLACEHOLDER
-            bpm_set_ig_as_hog = yes
-        }
-    }
-
-    if = {
-        limit = {
-            ruler = var:bpm_headofgov.leader
-        }
-        ordered_scope_character = {
-            limit = {
-                interest_group ?= prev.var:bpm_headofgov
-                is_character_alive = yes
-                is_ruler_of_own_country = no
-            }
-            save_scope_as = selected_char
+            modifier:country_government_formation_type_popular = yes
         }
         if = {
-            limit = { NOT = { exists = scope:selected_char } }
-            create_character = {
-                interest_group = var:bpm_headofgov
-                save_scope_as = selected_char
+            limit = {
+                country_has_voting_franchise = yes
+                bpm_country_is_republic = yes
+                exists = ruler.interest_group
+                NOT = {
+                    get_ruler_for:presidential_elective ?= ruler
+                }
+            }
+            random_interest_group = {
+                limit = {
+                    owner.ruler.interest_group.type ?= type
+                }
+                save_scope_as = ruling_ig
             }
         }
-        scope:selected_char = {
-            set_as_interest_group_leader = yes
+        else = {
+            get_ruler_for:presidential_elective.interest_group ?= {
+                save_scope_as = ruling_ig
+            }
         }
     }
-
-    if = {
-        limit = { modifier:country_bpm_unified_executive = no }
-        var:bpm_headofgov.leader ?= {
-            add_character_role = bpm_character_role_hog
-            add_career_length = {role = bpm_character_role_hog years = 100}
-        }
-    }
-}
-
-bpm_set_ig_as_hog = {
-    owner = {
-        set_variable = {
-            name = bpm_headofgov
-            value = prev
-        }
-    }
-}
-
-bpm_make_character_historical_hog = {
-    set_variable = bpm_historical_hog
-    if = {
+    ## In a traditional system, the monarch's IG is always the ruling IG until their death
+    ## Any way to dethrone this ruling IG involves the death or abdication of this monarch
+    ## or switching to an institutional system.
+    else_if = {
         limit = {
-            NOT = { has_modifier = bpm_historical_hog }
+            modifier:country_government_formation_type_traditional = yes
         }
-        add_modifier = {
-            name = bpm_historical_hog
-            days = normal_modifier_time
-        }
-    }
-    if = {
-        limit = { NOT = { exists = interest_group } }
-        set_interest_group = owner.var:bpm_headofgov
-    }
-    if = {
-        limit = {
-            NOT = { interest_group.leader = this }
-        }
-        set_as_interest_group_leader = yes
-    }
-}
-
-bpm_initialize_hog = {
-    if = {
-        limit = {
-            any_scope_character = { has_modifier = bpm_historical_hog }
-        }
-        random_scope_character = {
-            limit = { has_modifier = bpm_historical_hog }
-            interest_group = {
+        if = {
+            limit = {
+                exists = ruler.interest_group
+            }
+            random_interest_group = {
+                limit = {
+                    owner.ruler.interest_group.type ?= type
+                }
                 bpm_set_ig_as_hog = yes
             }
+        }
+    }
+    ## In the institutional system things are more complicated, the ruling_ig has an bpm_institutional_ruling_ig variable
+    ## As long as they have that variable, they are the ruling IG. They can be dethroned by a variety of institutional
+    ## actions as well as by more violent means. The ruling IG can also be changed by switching to a popular system.
+    else_if = {
+        limit = {
+            modifier:country_government_formation_type_institutional = yes
+        }
+        if = {
+            limit = {
+                var:bpm_ruling_ig ?= {
+                    has_variable = bpm_institutional_ruling_ig
+                }
+            }
+            var:bpm_ruling_ig ?= {
+                save_scope_as = ruling_ig
+                set_variable = bpm_institutional_ruling_ig
+            }
+        }
+        # If for some reason no IG is the current ruling IG, and whatever means
+        # the previous ruling IG was removed by didn't select a new ruling IG
+        # We simply default to the highest clout IG in the country that is not extremist
+        else = {
+            ordered_interest_group = {
+                limit = {
+                    bpm_ig_is_very_radical_opposition = no
+                }
+                alternative_limit = {
+                    always = yes
+                }
+                order_by = ig_clout
+                position = 0
+                save_scope_as = ruling_ig
+            }
+            scope:ruling_ig ?= {
+                set_variable = bpm_institutional_ruling_ig
+            }
+        }
+    }
+    ## In the colonial system, the ruling IG is the ruling IG type of their overlord. Theoretically a country with this system
+    ## should always have an overlord and this overlord should always have a ruling IG, but if this fails for some reason
+    ## it falls back to largest non-extremist IG by clout.
+    else_if = {
+        limit = {
+            modifier:country_government_formation_type_colonial = yes
+        }
+        if = {
+            limit = {
+                exists = top_overlord.var:bpm_ruling_ig
+            }
+            random_interest_group = {
+                limit = { type = owner.top_overlord.var:bpm_ruling_ig.type }
+                save_scope_as = ruling_ig
+            }
+        }
+        else = {
+            ordered_interest_group = {
+                limit = {
+                    bpm_ig_is_establishment = yes
+                }
+                alternative_limit = {
+                    always = yes
+                }
+                order_by = ig_clout
+                position = 0
+                save_scope_as = ruling_ig
+            }
+            scope:ruling_ig ?= {
+                set_variable = bpm_institutional_ruling_ig
+            }
+        }
+
+        if = {
+            limit = {
+                exists = top_overlord
+                NOT = { scope:ruling_ig.leader.home_country ?= top_overlord }
+            }
+
+        }
+    }
+
+    ## Use the selected IG, fallback to ruler
+    if = {
+        limit = {
+            exists = scope:ruling_ig
+        }
+        scope:ruling_ig = {
+            bpm_set_ig_as_hog_or_institutional = yes
+        }
+    }
+    else_if = {
+        limit = {
+            exists = ruler.interest_group
+        }
+        random_interest_group = {
+            limit = {
+                owner.ruler.interest_group.type ?= type
+            }
+            bpm_set_ig_as_hog_or_institutional = yes
         }
     }
     else = {
@@ -109,9 +200,150 @@ bpm_initialize_hog = {
             alternative_limit = {
                 always = yes
             }
-            position = 0
             order_by = ig_clout
-            bpm_set_ig_as_hog = yes
+            position = 0
+            bpm_set_ig_as_hog_or_institutional = yes
+        }
+    }
+
+    # In institutional systems, the ruler should be kept separate from 
+    # being the head of government, as the ruler represents something 
+    # outside and above the institutional government.
+    if = {
+        limit = {
+            ruler = var:bpm_ruling_ig.leader
+            modifier:country_government_formation_type_institutional = yes
+        }
+        ordered_scope_character = {
+            limit = {
+                interest_group ?= prev.var:bpm_ruling_ig
+                is_character_alive = yes
+                is_ruler_of_own_country = no
+            }
+            save_scope_as = selected_char
+        }
+        if = {
+            limit = { NOT = { exists = scope:selected_char } }
+            create_character = {
+                interest_group = var:bpm_ruling_ig
+                save_scope_as = selected_char
+            }
+        }
+        scope:selected_char = {
+            set_as_interest_group_leader = yes
+        }
+    }
+    else = {
+        var:bpm_ruling_ig.leader ?= {
+            add_character_role = bpm_character_role_hog
+        }
+    }
+
+    bpm_handle_ruling_ig_change = yes
+}
+
+# this = country
+# scope:bpm_previous_ruling_ig = the previous rig
+bpm_handle_ruling_ig_change = {
+    if = {
+        limit = {
+            has_variable = bpm_ruling_ig 
+            exists = var:bpm_ruling_ig
+            has_game_started = yes
+        }
+        if = {
+            limit = {
+                NOT = { has_variable = bpm_ruling_coalition_initialized }
+            }
+            set_variable = bpm_ruling_coalition_initialized
+        }
+        else_if = {
+            limit = {
+                exists = scope:bpm_previous_ruling_ig
+                NOT = { scope:bpm_previous_ruling_ig ?= var:bpm_ruling_ig }
+            }
+            if = {
+                limit = {
+                    currently_enacting_law.type ?= law_type:law_repeatable_special_form_coalition
+                }
+                bpm_cache_rig_approval = yes
+            }
+            else = {
+                bpm_form_ruling_coalition_enactment = yes
+            }
+        }
+    }
+}
+
+bpm_set_ig_as_hog = {
+    owner = {
+        set_variable = {
+            name = bpm_ruling_ig
+            value = prev
+        }
+    }
+}
+
+bpm_set_ig_as_institutional_hog = {
+    bpm_set_ig_as_hog = yes
+    set_variable = bpm_institutional_ruling_ig
+}
+
+bpm_make_character_historical_hog = {
+    set_variable = bpm_historical_hog
+    if = {
+        limit = {
+            NOT = { has_modifier = bpm_historical_hog }
+        }
+        add_modifier = {
+            name = bpm_historical_hog
+            days = very_short_modifier_time
+        }
+    }
+    if = {
+        limit = { NOT = { exists = interest_group } }
+        set_interest_group = owner.var:bpm_ruling_ig
+    }
+    if = {
+        limit = {
+            NOT = { interest_group.leader = this }
+        }
+        set_as_interest_group_leader = yes
+    }
+}
+
+bpm_initialize_hog = {
+    set_variable = bpm_hog_initialized
+    if = {
+        limit = {
+            NOT = { has_variable = bpm_ruling_ig }
+        }
+        set_variable = BPM_INITIALIZING_HISTORIHOG
+        if = {
+            limit = {
+                any_scope_character = { has_modifier = bpm_historical_hog }
+            }
+            random_scope_character = {
+                limit = { has_modifier = bpm_historical_hog }
+                interest_group = {
+                    bpm_set_ig_as_hog_or_institutional = yes
+                }
+            }
+        }
+        else = {
+            ordered_interest_group = {
+                limit = {
+                    is_in_government = yes
+                }
+                alternative_limit = {
+                    always = yes
+                }
+                position = 0
+                order_by = ig_clout
+                # Must also get the institutional marker, or bpm_update_hog
+                # immediately replaces it with the highest clout IG
+                bpm_set_ig_as_hog_or_institutional = yes
+            }
         }
     }
     bpm_update_hog = yes
@@ -262,12 +494,6 @@ bpm_remove_regency_modifier = {
 	}
 	if = {
 		limit = {
-			has_modifier = modifier_regency_christian_democrats
-		}
-		remove_modifier = modifier_regency_christian_democrats
-	}
-	if = {
-		limit = {
 			has_modifier = modifier_regency_agrarian_populists
 		}
 		remove_modifier = modifier_regency_agrarian_populists
@@ -328,7 +554,6 @@ bpm_set_character_as_regent = {
         add_regency_modifier = yes
     }
     add_character_role = bpm_character_role_regent
-    add_career_length = {role = bpm_character_role_regent years = 100}
 }
 
 bpm_start_regency = {
@@ -419,7 +644,6 @@ bpm_set_character_as_acting_hog = {
         add_acting_hog_modifier = yes
     }
     add_character_role = bpm_character_role_acting_hog
-    add_career_length = {role = bpm_character_role_acting_hog years = 100}
 }
 
 bpm_start_acting_hog = {
@@ -509,12 +733,6 @@ bpm_remove_acting_hog_modifier = {
 			has_modifier = modifier_acting_hog_fascists
 		}
 		remove_modifier = modifier_acting_hog_fascists
-	}
-	if = {
-		limit = {
-			has_modifier = modifier_acting_hog_christian_democrats
-		}
-		remove_modifier = modifier_acting_hog_christian_democrats
 	}
 	if = {
 		limit = {

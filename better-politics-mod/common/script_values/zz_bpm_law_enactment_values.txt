@@ -2,6 +2,18 @@
 	value = 0.1
 }
 
+bpm_law_enactment_success_vote_contribution = {
+	value = 0
+	add = bpm_country_yea_votes
+	divide = 2
+	if = {
+		limit = {
+			enactment_phase = 2
+		}
+		value = 10
+	}
+}
+
 bpm_total_government_clout = {
 	value = 0
 	every_interest_group = {
@@ -48,16 +60,43 @@ bpm_law_enactment_vote_threshold = {
 			value = -0.2
 		}
 	}
+	if = {
+		limit = {
+			currently_enacting_law = {
+				bpm_law_is_edict = yes
+			}
+		}
+		value = {
+			desc = "BPM_VALUE_FROM_EDICT"
+			value = 1
+		}
+	}
+}
+
+bpm_ig_voting_clout_percent = {
+	value = ig_clout
+	divide = owner.bpm_country_voting_clout
+}
+
+bpm_country_voting_clout = {
+	every_interest_group = {
+		limit = {
+			bpm_ig_can_vote_on_law = yes
+		}
+		add = ig_clout
+	}
 }
 
 bpm_country_neutral_clout = {
 	value = 0
 	every_interest_group = {
 		limit = {
+			bpm_ig_can_vote_on_law = yes
 			bpm_ig_law_support_total_value = 0
 		}
 		add = ig_clout
 	}
+	divide = bpm_country_voting_clout
 }
 
 bpm_country_nay_votes = {
@@ -69,58 +108,69 @@ bpm_country_yea_votes = {
 	value = 0
 	every_interest_group = {
 		limit = {
+			bpm_ig_can_vote_on_law = yes
 			bpm_ig_law_support_total_value > 0
 		}
 		add = ig_clout
 	}
+	divide = bpm_country_voting_clout
 }
 
 bpm_country_opposing_clout = {
 	value = 0
 	every_interest_group = {
 		limit = {
+			bpm_ig_can_vote_on_law = yes
 			bpm_ig_law_support_total_value < 0
 			bpm_ig_law_support_total_value > -2
 		}
 		add = ig_clout
 	}
+	divide = bpm_country_voting_clout
 }
 
 bpm_country_strongly_opposing_clout = {
 	value = 0
 	every_interest_group = {
 		limit = {
+			bpm_ig_can_vote_on_law = yes
 			bpm_ig_law_support_total_value <= -2
 		}
 		add = ig_clout
 	}
+	divide = bpm_country_voting_clout
 }
 
 bpm_country_supporting_clout = {
 	value = 0
 	every_interest_group = {
 		limit = {
+			bpm_ig_can_vote_on_law = yes
 			bpm_ig_law_support_total_value > 0
 			bpm_ig_law_support_total_value < 2
 		}
 		add = ig_clout
 	}
+	divide = bpm_country_voting_clout
 }
 
 bpm_country_strongly_supporting_clout = {
 	value = 0
 	every_interest_group = {
 		limit = {
+			bpm_ig_can_vote_on_law = yes
 			bpm_ig_law_support_total_value >= 2
 		}
 		add = ig_clout
 	}
+	divide = bpm_country_voting_clout
 }
 
 bpm_country_potential_support = {
 	value = 0
 	every_interest_group = {
 		limit = {
+			bpm_ig_can_vote_on_law = yes
 			OR = {
 				bpm_ig_law_support_total_value > 0
 				AND = {
@@ -139,12 +189,14 @@ bpm_country_potential_support = {
 		}
 		add = ig_clout
 	}
+	divide = bpm_country_voting_clout
 }
 
 bpm_country_easy_potential_support = {
 	value = 0
 	every_interest_group = {
 		limit = {
+			bpm_ig_can_vote_on_law = yes
 			OR = {
 				bpm_ig_law_support_total_value > 0
 				AND = {
@@ -155,9 +207,10 @@ bpm_country_easy_potential_support = {
 		}
 		add = ig_clout
 	}
+	divide = bpm_country_voting_clout
 }
 
-bpm_law_hog_power = {
+bpm_law_executive_power = {
 	if = {
 		limit = {
 			type = law_type:law_advisory_body
@@ -493,12 +546,8 @@ bpm_ig_law_support_total_value = {
 	value = 0
 
 	if = {
-		limit = {
-			NOT = {exists = scope:law}
-		}
-		owner.currently_enacting_law ?= {
-			save_temporary_scope_as = law
-		}
+		limit = { NOT = { exists = scope:law } }
+		owner.currently_enacting_law = { save_temporary_scope_as = law }
 	}
 
 	if = {
@@ -581,14 +630,10 @@ bpm_ig_law_support_total_value = {
 
 bpm_law_enactment_executive_approval = {
 	value = 0
-
+	
 	if = {
-		limit = {
-			NOT = {exists = scope:law}
-		}
-		currently_enacting_law ?= {
-			save_temporary_scope_as = law
-		}
+		limit = { NOT = { exists = scope:law } }
+		owner.currently_enacting_law = { save_temporary_scope_as = law }
 	}
 
 	add = {
@@ -599,10 +644,10 @@ bpm_law_enactment_executive_approval = {
 
 
 	add = {
-		scope:law = { value = bpm_law_hog_power }
-		scope:law.currently_active_law_in_group = { subtract = bpm_law_hog_power}
+		scope:law = { value = bpm_law_executive_power }
+		scope:law.currently_active_law_in_group = { subtract = bpm_law_executive_power}
 		multiply = 4
-		desc = "bpm_hog_power_difference"
+		desc = "bpm_executive_power_difference"
 	}
 	multiply = {
 		value = 1
@@ -640,6 +685,10 @@ bpm_law_enactment_executive_approval = {
 			desc = "bpm_ruler_must_resign"
 		}
 	}
+}
+
+bpm_executive_edict_support = {
+	value = bpm_law_enactment_executive_approval
 }
 
 # IG scope
@@ -727,12 +776,136 @@ bpm_government_law_support = {
 	}
 }
 
-bpm_law_enactment_desire_delta = {
-	value = bpm_law_enactment_desire
-	currently_active_law_in_group = {subtract = bpm_law_enactment_desire}
+bpm_law_docket_score_delta = {
+	value = bpm_law_docket_score
+	subtract = currently_active_law_in_group.bpm_law_docket_score
 }
 
-bpm_law_enactment_desire = {
+bpm_law_docket_score = {
+	save_temporary_scope_as = law
+	scope:law.type = {save_temporary_scope_as = lawtype} #i'm losing my mind
+	value = 0
+	if = {
+		limit = {scope:lawtype = law_type:law_provisional_government}
+		add = -10
+	}
+	else_if = {
+		limit = {
+			currently_active_law_in_group = this
+		}
+		owner = {
+			every_interest_group = {
+				limit = {
+					law_stance = {
+						law = scope:law.type
+						value >= approve
+					}
+				}
+				add = {
+					value = 5
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
+				}
+				if = {
+					limit = {
+    			    	scope:law.currently_active_law_in_group = {bpm_codification_is_constitutional_law = yes}
+					}
+					add = {
+						value = 3
+						multiply = ig_clout
+					}
+				}
+			}
+			every_interest_group = {
+				limit = {
+					law_stance = {
+						law = scope:law.type
+						value <= disapprove
+					}
+				}
+				add = {
+					value = -2.5
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
+				}
+			}
+		}
+	}
+	else = {
+		owner = {
+			every_interest_group = {
+				limit = {
+					law_enactment_stance = {
+						law = scope:law.type
+						value >= approve
+					}
+				}
+				add = {
+					value = 5
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
+				}
+			}
+			every_interest_group = {
+				limit = {
+					law_enactment_stance = {
+						law = scope:law.type
+						value <= disapprove
+					}
+				}
+				add = {
+					value = -2.5
+					multiply = ig_clout
+					if = {
+						limit = {is_in_government = yes}
+						multiply = 2
+					}
+				}
+			}
+		}
+	}
+	if = {
+		limit = {
+			scope:lawtype = law_type:law_repeatable_special_take_down_coalition
+		}
+		add = {
+			value = owner.bpm_take_down_coalition_action_clout
+			multiply = bpm_take_down_coalition_desire_per_clout
+		}
+	}
+	if = {
+		limit = {
+			scope:lawtype = law_type:law_repeatable_special_take_over_rig
+		}
+		add = {
+			value = owner.bpm_take_over_rig_action_clout
+			multiply = bpm_take_over_rig_desire_per_clout
+		}
+	}
+	if = {
+		limit = {
+			bpm_law_executive_would_edict = yes
+		}
+		add = owner.bpm_law_enactment_executive_approval
+	}
+	min = 0
+}
+
+bpm_ai_law_enactment_desire_delta = {
+	value = bpm_ai_law_enactment_desire
+	subtract = currently_active_law_in_group.bpm_ai_law_enactment_desire
+}
+
+bpm_ai_law_enactment_desire = {
 	save_temporary_scope_as = law
 	scope:law.type = {save_temporary_scope_as = lawtype} #i'm losing my mind
 	value = 0

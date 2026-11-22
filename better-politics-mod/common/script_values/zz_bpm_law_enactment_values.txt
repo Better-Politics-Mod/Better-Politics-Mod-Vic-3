@@ -24,8 +24,13 @@ bpm_total_government_clout = {
 
 bpm_law_enactment_vote_threshold = {
 	if = {
+		limit = { NOT = { exists = scope:law } }
+		currently_enacting_law = { save_temporary_scope_as = law }
+	}
+
+	if = {
 		limit = {
-			currently_enacting_law.type = law_type:law_repeatable_special_take_over_rig
+			scope:law.type = law_type:law_repeatable_special_take_over_rig
 		}
 		value = {
 			value = bpm_total_government_clout
@@ -44,7 +49,7 @@ bpm_law_enactment_vote_threshold = {
 	}
 	if = {
 		limit = {
-			bpm_is_changing_constitutional_law = yes
+			scope:law = { bpm_law_is_constitutional = yes }
 		}
 		add = {
 			desc = "BPM_VALUE_FROM_CONSTITUTIONAL_CHANGE"
@@ -53,7 +58,7 @@ bpm_law_enactment_vote_threshold = {
 	}
 	if = {
 		limit = {
-			currently_enacting_law.type = law_type:law_repeatable_special_form_coalition
+			scope:law.type = law_type:law_repeatable_special_form_coalition
 		}
 		add = {
 			desc = "BPM_VALUE_FROM_COALITION_FORMATION"
@@ -62,7 +67,7 @@ bpm_law_enactment_vote_threshold = {
 	}
 	if = {
 		limit = {
-			currently_enacting_law = {
+			scope:law = {
 				bpm_law_is_edict = yes
 			}
 		}
@@ -198,11 +203,7 @@ bpm_country_easy_potential_support = {
 		limit = {
 			bpm_ig_can_vote_on_law = yes
 			OR = {
-				bpm_ig_law_support_total_value > 0
-				AND = {
-					bpm_ig_law_support_total_value = 0
-					amenability >= 50
-				}
+				bpm_ig_law_support_total_value >= 0
 			}
 		}
 		add = ig_clout
@@ -646,7 +647,7 @@ bpm_law_enactment_executive_approval = {
 	add = {
 		scope:law = { value = bpm_law_executive_power }
 		scope:law.currently_active_law_in_group = { subtract = bpm_law_executive_power}
-		multiply = 4
+		multiply = 2
 		desc = "bpm_executive_power_difference"
 	}
 	multiply = {
@@ -688,7 +689,31 @@ bpm_law_enactment_executive_approval = {
 }
 
 bpm_executive_edict_support = {
-	value = bpm_law_enactment_executive_approval
+	if = {
+		limit = { NOT = { exists = scope:law } }
+		owner.currently_enacting_law = { save_temporary_scope_as = law }
+	}
+
+	value = {
+		value = bpm_law_enactment_executive_approval
+		multiply = bpm_law_executive_edict_urgency
+	}
+	if = {
+		limit = {
+			owner.bpm_country_yea_votes > owner.bpm_law_enactment_vote_threshold
+		}
+		multiply = 0.4
+	}
+	else_if = {
+		limit = {
+			owner.bpm_country_easy_potential_support > owner.bpm_law_enactment_vote_threshold
+		}
+		multiply = 0.6
+	}
+}
+
+bpm_law_executive_edict_urgency = {
+	value = 1
 }
 
 # IG scope
@@ -776,20 +801,9 @@ bpm_government_law_support = {
 	}
 }
 
-bpm_law_docket_score_delta = {
-	value = bpm_law_docket_score
-	subtract = currently_active_law_in_group.bpm_law_docket_score
-}
-
-bpm_law_docket_score = {
-	save_temporary_scope_as = law
-	scope:law.type = {save_temporary_scope_as = lawtype} #i'm losing my mind
-	value = 0
+bpm_law_approval_score = {
+	save_temporary_scope_as = innerlaw
 	if = {
-		limit = {scope:lawtype = law_type:law_provisional_government}
-		add = -10
-	}
-	else_if = {
 		limit = {
 			currently_active_law_in_group = this
 		}
@@ -797,7 +811,7 @@ bpm_law_docket_score = {
 			every_interest_group = {
 				limit = {
 					law_stance = {
-						law = scope:law.type
+						law = scope:innerlaw.type
 						value >= approve
 					}
 				}
@@ -811,7 +825,7 @@ bpm_law_docket_score = {
 				}
 				if = {
 					limit = {
-    			    	scope:law.currently_active_law_in_group = {bpm_codification_is_constitutional_law = yes}
+    			    	scope:innerlaw.currently_active_law_in_group = {bpm_law_is_constitutional = yes}
 					}
 					add = {
 						value = 3
@@ -822,7 +836,7 @@ bpm_law_docket_score = {
 			every_interest_group = {
 				limit = {
 					law_stance = {
-						law = scope:law.type
+						law = scope:innerlaw.type
 						value <= disapprove
 					}
 				}
@@ -842,7 +856,7 @@ bpm_law_docket_score = {
 			every_interest_group = {
 				limit = {
 					law_enactment_stance = {
-						law = scope:law.type
+						law = scope:innerlaw.type
 						value >= approve
 					}
 				}
@@ -858,7 +872,7 @@ bpm_law_docket_score = {
 			every_interest_group = {
 				limit = {
 					law_enactment_stance = {
-						law = scope:law.type
+						law = scope:innerlaw.type
 						value <= disapprove
 					}
 				}
@@ -873,6 +887,15 @@ bpm_law_docket_score = {
 			}
 		}
 	}
+}
+
+bpm_law_docket_score = {
+	save_temporary_scope_as = law
+	scope:law.type = {save_temporary_scope_as = lawtype} #i'm losing my mind
+
+	value = bpm_law_approval_score
+	subtract = currently_active_law_in_group.bpm_law_approval_score
+
 	if = {
 		limit = {
 			scope:lawtype = law_type:law_repeatable_special_take_down_coalition
@@ -895,7 +918,7 @@ bpm_law_docket_score = {
 		limit = {
 			bpm_law_executive_would_edict = yes
 		}
-		add = owner.bpm_law_enactment_executive_approval
+		add = owner.bpm_executive_edict_support
 	}
 	min = 0
 }
@@ -935,7 +958,7 @@ bpm_ai_law_enactment_desire = {
 				}
 				if = {
 					limit = {
-    			    	scope:law.currently_active_law_in_group = {bpm_codification_is_constitutional_law = yes}
+    			    	scope:law.currently_active_law_in_group = { bpm_law_is_constitutional = yes}
 					}
 					add = {
 						value = 3

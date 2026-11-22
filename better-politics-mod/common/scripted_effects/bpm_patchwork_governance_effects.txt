@@ -1,0 +1,150 @@
+﻿# this = state
+bpm_patchwork_governance_refresh_state_modifier = {
+	remove_modifier = bpm_patchwork_governance_level_1
+	remove_modifier = bpm_patchwork_governance_level_2
+	remove_modifier = bpm_patchwork_governance_level_3
+	remove_modifier = bpm_patchwork_governance_level_4
+	remove_modifier = bpm_patchwork_governance_level_5
+	if = {
+		limit = { bpm_patchwork_governance_level >= 5 }
+		add_modifier = { name = bpm_patchwork_governance_level_5 }
+	}
+	else_if = {
+		limit = { bpm_patchwork_governance_level = 4 }
+		add_modifier = { name = bpm_patchwork_governance_level_4 }
+	}
+	else_if = {
+		limit = { bpm_patchwork_governance_level = 3 }
+		add_modifier = { name = bpm_patchwork_governance_level_3 }
+	}
+	else_if = {
+		limit = { bpm_patchwork_governance_level = 2 }
+		add_modifier = { name = bpm_patchwork_governance_level_2 }
+	}
+	else_if = {
+		limit = { bpm_patchwork_governance_level = 1 }
+		add_modifier = { name = bpm_patchwork_governance_level_1 }
+	}
+}
+
+# this = state
+bpm_patchwork_governance_set_state_level = {
+	set_variable = {
+		name = bpm_patchwork_governance_level
+		value = $level$
+	}
+	set_variable = {
+		name = bpm_patchwork_governance_progress
+		value = 0
+	}
+	bpm_patchwork_governance_refresh_state_modifier = yes
+}
+
+# this = state
+bpm_patchwork_governance_clear_state = {
+	remove_variable = bpm_patchwork_governance_level
+	remove_variable = bpm_patchwork_governance_progress
+	bpm_patchwork_governance_refresh_state_modifier = yes
+	if = {
+		limit = { has_decree = decree_bpm_dismantle_patchwork_governance }
+		remove_decree = decree_bpm_dismantle_patchwork_governance
+	}
+	if = {
+		limit = { has_decree = decree_bpm_dismantle_patchwork_governance_colonial }
+		remove_decree = decree_bpm_dismantle_patchwork_governance_colonial
+	}
+}
+
+# this = country
+bpm_patchwork_governance_seed_states = {
+	every_scope_state = {
+		bpm_patchwork_governance_set_state_level = { level = 5 }
+	}
+}
+
+# this = country
+bpm_patchwork_governance_add_amendment = {
+	if = {
+		limit = { bpm_country_has_patchwork_governance = no }
+		active_law:lawgroup_centralization ?= {
+			bpm_add_sticky_amendment = {
+				type = bpm_amendment_patchwork_governance
+				sponsor = prev.ig:ig_landowners
+			}
+		}
+	}
+}
+
+# this = country
+bpm_patchwork_governance_seed_country = {
+	bpm_patchwork_governance_seed_states = yes
+	bpm_patchwork_governance_add_amendment = yes
+}
+
+# this = country
+bpm_patchwork_governance_game_start = {
+	if = {
+		limit = { bpm_country_has_patchwork_governance = yes }
+		active_law:lawgroup_centralization = {
+			random_scope_amendment = {
+				limit = { type = amendment_type:bpm_amendment_patchwork_governance }
+				remove_amendment = yes
+			}
+		}
+		bpm_patchwork_governance_seed_country = yes
+	}
+}
+
+# this = state
+bpm_patchwork_governance_state_monthly = {
+	if = {
+		limit = {
+			bpm_state_has_patchwork_governance = yes
+			bpm_state_is_dismantling_patchwork_governance = yes
+		}
+		add_radicals_in_state = {
+			value = 0.02
+			strata = upper
+		}
+		change_variable = {
+			name = bpm_patchwork_governance_progress
+			add = bpm_patchwork_governance_monthly_progress
+		}
+		if = {
+			limit = { bpm_patchwork_governance_progress >= 100 }
+			change_variable = {
+				name = bpm_patchwork_governance_progress
+				subtract = 100
+			}
+			change_variable = {
+				name = bpm_patchwork_governance_level
+				subtract = 1
+			}
+			if = {
+				limit = { bpm_patchwork_governance_level <= 0 }
+				bpm_patchwork_governance_clear_state = yes
+			}
+			else = {
+				bpm_patchwork_governance_refresh_state_modifier = yes
+			}
+		}
+	}
+}
+
+# this = country
+bpm_patchwork_governance_country_monthly = {
+	if = {
+		limit = {
+			bpm_country_has_patchwork_governance = yes
+			NOT = {
+				any_scope_state = {
+					is_incorporated = yes
+					bpm_state_has_patchwork_governance = yes
+				}
+			}
+		}
+		active_law:lawgroup_centralization = {
+			bpm_amendment_remove_util = { type = bpm_amendment_patchwork_governance }
+		}
+	}
+}

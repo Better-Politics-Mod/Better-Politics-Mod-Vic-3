@@ -97,6 +97,10 @@ bpm_ig_action_attraction = {
 		limit = { this ?= flag:bpm_action_take_over_rig }
 		add = scope:ig.bpm_ig_attraction_to_take_over_rig
 	}
+	if = {
+		limit = { this ?= flag:bpm_action_negotiate_budget }
+		add = scope:ig.bpm_ig_attraction_to_negotiate_budget
+	}
 }
 
 # this = ig
@@ -113,6 +117,10 @@ bpm_ig_current_action_attraction = {
 	else_if = {
 		limit = { bpm_ig_is_in_action_of_type = { TYPE = bpm_action_take_over_rig } }
 		add = bpm_ig_attraction_to_take_over_rig
+	}
+	else_if = {
+		limit = { bpm_ig_is_in_action_of_type = { TYPE = bpm_action_negotiate_budget } }
+		add = bpm_ig_attraction_to_negotiate_budget
 	}
 }
 
@@ -303,10 +311,75 @@ bpm_ig_attraction_to_take_over_rig = {
 	}
 }
 
+# this = ig
+bpm_ig_attraction_to_negotiate_budget = {
+	value = 0
+	save_temporary_scope_as = ig
+	if = {
+		limit = {
+			owner.var:bpm_ruling_ig ?= this
+			ig_approval <= unhappy
+		}
+		add = {
+			value = bpm_negotiate_budget_attraction_per_grievance
+			desc = "bpm_attraction_negotiate_budget_unhappy_rig"
+		}
+	}
+	if = {
+		limit = { bpm_ig_consumption_tax_burden > 0 }
+		add = {
+			value = bpm_negotiate_budget_attraction_per_grievance
+			desc = "bpm_attraction_negotiate_budget_consumption_taxes"
+		}
+	}
+	if = {
+		limit = { owner = { bpm_country_has_big_deficit = yes } }
+		add = {
+			value = bpm_negotiate_budget_attraction_per_grievance
+			desc = "bpm_attraction_negotiate_budget_deficit"
+		}
+	}
+	if = {
+		limit = {
+			bpm_ig_is_bourgeois = yes
+			owner = { bpm_country_has_large_debt = yes }
+		}
+		add = {
+			value = bpm_negotiate_budget_attraction_per_grievance
+			desc = "bpm_attraction_negotiate_budget_debt"
+		}
+	}
+	if = {
+		limit = {
+			NOT = { owner.var:bpm_ruling_ig ?= this }
+			is_in_government = no
+			ig_approval > angry
+			ig_approval <= unhappy
+			bpm_ig_attraction_to_take_down_coalition <= 0
+			bpm_ig_attraction_to_take_over_rig <= 0
+		}
+		add = {
+			value = bpm_negotiate_budget_attraction_unhappy_opposition
+			desc = "bpm_attraction_negotiate_budget_unhappy_opposition"
+		}
+	}
+	if = {
+		limit = { owner = { has_variable = bpm_negotiate_budget_cooldown } }
+		multiply = {
+			value = 0
+			desc = "bpm_attraction_reason_budget_cooldown"
+		}
+	}
+}
+
+bpm_negotiate_budget_attraction_per_grievance = 0.2
+bpm_negotiate_budget_attraction_unhappy_opposition = 0.1
+
 bpm_angry_coalition_member_months = 6
 
 bpm_take_down_coalition_desire_per_clout = 40
 bpm_take_over_rig_desire_per_clout = 40
+bpm_negotiate_budget_desire_per_clout = 40
 
 # this = country
 bpm_take_over_rig_action_clout = {
@@ -456,5 +529,17 @@ bpm_ig_take_down_coalition_support = {
 			value = 1
 			desc = "bpm_ig_take_down_support_unhappy"
 		}
+	}
+}
+
+# this = country
+bpm_negotiate_budget_action_clout = {
+	value = 0
+	every_in_list = {
+		variable = bpm_active_actions
+		limit = {
+			var:bpm_action_type ?= flag:bpm_action_negotiate_budget
+		}
+		add = bpm_action_total_clout_gui
 	}
 }

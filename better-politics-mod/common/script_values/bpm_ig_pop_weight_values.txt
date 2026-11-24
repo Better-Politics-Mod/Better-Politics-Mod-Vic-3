@@ -1088,6 +1088,578 @@ bpm_pop_weight_multiplier_ig_liberals = {
 	}
 }
 
+bpm_pop_weight_full_ig_reactionaries = {
+	save_temporary_scope_as = interest_group
+	ROOT = {
+		value = bpm_pop_weight_inner_ig_reactionaries
+
+		divide = {
+			desc = "interest_group_ig_reactionaries_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_ig_reactionaries_pop_attraction_mult
+			min = 0.01
+		}
+		divide = {
+			desc = "interest_group_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_pop_attraction_mult
+			min = 0.01
+		}
+	}
+}
+
+bpm_pop_weight_inner_ig_reactionaries = {
+	value = 0
+	
+	if = {
+    	limit = {
+			is_pop_type = aristocrats
+		}
+		add = {
+		    desc = "SLAVEHOLDER"
+			value = 25
+			multiply = {
+				value = "workplace.num_building_assets_of_group(bg_plantations)"
+				divide = workplace.level
+			}
+		}
+		add = {
+			desc = "POP_ARISTOCRATS"
+			value = 75
+        }
+	}
+	else_if = {
+		limit = { is_pop_type = clergymen }
+		add = {
+			desc = "POP_CLERGYMEN"
+			value = 50
+		}
+	}
+	else_if = {
+		limit = { is_pop_type = farmers }
+		add = {
+			desc = "POP_FARMERS"
+			value = 50
+		}
+	}
+	else_if = {
+	    limit = {
+			strata = lower
+		}
+		add = {
+		    desc = "CLASS_LOWER"
+			value = 40
+		}
+		add = {
+		    desc = "AVG_STANDARD_OF_LIVING"
+			value = state.average_expected_sol - standard_of_living 
+			multiply = 10
+			max = 50
+			min = 0
+		}
+	}
+}
+
+bpm_pop_weight_multiplier_ig_reactionaries = {
+	value = { value = 1 desc = "base_values" }
+
+	add = {
+		desc = "interest_group_ig_reactionaries_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_ig_reactionaries_pop_attraction_mult
+	}
+	add = {
+		desc = "interest_group_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_pop_attraction_mult
+	}
+	add = {
+		desc = "LEADER_POPULARITY"
+		scope:interest_group = {
+			leader = {
+				value = popularity
+				multiply = 0.01
+				max = 0.25
+				min = -0.25
+			}
+		}
+	}
+	if = {
+		limit = {
+			NOT = { has_pop_religion = atheist }
+		}
+		add = {
+			add = 0.1
+			desc = "RELIGIOUS"
+		}
+	}
+	add = {
+		value = 0
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			add = {
+				desc = "TRIGGER_IS_IN_GOVERNMENT"
+				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+			}
+		}
+	}
+
+	add = {
+		value = 0.5
+		subtract = literacy_rate
+		min = 0
+		divide = 5
+		desc = "LOW_LITERACY"
+	}
+	
+	add = {
+		desc = "bpm_ig_attraction_from_radicals_and_loyalists_tt"
+		value = ig_attraction_from_radicals_and_loyalists
+		subtract = 1
+	}
+}
+
+bpm_pop_weight_full_ig_conservatives = {
+	save_temporary_scope_as = interest_group
+	ROOT = {
+		value = bpm_pop_weight_inner_ig_conservatives
+
+		divide = {
+			desc = "interest_group_ig_conservatives_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_ig_conservatives_pop_attraction_mult
+			min = 0.01
+		}
+		divide = {
+			desc = "interest_group_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_pop_attraction_mult
+			min = 0.01
+		}
+	}
+}
+
+bpm_pop_weight_inner_ig_conservatives = {
+	value = 0
+	
+	if = {
+    	limit = {
+			is_pop_type = aristocrats
+		}
+		add = {
+			desc = "POP_ARISTOCRATS"
+			value = 50
+        }
+	}
+	else_if = {
+    	limit = {
+			is_pop_type = capitalists
+		}
+		add = {
+			desc = "POP_CAPITALISTS"
+			value = 30
+        }
+	}
+	else_if = {
+		limit = { is_pop_type = clergymen }
+		add = {
+			desc = "POP_CLERGYMEN"
+			value = 50
+		}
+	}
+	else_if = {
+		limit = { is_pop_type = farmers }
+		add = {
+			desc = "POP_FARMERS"
+			value = 20
+		}
+	}
+	else_if = {
+	    limit = {
+			bpm_pop_employment_is_rural = yes
+		}
+		add = {
+		    desc = "RURAL"
+			value = 40
+		}
+		if = {
+		    limit = { 
+				state.average_expected_sol - standard_of_living > -2
+				state.average_expected_sol - standard_of_living < 0
+			}
+			add = {
+		        desc = "AVG_STANDARD_OF_LIVING"
+				value =  standard_of_living - state.average_expected_sol
+    			multiply = 20
+    		}
+		}
+		else_if = {
+		    limit = { 
+				state.average_expected_sol - standard_of_living >= 0
+				state.average_expected_sol - standard_of_living < 2
+			}
+			add = {
+		        desc = "AVG_STANDARD_OF_LIVING"
+				value = state.average_expected_sol - standard_of_living 
+    			multiply = 20
+    		}
+		}
+	}
+	else_if = {
+	    limit = {
+			strata = lower
+		}
+		add = {
+		    desc = "CLASS_LOWER"
+			value = 30
+		}
+		# yandev
+		if = {
+		    limit = { 
+				state.average_expected_sol - standard_of_living > -2
+				state.average_expected_sol - standard_of_living < 0
+			}
+			add = {
+		        desc = "AVG_STANDARD_OF_LIVING"
+				value =  standard_of_living - state.average_expected_sol
+    			multiply = 20
+    		}
+		}
+		else_if = {
+		    limit = { 
+				state.average_expected_sol - standard_of_living >= 0
+				state.average_expected_sol - standard_of_living < 2
+			}
+			add = {
+		        desc = "AVG_STANDARD_OF_LIVING"
+				value = state.average_expected_sol - standard_of_living 
+    			multiply = 20
+    		}
+		}
+	}
+}
+
+bpm_pop_weight_multiplier_ig_conservatives = {
+	value = { value = 1 desc = "base_values" }
+
+	add = {
+		desc = "interest_group_ig_conservatives_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_ig_conservatives_pop_attraction_mult
+	}
+	add = {
+		desc = "interest_group_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_pop_attraction_mult
+	}
+	add = {
+		desc = "LEADER_POPULARITY"
+		scope:interest_group = {
+			leader = {
+				value = popularity
+				multiply = 0.01
+				max = 0.25
+				min = -0.25
+			}
+		}
+	}
+	if = {
+		limit = {
+			NOT = { has_pop_religion = atheist }
+		}
+		add = {
+			add = 0.1
+			desc = "RELIGIOUS"
+		}
+	}
+	add = {
+		value = 0
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			add = {
+				desc = "TRIGGER_IS_IN_GOVERNMENT"
+				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+			}
+		}
+	}
+	if = {
+	    limit = {
+			literacy_rate < 0.5
+			literacy_rate >= 0.3
+		}
+		add = {
+    		value = literacy_rate - 0.2
+    		min = 0
+    		divide = 5
+    		desc = "LITERACY"
+    	}
+	}
+	else_if = {
+	    limit = {
+			literacy_rate <= 0.7
+			literacy_rate >= 0.5
+		}
+		add = {
+    		value = 1 - literacy_rate - 0.2
+    		min = 0
+    		divide = 5
+    		desc = "LITERACY"
+    	}
+	}
+	
+	
+	add = {
+		desc = "bpm_ig_attraction_from_radicals_and_loyalists_tt"
+		value = ig_attraction_from_radicals_and_loyalists
+		subtract = 1
+	}
+}
+
+bpm_pop_weight_full_ig_fascists = {
+	save_temporary_scope_as = interest_group
+	ROOT = {
+		value = bpm_pop_weight_inner_ig_fascists
+
+		divide = {
+			desc = "interest_group_ig_fascists_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_ig_fascists_pop_attraction_mult
+			min = 0.01
+		}
+		divide = {
+			desc = "interest_group_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_pop_attraction_mult
+			min = 0.01
+		}
+	}
+}
+
+bpm_pop_weight_inner_ig_fascists = {
+	value = 0
+	
+	if = {
+    	limit = {
+			is_pop_type = capitalists
+		}
+    	add = {
+			desc = "POP_CAPITALISTS"
+			value = 75
+        }
+	}
+	else_if = {
+		limit = { 
+		    is_pop_type = shopkeepers
+		}
+		add = {
+			desc = "POP_SHOPKEEPERS"
+			value = 25
+			multiply = {
+			    value = state.average_expected_sol - standard_of_living
+				max = 2
+				min = 0
+			}
+		}
+	}
+	else_if = {
+		limit = { 
+		    is_pop_type = farmers
+		}
+		add = {
+			desc = "POP_FARMERS"
+			value = 25
+			multiply = {
+			    value = state.average_expected_sol - standard_of_living
+				max = 2
+				min = 0
+			}
+		}
+	}
+	else_if = {
+		limit = { 
+		    strata = middle 
+			bpm_pop_employment_is_rural = no
+		}
+		add = {
+			desc = "POP_URBAN"
+			value = 10
+			multiply = {
+			    value = state.average_expected_sol - standard_of_living
+				max = 4
+				min = 0
+			}
+		}
+	}
+	else_if = {
+	    limit = {
+			strata = lower
+			NOT = { is_pop_type = peasants }
+		}
+		add = {
+		    desc = "CLASS_LOWER"
+			value = 40
+		}
+		add = {
+		    desc = "AVG_STANDARD_OF_LIVING"
+			value = state.average_expected_sol - standard_of_living 
+			multiply = 10
+			max = 50
+			min = 0
+		}
+	}
+}
+
+bpm_pop_weight_multiplier_ig_fascists = {
+	value = { value = 1 desc = "base_values" }
+
+	add = {
+		desc = "interest_group_ig_fascists_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_ig_fascists_pop_attraction_mult
+	}
+	add = {
+		desc = "interest_group_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_pop_attraction_mult
+	}
+	add = {
+		desc = "LEADER_POPULARITY"
+		scope:interest_group = {
+			leader = {
+				value = popularity
+				multiply = 0.01
+				max = 0.25
+				min = -0.25
+			}
+		}
+	}
+	add = {
+		value = 0
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			add = {
+				desc = "TRIGGER_IS_IN_GOVERNMENT"
+				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+			}
+		}
+	}
+
+	add = {
+		value = 0.5
+		subtract = literacy_rate
+		min = 0
+		divide = 5
+		desc = "LOW_LITERACY"
+	}
+	
+	add = {
+		desc = "bpm_ig_attraction_from_radicals_and_loyalists_tt"
+		value = ig_attraction_from_radicals_and_loyalists
+		subtract = 1
+	}
+}
+
+bpm_pop_weight_full_ig_agrarian_populists = {
+	save_temporary_scope_as = interest_group
+	ROOT = {
+		value = bpm_pop_weight_inner_ig_agrarian_populists
+
+		divide = {
+			desc = "interest_group_ig_agrarian_populists_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_ig_agrarian_populists_pop_attraction_mult
+			min = 0.01
+		}
+		divide = {
+			desc = "interest_group_pop_attraction_mult"
+			value = 1
+			add = scope:interest_group.modifier:interest_group_pop_attraction_mult
+			min = 0.01
+		}
+	}
+}
+
+bpm_pop_weight_inner_ig_agrarian_populists = {
+	value = 0
+	
+	if = {
+    	limit = {
+			bpm_pop_employment_is_rural = yes
+		}
+    	add = {
+			desc = "RURAL_POP"
+			value = 25
+        }
+        if = {
+        	limit = {
+    			is_pop_type = farmers
+    		}
+        	add = {
+    			desc = "POP_FARMERS"
+    			value = 50
+            }
+    	}
+	}
+}
+
+bpm_pop_weight_multiplier_ig_agrarian_populists = {
+	value = { value = 1 desc = "base_values" }
+
+	add = {
+		desc = "interest_group_ig_agrarian_populists_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_ig_agrarian_populists_pop_attraction_mult
+	}
+	add = {
+		desc = "interest_group_pop_attraction_mult"
+		value = scope:interest_group.modifier:interest_group_pop_attraction_mult
+	}
+	add = {
+		desc = "LEADER_POPULARITY"
+		scope:interest_group = {
+			leader = {
+				value = popularity
+				multiply = 0.01
+				max = 0.25
+				min = -0.25
+			}
+		}
+	}
+	add = {
+		value = 0
+		if = {
+			limit = {
+				scope:interest_group = {
+					is_in_government = yes
+				}
+			}
+			add = {
+				desc = "TRIGGER_IS_IN_GOVERNMENT"
+				add = scope:interest_group.modifier:interest_group_in_government_attraction_mult
+			}
+		}
+	}
+
+	subtract = {
+		value = 0.5
+		subtract = literacy_rate
+		min = 0
+		divide = 5
+		desc = "LOW_LITERACY"
+	}
+	
+	add = {
+		desc = "bpm_ig_attraction_from_radicals_and_loyalists_tt"
+		value = ig_attraction_from_radicals_and_loyalists
+		subtract = 1
+	}
+}
+
 bpm_pop_weight_full_ig_socialists = {
 	save_temporary_scope_as = interest_group
 	ROOT = {
@@ -1323,6 +1895,30 @@ bpm_pop_weight_tt_ig_liberals = {
 	}
 }
 
+bpm_pop_weight_tt_ig_reactionaries = {
+	owner.ig:ig_reactionaries = {
+		value = bpm_pop_weight_full_ig_reactionaries
+	}
+}
+
+bpm_pop_weight_tt_ig_fascists = {
+	owner.ig:ig_fascists = {
+		value = bpm_pop_weight_full_ig_fascists
+	}
+}
+
+bpm_pop_weight_tt_ig_conservatives = {
+	owner.ig:ig_conservatives = {
+		value = bpm_pop_weight_full_ig_conservatives
+	}
+}
+
+bpm_pop_weight_tt_ig_agrarian_populists = {
+	owner.ig:ig_agrarian_populists = {
+		value = bpm_pop_weight_full_ig_agrarian_populists
+	}
+}
+
 bpm_pop_weight_tt_ig_socialists = {
 	owner.ig:ig_socialists = {
 		value = bpm_pop_weight_full_ig_socialists
@@ -1398,6 +1994,30 @@ bpm_pop_weight_multiplier_tt_ig_trade_unions = {
 		ROOT = {
 			value = bpm_pop_weight_multiplier_ig_trade_unions
 		}
+	}
+}
+
+bpm_pop_weight_multiplier_tt_ig_reactionaries = {
+	owner.ig:ig_reactionaries = {
+		value = bpm_pop_weight_multiplier_ig_reactionaries
+	}
+}
+
+bpm_pop_weight_multiplier_tt_ig_fascists = {
+	owner.ig:ig_fascists = {
+		value = bpm_pop_weight_multiplier_ig_fascists
+	}
+}
+
+bpm_pop_weight_multiplier_tt_ig_conservatives = {
+	owner.ig:ig_conservatives = {
+		value = bpm_pop_weight_multiplier_ig_conservatives
+	}
+}
+
+bpm_pop_weight_multiplier_tt_ig_agrarian_populists = {
+	owner.ig:ig_agrarian_populists = {
+		value = bpm_pop_weight_multiplier_ig_agrarian_populists
 	}
 }
 
@@ -1493,6 +2113,42 @@ bpm_pop_weight_stability_tt_ig_trade_unions = {
 
 bpm_pop_weight_stability_tt_ig_liberals = {
 	owner.ig:ig_liberals = {
+		save_temporary_scope_as = interest_group
+		ROOT = {
+			value = ig_attraction_to_interests_from_stability
+		}
+	}
+}
+
+bpm_pop_weight_stability_tt_ig_reactionaries = {
+	owner.ig:ig_reactionaries = {
+    save_temporary_scope_as = interest_group
+		ROOT = {
+			value = ig_attraction_to_interests_from_stability
+		}
+	}
+}
+
+bpm_pop_weight_multiplier_tt_ig_fascists = {
+	owner.ig:ig_fascists = {
+		save_temporary_scope_as = interest_group
+		ROOT = {
+			value = ig_attraction_to_interests_from_stability
+		}
+	}
+}
+
+bpm_pop_weight_multiplier_tt_ig_conservatives = {
+	owner.ig:ig_conservatives = {
+		save_temporary_scope_as = interest_group
+		ROOT = {
+			value = ig_attraction_to_interests_from_stability
+		}
+	}
+}
+
+bpm_pop_weight_multiplier_tt_ig_agrarian_populists = {
+	owner.ig:ig_agrarian_populists = {
 		save_temporary_scope_as = interest_group
 		ROOT = {
 			value = ig_attraction_to_interests_from_stability

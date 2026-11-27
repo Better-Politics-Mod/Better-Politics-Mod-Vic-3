@@ -6,27 +6,23 @@
 	}
 }
 
-bpm_the_docket_effect = {
-	clear_variable_list = bpm_considered_laws
-	every_law = {
-		limit = {
-			owner = {
-				NOR = {
-					has_law = prev.type
-					currently_enacting_law.type ?= prev.type
-					is_target_in_variable_list = { name = bpm_cooldown_laws target = prev.type }
-				}
-			}
-			law_is_available = yes
-			bpm_law_docket_score > 0
-		}
-		prev = { add_to_variable_list = { name = bpm_considered_laws target = prev } }
-	}
+bpm_update_docket_gui = {
 	clear_variable_list = bpm_the_docket
-	ordered_in_list = {
-		variable = bpm_considered_laws
+	ordered_law = {
+		limit = { bpm_law_is_docket_candidate = yes }
 		order_by = bpm_law_docket_score
 		prev = { add_to_variable_list = { name = bpm_the_docket target = prev } }
+	}
+}
+
+bpm_update_docket_outliner_gui = {
+	remove_variable = bpm_docket_top
+	ordered_law = {
+		limit = { bpm_law_is_docket_candidate = yes }
+		order_by = bpm_law_docket_score
+		position = 0
+		check_range_bounds = no
+		prev = { set_variable = { name = bpm_docket_top value = prev } }
 	}
 }
 
@@ -35,10 +31,11 @@ bpm_update_law_enactment_docket = {
 		limit = {
 			enacting_any_law = no
 		}
-		ordered_in_list = {
-			variable = bpm_the_docket
+		ordered_law = {
+			limit = { bpm_law_is_docket_candidate = yes }
 			order_by = bpm_law_docket_score
 			position = 0
+			check_range_bounds = no
 			save_temporary_scope_as = next_law
 			if = {
 				limit = {
@@ -49,20 +46,10 @@ bpm_update_law_enactment_docket = {
 						lawtype = scope:next_law.type
 					}
 				}
-				
 			}
 			else = {
 				owner = { start_enactment = scope:next_law.type }
 			}
-			save_scope_as = enacted_law
 		}
-		clear_variable_list = bpm_the_docket
-		ordered_in_list = {
-			variable = bpm_considered_laws
-			order_by = bpm_law_docket_score
-			prev = { add_to_variable_list = { name = bpm_the_docket target = prev } }
-		}
-		clear_saved_scope = enacted_law
 	}
-	bpm_the_docket_effect = yes
 }
